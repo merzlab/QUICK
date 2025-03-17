@@ -259,33 +259,18 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
   endif
 #endif
 
-#if defined(GPU)
-
-  ! startup cuda device
-  SAFE_CALL(gpu_startup(ierr))
-
-  SAFE_CALL(gpu_set_device(-1,ierr))
-
-  SAFE_CALL(gpu_init(ierr))
-
-  ! write cuda information
-  SAFE_CALL(gpu_write_info(iOutFile,ierr))
-    !------------------- END GPU ---------------------------------------
-#endif
-
-#if defined(MPIV_GPU)
-
-  SAFE_CALL(mgpu_query(mpisize, mpirank, mgpu_id, ierr))
-
-  SAFE_CALL(mgpu_setup(ierr))
-
-  if(master) SAFE_CALL(mgpu_write_info(iOutFile, mpisize, mgpu_ids, ierr))
-  
-  SAFE_CALL(mgpu_init(mpirank, mpisize, mgpu_id, ierr))
-
-#endif
-
 #if defined(GPU) || defined(MPIV_GPU)
+#if defined(GPU)
+  SAFE_CALL(gpu_new(ierr))
+  SAFE_CALL(gpu_init_device(ierr))
+  SAFE_CALL(gpu_write_info(iOutFile, ierr))
+#elif defined(MPIV_GPU)
+  SAFE_CALL(gpu_new(mpirank, ierr))
+  SAFE_CALL(mgpu_query(mpisize, mpirank, mgpu_id, ierr))
+  SAFE_CALL(mgpu_setup(ierr))
+  if (master) SAFE_CALL(mgpu_write_info(iOutFile, mpisize, mgpu_ids, ierr))
+  SAFE_CALL(mgpu_init_device(mpirank, mpisize, mgpu_id, ierr))
+#endif
   call gpu_allocate_scratch(.true.)
 #endif
 
@@ -847,17 +832,12 @@ subroutine delete_quick_job(ierr)
   ierr=0
 
 #if defined(GPU) || defined(MPIV_GPU)
-  call delete(quick_method,ierr)
+  call delete(quick_method, ierr)
   call gpu_deallocate_scratch(.true.)
-#endif
-
-#if defined(GPU)
-  SAFE_CALL(gpu_shutdown(ierr))
-#endif
-
 #if defined(MPIV_GPU)
   SAFE_CALL(delete_mgpu_setup(ierr))
-  SAFE_CALL(mgpu_shutdown(ierr))
+#endif
+  SAFE_CALL(gpu_delete(ierr))
 #endif
 
   ! finalize quick
