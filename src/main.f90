@@ -35,7 +35,7 @@
     use quick_sad_guess_module, only: getSadGuess
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
          exportMO, exportSCF, exportOPT
-!    use quick_restart_module, only: data_write_info, write_integer_array, write_double_array
+    use quick_restart_module, only: data_write_info, write_integer_array, write_double_array, iread
 #ifdef MPIV
     use mpi
 #endif
@@ -53,7 +53,7 @@
     character(80) :: arg
     logical :: failed = .false.         ! flag to indicates SCF fail or OPT fail
     integer :: ierr                     ! return error info
-    integer :: i,j,k
+    integer :: i,j,k, temp(1)
     double precision t1_t, t2_t
     common /timer/ t1_t, t2_t
     !------------------------------------------------------------------
@@ -141,12 +141,14 @@
     ! 2. Next step is to read job and initial guess
     !------------------------------------------------------------------
 
-!    if(quick_method%read_coord) call iread('molinfo', 1, natom)
-!
-!    write(6,*)'natom=',natom
-
     !read job spec and mol spec
     call read_Job_and_Atom(ierr)
+
+    if(quick_method%read_coord) write(6,*)'read_coord is defined'
+    if(quick_method%read_coord) call iread('molinfo', 1, temp)
+
+    write(6,*)'natom=',temp(1)
+
     !allocate essential variables
     call alloc(quick_molspec,ierr)
     !if (quick_method%MFCC) call allocate_MFCC()
@@ -175,7 +177,7 @@
     SAFE_CALL(getMol(ierr))
 
     !write the required info to data file
-!    if(quick_method%writeden .or. quick_method%writexyz) call data_write_info()
+    if(quick_method%writeden .or. quick_method%writexyz) call data_write_info()
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 
@@ -254,8 +256,8 @@
 
         if(master) then
           if(quick_method%writexyz)then
-!             call write_integer_array(quick_molspec%iattype, natom, 'iattype')
-!             call write_double_array(quick_molspec%xyz, 3, natom, 'xyz')
+             call write_integer_array(quick_molspec%iattype, natom, 'iattype')
+             call write_double_array(quick_molspec%xyz, 3, natom, 'xyz')
 !            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
 !            call wchk_int(iDataFile, "natom", natom, fail)
 !            call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
@@ -288,8 +290,8 @@
 
         if(master) then
           if(quick_method%writexyz)then
-!             call write_integer_array(quick_molspec%iattype, natom, 'iattype')
-!             call write_double_array(quick_molspec%xyz, 3, natom, 'xyz')
+             call write_integer_array(quick_molspec%iattype, natom, 'iattype')
+             call write_double_array(quick_molspec%xyz, 3, natom, 'xyz')
 !            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
 !            call wchk_int(iDataFile, "natom", natom, fail)
 !            call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)

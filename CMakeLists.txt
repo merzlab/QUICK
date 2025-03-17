@@ -242,7 +242,7 @@ if(ENABLEF)
 endif()
 
 # HDF5
-#include(ConfigureHDF5)
+include(ConfigureHDF5)
 
 # CUDA compiler flags
 # --------------------------------------------------------------------
