@@ -109,6 +109,8 @@ jobs:
           echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          echo LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/hdf5/openmpi:$LIBRARY_PATH >> "$GITHUB_ENV"
+          echo LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/hdf5/openmpi:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
           echo "HDF5_FORTRAN_MOD_DIR=/usr/include/hdf5/openmpi" >> "$GITHUB_ENV"
       - name: 'Configure MPI Version'
         run: |

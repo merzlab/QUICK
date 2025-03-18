@@ -103,6 +103,8 @@ jobs:
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          echo LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/hdf5/serial:$LIBRARY_PATH >> "$GITHUB_ENV"
+          echo LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/hdf5/serial:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
           echo "HDF5_FORTRAN_MOD_DIR=/usr/include/hdf5/serial/" >> "$GITHUB_ENV"
       - name: 'Configure Serial Version'
         run: |
