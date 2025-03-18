@@ -30,6 +30,10 @@ module quick_oei_module
 
 contains
 
+#define OEI
+#include "./include/attrashell.fh"
+#undef OEI
+
   !------------------------------------------------
   ! get1eEnergy
   !------------------------------------------------
@@ -311,10 +315,6 @@ subroutine kineticO(IBAS)
    enddo
 
 end subroutine kineticO
-
-#define OEI
-#include "./include/attrashell.fh"
-#undef OEI
 
 double precision function ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
    use quick_overlap_module, only: overlap_core
