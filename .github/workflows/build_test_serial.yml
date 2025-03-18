@@ -69,7 +69,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get -y install ${{ matrix.compiler-install }} parallel
+          sudo apt-get -y install ${{ matrix.compiler-install }} parallel libhdf5-dev
           if [[ ${{ matrix.compiler-type }} == 'gnu' || ${{ matrix.compiler-type }} == 'clang' ]]; then
             sudo rm /usr/bin/${{ matrix.c-compiler }}
             sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
@@ -281,7 +281,7 @@ jobs:
             sudo apt update
           fi
           sudo apt-get -y install ${{ matrix.compiler-install }} \
-            cmake parallel
+            cmake parallel libhdf5-dev
           if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
             sudo rm /usr/bin/${{ matrix.c-compiler }}
             sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
@@ -295,7 +295,7 @@ jobs:
       - name: 'MacOS: Install Dependencies for Serial Version'
         if: runner.os == 'macOS'
         run: |
-          brew install ${{ matrix.compiler-install }} cmake parallel
+          brew install ${{ matrix.compiler-install }} cmake parallel hdf5
           if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
             sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
               $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}

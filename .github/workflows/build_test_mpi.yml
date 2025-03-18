@@ -70,7 +70,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get -y install ${{ matrix.compiler-install }} \
-            openmpi-bin openmpi-common libopenmpi-dev
+            openmpi-bin openmpi-common libopenmpi-dev libhdf5-openmpi-dev
           which ${{ matrix.c-compiler }}-${{ matrix.compiler-version }}
           if [[ ${{ matrix.compiler-type }} == 'gnu' || ${{ matrix.compiler-type }} == 'clang' ]]; then
             sudo rm /usr/bin/${{ matrix.c-compiler }}
@@ -293,7 +293,7 @@ jobs:
             sudo apt update
           fi
           sudo apt-get -y install ${{ matrix.compiler-install }} \
-            cmake openmpi-bin openmpi-common libopenmpi-dev
+            cmake openmpi-bin openmpi-common libopenmpi-dev libhdf5-openmpi-dev
           if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
             sudo rm /usr/bin/${{ matrix.c-compiler }}
             sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
@@ -307,7 +307,7 @@ jobs:
       - name: 'MacOS: Install Dependencies for Serial Version'
         if: runner.os == 'macOS'
         run: |
-          brew install ${{ matrix.compiler-install }} cmake open-mpi
+          brew install ${{ matrix.compiler-install }} cmake open-mpi hdf5-mpi
           if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
             sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
               $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
