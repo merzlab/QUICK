@@ -71,6 +71,10 @@ echo  "
       --mkl          Use matrix diagonalizer from MKL. MKLROOT environment
                      variable must be set with the correct mkl installation path.
                      This path must contain lib and include directories.
+      --hdf5         Enable restart file support. This requires an HDF5 library be installed.
+                     HDF5_FORTRAN_MOD_DIR environment variable must be set with the correct
+		     HDF5 Fortran module installation path
+		     (e.g., /usr/lib64/gfortran/modules for GNU).
       --mirp         Use Boys function for ERI calculations from mirp library. 
                      MIRP_HOME and MIRP_DEP_HOME environment variables must be set to 
                      mirp and dependency installation directories. These paths must 
@@ -701,6 +705,9 @@ verbose='@'
 lapack='no'
 mkl='no'
 
+# flag for HDF5 library
+hdf5='no'
+
 # flag for mirp library
 mirp='no'
 
@@ -728,6 +735,7 @@ while [ $# -gt 0 ]; do
     --cew)         cew='yes';;
     --lapack)      lapack='yes';;
     --mkl)         mkl='yes';;
+    --hdf5)        hdf5='no';;
     --arch)        shift; cuda_arch="$cuda_arch $1"; uspec_arch='true';;
     --ncores)      shift; ncores=$1; uspec_ncores='yes';;
     --prefix)      shift; quick_prefix=${1%/}; useprefix='true';;
@@ -1425,6 +1433,15 @@ for buildtype in $buildtypes; do
         echo "Matrix diagonalizer from MKL will be used for $buildtype version."
         fort_flags="$fort_flags -DMKL"
         ldflags="$ldflags -L$MKLROOT/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread"
+      fi
+    fi
+
+    if [ "$hdf5" = 'yes' ]; then
+      check_mkl
+      if [ "$?" -eq 0 ]; then
+        echo "Fortran and HL bindings for HDF5 will be used for restart file support in $buildtype version."
+        fort_flags="$fort_flags -I$HDF5_FORTRAN_MOD_DIR"
+        ldflags="$ldflags -lhdf5_fortran -lhdf5"
       fi
     fi
 

@@ -109,9 +109,10 @@ jobs:
           echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          echo "HDF5_FORTRAN_MOD_DIR=/usr/lib64/gfortran/modules" >> "$GITHUB_ENV"
       - name: 'Configure MPI Version'
         run: |
-          ./configure --mpi --enablef --prefix $PWD/install \
+          ./configure --mpi --hdf5 --enablef --prefix $PWD/install \
             ${{ matrix.compiler-type }}
       - name: 'Build and Install MPI Version Using 2 Jobs'
         run: |
