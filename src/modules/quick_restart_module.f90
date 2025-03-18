@@ -680,20 +680,23 @@ contains
 
     implicit none
 
-    CHARACTER(LEN=7) , PARAMETER :: attribute  = "molinfo"
+    CHARACTER(LEN=7) , PARAMETER :: datasetname = "molinfo"
     INTEGER          , PARAMETER :: dim0       = 2
 
     INTEGER, DIMENSION(1:dim0) :: wdata
 
-    INTEGER :: hdferr
+    INTEGER            :: hdferr
+    INTEGER, PARAMETER :: rank = 1
+    INTEGER(HSIZE_T)   :: length(rank)
 
-    INTEGER(HID_T)  :: file ! Handles
+    INTEGER(HID_T)  :: file, space_id, dset ! Handles
     !
     ! Initialize FORTRAN interface.
     !
     CALL h5open_f(hdferr)
 
     wdata = (/natom,quick_molspec%nbasis/)
+    length = shape(wdata)
     !
     ! Create a new file using the default properties.
     !
@@ -702,25 +705,53 @@ contains
       call PrtErr(OUTFILEHANDLE,'Failed to create HDF5 data file')
       call quick_exit(OUTFILEHANDLE,1)
     endif
-
-    call write_to_hdf5(wdata, attribute, file, hdferr) 
     !
-    ! Close file
+    ! Create a simple dataspace
     !
+    call H5Screate_simple_f(rank, length, space_id, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE,'Error creating space in the HDF5 dataset')
+      call quick_exit(OUTFILEHANDLE,1)
+    endif
+    !
+    ! Create dataset
+    !
+    call h5dcreate_f(file, datasetname, H5T_NATIVE_INTEGER, space_id, dset, hdferr)
+    if (hdferr /= 0)then
+      call PrtErr(OUTFILEHANDLE,'Failed to create HDF5 dataset')
+      call quick_exit(OUTFILEHANDLE,1)
+    endif
+    !
+    ! Write the array to a dataset "datasetname"
+    !
+    call h5dwrite_f(dset, H5T_NATIVE_INTEGER, wdata, length, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE,'Error writing data to dataset')
+      call quick_exit(OUTFILEHANDLE,1)
+    endif
+    !
+    ! Close file and dataset
+    !
+    call h5sclose_f(space_id, hdferr)
+    call h5dclose_f(dset, hdferr)
     call h5fclose_f(file, hdferr)
 
   end subroutine data_write_info
 
-  subroutine write_integer_array(Array, length, attribute)
+  subroutine write_integer_array(Array, length, datasetname)
 
     implicit none
 
-    CHARACTER(LEN=*)           :: attribute
-    INTEGER                    :: length
-    INTEGER, DIMENSION(length) :: Array
+    CHARACTER(LEN=*)                 :: datasetname
+    INTEGER, PARAMETER               :: rank = 1
+    INTEGER                          :: length
+    INTEGER(HSIZE_T)                 :: lenArr(rank)
+    INTEGER, DIMENSION(length)       :: Array
 
     INTEGER :: hdferr
-    INTEGER(HID_T)  :: file ! Handles  
+    INTEGER(HID_T)  :: file, space_id, dset ! Handles  
+    !
+    lenArr=shape(Array)
     !
     ! Initialize FORTRAN interface.
     !
@@ -729,28 +760,87 @@ contains
     ! Open file.
     !
     CALL h5fopen_f(dataFileName, H5F_ACC_RDWR_F, file, hdferr)
+    if (hdferr /= 0)then
+      call PrtErr(OUTFILEHANDLE,'Failed to open HDF5 data file')
+      call quick_exit(OUTFILEHANDLE,1)
+    endif
     !
-    ! Write the integer array as a dataset to the data file.
+    ! Create a simple dataspace
     !
-    call write_to_hdf5(Array, attribute, file, hdferr)
+    call H5Screate_simple_f(rank, lenArr, space_id, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE,'Error creating space in the HDF5 dataset')
+      call quick_exit(OUTFILEHANDLE,1)
+    endif
     !
-    ! Close file
+    ! Create dataset
     !
+    call h5dcreate_f(file, datasetname, H5T_NATIVE_INTEGER, space_id, dset, hdferr)
+    if (hdferr /= 0)then
+      call PrtErr(OUTFILEHANDLE,'Failed to create HDF5 dataset')
+      call quick_exit(OUTFILEHANDLE,1)
+    endif
+    !
+    ! Write the array to a dataset "datasetname"
+    !
+    call h5dwrite_f(dset, H5T_NATIVE_INTEGER, Array, lenArr, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE,'Error writing data to dataset')
+      call quick_exit(OUTFILEHANDLE,1)
+    endif
+    !
+    ! Close file and dataset
+    !
+    call h5sclose_f(space_id, hdferr)
+    call h5dclose_f(dset, hdferr)
     call h5fclose_f(file, hdferr)
-  
+
   end subroutine write_integer_array
 
-  subroutine write_double_2d_array(Array, length1, length2, attribute)
+!  subroutine write_integer_array(Array, length, datasetname)
+!
+!    implicit none
+!
+!    CHARACTER(LEN=*)           :: datasetname
+!    INTEGER                    :: length
+!    INTEGER, DIMENSION(length) :: Array
+!
+!    INTEGER :: hdferr
+!    INTEGER(HID_T)  :: file ! Handles  
+!    !
+!    ! Initialize FORTRAN interface.
+!    !
+!    CALL h5open_f(hdferr)
+!    !
+!    ! Open file.
+!    !
+!    CALL h5fopen_f(dataFileName, H5F_ACC_RDWR_F, file, hdferr)
+!    !
+!    ! Write the integer array as a dataset to the data file.
+!    !
+!    call write_to_hdf5(Array, datasetname, file, hdferr)
+!    !
+!    ! Close file
+!    !
+!    call h5fclose_f(file, hdferr)
+!  
+!  end subroutine write_integer_array
+
+  subroutine write_double_2d_array(Array, length1, length2, datasetname)
 
     implicit none
 
-    CHARACTER(LEN=*)                                 :: attribute
+    CHARACTER(LEN=*)                                 :: datasetname
+    INTEGER, PARAMETER                               :: rank = 2
     INTEGER                                          :: length1, length2
+    INTEGER(HSIZE_T)                                 :: lenArr(rank)
     double precision, DIMENSION(length1, length2)    :: Array
 
     INTEGER :: hdferr
     logical :: exists
-    INTEGER(HID_T)  :: file ! Handles  
+    INTEGER(HID_T)  :: file, space_id, dset ! Handles  
+    !
+    lenArr=shape(Array)
     !
     ! Initialize FORTRAN interface.
     !
@@ -759,25 +849,91 @@ contains
     ! Open file.
     !
     CALL h5fopen_f(dataFileName, H5F_ACC_RDWR_F, file, hdferr)
+    if (hdferr /= 0)then
+      call PrtErr(OUTFILEHANDLE,'Failed to open HDF5 data file')
+      call quick_exit(OUTFILEHANDLE,1)
+    endif
     !
     ! Before writing check if dataset exists
     !
-    call h5lexists_f(file, attribute, exists, hdferr)
+    call h5lexists_f(file, datasetname, exists, hdferr)
     !
     ! delete the dataset if exists
     !
     if (exists) then
-      call h5ldelete_f(file, attribute, hdferr)
+      call h5ldelete_f(file, datasetname, hdferr)
     endif
     !
-    ! Write the integer array as a dataset to the data file.
+    ! Create a simple dataspace
     !
-    call write_to_hdf5(Array, attribute, file, hdferr)
+    call H5Screate_simple_f(rank, lenArr, space_id, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE,'Error creating space in the HDF5 dataset')
+      call quick_exit(OUTFILEHANDLE,1)
+    endif
     !
-    ! Close file
+    ! Create dataset
     !
+    call h5dcreate_f(file, datasetname, H5T_NATIVE_DOUBLE, space_id, dset, hdferr)
+    if (hdferr /= 0)then
+      call PrtErr(OUTFILEHANDLE,'Failed to create HDF5 dataset')
+      call quick_exit(OUTFILEHANDLE,1)
+    endif
+    !
+    ! Write the array to a dataset "datasetname"
+    !
+    call h5dwrite_f(dset, H5T_NATIVE_DOUBLE, Array, lenArr, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE,'Error writing data to dataset')
+      call quick_exit(OUTFILEHANDLE,1)
+    endif
+    !
+    ! Close file and dataset
+    !
+    call h5sclose_f(space_id, hdferr)
+    call h5dclose_f(dset, hdferr)
     call h5fclose_f(file, hdferr)
- 
+
   end subroutine write_double_2d_array
+
+!  subroutine write_double_2d_array(Array, length1, length2, datasetname)
+!
+!    implicit none
+!
+!    CHARACTER(LEN=*)                                 :: datasetname
+!    INTEGER                                          :: length1, length2
+!    double precision, DIMENSION(length1, length2)    :: Array
+!
+!    INTEGER :: hdferr
+!    logical :: exists
+!    INTEGER(HID_T)  :: file ! Handles  
+!    !
+!    ! Initialize FORTRAN interface.
+!    !
+!    CALL h5open_f(hdferr)
+!    !
+!    ! Open file.
+!    !
+!    CALL h5fopen_f(dataFileName, H5F_ACC_RDWR_F, file, hdferr)
+!    !
+!    ! Before writing check if dataset exists
+!    !
+!    call h5lexists_f(file, datasetname, exists, hdferr)
+!    !
+!    ! delete the dataset if exists
+!    !
+!    if (exists) then
+!      call h5ldelete_f(file, datasetname, hdferr)
+!    endif
+!    !
+!    ! Write the integer array as a dataset to the data file.
+!    !
+!    call write_to_hdf5(Array, datasetname, file, hdferr)
+!    !
+!    ! Close file
+!    !
+!    call h5fclose_f(file, hdferr)
+! 
+!  end subroutine write_double_2d_array
 
 end module quick_restart_module
