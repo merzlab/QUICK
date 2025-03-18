@@ -735,7 +735,7 @@ while [ $# -gt 0 ]; do
     --cew)         cew='yes';;
     --lapack)      lapack='yes';;
     --mkl)         mkl='yes';;
-    --hdf5)        hdf5='no';;
+    --hdf5)        hdf5='yes';;
     --arch)        shift; cuda_arch="$cuda_arch $1"; uspec_arch='true';;
     --ncores)      shift; ncores=$1; uspec_ncores='yes';;
     --prefix)      shift; quick_prefix=${1%/}; useprefix='true';;
