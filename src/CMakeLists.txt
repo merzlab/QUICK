@@ -34,7 +34,7 @@ set(QUICK_MODULES_SOURCES
         quick_cew_module.f90 quick_lri_module.f90 quick_lri_grad_module.f90
 	oshell_quick_eri_module.f90 oshell_quick_eri_grad_module.f90
 	oshell_quick_gradient_module.f90 quick_dftd3_module.f90 quick_molden_module.f90
-        hdf5_utils.f90 quick_restart_module.f90)
+        quick_restart_module.f90)
 
 set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	degen.f90 denspt.f90 diag.f90 dipole.f90

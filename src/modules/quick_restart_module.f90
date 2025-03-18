@@ -18,7 +18,6 @@
 
 module quick_restart_module
 
-  use hdf5_utils
   use HDF5
   use ISO_C_BINDING
 
@@ -104,7 +103,7 @@ contains
     !
     call H5Screate_F(H5S_SCALAR_F, space_id, hdferr)
     !
-    ! Read the array in dataset "datasetname" from  ind(1) to icount(1)
+    ! Read the array in dataset "datasetname"
     !
     call h5dread_f(dset, H5T_NATIVE_INTEGER, abuf, dimn, hdferr, space_id, file_space)
     if (hdferr /= 0) then
@@ -178,7 +177,7 @@ contains
     !
     call H5Screate_F(H5S_SCALAR_F, space_id, hdferr)
     !
-    ! Read the array in dataset "datasetname" from  ind(1) to icount(1)
+    ! Read the array in dataset "datasetname"
     !
     call h5dread_f(dset, H5T_NATIVE_DOUBLE, abuf, dimn, hdferr, space_id, file_space)
     if (hdferr /= 0) then
@@ -259,7 +258,7 @@ contains
       call quick_exit(OUTFILEHANDLE,1)
     endif
     !
-    ! Read the array in dataset "datasetname" from  ind(1) to icount(1)
+    ! Read the array in dataset "datasetname"
     !
     allocate(abuf(n))
     call h5dread_f(dset, H5T_NATIVE_INTEGER, abuf, dims, hdferr, mem_space_id=space_id, file_space_id=file_space)
@@ -341,7 +340,7 @@ contains
       call quick_exit(OUTFILEHANDLE,1)
     endif
     !
-    ! Read the array in dataset "datasetname" from  ind(1) to icount(1)
+    ! Read the array in dataset "datasetname"
     !
     allocate(abuf(n(1),n(2)))
     call h5dread_f(dset, H5T_NATIVE_DOUBLE, abuf, dims, hdferr, mem_space_id=space_id, file_space_id=file_space)
@@ -416,7 +415,7 @@ contains
     !
     call H5Screate_F(H5S_SCALAR_F, space_id, hdferr)
     !
-    ! Read the array in dataset "datasetname" from  ind(1) to icount(1)
+    ! Read the array in dataset "datasetname"
     !
     call h5dread_f(dset, H5T_NATIVE_INTEGER, ibuf, dimn, hdferr, space_id, file_space)
     if (hdferr /= 0) then
@@ -490,7 +489,7 @@ contains
     !
     call H5Screate_F(H5S_SCALAR_F, space_id, hdferr)
     !
-    ! Read the array in dataset "datasetname" from  ind(1) to icount(1)
+    ! Read the array in dataset "datasetname"
     !
     call h5dread_f(dset, H5T_NATIVE_INTEGER, ibuf, dimn, hdferr, space_id, file_space)
     if (hdferr /= 0) then
@@ -571,7 +570,7 @@ contains
       call quick_exit(OUTFILEHANDLE,1)
     endif
     !
-    ! Read the array in dataset "datasetname" from  ind(1) to icount(1)
+    ! Read the array in dataset "datasetname"
     !
     allocate(ibuf(n))
     call h5dread_f(dset, H5T_NATIVE_INTEGER, ibuf, dims, hdferr, mem_space_id=space_id, file_space_id=file_space)
@@ -653,7 +652,7 @@ contains
       call quick_exit(OUTFILEHANDLE,1)
     endif
     !
-    ! Read the array in dataset "datasetname" from  ind(1) to icount(1)
+    ! Read the array in dataset "datasetname"
     !
     allocate(ibuf(n(1),n(2)))
     call h5dread_f(dset, H5T_NATIVE_DOUBLE, ibuf, dims, hdferr, mem_space_id=space_id, file_space_id=file_space)
@@ -797,35 +796,6 @@ contains
 
   end subroutine write_integer_array
 
-!  subroutine write_integer_array(Array, length, datasetname)
-!
-!    implicit none
-!
-!    CHARACTER(LEN=*)           :: datasetname
-!    INTEGER                    :: length
-!    INTEGER, DIMENSION(length) :: Array
-!
-!    INTEGER :: hdferr
-!    INTEGER(HID_T)  :: file ! Handles  
-!    !
-!    ! Initialize FORTRAN interface.
-!    !
-!    CALL h5open_f(hdferr)
-!    !
-!    ! Open file.
-!    !
-!    CALL h5fopen_f(dataFileName, H5F_ACC_RDWR_F, file, hdferr)
-!    !
-!    ! Write the integer array as a dataset to the data file.
-!    !
-!    call write_to_hdf5(Array, datasetname, file, hdferr)
-!    !
-!    ! Close file
-!    !
-!    call h5fclose_f(file, hdferr)
-!  
-!  end subroutine write_integer_array
-
   subroutine write_double_2d_array(Array, length1, length2, datasetname)
 
     implicit none
@@ -895,45 +865,5 @@ contains
     call h5fclose_f(file, hdferr)
 
   end subroutine write_double_2d_array
-
-!  subroutine write_double_2d_array(Array, length1, length2, datasetname)
-!
-!    implicit none
-!
-!    CHARACTER(LEN=*)                                 :: datasetname
-!    INTEGER                                          :: length1, length2
-!    double precision, DIMENSION(length1, length2)    :: Array
-!
-!    INTEGER :: hdferr
-!    logical :: exists
-!    INTEGER(HID_T)  :: file ! Handles  
-!    !
-!    ! Initialize FORTRAN interface.
-!    !
-!    CALL h5open_f(hdferr)
-!    !
-!    ! Open file.
-!    !
-!    CALL h5fopen_f(dataFileName, H5F_ACC_RDWR_F, file, hdferr)
-!    !
-!    ! Before writing check if dataset exists
-!    !
-!    call h5lexists_f(file, datasetname, exists, hdferr)
-!    !
-!    ! delete the dataset if exists
-!    !
-!    if (exists) then
-!      call h5ldelete_f(file, datasetname, hdferr)
-!    endif
-!    !
-!    ! Write the integer array as a dataset to the data file.
-!    !
-!    call write_to_hdf5(Array, datasetname, file, hdferr)
-!    !
-!    ! Close file
-!    !
-!    call h5fclose_f(file, hdferr)
-! 
-!  end subroutine write_double_2d_array
 
 end module quick_restart_module
