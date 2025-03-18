@@ -103,8 +103,8 @@ jobs:
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-          echo LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/hdf5/serial:$LIBRARY_PATH >> "$GITHUB_ENV"
-          echo LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/hdf5/serial:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
+          echo LIBRARY_PATH=/usr/lib/`uname -m`-linux-gnu/hdf5/serial:$LIBRARY_PATH >> "$GITHUB_ENV"
+          echo LD_LIBRARY_PATH=/usr/lib/`uname -m`-linux-gnu/hdf5/serial:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
           echo "HDF5_FORTRAN_MOD_DIR=/usr/include/hdf5/serial/" >> "$GITHUB_ENV"
       - name: 'Configure Serial Version'
         run: |
@@ -264,13 +264,13 @@ jobs:
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
           if [ ${{ matrix.compiler-type }} == 'PGI' ]; then
-            echo PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/bin:$PATH >> "$GITHUB_ENV"
-            echo INCLUDE_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH >> "$GITHUB_ENV"
-            echo LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/lib:$LIBRARY_PATH >> "$GITHUB_ENV"
-            echo LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/lib:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
-            echo CMAKE_PREFIX_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/:$CMAKE_PREFIX_PATH >> "$GITHUB_ENV"
+            echo PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/bin:/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/comm_libs/mpi/bin:$PATH >> "$GITHUB_ENV"
+            echo INCLUDE_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH >> "$GITHUB_ENV"
+            echo LIBRARY_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/lib:$LIBRARY_PATH >> "$GITHUB_ENV"
+            echo LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/lib:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
+            echo CMAKE_PREFIX_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/:$CMAKE_PREFIX_PATH >> "$GITHUB_ENV"
             echo "NVHPC=/opt/nvidia/hpc_sdk" >> "$GITHUB_ENV"
-            echo NVHPC_ROOT=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }} >> "$GITHUB_ENV"
+            echo NVHPC_ROOT=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }} >> "$GITHUB_ENV"
           fi
       - name: 'MacOS: Setup Environment Variables for Building and Running Tests'
         if: runner.os == 'macOS'
