@@ -3,8 +3,33 @@
 
 message(STATUS "Checking whether to use built-in libraries...")
 
+if(PMEMD_ONLY)
 
-#List of 3rd party tools.
+set(3RDPARTY_TOOLS
+blas
+lapack
+netcdf
+netcdf-fortran
+zlib
+libbz2
+boost
+kmmd
+libm)
+
+set(3RDPARTY_TOOL_USES
+"for fundamental linear algebra calculations"
+"for fundamental linear algebra calculations"
+"for creating trajectory data files"
+"for creating trajectory data files from Fortran"
+"for various compression and decompression tasks"
+"for various compression and decompression tasks"
+"for supporting the gamma distribution"
+"Machine-learning molecular dynamics"
+"for fundamental math routines if they are not contained in the C library")
+
+else()
+
+# List of valid 3rd party tools.  All these names should be all lowercase.
 set(3RDPARTY_TOOLS
 blas
 lapack
@@ -33,6 +58,7 @@ boost
 nccl
 mbx
 tng_io
+torchani
 nlopt
 libtorch
 xtb
@@ -67,11 +93,14 @@ set(3RDPARTY_TOOL_USES
 "NVIDIA parallel GPU communication library"
 "computes energies and forces for pmemd with the MB-pol model"
 "enables GROMACS tng trajectory input in cpptraj"
-"used to perform nonlinear optimizations"                                                  
+"enables computation of energies and forces with Torchani"
+"used to perform nonlinear optimizations"
 "enables libtorch C++ library for tensor computation and dynamic neural networks"
 "enables the QM/MM interface with the external xtb software"
 "enables the QM/MM interface with the external dftbplus software"
 "enables DPRc machine learning potential with the external deepmd-kit software")
+
+endif()
 
 # Logic to disable tools
 set(3RDPARTY_SUBDIRS "")
@@ -140,7 +169,7 @@ endif()
 
 # suspicious 3rd party tools: tools where there are often problems with the system install
 if(NOT DEFINED SUSPICIOUS_3RDPARTY_TOOLS)
-	set(SUSPICIOUS_3RDPARTY_TOOLS "mkl,boost")
+	set(SUSPICIOUS_3RDPARTY_TOOLS "mkl")
 endif()
 
 option(TRUST_SYSTEM_LIBS "If true, Amber will use all found system libraries, even if they are considered problematic by the Amber developers" FALSE)
@@ -217,7 +246,7 @@ if(NEED_mkl)
 
 	# Static MKL is not the default at this time.
 	# <long_explanation>
-	# MKL has a fftw3 compatibility interface.  Wierdly enough, this interface is spread out between several different libraries: the main interface library, the
+	# MKL has a fftw3 compatibility interface.  Weirdly enough, this interface is spread out between several different libraries: the main interface library, the
 	# cdft library, and the actual fftw3 interface library (which is distributed as source code, not a binary).
 	# So, even though we don't use the fftw3 interface, there are symbols in the main MKL libraries which conflict with the symbols from fftw3.
 	# Oddly, on many platforms, the linker handles this fine.  However, in at least one case (the SDSC supercomputer Comet, running a derivative of CentOS),
@@ -615,6 +644,25 @@ if(NEED_mbx)
 endif()
 
 #------------------------------------------------------------------------------
+#  TORCHANI
+#------------------------------------------------------------------------------
+
+if(NEED_torchani)
+    find_package(Torchani 0.5 CONFIG)
+    if(Torchani_FOUND)
+        if (DOUBLE_PRECISION)
+		    set_3rdparty(torchani EXTERNAL)
+        else()
+            message(STATUS "Can't link Torchani if DOUBLE_PRECISION is not enabled.")
+		    set_3rdparty(torchani DISABLED)
+        endif()
+    else()
+        message(STATUS "Could not find Torchani. To locate it, add its install dir to the prefix path.")
+        set_3rdparty(torchani DISABLED)
+    endif()
+endif()
+
+#------------------------------------------------------------------------------
 #  tng_io
 #------------------------------------------------------------------------------
 
@@ -705,20 +753,23 @@ if(NEED_nlopt)
 	# because we are relying on the internal headers, our
 	# only option is to use the internal nlopt
 	#
-	set_3rdparty(nlopt INTERNAL)
+	#set_3rdparty(nlopt INTERNAL)
 
 	#
 	# In principle, we could search for external or use internal
 	#
-	#find_package(nlopt CONFIG)
-	#if(NOT nlopt_FOUND)
-	#	message(STATUS "Could not find nlopt.  To locate it, add its install dir to the prefix path.")
-	#endif()
-	#if(nlopt_FOUND)
-	#	set_3rdparty(nlopt EXTERNAL)
-	#else()
-	#	set_3rdparty(nlopt INTERNAL)
-	#endif() 
+	find_package(nlopt)
+
+	if(NOT nlopt_FOUND)
+	  message(STATUS "Could not find nlopt.  To locate it, add its install dir to the prefix path.")
+	endif()
+	if(nlopt_FOUND)
+	  set_3rdparty(nlopt EXTERNAL)
+	  message("-- Found external nlopt")
+	else()
+	  set_3rdparty(nlopt INTERNAL)
+	  message("-- Did not find external nlopt")
+	endif()
 endif()
 
 
@@ -745,7 +796,7 @@ if(NEED_dftbplus)
 endif()
 
 if(NEED_deepmd-kit)
-	# J. Zeng: idealy, libdeepmd.tar.gz should contain a cmake config
+	# J. Zeng: ideally, libdeepmd.tar.gz should contain a cmake config
 	# However, it's not ready in the current version...
 	# so I manually add FindDeePMD.cmake
 	find_package(DeePMD REQUIRED)
@@ -764,9 +815,9 @@ endif()
 # we can now reset this back to the default behavior -- targets will be made PIC as needed in the individual CMake scripts
 unset(CMAKE_POSITION_INDEPENDENT_CODE)
 
-set(FORCE_EXTERNAL_LIBS "" CACHE STRING "3rd party libraries to force using the system version of. Accepts a semicolon-seperated list of library names from the 3rd Party Libraries section of the build report.")
-set(FORCE_INTERNAL_LIBS "" CACHE STRING "3rd party libraries to force to build inside Amber. Accepts a semicolon-seperated list of library names from the 3rd Party Libraries section of the build report.")
-set(FORCE_DISABLE_LIBS "" CACHE STRING "3rd party libraries to force Amber to not use at all. Accepts a semicolon-seperated list of library names from the 3rd Party Libraries section of the build report.")
+set(FORCE_EXTERNAL_LIBS "" CACHE STRING "3rd party libraries to force using the system version of. Accepts a semicolon-separated list of library names from the 3rd Party Libraries section of the build report.")
+set(FORCE_INTERNAL_LIBS "" CACHE STRING "3rd party libraries to force to build inside Amber. Accepts a semicolon-separated list of library names from the 3rd Party Libraries section of the build report.")
+set(FORCE_DISABLE_LIBS "" CACHE STRING "3rd party libraries to force Amber to not use at all. Accepts a semicolon-separated list of library names from the 3rd Party Libraries section of the build report.")
 
 # look for and handle suspicious tools
 if(NOT TRUST_SYSTEM_LIBS)
@@ -797,39 +848,42 @@ endif()
 foreach(TOOL ${FORCE_EXTERNAL_LIBS})
 	colormsg(YELLOW "Forcing ${TOOL} to be sourced externally")
 
-	list_contains(VALID_TOOL ${TOOL} ${3RDPARTY_TOOLS})
+	string(TOLOWER ${TOOL} TOOL_LOWERCASE)
+	list_contains(VALID_TOOL ${TOOL_LOWERCASE} ${3RDPARTY_TOOLS})
 
 	if(NOT VALID_TOOL)
 		message(FATAL_ERROR "${TOOL} is not a valid 3rd party library name.")
 	endif()
 
-	set_3rdparty(${TOOL} EXTERNAL)
+	set_3rdparty(${TOOL_LOWERCASE} EXTERNAL)
 endforeach()
 
 if(INSIDE_AMBER)
 	foreach(TOOL ${FORCE_INTERNAL_LIBS})
 		colormsg(GREEN "Forcing ${TOOL} to be built internally")
 
-		list_contains(VALID_TOOL ${TOOL} ${3RDPARTY_TOOLS})
+		string(TOLOWER ${TOOL} TOOL_LOWERCASE)
+		list_contains(VALID_TOOL ${TOOL_LOWERCASE} ${3RDPARTY_TOOLS})
 
 		if(NOT VALID_TOOL)
 			message(FATAL_ERROR "${TOOL} is not a valid 3rd party library name.")
 		endif()
 
-		set_3rdparty(${TOOL} INTERNAL)
+		set_3rdparty(${TOOL_LOWERCASE} INTERNAL)
 	endforeach()
 endif()
 
 foreach(TOOL ${FORCE_DISABLE_LIBS})
 	colormsg(HIRED "Forcing ${TOOL} to be disabled")
 
-	list_contains(VALID_TOOL ${TOOL} ${3RDPARTY_TOOLS})
+	string(TOLOWER ${TOOL} TOOL_LOWERCASE)
+	list_contains(VALID_TOOL ${TOOL_LOWERCASE} ${3RDPARTY_TOOLS})
 
 	if(NOT VALID_TOOL)
 		message(FATAL_ERROR "${TOOL} is not a valid 3rd party library name.")
 	endif()
 
-	set_3rdparty(${TOOL} DISABLED)
+	set_3rdparty(${TOOL_LOWERCASE} DISABLED)
 endforeach()
 
 # force all unneeded tools to be disabled
@@ -1235,6 +1289,14 @@ if(mbx_EXTERNAL)
 	using_library_targets(MBX::mbx)
 endif()
 
+#------------------------------------------------------------------------------
+#  Torchani
+#------------------------------------------------------------------------------
+
+if(torchani_EXTERNAL)
+    using_library_targets(Torchani::torchani)
+endif()
+
 # --------------------------------------------------------------------
 #  tng_io
 # --------------------------------------------------------------------
@@ -1273,5 +1335,10 @@ elseif(nlopt_EXTERNAL)
     message(FATAL_ERROR "You requested to use an external nlopt, but no installation was found.")
   endif()
   
-  using_library_targets(nlopt LIBRARIES nlopt::nlopt)
+  #using_library_targets(nlopt LIBRARIES nlopt::nlopt)
+  #using_library_targets(nlopt::nlopt)
+  #import_libraries(nlopt LIBRARIES nlopt::nlopt INCLUDES nlopt::nlopt)
+  #using_library_targets(nlopt LIBRARIES nlopt::nlopt INCLUDES nlopt::nlopt)
+  using_library_targets(nlopt::nlopt)
+  import_libraries(nlopt LIBRARIES nlopt::nlopt)
 endif()

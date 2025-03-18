@@ -18,7 +18,11 @@ if(CUDA)
 
     set(CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
 
-    #SM9.0 = H100, GH200 (Hopper)
+    #SM12.0 = GB202, GB203, GB205, GB206, GB207 (Blackwell)
+    set(SM120FLAGS -gencode arch=compute_120,code=sm_120)
+    #SM10.0 = GB100 (Blackwell)
+    set(SM100FLAGS -gencode arch=compute_100,code=sm_100)
+    #SM9.0 = H100, H200, H800, GH200 (Hopper)
     set(SM90FLAGS -gencode arch=compute_90,code=sm_90)
     #SM8.9 = L4, L40 (Ada Lovelace)
     set(SM89FLAGS -gencode arch=compute_89,code=sm_89)
@@ -174,8 +178,22 @@ if(CUDA)
             set(FOUND "TRUE")
         endif()
 
+        if("${QUICK_USER_ARCH}" MATCHES "blackwell")
+            message(STATUS "Configuring QUICK for SM10.0")
+            list(APPEND CUDA_NVCC_FLAGS ${SM100FLAGS})
+            set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
+            set(FOUND "TRUE")
+        endif()
+
+        if("${QUICK_USER_ARCH}" MATCHES "blackwell2")
+            message(STATUS "Configuring QUICK for SM12.0")
+            list(APPEND CUDA_NVCC_FLAGS ${SM120FLAGS})
+            set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
+            set(FOUND "TRUE")
+        endif()
+
         if (NOT ${FOUND})
-            message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH. Possible values are kepler, maxwell, pascal, volta, turing, ampere, adalovelace, and hopper.")
+            message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH. Possible values are kepler, maxwell, pascal, volta, turing, ampere, adalovelace, hopper, blackwell (SM10.0), and blackwell2 (SM12.0).")
         endif()
 
     endif()
@@ -186,7 +204,10 @@ if(CUDA)
     #  https://stackoverflow.com/questions/6622454/cuda-incompatible-with-my-gcc-version
     #  VERSION_EQUAL 10 means 10.0, so use ranges to compare major versions.
     if ( "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" AND (
-            ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.3
+	    ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 14.2
+              AND CUDA_VERSION VERSION_GREATER_EQUAL 12.6
+              AND CUDA_VERSION VERSION_LESS_EQUAL 12.6 )
+        OR  ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.3
               AND CUDA_VERSION VERSION_GREATER_EQUAL 12.4
               AND CUDA_VERSION VERSION_LESS_EQUAL 12.4 )
         OR ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 12.3
@@ -222,8 +243,8 @@ if(CUDA)
     ) )
         message(STATUS "Checking CUDA and GNU versions -- compatible")
     elseif ( "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" AND (
-        CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.2
-            OR CUDA_VERSION VERSION_GREATER 12.4
+        CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 14.2
+            OR CUDA_VERSION VERSION_GREATER 12.8
     ) )
         message(STATUS "Checking CUDA and GNU versions -- compatibility unknown")
         message(STATUS "    See https://stackoverflow.com/questions/6622454/cuda-incompatible-with-my-gcc-version")
@@ -231,8 +252,7 @@ if(CUDA)
         message(STATUS "")
         message("************************************************************")
         message("Error: Incompatible CUDA and GNU versions")
-        message(" ${CMAKE_CXX_COMPILER_VERSION}")
-        message(" ${CMAKE_CXX_COMPILER_VERSION_MAJOR}")
+        message("  GNU version is ${CMAKE_CXX_COMPILER_VERSION}.")
         message("See https://stackoverflow.com/questions/6622454/cuda-incompatible-with-my-gcc-version")
         message("************************************************************")
         message(STATUS "")
