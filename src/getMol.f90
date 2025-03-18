@@ -15,6 +15,7 @@ subroutine getMol(ierr)
    use allmod
    use quick_gridpoints_module
    use quick_exception_module
+   use quick_restart_module, only: iread, aread
 #ifdef MPIV
    use mpi
 #endif
@@ -35,16 +36,11 @@ subroutine getMol(ierr)
 
       ! read xyz coordinates from the .in file 
       if(.not. isTemplate) then
-!        if(quick_method%read_coord)then
-!
-!          open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
-!          call rchk_darray(iDataFile, "xyz", 3, natom, 1, xyz, fail)
-!          call rchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
-!          close(iDataFile)
-!
-!          quick_molspec%xyz => xyz
-!
-!        else
+        if(quick_method%read_coord)then
+          call aread('xyz', (/1,1/), (/3,natom/), xyz)
+          call iread('iattype', 1, natom, quick_molspec%iattype)
+          quick_molspec%xyz => xyz
+        else
 
           call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
           CHECK_ERROR(ierr)
@@ -52,7 +48,7 @@ subroutine getMol(ierr)
           call read2(quick_molspec,inFile,ierr)
           close(inFile)
 
-!        endif
+        endif
       endif
 
       quick_molspec%nbasis   => nbasis

@@ -53,8 +53,8 @@
     character(80) :: arg
     logical :: failed = .false.         ! flag to indicates SCF fail or OPT fail
     integer :: ierr                     ! return error info
-    integer :: i,j,k, ind(2), itemp(4)
-    double precision t1_t, t2_t, temp, atemp(2,3)
+    integer :: i,j,k
+    double precision t1_t, t2_t
     common /timer/ t1_t, t2_t
     !------------------------------------------------------------------
     ! 1. The first thing that must be done is to initialize and prepare files
@@ -143,32 +143,6 @@
 
     !read job spec and mol spec
     call read_Job_and_Atom(ierr)
-
-    if(quick_method%read_coord)then
-      call iread('molinfo', 1, natom)
-    endif
-
-    write(6,*)'natom=',natom
-
-    ind=(/2,4/)
-
-    if(quick_method%read_coord)then
-      call aread('xyz', ind, temp)
-    endif
-
-    write(6,*)'temp=',temp
-
-    if(quick_method%read_coord)then
-      call iread('iattype', 3, 4, itemp)
-    endif
-
-    write(6,*)'itemp=',itemp
-
-    if(quick_method%read_coord)then
-      call aread('dense', (/3,5/), (/2,3/), atemp)
-    endif
-
-    write(6,*)'atemp=',atemp
 
     !allocate essential variables
     call alloc(quick_molspec,ierr)

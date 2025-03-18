@@ -289,6 +289,7 @@ contains
     use quick_exception_module
     use quick_method_module, only: quick_method
     use quick_files_module, only : iDataFile, dataFileName
+    use quick_restart_module, only: iread
 
     implicit none
 
@@ -344,31 +345,29 @@ contains
   if( .not. isTemplate) then
 
     ! If reading from data file
-!    if(quick_method%read_coord)then
-!
-!      open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
-!      call rchk_int(iDataFile, "natom", natom, fail)
-!      if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
-!      call rchk_iarray(iDataFile, "iattype", natom, 1, 1, self%iattype, fail)
-!      close(iDataFile)
-!
-!      ! Reading external charges from data file is not yet implemented
-!      nextatom = 0
-!      self%nextatom = nextatom
-!
-!      iAtomType = 0
-!
-!      do i = 1, natom
-!        if (.not.(any(self%atom_type_sym(1:iAtomType).eq.symbol(self%iattype(i))))) then
-!          iAtomType=iAtomType+1
-!          self%atom_type_sym(iAtomType) = symbol(self%iattype(i))
-!        endif
-!      enddo
-!
-!      self%iAtomType = iAtomType
-!
-!    ! Reading from input file
-!    else
+    if(quick_method%read_coord)then
+
+      call iread('molinfo', 1, natom)
+      if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
+      call iread('iattype', 1, natom, self%iattype)
+
+      ! Reading external charges from data file is not yet implemented
+      nextatom = 0
+      self%nextatom = nextatom
+
+      iAtomType = 0
+
+      do i = 1, natom
+        if (.not.(any(self%atom_type_sym(1:iAtomType).eq.symbol(self%iattype(i))))) then
+          iAtomType=iAtomType+1
+          self%atom_type_sym(iAtomType) = symbol(self%iattype(i))
+        endif
+      enddo
+
+      self%iAtomType = iAtomType
+
+    ! Reading from input file
+    else
       call findBlock(input,1)
 
       ! first is to read atom and atom kind
@@ -411,7 +410,7 @@ contains
       iAtomType=iAtomType-1
       self%iAtomType = iAtomType
       self%nextatom = nextatom
-!    endif
+    endif
   endif
 
   end subroutine read_quick_molspec

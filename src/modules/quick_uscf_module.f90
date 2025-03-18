@@ -131,7 +131,7 @@ contains
      use quick_scf_module  
      use quick_oei_module, only: bCalc1e
      use quick_molden_module, only: quick_molden
-     use quick_restart_module, only: write_double_array
+     use quick_restart_module, only: write_double_array, iread, aread
 
 #if defined HIP || defined HIP_MPIV
      use quick_rocblas_module, only: rocDGEMM
@@ -237,11 +237,9 @@ contains
         if(quick_method%readden)then
           nbasis = quick_molspec%nbasis
           if(master)then
-            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
-            call rchk_int(iDataFile, "nbasis", nbasis, fail)
-            call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
-            call rchk_darray(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%denseb, fail)
-            close(iDataFile)
+            call iread('molinfo',2,nbasis)
+            call aread('dense', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%dense)
+            call aread('denseb', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%denseb)
           endif
         endif
  
