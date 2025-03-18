@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.9.0) # version 3.9.0 needed for FindMPI and FindOpenMP versions which provide imported targets
+cmake_minimum_required(VERSION 3.12.0) # version 3.9.0 needed for FindMPI and FindOpenMP versions which provide imported targets
 
-project(quick LANGUAGES NONE VERSION 24.03)
+project(quick LANGUAGES NONE VERSION 25.03)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/quick-cmake)
 
@@ -51,19 +51,26 @@ set_property(DIRECTORY . PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>:DEBUG>)
 
 option(WARNINGS "Enable warnings." FALSE)
 
-set(NO_OPT_FFLAGS -O0)
-set(NO_OPT_CFLAGS -O0)
-set(NO_OPT_CXXFLAGS -O0)
-
+set(CMAKE_Fortran_FLAGS "")
 set(CMAKE_C_FLAGS "")
 set(CMAKE_CXX_FLAGS "")
-set(CMAKE_Fortran_FLAGS "")
+
+set(OPT_FFLAGS "")
+set(OPT_CFLAGS "")
+set(OPT_CXXFLAGS "")
+
+set(NO_OPT_FFLAGS "")
+set(NO_OPT_CFLAGS "")
+set(NO_OPT_CXXFLAGS "")
+
+list(APPEND NO_OPT_FFLAGS "-O0")
+list(APPEND NO_OPT_CFLAGS "-O0")
+list(APPEND NO_OPT_CXXFLAGS "-O0")
 
 # GNU
 # --------------------------------------------------------------------
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
-
-    set(OPT_CFLAGS -O2 -mtune=native)
+    list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
 
     if (WARNINGS)
 	add_flags(C -Wall -Wno-unused-function -Wno-unknown-pragmas)
@@ -76,12 +83,10 @@ if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 	    add_flags(C -Wno-uninitialized -Wno-maybe-uninitialized)
 	endif()
     endif()
-    
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    
-    set(OPT_CXXFLAGS -O2 -mtune=native)
+    list(APPEND OPT_CXXFLAGS "-O2" "-mtune=native")
 
     if (WARNINGS)
 	add_flags(CXX -Wall -Wno-unused-function -Wno-unknown-pragmas)
@@ -101,22 +106,17 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	    add_flags(CXX -Wno-uninitialized -Wno-maybe-uninitialized)
 	endif()
     endif()
-
 endif()
 
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
-
-    set(OPT_FFLAGS -O2 -mtune=native)
-
+    list(APPEND OPT_FFLAGS "-O2" "-mtune=native")
     add_flags(Fortran -ffree-line-length-none)
 
     if (WARNINGS)
 	add_flags(Fortran -Wall -Wno-tabs -Wno-unused-function -ffree-line-length-none -Wno-unused-dummy-argument)
-    
 	if(NOT UNUSED_WARNINGS)
 	    add_flags(Fortran -Wno-unused-variable)
 	endif()
-		
 	if(NOT UNINITIALIZED_WARNINGS)
 	    add_flags(Fortran -Wno-maybe-uninitialized)
 	endif()	
@@ -129,7 +129,6 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
     endif()
 
     add_definitions(-DGNU)
-
 endif()
 
 
@@ -137,40 +136,28 @@ endif()
 # --------------------------------------------------------------------
 
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")
-
     set(CMAKE_C_FLAGS_DEBUG "-g -debug all -traceback")
-    
-    set(OPT_CFLAGS -ip -O2 -xHost)
-		
+    list(APPEND OPT_CFLAGS "-ip" "-O2" "-xHost")
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-
     set(CMAKE_CXX_FLAGS_DEBUG "-g -debug all -traceback")
-	
-    set(OPT_CXXFLAGS -ip -O2 -xHost)
-
+    list(APPEND OPT_CXXFLAGS "-ip" "-O2" "-xHost")
 endif()
 
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
-    
     set(CMAKE_Fortran_FLAGS_DEBUG "-g -debug all -traceback")
-    set(CMAKE_Fortran_FLAGS "-cpp -diag-disable 8291")
-	
-    set(OPT_FFLAGS -ip -O2 -xHost)
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp -diag-disable 8291")
+    list(APPEND OPT_FFLAGS "-ip" "-O2" "-xHost")
 
     if(WARNINGS)
 	add_flags(Fortran "-warn all" "-warn nounused")
-	    
 	option(IFORT_CHECK_INTERFACES "If enabled and Intel Fortran is in use, then ifort will check that types passed to functions are the correct ones, and produce warnings or errors for mismatches." FALSE)
-		
 	if(NOT IFORT_CHECK_INTERFACES)
-			
 	    # disable errors from type mismatches
 	    add_flags(Fortran -warn nointerfaces)
 	endif()
     endif()		
-		
 endif()
 
 
@@ -179,18 +166,18 @@ endif()
 
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "IntelLLVM")
     set(CMAKE_C_FLAGS_DEBUG "-g -debug all")
-    set(OPT_CFLAGS -O2)
+    list(APPEND OPT_CFLAGS "-O2")
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "IntelLLVM")
     set(CMAKE_CXX_FLAGS_DEBUG "-g -debug all")
-    set(OPT_CXXFLAGS -O2)
+    list(APPEND OPT_CXXFLAGS "-O2")
 endif()
 
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "IntelLLVM")
     set(CMAKE_Fortran_FLAGS_DEBUG "-g -debug all")
-    set(CMAKE_Fortran_FLAGS "-fpp -diag-disable 8291")
-    set(OPT_FFLAGS -O2)
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fpp -diag-disable 8291")
+    list(APPEND OPT_FFLAGS "-O2")
 
     if(WARNINGS)
 	add_flags(Fortran "-warn all" "-warn nounused")
@@ -203,15 +190,27 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "IntelLLVM")
     endif()		
 endif()
 
-
-# PGI, CRAY, CLANG: NOT SUPPORTED
+# PGI or NVHPC
 # --------------------------------------------------------------------
-if(${COMPILER} STREQUAL PGI)
-    message(FATAL_ERROR "PGI compiler not supported by QUICK.")
-elseif(${COMPILER} STREQUAL CRAY)
+
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "PGI" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "NVHPC")
+    list(APPEND OPT_CFLAGS "-O2")
+endif()
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "PGI" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "NVHPC")
+    list(APPEND OPT_CXXFLAGS "-O2")
+endif()
+
+if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "PGI" OR "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "NVHPC")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp")
+    list(APPEND OPT_FFLAGS "-fast" "-O3")
+endif()
+
+
+# CRAY: NOT SUPPORTED
+# --------------------------------------------------------------------
+if(${COMPILER} STREQUAL CRAY)
     message(FATAL_ERROR "CRAY compiler not supported by QUICK.")
-#elseif(${COMPILER} STREQUAL CLANG)
-#    message(FATAL_ERROR "CLANG compiler not supported by QUICK.")
 endif()
 
 
