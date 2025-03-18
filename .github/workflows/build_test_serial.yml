@@ -69,7 +69,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get -y install ${{ matrix.compiler-install }} parallel libhdf5-dev
+          sudo apt-get -y install ${{ matrix.compiler-install }} parallel libhdf5-dev libhdf5-fortran-dev
           if [[ ${{ matrix.compiler-type }} == 'gnu' || ${{ matrix.compiler-type }} == 'clang' ]]; then
             sudo rm /usr/bin/${{ matrix.c-compiler }}
             sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
@@ -303,7 +303,7 @@ jobs:
               | sudo tee /etc/apt/sources.list.d/nvhpc.list
             sudo apt update
           fi
-          sudo apt-get -y install ${{ matrix.compiler-install }} cmake parallel libhdf5-dev
+          sudo apt-get -y install ${{ matrix.compiler-install }} cmake parallel libhdf5-dev libhdf5-fortran-dev
           if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
             sudo rm /usr/bin/${{ matrix.c-compiler }}
             sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
@@ -317,7 +317,7 @@ jobs:
       - name: 'MacOS: Install Dependencies for Serial Version'
         if: runner.os == 'macOS'
         run: |
-          brew install --formula --quiet ${{ matrix.compiler-install }} cmake parallel hdf5
+          brew install --formula --quiet ${{ matrix.compiler-install }} cmake parallel hdf5 --with-fortran
           if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
             sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
               $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
