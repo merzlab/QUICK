@@ -62,7 +62,7 @@ if(${CMAKE_C_COMPILER_ID} STREQUAL "Intel")
 		endif()
 	endif()
 	
-elseif({CMAKE_C_COMPILER_ID} STREQUAL "IntelLLVM")
+elseif(${CMAKE_C_COMPILER_ID} STREQUAL "IntelLLVM")
       
 	if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 	
@@ -70,7 +70,7 @@ elseif({CMAKE_C_COMPILER_ID} STREQUAL "IntelLLVM")
 
 	else()
 
-		set(PMEMD_CFLAGS -ipo -O3)
+		set(PMEMD_CFLAGS -O3)
 		
 		if(SSE)
 			if(NOT "${SSE_TYPES}" STREQUAL "")
@@ -90,7 +90,7 @@ endif()
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #this tree mirrors the C tree very closely, with only minor differences
-if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
+if(${CMAKE_Fortran_COMPILER_ID} STREQUAL "Intel")
 	
 	if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 	
@@ -112,6 +112,23 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
 
 	endif()
 	
+elseif(${CMAKE_Fortran_COMPILER_ID} STREQUAL "IntelLLVM")
+
+	if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+		set(PMEMD_FFLAGS -O3 -mdynamic-no-pic -no-prec-div -xHost)
+		list(APPEND PMEMD_FFLAGS -ipo)
+	else()
+		set(PMEMD_FFLAGS -O3 -no-prec-div)
+
+		if(SSE)
+			if(NOT "${SSE_TYPES}" STREQUAL "")
+				list(APPEND PMEMD_FFLAGS "-ax${SSE_TYPES}")
+			else()
+				list(APPEND PMEMD_FFLAGS -xHost)
+			endif()
+		endif()
+	endif()
+
 else()
 	#use regular compiler flags
 	set(PMEMD_FFLAGS ${OPT_FFLAGS})
@@ -234,7 +251,7 @@ if(CUDA)
 	else()
 		set(PMEMD_NVCC_FLAGS -use_fast_math -O3)
 
-		list(APPEND PMEMD_NVCC_FLAGS --std c++11) 
+		list(APPEND PMEMD_NVCC_FLAGS --std c++17) 
 	endif()
 	
 	set(PMEMD_CUDA_DEFINES -DCUDA)

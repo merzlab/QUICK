@@ -383,7 +383,7 @@ jobs:
             source /opt/intel/oneapi/setvars.sh
             cmake .. -DCOMPILER=${{ matrix.compiler-type }} \
               -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install \
-              -DMKL_HOME=$MKLROOT -DMKL_MULTI_THREADED=FALSE
+              -DMKL_HOME=$MKLROOT -DMKL_MULTI_THREADED=FALSE -DTRUST_SYSTEM_LIBS=TRUE
           else
             cmake .. -DCOMPILER=${{ matrix.compiler-type }} \
               -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install

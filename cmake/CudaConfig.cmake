@@ -62,28 +62,33 @@ else()
 			message(STATUS "Configuring for SM3.0, SM3.5, SM3.7, SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0 and SM7.5")
 			list(APPEND CUDA_NVCC_FLAGS ${SM30FLAGS} ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} -Wno-deprecated-gpu-targets -Wno-deprecated-declarations)
 
-		elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 11.0) AND (${CUDA_VERSION} VERSION_LESS 12.0))
+		elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 11.0) AND (${CUDA_VERSION} VERSION_LESS 11.8))
 			# Implement the standard compilation rather than a warp-synchronous one, which is deprecated as of CUDA 11
 
 			message(STATUS "Configuring for SM3.5, SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0, SM7.5 and SM8.0")
 			list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS} ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} -Wno-deprecated-gpu-targets -Wno-deprecated-declarations)
-		elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 12.0) AND (${CUDA_VERSION} VERSION_LESS 12.5))
+		elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 11.8) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 12.5))
 			message(STATUS "Configuring for SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0, SM7.5, SM8.0, SM8.6, and SM9.0")
 			list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM90FLAGS} -Wno-deprecated-gpu-targets -Wno-deprecated-declarations)
 
 		else()
-			message(FATAL_ERROR "Error: Untested CUDA version. AMBER currently requires CUDA version >= 7.5 and <  12.5.")
+			message(FATAL_ERROR "Error: Untested CUDA version. AMBER currently requires CUDA version >= 7.5 and <=  12.5.")
 		endif()
 
-		#  check maximum GNU compiler versions wrt cuda:
+		#  Check maximum GNU compiler versions wrt cuda:
+		#  Note that this check is independent of the check(s) elsewhere
+		#  for the cuda versions supported by Amber.
 		#  PROGRAMMER WARNING:  This code is NOT trivial.  Before you
 		#  modify it, read and understand it and the stackoverflow link !
 		#  https://stackoverflow.com/questions/6622454/cuda-incompatible-with-my-gcc-version
 		#  VERSION_EQUAL 10 means 10.0, so use ranges to compare major versions.
 		if ( "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" AND (
-		       ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.3
+		       ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15
 			AND CUDA_VERSION VERSION_GREATER_EQUAL 12.4
-			AND CUDA_VERSION VERSION_LESS_EQUAL 12.4 )
+			AND CUDA_VERSION VERSION_LESS_EQUAL 12.6 )
+		    OR ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.3
+			AND CUDA_VERSION VERSION_GREATER_EQUAL 12.4
+			AND CUDA_VERSION VERSION_LESS_EQUAL 12.6 )
 		    OR ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 12.3
 			AND CUDA_VERSION VERSION_GREATER_EQUAL 12.1
 			AND CUDA_VERSION VERSION_LESS_EQUAL 12.3 )
@@ -118,17 +123,16 @@ else()
 			message(STATUS "Checking CUDA and GNU versions -- compatible")
 		elseif ( "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" AND (
 		    CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.2
-			OR CUDA_VERSION VERSION_GREATER 12.4
+			OR CUDA_VERSION VERSION_GREATER 12.5
 		) )
 			message(STATUS "Checking CUDA and GNU versions -- compatibility unknown")
 			message(STATUS "    See https://stackoverflow.com/questions/6622454/cuda-incompatible-with-my-gcc-version")
 		elseif ( "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" )
 			message(STATUS "")
 			message("************************************************************")
-			message("Error: Incompatible CUDA and GNU versions")
-			message(" ${CMAKE_CXX_COMPILER_VERSION}")
-			message(" ${CMAKE_CXX_COMPILER_VERSION_MAJOR}")
-			message("See https://stackoverflow.com/questions/6622454/cuda-incompatible-with-my-gcc-version")
+			message("Error: Incompatible CUDA and GNU versions!")
+			message("  GNU version is ${CMAKE_CXX_COMPILER_VERSION}.")
+			message("  See https://stackoverflow.com/questions/6622454/cuda-incompatible-with-my-gcc-version")
 			message("************************************************************")
 			message(STATUS "")
 			message(FATAL_ERROR)
@@ -143,12 +147,17 @@ else()
 
 		# --------------------------------------------------------------------
 		# import a couple of CUDA libraries used by PMEMD and PBSA
-
+		find_library(CUDA_cublas_LIBRARY NAMES cublas HINTS ${NVIDIA_MATH_LIBS})
 		import_library(cublas "${CUDA_cublas_LIBRARY}")
+		find_library(CUDA_cufft_LIBRARY NAMES cufft HINTS ${NVIDIA_MATH_LIBS})
 		import_library(cufft "${CUDA_cufft_LIBRARY}")
+		find_library(CUDA_cusolver_LIBRARY NAMES cusolver HINTS ${NVIDIA_MATH_LIBS})
 		import_library(cusolver "${CUDA_cusolver_LIBRARY}")
+		find_library(CUDA_curand_LIBRARY NAMES curand HINTS ${NVIDIA_MATH_LIBS})
 		import_library(curand "${CUDA_curand_LIBRARY}")
+		find_library(CUDA_cusparse_LIBRARY NAMES cusparse HINTS ${NVIDIA_MATH_LIBS})
 		import_library(cusparse "${CUDA_cusparse_LIBRARY}")
+		find_library(CUDA_cudadevrt_LIBRARY NAMES cudadevrt HINTS ${NVIDIA_MATH_LIBS})
 	 	import_library(cudadevrt "${CUDA_cudadevrt_LIBRARY}")
 
 	 	# --------------------------------------------------------------------
@@ -204,11 +213,13 @@ else()
 			set(CMAKE_HIP_CREATE_SHARED_LIBRARY "${CUDA_NVCC_EXECUTABLE} -fgpu-rdc --hip-link <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -Wl,--unresolved-symbols=ignore-in-object-files -Wl,-soname,<TARGET> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 			# set(CMAKE_CXX_CREATE_SHARED_LIBRARY "${CUDA_NVCC_EXECUTABLE} -fgpu-rdc --hip-link <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -Wl,--unresolved-symbols=ignore-in-object-files <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 		endif()
-
+		find_library(CUDA_cublas_LIBRARY NAMES cublas HINTS ${NVIDIA_MATH_LIBS})
 		import_library(cublas "${CUDA_cublas_LIBRARY}")
+		find_library(CUDA_cufft_LIBRARY NAMES cufft HINTS ${NVIDIA_MATH_LIBS})
 		import_library(cufft "${CUDA_cufft_LIBRARY}")
-
+		find_library(CUDA_curand_LIBRARY NAMES curand HINTS ${NVIDIA_MATH_LIBS})
 		import_library(curand "${CUDA_curand_LIBRARY}")
+		find_library(CUDA_cusparse_LIBRARY NAMES cusparse HINTS ${NVIDIA_MATH_LIBS})
 		import_library(cusparse "${CUDA_cusparse_LIBRARY}")
 		#import_library(cudadevrt "${CUDA_cudadevrt_LIBRARY}")
 	endif()
