@@ -35,6 +35,7 @@
     use quick_sad_guess_module, only: getSadGuess
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
          exportMO, exportSCF, exportOPT
+    use quick_restart_module, only: data_write_info, write_integer_array, write_double_array, iread, aread
 #ifdef MPIV
     use mpi
 #endif
@@ -138,6 +139,7 @@
 
     !read job spec and mol spec
     call read_Job_and_Atom(ierr)
+
     !allocate essential variables
     call alloc(quick_molspec,ierr)
     !if (quick_method%MFCC) call allocate_MFCC()
@@ -165,8 +167,10 @@
     !-----------------------------------------------------------------
     SAFE_CALL(getMol(ierr))
 
-#if defined(GPU) || defined(MPIV_GPU)
+    !write the required info to data file
+    if(master .and. (quick_method%writeden .or. quick_method%writexyz)) call data_write_info(natom, quick_molspec%nbasis)
 
+#if defined(GPU) || defined(MPIV_GPU)
     call gpu_allocate_scratch(quick_method%grad .or. quick_method%opt)
 
     call upload(quick_method, ierr)
@@ -242,11 +246,13 @@
 
         if(master) then
           if(quick_method%writexyz)then
-            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
-            call wchk_int(iDataFile, "natom", natom, fail)
-            call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
-            call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
-            close(iDataFile)
+             call write_integer_array(quick_molspec%iattype, natom, 'iattype')
+             call write_double_array(quick_molspec%xyz, 3, natom, 'xyz')
+!            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
+!            call wchk_int(iDataFile, "natom", natom, fail)
+!            call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+!            call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
+!            close(iDataFile)
           endif 
         endif
 
@@ -274,11 +280,8 @@
 
         if(master) then
           if(quick_method%writexyz)then
-            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
-            call wchk_int(iDataFile, "natom", natom, fail)
-            call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
-            call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
-            close(iDataFile)
+             call write_integer_array(quick_molspec%iattype, natom, 'iattype')
+             call write_double_array(quick_molspec%xyz, 3, natom, 'xyz')
           endif 
         endif
     endif
