@@ -1091,7 +1091,7 @@ if [ -n "$PARALLEL_TEST_COUNT" ]; then
   #       utilizes a export and eval approach for string representation of shell functions)
   export buildtype qbindir qexe apipath apiexe ismpirun has_parallel
   export -f set_job_gpus set_test run_test run_test_api run_energy_test run_grad_test run_opt_test run_api_test \
-	  run_rw_test check_energy check_gradient check_opt check_dipole clean_up check_f_error lock_file unlock_file
+	  run_rw_test check_rw check_energy check_gradient check_opt check_dipole clean_up check_f_error lock_file unlock_file
 fi
 
 #  !---------------------------------------------------------------------!
