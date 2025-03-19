@@ -145,7 +145,7 @@ module quick_gridpoints_module
 
     subroutine form_xc_quadrature(self, xcg_tmp)
     use quick_method_module
-    use quick_molspec_module, only: quick_molspec, xyz
+    use quick_molspec_module, only: quick_molspec, xyz, natom
     use quick_basis_module
     use quick_timer_module
 
