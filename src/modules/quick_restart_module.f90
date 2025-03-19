@@ -18,6 +18,8 @@
 
 module quick_restart_module
 
+#if defined(HDF5)
+
   use HDF5
   use ISO_C_BINDING
 
@@ -866,5 +868,7 @@ contains
     call h5fclose_f(file, hdferr)
 
   end subroutine write_double_2d_array
+
+#endif
 
 end module quick_restart_module

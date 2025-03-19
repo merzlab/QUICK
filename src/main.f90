@@ -35,7 +35,10 @@
     use quick_sad_guess_module, only: getSadGuess
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
          exportMO, exportSCF, exportOPT
-    use quick_restart_module, only: data_write_info, write_integer_array, write_double_array, iread, aread
+#ifdef HDF5
+    use quick_restart_module, only: data_write_info, write_integer_array, write_double_array
+#endif
+
 #ifdef MPIV
     use mpi
 #endif
@@ -167,8 +170,10 @@
     !-----------------------------------------------------------------
     SAFE_CALL(getMol(ierr))
 
+#ifdef HDF5
     !write the required info to data file
     if(master .and. (quick_method%writeden .or. quick_method%writexyz)) call data_write_info(natom, quick_molspec%nbasis)
+#endif
 
 #if defined(GPU) || defined(MPIV_GPU)
     call gpu_allocate_scratch(quick_method%grad .or. quick_method%opt)
@@ -243,19 +248,14 @@
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         SAFE_CALL(getEnergy(.false.,ierr))
-
+#ifdef HDF5
         if(master) then
           if(quick_method%writexyz)then
              call write_integer_array(quick_molspec%iattype, natom, 'iattype')
              call write_double_array(quick_molspec%xyz, 3, natom, 'xyz')
-!            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
-!            call wchk_int(iDataFile, "natom", natom, fail)
-!            call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
-!            call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
-!            close(iDataFile)
           endif 
         endif
-
+#endif
     endif
 
     !------------------------------------------------------------------
@@ -277,13 +277,14 @@
         else
             SAFE_CALL(lopt(ierr))         ! Cartesian
         endif
-
+#ifdef HDF5
         if(master) then
           if(quick_method%writexyz)then
              call write_integer_array(quick_molspec%iattype, natom, 'iattype')
              call write_double_array(quick_molspec%xyz, 3, natom, 'xyz')
           endif 
         endif
+#endif
     endif
     
     if (.not.quick_method%opt .and. quick_method%grad) then

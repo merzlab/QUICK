@@ -289,7 +289,9 @@ contains
     use quick_exception_module
     use quick_method_module, only: quick_method
     use quick_files_module, only : iDataFile, dataFileName
+#ifdef HDF5
     use quick_restart_module, only: iread
+#endif
 
     implicit none
 
@@ -344,6 +346,7 @@ contains
 
   if( .not. isTemplate) then
 
+#ifdef HDF5
     ! If reading from data file
     if(quick_method%read_coord)then
 
@@ -368,6 +371,7 @@ contains
 
     ! Reading from input file
     else
+#endif
       call findBlock(input,1)
 
       ! first is to read atom and atom kind
@@ -410,7 +414,9 @@ contains
       iAtomType=iAtomType-1
       self%iAtomType = iAtomType
       self%nextatom = nextatom
+#ifdef HDF5
     endif
+#endif
   endif
 
   end subroutine read_quick_molspec

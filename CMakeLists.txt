@@ -35,11 +35,16 @@ if(NOT INSIDE_AMBER)
 endif()
 
 # HDF5
-find_package(HDF5 COMPONENTS Fortran HL)
-if(HDF5_FOUND)
-  message(STATUS "Found HDF5: ${HDF5_VERSION}")
-else()
-  message(FATAL_ERROR "HDF5 is requested but was not found. Please, make sure HDF5 is installed.")
+option(HDF5 "Build with restart capability using HDF5." FALSE)
+
+if(HDF5)
+  add_definitions(-DHDF5)
+  find_package(HDF5 REQUIRED COMPONENTS Fortran HL)
+  if(HDF5_FOUND)
+    message(STATUS "Found HDF5: ${HDF5_VERSION}")
+  else()
+    message(FATAL_ERROR "HDF5 is requested, but was not found. Please make sure HDF5 is installed.")
+  endif()
 endif()
 
 option(ENABLEF "Enables the support for f functions in the ERI code." FALSE)
