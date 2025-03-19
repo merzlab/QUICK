@@ -12,8 +12,8 @@ set(COMPILER_HELP "
   --------------------------------------------------------------------------------------
       GNU        |     gcc      |      g++       |     gfortran       | 6.0 +
       INTEL      |     icc      |      icpc      |     ifort          | 19 - 22
-      INTELLLVM  |     icx      |      icpx      |     ifx            | 2024
-      ONEAPI     |     icx      |      icpx      |     ifx            | 2024
+      INTELLLVM  |     icx      |      icpx      |     ifx            | 2023, 2024
+      ONEAPI     |     icx      |      icpx      |     ifx            | 2023, 2024
       PGI        |     pgcc     |      pgc++     |     pgf90          | 14.9, 15.4, 16.5
       CLANG      |     clang    |      clang++   |     gfortran       | 
       CRAY       |     cc       |      CC        |     ftn            | 8.4.6*

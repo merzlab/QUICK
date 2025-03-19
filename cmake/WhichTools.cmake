@@ -10,9 +10,14 @@
 # There are many, many reasons that you would want a tool not to build, and in some cases more than one can occur at the same time
 # For that reason, and because order matters, we use a blacklist model for deciding what tools to build.
 # We start with all of them enabled (except the ones not in release builds), and pare down this list for various reasons in the logic below.
+  
+if(PMEMD_ONLY)
+
+   set(AMBER_TOOLS lib emil kmmd gpu_utils pmemd)
+  
+else()
+
 set(AMBER_TOOLS
-  
-  
 #3rd party programs: see 3rdPartyTools.cmake
 #	utility routines and libraries:
 gbnsr6
@@ -82,9 +87,6 @@ tcpb-cpp/pytcpb
 #	reaxff-puremd
 reaxff_puremd
 
-#	ffq
-ffq
-
 #	nfe-umbrella-slice
 nfe-umbrella-slice
 
@@ -111,7 +113,13 @@ pmemd
 nabc
 
 fe-toolkit
+
+modXNA
+
+libdlfind
 )
+
+endif()
 
 # list of tools in the src directory instead of AmberTools/src
 set(TOOLS_IN_SRC
@@ -200,7 +208,7 @@ tool_depends(tcpb-cpp/pytcpb tcpb-cpp)
 tool_depends(cew lib)
 tool_depends(quick sqm cew)
 tool_depends(reaxff_puremd sqm)
-tool_depends(rism lib)
+tool_depends(rism lib pbsa)
 tool_depends(sander sqm pbsa sebomd emil lib)
 tool_depends(sebomd sander lib)
 tool_depends(sff pbsa)
@@ -257,9 +265,9 @@ if(perlmol_DISABLED)
 endif()
 
 #deprecated programs
-option(BUILD_DEPRECATED "Build outdated and deprecated tools, such as ptraj" FALSE)
+option(BUILD_DEPRECATED "Build outdated and deprecated tools, such as ptraj, moft" FALSE)
 if(NOT BUILD_DEPRECATED)
-	disable_tools("Deprecated tools are disabled" ptraj )
+	disable_tools("Deprecated tools are disabled" ptraj moft )
 endif()
 
 # in-development programs
@@ -276,10 +284,6 @@ endif()
 
 if(NOT BUILD_REAXFF_PUREMD) # note: option declared in SanderConfig.cmake to resolve circular dependency
 	disable_tool(reaxff_puremd "BUILD_REAXFF_PUREMD is not enabled")
-endif()
-
-if(NOT BUILD_FFQ) # note: option declared in SanderConfig.cmake to resolve circular dependency
-	disable_tool(ffq "BUILD_FFQ is not enabled")
 endif()
 
 if(NOT BUILD_SANDER_API)
@@ -363,7 +367,6 @@ disable_tools("Disabled by user" ${DISABLE_TOOLS})
 # hopefully 3 iterations is enough
 foreach(ITERATION RANGE 0 2)
 	foreach(TOOL ${AMBER_TOOLS})
-		
 		foreach(DEPENDENCY ${TOOL_DEPENDENCIES_${TOOL}})
 			list_contains(DEPEND_ENABLED ${DEPENDENCY} ${AMBER_TOOLS})
 			

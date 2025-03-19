@@ -30,7 +30,6 @@
 //-----------------------------------------------
 extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
 {
-
     int gpuCount = 0;           // Total number of GPU devices available
     cudaError_t status;
 
@@ -63,109 +62,12 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
 
 
 //-----------------------------------------------
-// create gpu class
-//-----------------------------------------------
-void mgpu_startup(int mpirank, int* ierr)
-{
-#if defined DEBUG || defined DEBUGTIME
-    char fname[16];
-    sprintf(fname, "debug.gpu.%i", mpirank);
-
-    debugFile = fopen(fname, "w+");
-#endif
-
-    PRINTDEBUGNS("BEGIN TO WARM UP");
-
-    gpu = new gpu_type;
-
-#if defined DEBUG || defined DEBUGTIME
-    gpu->debugFile = debugFile;
-#endif
-    gpu->totalCPUMemory = 0;
-    gpu->totalGPUMemory = 0;
-    gpu->gpu_dev_id = -1;
-    gpu->blocks = 0;
-    gpu->threadsPerBlock = 0;
-    gpu->twoEThreadsPerBlock = 0;
-    gpu->XCThreadsPerBlock = 0;
-    gpu->gradThreadsPerBlock = 0;
-    gpu->xc_blocks = 0;
-    gpu->xc_threadsPerBlock = 0;
-    gpu->sswGradThreadsPerBlock = 0;
-    gpu->mpirank = -1;
-    gpu->mpisize = 0;    
-    gpu->timer = NULL;
-    gpu->natom = 0;
-    gpu->nextatom = 0;
-    gpu->nbasis = 0;
-    gpu->nElec = 0;
-    gpu->imult = 0;
-    gpu->molchg = 0;
-    gpu->iAtomType = 0;
-    gpu->nshell = 0;
-    gpu->nprim = 0;
-    gpu->jshell = 0;
-    gpu->jbasis = 0;
-    gpu->maxL = 0;
-    gpu->iattype = NULL;
-    gpu->xyz = NULL;
-    gpu->allxyz = NULL;
-    gpu->chg = NULL;
-    gpu->allchg = NULL;
-    gpu->DFT_calculated = NULL;
-    gpu->grad = NULL;
-    gpu->ptchg_grad = NULL;
-    gpu->gradULL = NULL;
-    gpu->ptchg_gradULL = NULL;
-    gpu->cew_grad = NULL;
-    gpu->gpu_calculated = NULL;
-    gpu->gpu_basis = NULL;
-    gpu->gpu_cutoff = NULL;
-    gpu->gpu_xcq = NULL;
-    gpu->aoint_buffer = NULL;
-    gpu->intCount = NULL;
-    gpu->scratch = NULL;
-    gpu->lri_data = NULL;
-
-    gpu->timer = new gpu_timer_type;
-    gpu->timer->t_2elb = 0.0;
-    gpu->timer->t_xclb = 0.0;
-    gpu->timer->t_xcrb = 0.0;
-
-    PRINTDEBUG("CREATE NEW GPU")
-}
-
-
-//-----------------------------------------------
-// Finalize the devices
-//-----------------------------------------------
-extern "C" void mgpu_shutdown_(int* ierr)
-{
-    PRINTDEBUG("BEGIN TO SHUTDOWN DEVICES");
-
-    delete gpu->timer;
-    delete gpu;
-
-    cudaDeviceReset();
-
-    PRINTDEBUGNS("END DEVICE SHUTDOWN");
-
-#if defined DEBUG || defined DEBUGTIME
-    fclose(debugFile);
-#endif
-}
-
-
-//-----------------------------------------------
 // Initialize the devices
 //-----------------------------------------------
-extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device, int* ierr)
+extern "C" void mgpu_init_device_(int *mpirank, int *mpisize, int *device, int* ierr)
 {
     cudaError_t status;
     cudaDeviceProp deviceProp;
-
-    // Each node starts up GPUs
-    mgpu_startup(*mpirank, ierr);
 
     PRINTDEBUG("BEGIN MULTI GPU INITIALIZATION");
 
