@@ -173,9 +173,6 @@ module quick_calculated_module
       ! Mulliken charge and Lowdin charge
       double precision,dimension(:),allocatable :: Mulliken,Lowdin
 
-      ! Electrostatic potential 
-      double precision,dimension(:), allocatable   :: ESP
-
 
    end type quick_qm_struct_type
 
@@ -222,8 +219,8 @@ contains
    ! subroutine to allocate variables
    !---------------------------------------
    subroutine allocate_quick_qm_struct(self)
-      use quick_method_module,only: quick_method
-      use quick_molspec_module,only: quick_molspec
+      use quick_method_module, only: quick_method
+      use quick_molspec_module, only: quick_molspec
       implicit none
 
       integer nbasis
@@ -313,7 +310,7 @@ contains
    subroutine reallocate_quick_qm_struct(self,ierr)
 
      use quick_exception_module
-     use quick_molspec_module,only: quick_molspec
+     use quick_molspec_module, only: quick_molspec
 
      implicit none
 
@@ -338,8 +335,8 @@ contains
 
    subroutine dat_quick_qm_struct(self, idatafile)
 
-      use quick_method_module,only: quick_method
-      use quick_molspec_module,only: quick_molspec
+      use quick_method_module, only: quick_method
+      use quick_molspec_module, only: quick_molspec
       logical fail
 
       integer nbasis
@@ -467,8 +464,8 @@ contains
    !-------------------
    subroutine broadcast_quick_qm_struct(self)
       use quick_mpi_module
-      use quick_method_module,only: quick_method
-      use quick_molspec_module,only: quick_molspec
+      use quick_method_module, only: quick_method
+      use quick_molspec_module, only: quick_molspec
       use mpi
       implicit none
       type (quick_qm_struct_type) self
@@ -546,8 +543,8 @@ contains
 #endif
 
    subroutine init_quick_qm_struct(self)
-      use quick_method_module,only: quick_method
-      use quick_molspec_module,only: quick_molspec
+      use quick_method_module, only: quick_method
+      use quick_molspec_module, only: quick_molspec
       implicit none
 
       integer nbasis

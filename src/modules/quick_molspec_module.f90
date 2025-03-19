@@ -290,6 +290,7 @@ contains
       call MPI_BCAST(self%nElec,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%nElecb,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%nextatom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%nextpoint,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%imult,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%molchg,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%nNonHAtom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -655,10 +656,6 @@ contains
            write(io,'(" NUMBER OF EXTERNAL POINT CHARGES = ",i4)') self%nextatom
          endif
 
-!         if(self%nextpoint.gt.0 )then
-!            write(io,'(" NUMBER OF EXTERNAL GRID POINTS = ",i4)') self%nextpoint
-!          endif         
-
          if (self%nelecb.ne.0) then
             write (io,'(" NUMBER OF ALPHA ELECTRONS = ",I4)') self%nelec
             write (io,'(" NUMBER OF BETA ELECTRONS  = ",I4)') self%nelecb
@@ -680,14 +677,6 @@ contains
                write(io,'(4x,3(F10.4,1x),3x,F7.4)') (self%extxyz(j,i)*BOHRS_TO_A,j=1,3),self%extchg(i)
             enddo
          endif
-
-!         if(self%nextpoint.gt.0 )then
-!            write(io,*)
-!            write(io,'(" -- EXTERNAL GRID : (X,Y,Z) -- ")')
-!            do i=1,self%nextpoint
-!               write(io,'(4x,3(F10.4,1x),3x,F7.4)') (self%extpointxyz(j,i)*BOHRS_TO_A,j=1,3)
-!            enddo
-!         endif
 
          ! if no. of atom is less than 30, then output them
          if (self%natom.le.30) then

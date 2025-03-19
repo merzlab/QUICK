@@ -177,8 +177,6 @@ module quick_oeproperties_module
 #endif
    integer :: Ish
 
-!   Write(6,*)quick_qm_struct%osave(1,1)
-
    ierr = 0
    
    ! Allocates ESP_NUC and ESP_ELEC arrays
@@ -195,9 +193,7 @@ module quick_oeproperties_module
    RECORD_TIME(timer_begin%TESPGrid)
 
    ! Computes ESP_NUC 
-!   do igridpoint=1,npoints
    call esp_nuc(npoints, xyz_points, esp_nuclear)
-!   end do
 
    ! Computes ESP_ELEC
 #if defined CUDA || defined CUDA_MPIV

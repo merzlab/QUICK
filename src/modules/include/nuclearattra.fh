@@ -1,6 +1,5 @@
 #if defined (OEPROP)
  subroutine esp_1pdm(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,esp)
-! subroutine esp_1pdm(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,esp,point)
 #elif defined (OEI)
  subroutine nuclearattra(Ips,Jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz)
 #endif
@@ -8,7 +7,6 @@
    use quick_calculated_module, only : quick_qm_struct
    use quick_basis_module, only: attraxiao,quick_basis
    use quick_files_module, only: ioutfile
-
 #if defined (OEPROP)
    use quick_method_module, only: quick_method
 #endif
@@ -23,11 +21,9 @@
    double precision X1temp, Xconstant, dense_sym_factor
    double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g
    double precision AA(3),BB(3),CC(3),PP(3)
-
 #if defined (OEPROP)
    double precision, intent(inout) :: esp
-   double precision esp_update
-!   integer point
+   double precision :: esp_update
 #endif
 
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
@@ -251,12 +247,6 @@
                      *quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0)
                  endif
 
-!                 if (quick_method%UNRST) quick_qm_struct%denseSave(JJJ,III) = (quick_qm_struct%dense(JJJ,III)&
-!                   +quick_qm_struct%denseb(JJJ,III))
-!
-!                 esp_update = dense_sym_factor*quick_qm_struct%denseSave(JJJ,III)*Xconstant &
-!                       *quick_basis%cons(III)*quick_basis%cons(JJJ)*attraxiao(itemp1,itemp2,0)
-
                  esp = esp + esp_update
 #elif defined (OEI)
               quick_qm_struct%o(JJJ,III)=quick_qm_struct%o(JJJ,III)+ &
@@ -271,9 +261,9 @@
    201 return
 
 #if defined (OEPROP)
- End subroutine esp_1pdm
+ end subroutine esp_1pdm
 #elif defined (OEI)
- End subroutine nuclearattra
+ end subroutine nuclearattra
 #endif
 
 
@@ -294,7 +284,6 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
    implicit none
 
    double precision attra,aux(0:20)
-
    integer a(3),b(3)
    integer Ips, Jps, IIsh, JJsh, NIJ1
    integer iA, iB, III, III1, III2, JJJ, JJJ1, JJJ2, NBI1, NBI2, NBJ1, NBJ2
@@ -303,13 +292,13 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
    double precision AA(3),BB(3),CC(3),PP(3)
    double precision Agrad1, Agrad2, Agrad3, Bgrad1, Bgrad2, Bgrad3, Cgrad1, Cgrad2, Cgrad3
    double precision X1temp,Xconstant,Xconstant1,Xconstant2
-   common /xiaoattra/attra,aux,AA,BB,CC,PP,g
-
 #if defined (OEPROP)
    double precision, intent(inout) :: efield(3)
 #elif defined (OEI)
    integer :: iatom,iC,iCstart,itemp1new,itemp2new
 #endif
+#
+   common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    AA(1)=Ax
    AA(2)=Ay
@@ -1283,7 +1272,7 @@ endif
 #endif
 
 #if defined (OEPROP)
-End subroutine efield_1pdm
+end subroutine efield_1pdm
 #elif defined (OEI)
-End subroutine nuclearattraopt
+end subroutine nuclearattraopt
 #endif

@@ -145,7 +145,7 @@ module quick_gridpoints_module
 
     subroutine form_xc_quadrature(self, xcg_tmp)
     use quick_method_module
-    use quick_molspec_module
+    use quick_molspec_module, only: quick_molspec, xyz
     use quick_basis_module
     use quick_timer_module
 
@@ -486,7 +486,7 @@ module quick_gridpoints_module
     end subroutine
 
     subroutine alloc_xcg_tmp_variables(xcg_tmp)
-        use quick_molspec_module
+        use quick_molspec_module, only: natom
         implicit none
         type(quick_xcg_tmp_type) xcg_tmp
         integer :: tot_gps
@@ -553,7 +553,6 @@ module quick_gridpoints_module
     end subroutine
 
     subroutine dealloc_xcg_tmp_variables(xcg_tmp)
-        use quick_molspec_module
         implicit none
         type(quick_xcg_tmp_type) xcg_tmp
 
@@ -589,7 +588,7 @@ module quick_gridpoints_module
    subroutine print_grid_information(self)
      use quick_files_module
      use quick_method_module
-     use quick_molspec_module
+     use quick_molspec_module, only: quick_molspec
      use quick_basis_module
      implicit none
      type(quick_xc_grid_type) self

@@ -6,9 +6,6 @@
 #include "./modules/include/nuclearattra.fh"
 #undef OEI
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!             Moved to nuclearattra.fh, contains nuclearattra and esp_1pdm             !!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !***Xiao HE******** 07/07/07 version
 ! new lesson: be careful of HSSS,ISSS,JSSS

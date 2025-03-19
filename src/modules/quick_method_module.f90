@@ -234,8 +234,8 @@ module quick_method_module
             call MPI_BCAST(self%analGrad,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%analHess,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%esp_charge,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%espgrid_spacing,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-!            call MPI_BCAST(self%vdw_radii,1,mpi_character,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%espgrid_spacing,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%vdw_radii,5,mpi_character,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%esp_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%efield_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%efg_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -686,7 +686,6 @@ module quick_method_module
 
             if (index(keyWD,'EXTCHARGES').ne.0) self%EXTCHARGES=.true.
             if (index(keyWD,'EXTGRID').ne.0) self%ext_grid=.true.
-            !if (index(keyWD,'EXTGRID_ANGSTROM').ne.0) self%extgrid_angstrom=.true.
             if (index(keyWD,'FORCE').ne.0)      self%grad=.true.
 
             if (index(keyWD,'NODIRECT').ne.0)      self%NODIRECT=.true.

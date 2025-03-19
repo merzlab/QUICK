@@ -1,7 +1,5 @@
 /*
    !---------------------------------------------------------------------!
-   ! Written by Madu Manathunga on 06/17/2021                            !
-   !                                                                     !
    ! Copyright (C) 2020-2021 Merz lab                                    !
    ! Copyright (C) 2020-2021 Götz lab                                    !
    !                                                                     !

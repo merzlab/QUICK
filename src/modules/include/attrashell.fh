@@ -14,12 +14,11 @@ subroutine attrashell(IIsh, JJsh)
    use quick_method_module, only: quick_method
    use quick_basis_module, only: quick_basis, attraxiao
    use quick_molspec_module, only: quick_molspec, xyz
-   use quick_overlap_module, only: gpt, opf, overlap_core
-   use quick_constants_module, only : Pi
-
 #if defined (OEI)
    use quick_molspec_module, only: natom
 #endif
+   use quick_overlap_module, only: gpt, opf, overlap_core
+   use quick_constants_module, only : Pi
 
    implicit none
 
@@ -282,9 +281,7 @@ subroutine attrashell(IIsh, JJsh)
     !    attraction = attraction*(-1.d0)* Z
 
 #if defined (OEPROP)
-    return
   end subroutine efield_shell_pair
 #elif defined (OEI)
-    return
   end subroutine attrashellopt
 #endif

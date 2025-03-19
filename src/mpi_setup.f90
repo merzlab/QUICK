@@ -51,8 +51,6 @@
     
     call Broadcast(quick_method,ierr)
     call MPI_BCAST(natom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-    call MPI_BCAST(quick_molspec%nextpoint,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-    !call MPI_BCAST(quick_molspec%nextatom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
     call MPI_BCAST(nbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
     if (quick_method%ecp) then
         call MPI_BCAST(tolecp,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
