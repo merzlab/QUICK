@@ -297,7 +297,7 @@ subroutine nuclearattraopt(Ips,Jps,IIsh,JJsh,NIJ1, &
 #elif defined (OEI)
    integer :: iatom,iC,iCstart,itemp1new,itemp2new
 #endif
-#
+   
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    AA(1)=Ax
