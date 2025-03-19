@@ -366,8 +366,9 @@ get_total_tests()
   if [ "$5" = 'yes' ]; then
     tot_esp_tests="${#tests[@]}"
     tests+=(`grep "^esp_" "$test_list" | awk '{print $1}'`)
-    readarray -t -O "${#test_names[@]}" test_names <<< \
-              "$(grep "^esp_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')"
+    while IFS= read -r line; do
+        test_names+=("$line")
+    done < <(grep "^esp_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')
     total_tests="${#tests[@]}"
     tot_esp_tests=$(($total_tests-$tot_esp_tests))
   fi
