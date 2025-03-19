@@ -30,9 +30,7 @@
 //-----------------------------------------------
 extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
 {
-
     int gpuCount = 0;           // Total number of GPU devices available
-    size_t minMem = 4000000000; // Threshold  memory (in bytes) for device selection criteria
     hipError_t status;
 
     gpuGetDeviceCount(&gpuCount);
@@ -55,9 +53,6 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
     if (devProp.major < 3) {
         *ierr = 29;
         return;
-    } else if (devProp.totalGlobalMem < minMem) {
-        *ierr = 30;
-        return;
     }
 
     *mgpu_id = devID;
@@ -67,64 +62,12 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
 
 
 //-----------------------------------------------
-// create gpu class
-//-----------------------------------------------
-void mgpu_startup(int mpirank, int* ierr)
-{
-#if defined DEBUG || defined DEBUGTIME
-    char fname[16];
-    sprintf(fname, "debug.gpu.%i", mpirank);
-
-    debugFile = fopen(fname, "w+");
-#endif
-
-    PRINTDEBUGNS("BEGIN TO WARM UP");
-
-    gpu = new gpu_type;
-
-    gpu->timer = new gpu_timer_type;
-    gpu->timer->t_2elb = 0.0;
-    gpu->timer->t_xclb = 0.0;
-    gpu->timer->t_xcrb = 0.0;
-
-#if defined DEBUG || defined DEBUGTIME
-    gpu->debugFile = debugFile;
-#endif
-
-    PRINTDEBUG("CREATE NEW GPU")
-}
-
-
-//-----------------------------------------------
-// Finalize the devices
-//-----------------------------------------------
-extern "C" void mgpu_shutdown_(int* ierr)
-{
-    PRINTDEBUG("BEGIN TO SHUTDOWN DEVICES");
-
-    delete gpu->timer;
-    delete gpu;
-
-    hipDeviceReset();
-
-    PRINTDEBUGNS("END DEVICE SHUTDOWN");
-
-#if defined DEBUG || defined DEBUGTIME
-    fclose(debugFile);
-#endif
-}
-
-
-//-----------------------------------------------
 // Initialize the devices
 //-----------------------------------------------
-extern "C" void mgpu_init_(int *mpirank, int *mpisize, int *device, int* ierr)
+extern "C" void mgpu_init_device_(int *mpirank, int *mpisize, int *device, int* ierr)
 {
     hipError_t status;
     hipDeviceProp_t deviceProp;
-
-    // Each node starts up GPUs
-    mgpu_startup(*mpirank, ierr);
 
     PRINTDEBUG("BEGIN MULTI GPU INITIALIZATION");
 

@@ -30,7 +30,7 @@ else()
 endif()
 
 add_library(rocblas_fortran_obj OBJECT ${ROCBLAS_FORTRAN_SOURCE})
-set_property(TARGET rocblas_fortran_obj PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS}) 
+set_property(TARGET rocblas_fortran_obj PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS})
 set_property(TARGET rocblas_fortran_obj PROPERTY COMPILE_DEFINITIONS CUBLAS_USE_THUNKING)
 set_property(TARGET rocblas_fortran_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
@@ -43,7 +43,7 @@ if(NOT MAGMA AND ${HIP_VERSION} VERSION_GREATER_EQUAL 5.3.0)
 	set(ROCSOLVER_SOURCE rocsolver/quick_rocsolver_module.f90  rocsolver/rocsolver_extra_module.f90)
 
 	add_library(rocsolver_obj OBJECT ${ROCSOLVER_SOURCE})
-	set_property(TARGET rocsolver_obj PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS}) 
+	set_property(TARGET rocsolver_obj PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS})
 	set_property(TARGET rocsolver_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 	add_dependencies(rocsolver_obj rocblas_fortran_obj)
