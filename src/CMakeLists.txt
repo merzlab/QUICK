@@ -133,15 +133,15 @@ add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${DFTD3_SOURCES_FU
 target_compile_options(libquick PRIVATE
 	"$<$<COMPILE_LANGUAGE:FORTRAN>:${OPT_FFLAGS}>")
 if(HDF5)
-  target_compile_definitions(libquick PRIVATE
-	"$<$<COMPILE_LANGUAGE:FORTRAN>:${HDF5_Fortran_DEFINITIONS}>")
-  target_include_directories(libquick PRIVATE 
-	"$<$<COMPILE_LANGUAGE:FORTRAN>:${HDF5_Fortran_INCLUDE_DIRS}>")
-  config_module_dirs(libquick quick/serial libxc/serial ${HDF5_Fortran_INCLUDE_DIRS})
-  target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS} ${HDF5_LIBRARIES})
+	target_compile_definitions(libquick PRIVATE
+		"$<$<COMPILE_LANGUAGE:FORTRAN>:${HDF5_Fortran_DEFINITIONS}>" "HDF5")
+	target_include_directories(libquick PRIVATE 
+		"$<$<COMPILE_LANGUAGE:FORTRAN>:${HDF5_Fortran_INCLUDE_DIRS}>")
+	config_module_dirs(libquick quick/serial libxc/serial ${HDF5_Fortran_INCLUDE_DIRS})
+	target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS} ${HDF5_LIBRARIES})
 else()
-  config_module_dirs(libquick quick/serial libxc/serial)
-  target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS})
+	config_module_dirs(libquick quick/serial libxc/serial)
+	target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS})
 endif()
 
 if(INSIDE_AMBER)
