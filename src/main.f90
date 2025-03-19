@@ -121,14 +121,11 @@
     !-----------------------------------------------------------------
     SAFE_CALL(getMol(ierr))
 
-<<<<<<< HEAD
 #if defined(RESTART_HDF5)
     !write the required info to data file
     if(master .and. (quick_method%writeden .or. quick_method%writexyz)) call data_write_info(natom, quick_molspec%nbasis)
 #endif
 
-=======
->>>>>>> master
 #if defined(GPU) || defined(MPIV_GPU)
     call gpu_allocate_scratch(quick_method%grad .or. quick_method%opt)
     call upload(quick_method, ierr)
