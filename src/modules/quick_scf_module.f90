@@ -159,7 +159,7 @@ contains
      use quick_oei_module, only: bCalc1e 
      use quick_lri_module, only: computeLRI
      use quick_molden_module, only: quick_molden
-#ifdef HDF5
+#if defined(RESTART_HDF5)
      use quick_restart_module, only: write_double_array, iread, aread
 #endif
 
@@ -268,7 +268,7 @@ contains
      !-------------- END MPI / ALL NODE -----------
 #endif
 
-#ifdef HDF5
+#if defined(RESTART_HDF5)
         if(quick_method%readden)then
           nbasis = quick_molspec%nbasis
           if(master)then
@@ -722,7 +722,7 @@ contains
         !--------------- END MPI/ALL NODES -------------------------------------
   
         if (master) then
-#ifdef HDF5
+#if defined(RESTART_HDF5)
           if(quick_method%writeden) call write_double_array(quick_qm_struct%dense, nbasis, nbasis, 'dense')
 #endif
 

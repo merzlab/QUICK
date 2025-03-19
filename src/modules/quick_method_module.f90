@@ -642,7 +642,7 @@ module quick_method_module
             if (index(keyWD,'ZMAKE').ne.0)      self%zmat=.true.
             if (index(keyWD,'DIPOLE').ne.0)     self%dipole=.true.
             if (index(keyWD,'WRITE').ne.0)then
-#ifdef HDF5
+#if defined(RESTART_HDF5)
                 self%writeden=.true.
                 self%writexyz=.true.
 #else
@@ -672,7 +672,7 @@ module quick_method_module
 
             !Read density matrix
             if (index(keyWD,'READDEN').ne.0)then
-#ifdef HDF5
+#if defined(RESTART_HDF5)
                self%readden=.true.
 #else
                call PrtErr(OUTFILEHANDLE,'HDF5 is not enabled. Restart features (reading from datafile) are not available.')
@@ -683,7 +683,7 @@ module quick_method_module
 
             !Read coordinates
             if (index(keyWD,'READ_COORD').ne.0)then
-#ifdef HDF5
+#if defined(RESTART_HDF5)
               self%read_coord=.true.
 #else
               call PrtErr(OUTFILEHANDLE,'HDF5 is not enabled. Restart features (reading from datafile) are not available.')

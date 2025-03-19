@@ -289,7 +289,7 @@ contains
     use quick_exception_module
     use quick_method_module, only: quick_method
     use quick_files_module, only : iDataFile, dataFileName
-#ifdef HDF5
+#if defined(RESTART_HDF5)
     use quick_restart_module, only: iread
 #endif
 
@@ -346,7 +346,7 @@ contains
 
   if( .not. isTemplate) then
 
-#ifdef HDF5
+#if defined(RESTART_HDF5)
     ! If reading from data file
     if(quick_method%read_coord)then
 
@@ -414,7 +414,7 @@ contains
       iAtomType=iAtomType-1
       self%iAtomType = iAtomType
       self%nextatom = nextatom
-#ifdef HDF5
+#if defined(RESTART_HDF5)
     endif
 #endif
   endif

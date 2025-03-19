@@ -134,7 +134,7 @@ target_compile_options(libquick PRIVATE
 	"$<$<COMPILE_LANGUAGE:FORTRAN>:${OPT_FFLAGS}>")
 if(HDF5)
 	target_compile_definitions(libquick PRIVATE
-		"$<$<COMPILE_LANGUAGE:FORTRAN>:${HDF5_Fortran_DEFINITIONS}>" "HDF5")
+		"$<$<COMPILE_LANGUAGE:FORTRAN>:${HDF5_Fortran_DEFINITIONS}>" "RESTART_HDF5")
 	target_include_directories(libquick PRIVATE 
 		"$<$<COMPILE_LANGUAGE:FORTRAN>:${HDF5_Fortran_INCLUDE_DIRS}>")
 	config_module_dirs(libquick quick/serial libxc/serial ${HDF5_Fortran_INCLUDE_DIRS})

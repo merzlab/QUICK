@@ -18,7 +18,7 @@
 
 module quick_restart_module
 
-#if defined(HDF5)
+#if defined(RESTART_HDF5)
 
   use HDF5
   use ISO_C_BINDING

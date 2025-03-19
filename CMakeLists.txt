@@ -36,11 +36,12 @@ endif()
 
 # HDF5
 option(HDF5 "Build with restart capability using HDF5." FALSE)
-
 if(HDF5)
     find_package(HDF5 REQUIRED COMPONENTS Fortran HL)
     if(HDF5_FOUND)
         message(STATUS "Found HDF5: ${HDF5_VERSION}")
+    else()
+        message(FATAL_ERROR "Restart support via HDF5 is requested but was not found. Please, make sure an HDF5 library (HL, Fortran bindings) is installed.")
     endif()
 endif()
 

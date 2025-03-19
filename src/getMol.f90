@@ -15,7 +15,7 @@ subroutine getMol(ierr)
    use allmod
    use quick_gridpoints_module
    use quick_exception_module
-#ifdef HDF5
+#if defined(RESTART_HDF5)
    use quick_restart_module, only: iread, aread
 #endif
 #ifdef MPIV
@@ -38,7 +38,7 @@ subroutine getMol(ierr)
 
       ! read xyz coordinates from the .in file 
       if(.not. isTemplate) then
-#ifdef HDF5
+#if defined(RESTART_HDF5)
         if(quick_method%read_coord)then
           call aread('xyz', (/1,1/), (/3,natom/), xyz)
           call iread('iattype', 1, natom, quick_molspec%iattype)
@@ -50,7 +50,7 @@ subroutine getMol(ierr)
           ! read molecule coordinates
           call read2(quick_molspec,inFile,ierr)
           close(inFile)
-#ifdef HDF5
+#if defined(RESTART_HDF5)
         endif
 #endif
       endif
