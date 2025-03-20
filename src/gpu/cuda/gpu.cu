@@ -555,6 +555,10 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu->gpu_calculated->obULL = NULL;
 #endif
     gpu->gpu_calculated->distance = NULL;
+    gpu->gpu_calculated->esp_electronic = NULL;
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gpu_calculated->esp_electronicULL = NULL;
+#endif
 
     gpu->gpu_basis = new gpu_basis_type;
     gpu->gpu_basis->natom = *natom;
@@ -1636,6 +1640,35 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
     gpu->gpu_basis->Qfinal->DeleteCPU();
     gpu->gpu_basis->gccoeff->DeleteCPU();
     gpu->gpu_basis->gcexpo->DeleteCPU();
+}
+
+
+//-----------------------------------------------
+//  upload information for OEPROP calculation
+//-----------------------------------------------
+extern "C" void gpu_upload_oeprop_(int * nextpoint, QUICKDouble * extpointxyz,
+        QUICKDouble * esp_electronic, int *ierr)
+{
+    // store coordinates and charges for oeprop calculation
+    gpu->nextpoint = *nextpoint;
+    gpu->extpointxyz = new gpu_buffer_type<QUICKDouble>(extpointxyz, 3, gpu->nextpoint);
+
+    gpu->extpointxyz->Upload();
+
+    gpu->gpu_sim.nextpoint = *nextpoint;
+    gpu->gpu_sim.extpointxyz = gpu->extpointxyz->_devData;
+
+    gpu->gpu_calculated->esp_electronic = new gpu_buffer_type<QUICKDouble>(1, gpu->nextpoint);
+
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gpu_calculated->esp_electronic->DeleteGPU();
+    gpu->gpu_calculated->esp_electronicULL = new gpu_buffer_type<QUICKULL>(1, gpu->nextpoint);
+    gpu->gpu_calculated->esp_electronicULL->Upload();
+    gpu->gpu_sim.esp_electronicULL = gpu->gpu_calculated->esp_electronicULL->_devData;
+#else
+    gpu->gpu_calculated->esp_electronic->Upload();
+    gpu->gpu_sim.esp_electronic = gpu->gpu_calculated->esp_electronic->_devData;
+#endif
 }
 
 

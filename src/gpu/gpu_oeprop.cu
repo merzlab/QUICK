@@ -1,7 +1,5 @@
 /*
    !---------------------------------------------------------------------!
-   ! Written by Madu Manathunga on 06/17/2021                            !
-   !                                                                     !
    ! Copyright (C) 2020-2021 Merz lab                                    !
    ! Copyright (C) 2020-2021 Götz lab                                    !
    !                                                                     !
@@ -14,7 +12,7 @@
    ! This source file contains functions required for QUICK one electron !
    ! integral computation.                                               !
    !---------------------------------------------------------------------!
- */
+   */
 
 #if defined(CUDA) || defined(CUDA_MPIV)
   #include "cuda/gpu.h"
@@ -23,13 +21,11 @@
 #endif
 #include "gpu_common.h"
 
-
 static __constant__ gpu_simulation_type devSim;
 static __constant__ int devTrans[TRANSDIM * TRANSDIM * TRANSDIM];
 static __constant__ int Sumindex[10] = {0, 0, 1, 4, 10, 20, 35, 56, 84, 120};
 
-
-#define STOREDIM 20
+#define STOREDIM (20)
 #define REG_PF
 #define REG_FP
 #define REG_SF
@@ -41,15 +37,14 @@ static __constant__ int Sumindex[10] = {0, 0, 1, 4, 10, 20, 35, 56, 84, 120};
 #include "gpu_oei_classes.h"
 #include "gpu_oei_definitions.h"
 #include "gpu_oei_assembler.h"
-#include "gpu_oei.h"
-#include "gpu_oei_grad_assembler.h"
-#include "gpu_oei_grad.h"
+#include "gpu_oeprop.h"
 
 
 /*
    upload trans array to constant memory
- */
-void upload_para_to_const_oei() {
+*/
+void upload_para_to_const_oeprop()
+{
     int trans[TRANSDIM * TRANSDIM * TRANSDIM];
 
     LOC3(trans, 0, 0, 0, TRANSDIM, TRANSDIM, TRANSDIM) =   1;
@@ -179,8 +174,9 @@ void upload_para_to_const_oei() {
 
 /*
    upload gpu simulation type to constant memory
- */
-void upload_sim_to_constant_oei(_gpu_type gpu) {
+*/
+void upload_sim_to_constant_oeprop(_gpu_type gpu)
+{
     gpuMemcpyToSymbol((const void *) &devSim, (const void *) &gpu->gpu_sim, sizeof(gpu_simulation_type));
 }
 
@@ -191,12 +187,7 @@ static float totTime;
 
 
 // interface for kernel launching
-void getOEI(_gpu_type gpu) {
-    QUICK_SAFE_CALL((getOEI_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
+void getOEPROP(_gpu_type gpu)
+{
+    QUICK_SAFE_CALL((getOEPROP_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
 }
-
-
-void get_oei_grad(_gpu_type gpu) {
-    QUICK_SAFE_CALL((get_oei_grad_kernel<<<gpu->blocks, gpu->twoEThreadsPerBlock>>>()));
-}
-

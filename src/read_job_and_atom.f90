@@ -29,8 +29,8 @@ subroutine read_job_and_atom(ierr)
    ! Instant variables
    integer i,j,k
    integer istrt
-   character(len=200) :: keyWD
-   character(len=20) :: tempstring
+   character(len=300) :: keyWD
+   character(len=300) :: tempstring
    integer, intent(inout) :: ierr
 
    if (master) then
@@ -45,22 +45,38 @@ subroutine read_job_and_atom(ierr)
         keyWD=quick_api%Keywd
       else
         SAFE_CALL(quick_open(infile,inFileName,'O','F','W',.true.,ierr))
-        read (inFile,'(A200)') keyWD
+        keyWD(:)=''
+        do while(.true.)
+          read (inFile,'(A300)') tempstring
+          if(trim(tempstring).eq.'') exit
+          if(tempstring(1:1).eq.'$')then
+            call upcase(tempstring(2:2),4)
+            if (tempstring(2:5).eq.'DATA')then
+              ! read data file
+              SAFE_CALL(read_data_file(tempstring))
+            endif
+          else
+            keyWD=trim(keyWD)//' '//trim(tempstring)
+          endif
+        end do
       endif
 
-      call upcase(keyWD,200)
-      write(iOutFile,'("  KEYWORD=",a)') keyWD
+      call upcase(keyWD,300)
+      keyWD = adjustl(keyWD)
+      write(iOutFile,'("  KEYWORD=",a)') trim(keyWD)
 
       ! These interfaces,"read","check" and "print" are from quick_method_module
       SAFE_CALL(read(quick_method,keyWD,ierr))     ! read method from Keyword
+
       call read(quick_qm_struct,keyWD)  ! read qm struct from Keyword
       call check(quick_method,iOutFile,ierr) ! check the correctness
       call print(quick_method,iOutFile,ierr) ! then print method
     
       ! read basis file
-      SAFE_CALL(read_basis_file(keywd,ierr))
+      SAFE_CALL(read_basis_file(keyWD,ierr))
       call print_basis_file(iOutFile)
-      if (quick_method%ecp) call print_ecp_file(iOutFile)
+      call print_data_file(iOutFile) 
+     if (quick_method%ecp) call print_ecp_file(iOutFile)
       
       ! If PDB flag is on, then call readPDB to read PDB file and 
       ! rewrite input file so that there will be no difference between

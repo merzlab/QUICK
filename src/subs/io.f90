@@ -35,6 +35,7 @@ subroutine wchk_int(chk,key,nvalu,fail)
    write(chk) 'I '
    write(chk) nvalu
    fail=1
+   return
    200  return
 
 end
@@ -232,6 +233,7 @@ subroutine wchk_iarray(chk,key,x,y,z,dim,fail)
    enddo
 
    100  write(chk) '#'//kline(1:40)
+   write(chk) '#'//kline(1:40)
    write(chk) 'II'
    write(chk) x*y*z
    write(chk) (((dim(i,j,k),i=1,x),j=1,y),k=1,z)
@@ -269,20 +271,11 @@ subroutine rchk_iarray(chk,key,x,y,z,dim,fail)
       if (ktype.ne.'II') exit
       read(chk,end=100,err=100) num
       if (num.ne.x*y*z) exit
-      read(chk,end=100,err=100) (((dim_t(i,j,k),i=1,2*x-1),j=1,2*y-1),k=1,2*z-1)
-      !	 read(chk,end=100,err=100) (((dim(i,j,k),i=1,x),j=1,y-1),k=1,z)
+      read(chk,end=100,err=100) (((dim(i,j,k),i=1,x),j=1,y),k=1,z)
 
       fail=1
       exit
    120    continue
-   enddo
-
-   do i=1,x
-      do j=1,y
-         do k=1,z
-            dim(i,1,1)=dim_t(2*i-1,2*j-1,2*k-1)
-         enddo
-      enddo
    enddo
 
    100  return
@@ -388,6 +381,7 @@ subroutine wchk_darray(chk,key,x,y,z,dim,fail)
    write(chk) (((dim(i,j,k),i=1,x),j=1,y),k=1,z)
    fail=1
    200  return
+   return
 
 end
 

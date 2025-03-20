@@ -24,23 +24,42 @@
 
     program quick
 
-    use allMod
     use divPB_Private, only: initialize_DivPBVars
     use quick_cutoff_module, only: schwarzoff
     use quick_exception_module
     use quick_eri_cshell_module, only: getEriPrecomputables
     use quick_grad_cshell_module, only: cshell_gradient
     use quick_grad_oshell_module, only: oshell_gradient
+    use quick_oeproperties_module, only: compute_oeprop
     use quick_optimizer_module
     use quick_sad_guess_module, only: getSadGuess
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
          exportMO, exportSCF, exportOPT
+    use quick_timer_module, only : timer_end, timer_cumer, timer_begin
+    use quick_method_module, only : quick_method
+    use quick_files_module, only: ioutfile, outFileName, iDataFile, dataFileName
+    use quick_mpi_module, only: master, bMPI, print_quick_mpi, mpirank
+    use quick_molspec_module, only: quick_molspec, natom, alloc
+    use quick_files_module, only: write_molden, set_quick_files, print_quick_io_file
+    use quick_molsurface_module, only: generate_MKS_surfaces
 #ifdef MPIV
     use mpi
+#endif
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+    use quick_basis_module, only: quick_basis, aexp, cutprim, dcoeff, itype
+    use quick_basis_module, only: jbasis, jshell, maxcontract, nbasis, ncontract
+    use quick_basis_module, only: nprim, nshell, Ycutoff
+    use quick_molspec_module, only : xyz
+    use quick_method_module, only: delete, upload
+#endif
+
+#if defined CUDA_MPIV || defined HIP_MPIV
+    use quick_mpi_module, only: mpisize, mgpu_id, mgpu_ids
 #endif
 
     implicit none
 
+    integer :: fail
     logical :: failed = .false.         ! flag to indicates SCF fail or OPT fail
     integer :: ierr                     ! return error info
     integer :: i,j,k
@@ -140,7 +159,7 @@
     !-----------------------------------------------------------------
 
     ! if it is div&con method, begin fragmetation step, initial and setup
-    ! div&con varibles
+    ! div&con variables
     !if (quick_method%DIVCON) call inidivcon(quick_molspec%natom)
 
     ! if it is not opt job, begin single point calculation
@@ -184,7 +203,22 @@
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         SAFE_CALL(getEnergy(.false.,ierr))
-        
+        ! One electron properties (ESP, EField)
+
+        !call generate_MKS_surfaces()
+
+        call compute_oeprop()
+
+        if(master) then
+          if(quick_method%writexyz)then
+            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
+            call wchk_int(iDataFile, "natom", natom, fail)
+            call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+            call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
+            close(iDataFile)
+          endif 
+        endif
+
     endif
 
     !------------------------------------------------------------------
@@ -203,6 +237,17 @@
         else
             SAFE_CALL(lopt(ierr))         ! Cartesian
         endif
+
+        if(master) then
+          if(quick_method%writexyz)then
+            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
+            call wchk_int(iDataFile, "natom", natom, fail)
+            call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+            call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
+            close(iDataFile)
+            close(iDataFile)
+          endif 
+        endif
     endif
     
     if (.not.quick_method%opt .and. quick_method%grad) then
@@ -211,6 +256,10 @@
         else
             SAFE_CALL(cshell_gradient(ierr))
         endif
+
+        ! One electron properties (ESP, EField) 
+        call compute_oeprop()
+
     endif
 
     ! Now at this point we have an energy and a geometry.  If this is
@@ -278,7 +327,6 @@
         ! Calculate Dipole Moment
         if (quick_method%dipole) call dipole
     endif
-
     ! Now at this point we have an energy and a geometry.  If this is
     ! an optimization job, we now have the optimized geometry.
 

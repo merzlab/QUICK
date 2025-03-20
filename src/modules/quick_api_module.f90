@@ -62,8 +62,8 @@ module quick_api_module
     double precision, allocatable, dimension(:,:) :: ptchg_crd
 
     ! job card for quick job, essentially the first line of regular quick input file
-    ! default length is 256 characters
-    character(len=256) :: keywd
+    ! default length is 300 characters
+    character(len=300) :: keywd
 
     ! Is the job card provided by passing a string? default is false
     logical :: hasKeywd = .false.
@@ -334,7 +334,7 @@ end subroutine get_atom_types
 ! allocate memory for point charges and gradients
 subroutine allocate_point_charge(isgrad,ierr)
 
-  use quick_molspec_module
+  use quick_molspec_module, only: quick_molspec, realloc
   use quick_calculated_module
   implicit none
   logical, intent(in) :: isgrad
@@ -357,7 +357,6 @@ end subroutine allocate_point_charge
 ! allocate memory for point charges and gradients
 subroutine deallocate_point_charge(isgrad,ierr)
 
-  use quick_molspec_module
   use quick_calculated_module
   implicit none
   logical, intent(in) :: isgrad
@@ -374,7 +373,7 @@ end subroutine deallocate_point_charge
 ! returns quick qm energy
 subroutine get_quick_energy(coords, nxt_ptchg, ptchg_crd, energy, ierr)
 
-  use quick_molspec_module
+  use quick_molspec_module, only: quick_molspec
   implicit none
   
   integer, intent(in)           :: nxt_ptchg
@@ -410,7 +409,7 @@ end subroutine get_quick_energy
 subroutine get_quick_energy_gradients(coords, nxt_ptchg, ptchg_crd, &
            energy, gradients, ptchg_grad, ierr)
 
-  use quick_molspec_module
+  use quick_molspec_module, only: quick_molspec
   implicit none
 
   integer, intent(in)             :: nxt_ptchg 
