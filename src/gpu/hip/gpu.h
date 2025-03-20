@@ -53,6 +53,12 @@ void get_oei_grad(_gpu_type);
 void upload_sim_to_constant_oei(_gpu_type);
 void upload_para_to_const_oei();
 
+// c interface ESP
+extern "C" void gpu_get_oeprop_(QUICKDouble* esp_electronic);
+void getOEPROP(_gpu_type gpu);
+void upload_sim_to_constant_oeprop(_gpu_type gpu);
+void upload_para_to_const_oeprop();
+
 // c interface [gpu_get2e]
 extern "C" void get1e_();
 extern "C" void get_oneen_grad_();

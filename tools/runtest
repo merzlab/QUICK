@@ -20,7 +20,7 @@
 #  !---------------------------------------------------------------------!
 #  ! QUICK version                                                       !
 #  !---------------------------------------------------------------------!
-QUICK_VERSION='QUICK-24.03'
+QUICK_VERSION='QUICK-25.03'
 
 #  !---------------------------------------------------------------------!
 #  ! Variable definitions                                                !
@@ -58,6 +58,7 @@ test_grad='no'
 test_opt='no'
 test_api='no'
 test_rw='no'
+test_esp='no'
 uspec_test='no'
 test_length='short'
 
@@ -111,7 +112,8 @@ print_help()
       --grad                Run only gradient tests
       --opt                 Run only geometry optimization tests
       --api                 Run only api tests
-      --rw                  Run only read-write tests
+      --rw                  Run only restart tests
+      --esp                 Run only ESP tests
       --full                Run a large set of tests (Default: no)
       --nolog               Disable writing output into runtest.log (Default: no)
                                                                             
@@ -305,11 +307,13 @@ set_job_gpus()
 #   $2: run gradient tests ['yes'|'no']
 #   $3: run geometry optimization tests ['yes'|'no']
 #   $4: run API tests ['yes'|'no']
+#   $5: run restart tests ['yes'|'no']
+#   $6: run ESP tests ['yes'|'no']
 #
 # outputs:
 #   tests: array of tests
 #   test_names: array of test names
-#   tot_{ene,grad,opt,api}_tests: counts for test lists by type
+#   tot_{ene,grad,opt,api,esp}_tests: counts for test lists by type
 #   total_tests: sum of counts for all test types
 get_total_tests()
 {
@@ -320,6 +324,7 @@ get_total_tests()
   tot_opt_tests=0 
   tot_api_tests=0 
   tot_rw_tests=0 
+  tot_esp_tests=0 
   total_tests=0 
 
   if [ "$1" = 'yes' ]; then
@@ -365,10 +370,21 @@ get_total_tests()
   if [ "$5" = 'yes' ]; then
     tot_rw_tests="${#tests[@]}"
     tests+=(`grep "^rw_" "$test_list" | awk '{print $1}'`)
-    readarray -t -O "${#test_names[@]}" test_names <<< \
-              "$(grep "^rw_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')"
+    while IFS= read -r line; do
+        test_names+=("$line")
+    done < <(grep "^rw_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')
     total_tests="${#tests[@]}"
     tot_rw_tests=$(($total_tests-$tot_rw_tests))
+  fi
+
+  if [ "$6" = 'yes' ]; then
+    tot_esp_tests="${#tests[@]}"
+    tests+=(`grep "^esp_" "$test_list" | awk '{print $1}'`)
+    while IFS= read -r line; do
+        test_names+=("$line")
+    done < <(grep "^esp_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')
+    total_tests="${#tests[@]}"
+    tot_esp_tests=$(($total_tests-$tot_esp_tests))
   fi
 }
 
@@ -394,7 +410,7 @@ set_test()
   fi
 
   # copy input if the test is not an api test
-  if [ `echo "$1" | grep 'api_' | wc -l` -lt 1 ]; then
+  if [ `echo "$1" | grep '^api_' | wc -l` -lt 1 ]; then
     cp "$2/$1.in" ./
   fi
 
@@ -402,6 +418,13 @@ set_test()
     cp "$2/$1_read.in" ./
   else
     cp "$2/saved/$1.out" "$1.ref.out"
+  fi
+
+  # copy extra files generated while computing ESP on grid points
+  if [ `echo "$1" | grep '^esp_grid_'| wc -l` -gt 0 ]; then
+    cp "$2/saved/$1.esp" "$1.ref.esp"
+  elif [ `echo "$1" | grep '^esp_'| wc -l` -gt 0 ]; then
+    cp "$2/saved/$1.vdw" "$1.ref.vdw"
   fi
 }
 
@@ -601,7 +624,7 @@ run_api_test()
 }
 
 
-# wrapper function for testing reading and writing checkpoint files.
+# wrapper function for testing restart files.
 #
 # arguments:
 #   $1: test
@@ -620,6 +643,42 @@ run_rw_test()
   echo "$2" | tee -a "$6"
   if [ `check_f_error $1` -eq 0 ]; then
     check_rw "$1" "$5" "$6"
+    echo "" | tee -a "$6"
+  else
+    echo "SKIPPED." | tee -a "$6"
+    echo "==============================================================" | tee -a "$6"
+    echo "" | tee -a "$6"
+  fi
+  unlock_file "$6"
+  clean_up "$1"
+}
+
+
+# wrapper function for esp tests.
+#
+# arguments:
+#   $1: test
+#   $2: test name
+#   $3: test number for this test
+#   $4: total number of tests
+#   $5: directory containing test files and scripts
+#   $6: log file
+#   $7: job slot (GNU parallel) (1-based indexing)
+run_esp_test()
+{
+  set_test "$1" "$5" "$7"
+  run_test "$1" "$2" "$3" "$4" "$6"
+  lock_file "$6"
+  echo "Running test $3 of $4" | tee -a "$6"
+  echo "$2" | tee -a "$6"
+  if [ `check_f_error $1` -eq 0 ]; then
+    check_energy "$1" "$5" "$6"
+    if [ `echo "$1" | grep '^esp_grid_'| wc -l` -gt 0 ]; then
+      check_esp_grid "$1" "$5" "$6"
+    elif [ `echo "$1" | grep '^esp_'| wc -l` -gt 0 ]; then
+      check_esp_charge "$1" "$5" "$6"
+      check_vdw_surface "$1" "$5" "$6"
+    fi
     echo "" | tee -a "$6"
   else
     echo "SKIPPED." | tee -a "$6"
@@ -669,6 +728,42 @@ check_energy()
   "$2/dacdif" -k -a '4.0e-5' "$1.ref.ene" "$1.ene" | tee -a "$3"
 }
 
+
+# check ESP charge output from test.
+#
+# arguments:
+#   $1: test name
+#   $2: directory containing test files and scripts
+#   $3: log file
+check_esp_charge()
+{
+  awk '/ESP charges:/,/Net charge/ {print}' "$1.ref.out" > "$1.ref.charge"
+  awk '/ESP charges:/,/Net charge/ {print}' "$1.out" > "$1.charge"
+
+  "$2/dacdif" -k -a '1.0e-5' "$1.ref.charge" "$1.charge" | tee -a "$3"
+}
+
+# check ESP on points on van der Waals surface output from test.
+#
+# arguments:
+#   $1: test name
+#   $2: directory containing test files and scripts
+#   $3: log file
+check_vdw_surface()
+{
+  "$2/dacdif" -k -a '2.0e-7' "$1.ref.vdw" "$1.vdw" | tee -a "$3"
+}
+
+# check ESP on external points output from test.
+#
+# arguments:
+#   $1: test name
+#   $2: directory containing test files and scripts
+#   $3: log file
+check_esp_grid()
+{
+  "$2/dacdif" -k -a '2.0e-7' "$1.ref.esp" "$1.esp" | tee -a "$3"
+}
 
 # check nuclear and point charge gradients output from test.
 #
@@ -724,7 +819,7 @@ check_dipole()
 #   $1: test name
 clean_up()
 {
-  rm -f $1.ref.out $1.in ddtmp.$1* $1.*ene $1.*grad $1.*dipole $1.*opt $1.*xyz
+  rm -f $1.ref.out $1.ref.vdw $1.ref.esp $1.in ddtmp.$1* $1.*ene $1.*grad $1.*dipole $1.*opt $1.*charge $1.*xyz
   rm -f $1_read.ref.out $1_read.in $1_read.*ene $1_read.*opt
 }
 
@@ -749,17 +844,19 @@ print_summary()
     total_opt=0
     total_api=0
     total_rw=0
+    total_esp=0
     failed_ene=0
     failed_grad=0
     failed_opt=0
     failed_api=0
     failed_rw=0
+    failed_esp=0
  
     # set testlist
     set_qexe_testlist "$buildtype"
  
     # get the number of tests to run
-    get_total_tests "$test_ene" "$test_grad" "$test_opt" "$test_api" "$test_rw"
+    get_total_tests "$test_ene" "$test_grad" "$test_opt" "$test_api" "$test_rw" "$test_esp"
  
     # grab stuff from temporary log files
     sed -n '/'$buildtype' version started/,/All '$buildtype' tests are done/p' $QUICK_HOME/.quick.${buildtype}.runtest.log > .quick.runtest.${buildtype}.summary.tmp1
@@ -798,12 +895,17 @@ print_summary()
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_rw=$(($failed_rw+1))
         fi
+      elif [ `sed -n '/ESP test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+        total_esp=$(($total_esp+1))
+        if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+          failed_esp=$(($failed_esp+1))
+        fi
       fi
       
       rm -f .quick.runtest.${buildtype}.summary.tmp2
     done
     
-    failed_total=$(($failed_ene+$failed_grad+$failed_opt+$failed_api+$failed_rw))
+    failed_total=$(($failed_ene+$failed_grad+$failed_opt+$failed_api+$failed_rw+$failed_esp))
 
     # update cumulative failed tests too
     ncum_failed_tests=$(($ncum_failed_tests+$failed_total))
@@ -814,6 +916,7 @@ print_summary()
     echo "    Optimization tests: $failed_opt/$total_opt (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    API tests: $failed_api/$total_api (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    RW tests: $failed_rw/$total_rw (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    ESP tests: $failed_esp/$total_esp (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Total tests: $failed_total/$total_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "" >> .quick.runtest.${buildtype}.summary.tmp0
  
@@ -864,6 +967,7 @@ while [ $# -gt 0 ]; do
     --opt)         test_opt='yes';uspec_test='yes';;
     --api)         test_api='yes';uspec_test='yes';;
     --rw)          test_rw='yes';uspec_test='yes';;
+    --esp)         test_esp='yes';uspec_test='yes';;
     --full)        test_length='full';;
     --nolog)       log='no';;   
     -h| -H| -help| --help) print_help;;
@@ -1091,7 +1195,8 @@ if [ -n "$PARALLEL_TEST_COUNT" ]; then
   #       utilizes a export and eval approach for string representation of shell functions)
   export buildtype qbindir qexe apipath apiexe ismpirun has_parallel
   export -f set_job_gpus set_test run_test run_test_api run_energy_test run_grad_test run_opt_test run_api_test \
-	  run_rw_test check_rw check_energy check_gradient check_opt check_dipole clean_up check_f_error lock_file unlock_file
+	  run_rw_test run_esp_test check_rw check_energy check_gradient check_opt check_esp_grid check_vdw_surface \
+	  check_esp_charge check_dipole clean_up check_f_error lock_file unlock_file 
 fi
 
 #  !---------------------------------------------------------------------!
@@ -1115,6 +1220,7 @@ if [ "$uspec_test" = 'no' ]; then
   test_opt='yes'
   test_api='yes'
   test_rw='yes'
+  test_esp='yes'
 fi
 
 #  !---------------------------------------------------------------------!
@@ -1133,7 +1239,7 @@ for buildtype in $buildtypes; do
   set_qexe_testlist "$buildtype"
 
   # get the number of tests to run
-  get_total_tests "$test_ene" "$test_grad" "$test_opt" "$test_api" "$test_rw"
+  get_total_tests "$test_ene" "$test_grad" "$test_opt" "$test_api" "$test_rw" "$test_esp"
 
   cd "$testdir/runs/$buildtype"
 
@@ -1213,7 +1319,7 @@ for buildtype in $buildtypes; do
     fi
   fi
 
-  # Run read-write tests
+  # Run restart tests
   if [ "$test_rw" = 'yes' ]; then
     tc_start=$(($tc_end+1))
     tc_end=$(($tc_end+$tot_rw_tests))
@@ -1226,6 +1332,22 @@ for buildtype in $buildtypes; do
       parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --xapply --will-cite run_rw_test {1} {2} {3} \
 	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" {%} \
 	      ::: "${tests[@]:$(($tc_start-1)):$tot_rw_tests}" ::: "${test_names[@]:$(($tc_start-1)):$tot_rw_tests}" \
+    fi
+  fi
+
+  # Run ESP test
+  if [ "$test_esp" = 'yes' ]; then
+    tc_start=$(($tc_end+1))
+    tc_end=$(($tc_end+$tot_esp_tests))
+    if [ $has_parallel = 'no' ]; then
+      for tc in `seq $tc_start $tc_end`; do
+        run_esp_test "${tests[$(($tc-1))]}" "${test_names[$(($tc-1))]}" "$tc" "$total_tests" \
+		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log"
+      done
+    elif [ $has_parallel = 'yes' ]; then
+      parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --xapply --will-cite run_esp_test {1} {2} {3} \
+	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" {%} \
+	      ::: "${tests[@]:$(($tc_start-1)):$tot_esp_tests}" ::: "${test_names[@]:$(($tc_start-1)):$tot_esp_tests}" \
 	      ::: `seq $tc_start $tc_end`
     fi
   fi

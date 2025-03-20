@@ -24,13 +24,13 @@
 
     program quick
 
-    use allMod
     use divPB_Private, only: initialize_DivPBVars
     use quick_cutoff_module, only: schwarzoff
     use quick_exception_module
     use quick_eri_cshell_module, only: getEriPrecomputables
     use quick_grad_cshell_module, only: cshell_gradient
     use quick_grad_oshell_module, only: oshell_gradient
+    use quick_oeproperties_module, only: compute_oeprop
     use quick_optimizer_module
     use quick_sad_guess_module, only: getSadGuess
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
@@ -38,9 +38,26 @@
 #if defined(RESTART_HDF5)
     use quick_restart_module, only: data_write_info, write_integer_array, write_double_array
 #endif
-
+    use quick_timer_module, only : timer_end, timer_cumer, timer_begin
+    use quick_method_module, only : quick_method
+    use quick_files_module, only: ioutfile, outFileName, iDataFile, dataFileName
+    use quick_mpi_module, only: master, bMPI, print_quick_mpi, mpirank
+    use quick_molspec_module, only: quick_molspec, natom, alloc
+    use quick_files_module, only: write_molden, set_quick_files, print_quick_io_file
+    use quick_molsurface_module, only: generate_MKS_surfaces
 #ifdef MPIV
     use mpi
+#endif
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+    use quick_basis_module, only: quick_basis, aexp, cutprim, dcoeff, itype
+    use quick_basis_module, only: jbasis, jshell, maxcontract, nbasis, ncontract
+    use quick_basis_module, only: nprim, nshell, Ycutoff
+    use quick_molspec_module, only : xyz
+    use quick_method_module, only: delete, upload
+#endif
+
+#if defined CUDA_MPIV || defined HIP_MPIV
+    use quick_mpi_module, only: mpisize, mgpu_id, mgpu_ids
 #endif
 
     implicit none
@@ -150,7 +167,7 @@
     !-----------------------------------------------------------------
 
     ! if it is div&con method, begin fragmetation step, initial and setup
-    ! div&con varibles
+    ! div&con variables
     !if (quick_method%DIVCON) call inidivcon(quick_molspec%natom)
 
     ! if it is not opt job, begin single point calculation
@@ -194,6 +211,10 @@
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         SAFE_CALL(getEnergy(.false.,ierr))
+        
+        ! One electron properties (ESP, EField)
+        call compute_oeprop()
+
 #if defined(RESTART_HDF5)
         if(master) then
           if(quick_method%writexyz)then
@@ -236,6 +257,10 @@
         else
             SAFE_CALL(cshell_gradient(ierr))
         endif
+
+        ! One electron properties (ESP, EField) 
+        call compute_oeprop()
+
     endif
 
     ! Now at this point we have an energy and a geometry.  If this is
@@ -303,7 +328,6 @@
         ! Calculate Dipole Moment
         if (quick_method%dipole) call dipole
     endif
-
     ! Now at this point we have an energy and a geometry.  If this is
     ! an optimization job, we now have the optimized geometry.
 

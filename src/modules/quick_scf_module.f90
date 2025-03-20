@@ -151,7 +151,7 @@ contains
 
   ! electdiis
   !-------------------------------------------------------
-  ! 11/02/2010 Yipu Miao: Add paralle option for HF calculation
+  ! 11/02/2010 Yipu Miao: Add parallel option for HF calculation
   subroutine electdiis(jscf,ierr)
      use allmod
      use quick_gridpoints_module
@@ -197,7 +197,7 @@ contains
      double precision :: Sum2Mat,rms
      integer :: I,J,K,L,IERROR
   
-     double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
+     double precision :: oldEnergy=0.0d0,E1e ! energy for last iteration, and 1e-energy
      double precision :: PRMS,PCHANGE, tmp
 
      double precision :: c_coords(3),c_zeta,c_chg
@@ -384,7 +384,7 @@ contains
            !-----------------------------------------------
            ! The matrix multiplier comes from Steve Dixon. It calculates
            ! C = Transpose(A) B.  Thus to utilize this we have to make sure that the
-           ! A matrix is symetric. First, calculate DENSE*S and store in the scratch
+           ! A matrix is symmetric. First, calculate DENSE*S and store in the scratch
            ! matrix hold.Then calculate O*(DENSE*S).  As the operator matrix is symmetric, the
            ! above code can be used. Store this (the ODS term) in the all error
            ! matrix.

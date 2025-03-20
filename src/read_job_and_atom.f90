@@ -67,6 +67,7 @@ subroutine read_job_and_atom(ierr)
 
       ! These interfaces,"read","check" and "print" are from quick_method_module
       SAFE_CALL(read(quick_method,keyWD,ierr))     ! read method from Keyword
+
       call read(quick_qm_struct,keyWD)  ! read qm struct from Keyword
       call check(quick_method,iOutFile,ierr) ! check the correctness
       call print(quick_method,iOutFile,ierr) ! then print method

@@ -105,6 +105,10 @@ contains
      if (quick_method%diisscf .and. .not. quick_method%divcon) call uelectdiis(jscf,ierr)       ! normal scf
   
      jscf=jscf+1
+
+!    After SCF is done the total density is calculated for
+!    property calculations.
+     quick_qm_struct%denseab = quick_qm_struct%dense+quick_qm_struct%denseb
   
      !if (quick_method%debug)  call debug_SCF(jscf)
 
@@ -152,7 +156,7 @@ contains
      integer :: fail
  
      ! variable inputed to return
-     integer :: jscf                ! scf interation
+     integer :: jscf                ! scf iteration
      integer, intent(inout) :: ierr
   
      logical :: diisdone = .false.  ! flag to indicate if diis is done

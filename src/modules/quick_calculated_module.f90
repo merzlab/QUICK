@@ -85,6 +85,12 @@ module quick_calculated_module
       ! the dimension is nbasis*nbasis.
       double precision,dimension(:,:), allocatable :: denseb
 
+      ! when calculating properties of unrestricted systems, this is
+      ! the total density. Only computed after SCF has converged.
+      ! Using this density if efficient for property calculation.
+      ! the dimension is nbasis*nbasis.
+      double precision,dimension(:,:), allocatable :: denseab
+
       ! saved density matrix
       ! the dimension is nbasis*nbasis.
       double precision,dimension(:,:), allocatable :: denseSave
@@ -209,12 +215,12 @@ module quick_calculated_module
    !----------------------
 contains
 
-   !--------------
+   !--------------------------------------
    ! subroutine to allocate variables
-   !--------------
+   !---------------------------------------
    subroutine allocate_quick_qm_struct(self)
-      use quick_method_module,only: quick_method
-      use quick_molspec_module,only: quick_molspec
+      use quick_method_module, only: quick_method
+      use quick_molspec_module, only: quick_molspec
       implicit none
 
       integer nbasis
@@ -272,6 +278,7 @@ contains
       if (quick_method%unrst) then
          if(.not. allocated(self%ob)) allocate(self%ob(nbasis,nbasis))
          if(.not. allocated(self%obSave)) allocate(self%obSave(nbasis,nbasis))
+         if(.not. allocated(self%denseab)) allocate(self%denseab(nbasis,nbasis))
          if(.not. allocated(self%densebSave)) allocate(self%densebSave(nbasis,nbasis))
          if(.not. allocated(self%densebOld)) allocate(self%densebOld(nbasis,nbasis))
          if(.not. allocated(self%cob)) allocate(self%cob(nbasis,nbasis))
@@ -303,7 +310,7 @@ contains
    subroutine reallocate_quick_qm_struct(self,ierr)
 
      use quick_exception_module
-     use quick_molspec_module,only: quick_molspec
+     use quick_molspec_module, only: quick_molspec
 
      implicit none
 
@@ -328,8 +335,8 @@ contains
 
    subroutine dat_quick_qm_struct(self, idatafile)
 
-      use quick_method_module,only: quick_method
-      use quick_molspec_module,only: quick_molspec
+      use quick_method_module, only: quick_method
+      use quick_molspec_module, only: quick_molspec
       logical fail
 
       integer nbasis
@@ -432,6 +439,7 @@ contains
       if (quick_method%unrst) then
          if(allocated(self%ob)) deallocate(self%ob)
          if(allocated(self%obSave)) deallocate(self%obSave)
+         if(allocated(self%denseab)) deallocate(self%denseab)
          if(allocated(self%densebSave)) deallocate(self%densebSave)
          if(allocated(self%densebOld)) deallocate(self%densebOld)
          if (allocated(self%cob)) deallocate(self%cob)
@@ -456,8 +464,8 @@ contains
    !-------------------
    subroutine broadcast_quick_qm_struct(self)
       use quick_mpi_module
-      use quick_method_module,only: quick_method
-      use quick_molspec_module,only: quick_molspec
+      use quick_method_module, only: quick_method
+      use quick_molspec_module, only: quick_molspec
       use mpi
       implicit none
       type (quick_qm_struct_type) self
@@ -505,6 +513,7 @@ contains
 
       if (quick_method%unrst) then
          call MPI_BCAST(self%cob,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%denseab,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(self%denseb,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(self%Eb,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(self%aElec,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -534,8 +543,8 @@ contains
 #endif
 
    subroutine init_quick_qm_struct(self)
-      use quick_method_module,only: quick_method
-      use quick_molspec_module,only: quick_molspec
+      use quick_method_module, only: quick_method
+      use quick_molspec_module, only: quick_molspec
       implicit none
 
       integer nbasis
@@ -588,6 +597,7 @@ contains
       ! if unrestricted, some more varibles is required to be allocated
       if (quick_method%unrst) then
          call zeroMatrix(self%cob,nbasis)
+         call zeroMatrix(self%denseab,nbasis)
          call zeroMatrix(self%denseb,nbasis)
          call zeroVec(self%Eb,nbasis)
       endif
