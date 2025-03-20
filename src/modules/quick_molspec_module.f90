@@ -421,113 +421,113 @@ contains
 
     ! get the atom number, type and number of external charges
 
-  if( .not. isTemplate) then
-
-    ! If reading from data file
-    if(quick_method%read_coord)then
-
-      open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
-      call rchk_int(iDataFile, "natom", natom, fail)
-      if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
-      call rchk_iarray(iDataFile, "iattype", natom, 1, 1, self%iattype, fail)
-      close(iDataFile)
-
-      ! Reading external charges from data file is not yet implemented
-      nextatom = 0
-      self%nextatom = nextatom
-
-      iAtomType = 0
-
-      do i = 1, natom
-        if (.not.(any(self%atom_type_sym(1:iAtomType).eq.symbol(self%iattype(i))))) then
-          iAtomType=iAtomType+1
-          self%atom_type_sym(iAtomType) = symbol(self%iattype(i))
-        endif
-      enddo
-
-      self%iAtomType = iAtomType
-
-    ! Reading from input file
-    else
-      call findBlock(input,1)
-
-      ! first is to read atom and atom kind
-      iAtomType = 1
-      natom = 0
-      nextatom = 0
-      nextpoint = 0
-      nconsatom = 0
-      nfreezeatom = 0
-      do
-        read(input,'(A80)',end=111,err=111) keywd
-        i=1;j=80
-        call upcase(keywd,80)
-        call rdword(keywd,i,j)
-        if (is_blank(keywd,1,80)) exit
-        do k=0,92
-          if (keywd(i:j) == symbol(k)) then
-            natom=natom+1
-            ! check if atom type has been shown before
-            if (.not.(any(self%atom_type_sym(1:iatomtype).eq.symbol(k)))) then
-              !write(*,*) "Assigning value to atom_type_sym:", k, symbol(k)
-              self%atom_type_sym(iAtomType)=symbol(k)
-              iAtomType=iAtomType+1
-            endif
+    if( .not. isTemplate) then
+   
+      ! If reading from data file
+      if(quick_method%read_coord)then
+   
+        open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
+        call rchk_int(iDataFile, "natom", natom, fail)
+        if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
+        call rchk_iarray(iDataFile, "iattype", natom, 1, 1, self%iattype, fail)
+        close(iDataFile)
+   
+        ! Reading external charges from data file is not yet implemented
+        nextatom = 0
+        self%nextatom = nextatom
+   
+        iAtomType = 0
+   
+        do i = 1, natom
+          if (.not.(any(self%atom_type_sym(1:iAtomType).eq.symbol(self%iattype(i))))) then
+            iAtomType=iAtomType+1
+            self%atom_type_sym(iAtomType) = symbol(self%iattype(i))
           endif
         enddo
-      enddo
-      111     continue
-
-      ! read external charge part
-      if (is_extcharge)  then
-        rewind(input)
-        call findBlock(input,2)
+   
+        self%iAtomType = iAtomType
+   
+      ! Reading from input file
+      else
+        call findBlock(input,1)
+   
+        ! first is to read atom and atom kind
+        iAtomType = 1
+        natom = 0
+        nextatom = 0
+        nextpoint = 0
+        nconsatom = 0
+        nfreezeatom = 0
         do
-          read(input,'(A80)',end=112,err=112) keywd
+          read(input,'(A80)',end=111,err=111) keywd
+          i=1;j=80
+          call upcase(keywd,80)
+          call rdword(keywd,i,j)
           if (is_blank(keywd,1,80)) exit
-          nextatom=nextatom+1
+          do k=0,92
+            if (keywd(i:j) == symbol(k)) then
+              natom=natom+1
+              ! check if atom type has been shown before
+              if (.not.(any(self%atom_type_sym(1:iatomtype).eq.symbol(k)))) then
+                !write(*,*) "Assigning value to atom_type_sym:", k, symbol(k)
+                self%atom_type_sym(iAtomType)=symbol(k)
+                iAtomType=iAtomType+1
+              endif
+            endif
+          enddo
         enddo
-      endif
-
-      ! read external grid part
-      if (is_extgrid) then
-         rewind(input)
-         call findBlock(input,2)
-         do
+        111     continue
+   
+        ! read external charge part
+        if (is_extcharge)  then
+          rewind(input)
+          call findBlock(input,2)
+          do
             read(input,'(A80)',end=112,err=112) keywd
             if (is_blank(keywd,1,80)) exit
-            nextpoint = nextpoint + 1
-         enddo
+            nextatom=nextatom+1
+          enddo
+        endif
+   
+        ! read external grid part
+        if (is_extgrid) then
+           rewind(input)
+           call findBlock(input,2)
+           do
+              read(input,'(A80)',end=112,err=112) keywd
+              if (is_blank(keywd,1,80)) exit
+              nextpoint = nextpoint + 1
+           enddo
+        endif
+   
+        112     continue
+      
+        !read contrained part
+        if (is_constrain) then
+           rewind(input)
+           if (is_extcharge) then
+              call findBlock(input,3)
+           else
+              call findBlock(input,2)
+           endif
+           do
+              read(input,'(A80)',end=113,err=113) keywd
+              if (is_blank(keywd,1,80)) exit
+              call upcase(keywd,80)
+              if ((index(keywd,'DISTANCE') /=0) .or. (index(keywd,'ANGLE') /=0) &
+                 .or. (index(keywd,'DIHEDRAL') /=0)) nconsatom = nconsatom+1
+              if (index(keywd,'FREEZE')/=0) nfreezeatom =nfreezeatom+1
+           enddo
+        endif
+      
+        113       continue
+      
+        iAtomType=iAtomType-1
+        self%iAtomType = iAtomType
+        self%nextatom = nextatom
+        self%nfreezeatom = nfreezeatom
+        self%nconsatom = nconsatom 
       endif
-
-      112     continue
-    
-      !read contrained part
-      if (is_constrain) then
-         rewind(input)
-         if (is_extcharge) then
-            call findBlock(input,3)
-         else
-            call findBlock(input,2)
-         endif
-         do
-            read(input,'(A80)',end=113,err=113) keywd
-            if (is_blank(keywd,1,80)) exit
-            call upcase(keywd,80)
-            if ((index(keywd,'DISTANCE') /=0) .or. (index(keywd,'ANGLE') /=0) &
-               .or. (index(keywd,'DIHEDRAL') /=0)) nconsatom = nconsatom+1
-            if (index(keywd,'FREEZE')/=0) nfreezeatom =nfreezeatom+1
-         enddo
-      endif
-    
-      113       continue
-    
-      iAtomType=iAtomType-1
-      self%iAtomType = iAtomType
-      self%nextatom = nextatom
-      self%nfreezeatom = nfreezeatom
-      self%nconsatom = nconsatom 
-    
     endif
 
   end subroutine read_quick_molspec
