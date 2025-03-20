@@ -37,10 +37,6 @@ endif()
 
 option(BUILD_REAXFF_PUREMD "Enable building reaxff-puremd." FALSE)
 
-# -------------------------------------------------------------
-# ffq
-
-option(BUILD_FFQ "Enable building ffq." FALSE)
 	
 #---------------------------------------------------
 # make the SANDER report for the build report

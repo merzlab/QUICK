@@ -58,12 +58,12 @@ A list of installation and runtime issues can be found [here](https://quick-docs
 
 Citation
 --------
-Please cite QUICK-24.03 as follows.
+Please cite QUICK-25.03 as follows.
 
 Manathunga, M.; O'Hearn, K. A.; Shajan, A.; Smith, J.; Miao, Y.; He, X.; Ayers, K;
-Brothers, E.; Götz, A. W.; Merz, K. M. QUICK-24.03.
+Brothers, E.; Palos, E.; Tripathy, V.; Götz, A. W.; Merz, K. M. QUICK-25.03.
 University of California, San Diego, CA and
-Michigan State University, East Lansing, MI, 2024.
+Michigan State University, East Lansing, MI, 2025.
 
 If you perform density functional theory calculations please also cite:
 

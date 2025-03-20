@@ -40,6 +40,10 @@ struct gpu_calculated_type {
     gpu_buffer_type<QUICKULL> *obULL;  // Unsigned long long int type Ob matrix
 #endif
     gpu_buffer_type<QUICKDouble> *distance; // distance matrix
+    gpu_buffer_type<QUICKDouble> *esp_electronic; // electronic contribution to ESP
+#if defined(USE_LEGACY_ATOMICS)
+    gpu_buffer_type<QUICKULL> *esp_electronicULL; // Unsigned long long int type electronic contribution to ESP
+#endif
 };
 
 // struct to hold large temporary device arrays
@@ -187,6 +191,7 @@ struct gpu_simulation_type {
 
     int natom;
     int nextatom;
+    int nextpoint;
     int nbasis;
     int nshell;
     int nprim;
@@ -277,6 +282,7 @@ struct gpu_simulation_type {
     // Some more infos about basis function
     QUICKDouble *xyz;
     QUICKDouble *allxyz; // coordinates of nuclei and external charges for oei
+    QUICKDouble *extpointxyz; // coordinates of points on which one electron properties are obtained
     int *ncenter;
 
     int *kstart;
@@ -304,6 +310,10 @@ struct gpu_simulation_type {
     QUICKULL *obULL;
     QUICKDouble *dense;
     QUICKDouble *denseb;
+
+    // OEPROP
+    QUICKDouble *esp_electronic;
+    QUICKULL *esp_electronicULL;
 
     QUICKDouble *distance;
     QUICKDouble *Xcoeff;
@@ -458,6 +468,7 @@ struct gpu_type {
     // Molecule specification part
     int natom;
     int nextatom;
+    int nextpoint;
     int nbasis;
     int nElec;
     int imult;
@@ -473,6 +484,7 @@ struct gpu_type {
     gpu_buffer_type<int> *iattype;
     gpu_buffer_type<QUICKDouble> *xyz;
     gpu_buffer_type<QUICKDouble> *allxyz; // coordinates of nuclei and external point charges
+    gpu_buffer_type<QUICKDouble> *extpointxyz; // coordinates of points on which one electron properties are obtained
     gpu_buffer_type<QUICKDouble> *chg;
     gpu_buffer_type<QUICKDouble> *allchg; // charges of nuclei and external point charges
     gpu_buffer_type<DFT_calculated_type> *DFT_calculated;
