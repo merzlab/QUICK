@@ -426,19 +426,6 @@ contains
     ! If reading from data file
     if(quick_method%read_coord)then
 
-    ! first is to read atom and atom kind
-    iAtomType = 1
-    natom = 0
-    nextatom = 0
-    nconsatom = 0
-    nfreezeatom = 0
-    do
-      read(input,'(A80)',end=111,err=111) keywd
-      i=1;j=80
-      call upcase(keywd,80)
-      call rdword(keywd,i,j)
-      if (is_blank(keywd,1,80)) exit
-
       open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
       call rchk_int(iDataFile, "natom", natom, fail)
       if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
@@ -469,6 +456,8 @@ contains
       natom = 0
       nextatom = 0
       nextpoint = 0
+      nconsatom = 0
+      nfreezeatom = 0
       do
         read(input,'(A80)',end=111,err=111) keywd
         i=1;j=80
@@ -512,42 +501,34 @@ contains
       endif
 
       112     continue
-
+    
+      !read contrained part
+      if (is_constrain) then
+         rewind(input)
+         if (is_extcharge) then
+            call findBlock(input,3)
+         else
+            call findBlock(input,2)
+         endif
+         do
+            read(input,'(A80)',end=113,err=113) keywd
+            if (is_blank(keywd,1,80)) exit
+            call upcase(keywd,80)
+            if ((index(keywd,'DISTANCE') /=0) .or. (index(keywd,'ANGLE') /=0) &
+               .or. (index(keywd,'DIHEDRAL') /=0)) nconsatom = nconsatom+1
+            if (index(keywd,'FREEZE')/=0) nfreezeatom =nfreezeatom+1
+         enddo
+      endif
+    
+      113       continue
+    
       iAtomType=iAtomType-1
       self%iAtomType = iAtomType
       self%nextatom = nextatom
-      self%nextpoint = nextpoint
+      self%nfreezeatom = nfreezeatom
+      self%nconsatom = nconsatom 
+    
     endif
-
-    112     continue
-
-    !read contrained part
-    if (is_constrain) then
-       rewind(input)
-       if (is_extcharge) then
-          call findBlock(input,3)
-       else
-          call findBlock(input,2)
-       endif
-       do
-          read(input,'(A80)',end=113,err=113) keywd
-          if (is_blank(keywd,1,80)) exit
-          call upcase(keywd,80)
-          if ((index(keywd,'DISTANCE') /=0) .or. (index(keywd,'ANGLE') /=0) &
-             .or. (index(keywd,'DIHEDRAL') /=0)) nconsatom = nconsatom+1
-          if (index(keywd,'FREEZE')/=0) nfreezeatom =nfreezeatom+1
-       enddo
-    endif
-
-    113       continue
-
-    iAtomType=iAtomType-1
-    self%iAtomType = iAtomType
-    self%nextatom = nextatom
-    self%nfreezeatom = nfreezeatom
-    self%nconsatom = nconsatom 
-
-  endif
 
   end subroutine read_quick_molspec
 
