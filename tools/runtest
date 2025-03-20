@@ -1332,6 +1332,7 @@ for buildtype in $buildtypes; do
       parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --xapply --will-cite run_rw_test {1} {2} {3} \
 	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" {%} \
 	      ::: "${tests[@]:$(($tc_start-1)):$tot_rw_tests}" ::: "${test_names[@]:$(($tc_start-1)):$tot_rw_tests}" \
+	      ::: `seq $tc_start $tc_end`
     fi
   fi
 
