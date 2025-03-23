@@ -118,7 +118,7 @@ subroutine dlf_parallel_opt(trestarted_report, tconv, &
   real(rk),allocatable :: energies_save(:), xcoords_save(:,:,:)
   real(rk),allocatable :: pop_icoords(:,:), init_pop_icoords(:,:)
   real(rk),allocatable :: pop_xgradient(:,:,:)
-  integer, intent(out) :: ierr
+  integer, intent(inout) :: ierr
 
 ! may want to change this for different systems...
   real(rk), parameter  :: small=1.0D-12
@@ -624,7 +624,7 @@ end subroutine dlf_init_engarrays
 subroutine dlf_get_engarrays(ierr)
 !! SOURCE
 
-  integer, intent(out) :: ierr
+  integer, intent(inout) :: ierr
 integer :: l, m, status
 
     do m = lower_index, glob%po_pop_size

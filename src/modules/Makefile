@@ -33,16 +33,16 @@ modobj=$(objfolder)/quick_exception_module.o $(objfolder)/quick_input_parser_mod
 		$(objfolder)/quick_timer_module.o $(objfolder)/quick_mfcc_module.o $(objfolder)/quick_params_module.o \
 		$(objfolder)/quick_pb_module.o $(objfolder)/quick_scratch_module.o $(objfolder)/quick_all_module.o \
 		$(objfolder)/quick_magma_module.o $(objfolder)/quick_overlap_module.o $(objfolder)/quick_gridpoints_module.o \
-		$(objfolder)/quick_cutoff_module.o $(objfolder)/quick_molsurface_module.o \
+		$(objfolder)/quick_cutoff_module.o $(objfolder)/quick_molsurface_module.o $(objfolder)/quick_molden_module.o \
 		$(objfolder)/quick_eri_cshell_module.o $(objfolder)/quick_eri_oshell_module.o $(objfolder)/quick_lri_module.o \
-		$(objfolder)/quick_molden_module.o $(objfolder)/quick_eri_grad_cshell_module.o \
-		$(objfolder)/quick_eri_grad_oshell_module.o $(objfolder)/quick_lri_grad_module.o \
-		$(objfolder)/quick_cew_module.o $(objfolder)/quick_oei_module.o \
-		$(objfolder)/quick_oeproperties_module.o $(objfolder)/quick_dft_module.o \
-		$(objfolder)/quick_scf_operator_module.o $(objfolder)/quick_scf_module.o $(objfolder)/quick_grad_cshell_module.o \
-		$(objfolder)/quick_grad_oshell_module.o \
-		$(objfolder)/quick_uscf_operator_module.o $(objfolder)/quick_uscf_module.o $(objfolder)/quick_sad_guess_module.o \
-		$(objfolder)/quick_dftd3_module.o
+		$(objfolder)/quick_eri_grad_cshell_module.o $(objfolder)/quick_eri_grad_oshell_module.o \
+		$(objfolder)/quick_lri_grad_module.o $(objfolder)/quick_cew_module.o \
+		$(objfolder)/quick_oei_module.o $(objfolder)/quick_oeproperties_module.o \
+		$(objfolder)/quick_dft_module.o $(objfolder)/quick_optimizer_module.o \
+		$(objfolder)/quick_grad_cshell_module.o $(objfolder)/quick_grad_oshell_module.o \
+		$(objfolder)/quick_scf_operator_module.o $(objfolder)/quick_scf_module.o \
+		$(objfolder)/quick_uscf_operator_module.o $(objfolder)/quick_uscf_module.o \
+		$(objfolder)/quick_sad_guess_module.o $(objfolder)/quick_dftd3_module.o
 
 opt_modobj=$(objfolder)/quick_optimizer_module.o
 
