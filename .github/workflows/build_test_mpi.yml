@@ -71,7 +71,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
-            mpi-install: 'mpich mpich-dev'
+            mpi-install: 'mpich mpich-devel'
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'gnu'
             mpi-type: 'OpenMPI'
@@ -89,7 +89,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
-            mpi-install: 'mpich mpich-dev'
+            mpi-install: 'mpich mpich-devel'
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - ${{ matrix.mpi-type }} - Legacy - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
@@ -221,7 +221,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
-            mpi-install: 'mpich mpich-dev'
+            mpi-install: 'mpich mpich-devel'
           - os: 'ubuntu-24.04'
             compiler-type: 'CLANG'
             mpi-type: 'OpenMPI'
@@ -284,7 +284,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
-            mpi-install: 'mpich mpich-dev'
+            mpi-install: 'mpich mpich-devel'
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'CLANG'
             mpi-type: 'OpenMPI'
