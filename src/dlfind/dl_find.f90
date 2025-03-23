@@ -492,11 +492,11 @@ subroutine dlf_run(ierr2 &
   do WHILE (stat%ccycle.lt.quick_method%iopt)! exit conditions implemented via exit statements
 
     if (glob%iopt/10 == 5) then ! parallel optimisation
-       call dlf_parallel_opt(trestarted_report, tconv &
+       call dlf_parallel_opt(trestarted_report, tconv, &
 #ifdef GAMESS
-       ,core&
+       core,&
 #endif
-       )
+       ierr2)
        exit ! the MAIN OPTIMISATION CYCLE
     end if
 

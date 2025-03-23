@@ -88,11 +88,11 @@
 !! best_active.xyz
 !!
 !! SYNOPSIS
-subroutine dlf_parallel_opt(trestarted_report, tconv &
+subroutine dlf_parallel_opt(trestarted_report, tconv, &
 #ifdef GAMESS
-    ,core&
+    core,&
 #endif
-    )
+    ierr)
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr,stdout,printl,printf
@@ -118,6 +118,7 @@ subroutine dlf_parallel_opt(trestarted_report, tconv &
   real(rk),allocatable :: energies_save(:), xcoords_save(:,:,:)
   real(rk),allocatable :: pop_icoords(:,:), init_pop_icoords(:,:)
   real(rk),allocatable :: pop_xgradient(:,:,:)
+  integer, intent(out) :: ierr
 
 ! may want to change this for different systems...
   real(rk), parameter  :: small=1.0D-12
@@ -256,7 +257,7 @@ subroutine dlf_parallel_opt(trestarted_report, tconv &
 #ifdef GAMESS
                core,&
 #endif
-               status)
+               status,ierr)
           stat%sene = stat%sene + 1
           stat%pene = stat%pene + 1
           call clock_stop("EANDG")
@@ -356,7 +357,7 @@ subroutine dlf_parallel_opt(trestarted_report, tconv &
 #ifdef GAMESS
                      core,&
 #endif
-                     status)
+                     status,ierr)
                 stat%pene = stat%pene + 1
                 call clock_stop("EANDG")
 
@@ -479,7 +480,7 @@ subroutine dlf_parallel_opt(trestarted_report, tconv &
 
        ! calculate energy and gradient for each individual in the population
        ! (apart from the first individual in a GA run...)
-       call dlf_get_engarrays
+       call dlf_get_engarrays(ierr)
 
 ! Make the full pop_energies (and pop_xgradient) arrays known on all processors
        !!!call dlf_global_real_sum(pop_energies(:), glob%po_pop_size)
@@ -514,7 +515,7 @@ subroutine dlf_parallel_opt(trestarted_report, tconv &
           call dlf_global_real_bcast(pop_icoords(:,:),&
                                     &glob%po_pop_size*glob%nivar,0)
           call dlf_init_engarrays
-          call dlf_get_engarrays
+          call dlf_get_engarrays(ierr)
           call dlf_tasks_real_sum(pop_energies(:), glob%po_pop_size)
           call dlf_tasks_real_sum(pop_xgradient(:,:,:), &
                                  &glob%po_pop_size*glob%nvar)
@@ -620,9 +621,10 @@ end subroutine dlf_init_engarrays
 !! pop_xgradient(:,:,:)
 !!
 !! SYNOPSIS
-subroutine dlf_get_engarrays
+subroutine dlf_get_engarrays(ierr)
 !! SOURCE
 
+  integer, intent(out) :: ierr
 integer :: l, m, status
 
     do m = lower_index, glob%po_pop_size
@@ -645,7 +647,7 @@ integer :: l, m, status
 #ifdef GAMESS
                core,&
 #endif
-               status)
+               status,ierr)
           stat%pene = stat%pene + 1
           call clock_stop("EANDG")
 
