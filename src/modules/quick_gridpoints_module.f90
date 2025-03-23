@@ -506,6 +506,20 @@ module quick_gridpoints_module
         if (.not. allocated(xcg_tmp%tmp_sswt)) allocate(xcg_tmp%tmp_sswt(tot_gps))
         if (.not. allocated(xcg_tmp%tmp_weight)) allocate(xcg_tmp%tmp_weight(tot_gps))
 #endif
+
+        xcg_tmp%init_grid_atm = 0
+        xcg_tmp%init_grid_ptx = 0.0d0
+        xcg_tmp%init_grid_pty = 0.0d0
+        xcg_tmp%init_grid_ptz = 0.0d0
+        xcg_tmp%arr_wtang = 0.0d0
+        xcg_tmp%arr_rwt = 0.0d0
+        xcg_tmp%arr_rad3 = 0.0d0
+        xcg_tmp%sswt = 0.0d0
+        xcg_tmp%weight = 0.0d0
+#ifdef MPIV
+        xcg_tmp%tmp_sswt = 0.0d0
+        xcg_tmp%tmp_weight = 0.0d0
+#endif
     end subroutine
 
 #ifdef MPIV
@@ -517,6 +531,8 @@ module quick_gridpoints_module
         if (.not. allocated(self%igridptul)) allocate(self%igridptul(mpisize))
         if (.not. allocated(self%igridptll)) allocate(self%igridptll(mpisize))
 
+        self%igridptul = 0
+        self%igridptll = 0
    end subroutine
 #endif
 
