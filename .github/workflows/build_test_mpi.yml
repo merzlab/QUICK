@@ -135,9 +135,15 @@ jobs:
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          if [[ ${{ matrix.mpi-type }} == 'OpenMPI' ]]; then
+            echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+            echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+            echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          elif [[ ${{ matrix.mpi-type }} == 'MPICH' ]]; then
+            echo "MPICH_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+            echo "MPICH_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+            echo "MPICH_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          fi
       - name: 'Configure MPI Version'
         run: |
           ./configure --mpi --enablef --prefix $PWD/install \
@@ -152,14 +158,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mpi-legacy-configure-make-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: mpi-legacy-configure-make-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}-${{ matrix.mpi-type }}
           path: ${{ github.workspace }}/install/test/runs/mpi
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for MPI Version'
         uses: actions/download-artifact@v4
         with:
-          name: mpi-legacy-configure-make-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: mpi-legacy-configure-make-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}-${{ matrix.mpi-type }}
       - name: 'Display Artifacts'
         run: |
           ls -R
@@ -242,7 +248,7 @@ jobs:
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'INTELLLVM'
-            mpi-type: 'Intel MPI (oneCCL)'
+            mpi-type: 'Intel MPI'
             compiler-version: '2024.2.1'
             c-compiler: 'mpiicx'
             cxx-compiler: 'mpiicpx'
@@ -251,7 +257,7 @@ jobs:
             mpi-install: ''
           - os: 'ubuntu-24.04'
             compiler-type: 'INTELLLVM'
-            mpi-type: 'Intel MPI (oneCCL)'
+            mpi-type: 'Intel MPI'
             compiler-version: '2025.0.1'
             c-compiler: 'mpiicx'
             cxx-compiler: 'mpiicpx'
@@ -260,7 +266,7 @@ jobs:
             mpi-install: ''
           - os: 'ubuntu-24.04'
             compiler-type: 'PGI'
-            mpi-type: 'OpenMPI (from NVHPC SDK)'
+            mpi-type: 'OpenMPI'
             compiler-version: '25.1'
             c-compiler: 'pgcc'
             cxx-compiler: 'pgcc++'
@@ -345,9 +351,15 @@ jobs:
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          if [[ ${{ matrix.mpi-type }} == 'OpenMPI' ]]; then
+            echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+            echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+            echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          elif [[ ${{ matrix.mpi-type }} == 'MPICH' ]]; then
+            echo "MPICH_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+            echo "MPICH_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+            echo "MPICH_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          fi
           if [ ${{ matrix.compiler-type }} == 'PGI' ]; then
             echo PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/comm_libs/mpi/bin:$PATH >> "$GITHUB_ENV"
             echo INCLUDE_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH >> "$GITHUB_ENV"
@@ -365,9 +377,15 @@ jobs:
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          if [[ ${{ matrix.mpi-type }} == 'OpenMPI' ]]; then
+            echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+            echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+            echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          elif [[ ${{ matrix.mpi-type }} == 'MPICH' ]]; then
+            echo "MPICH_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+            echo "MPICH_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+            echo "MPICH_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          fi
           if [[ ${{ matrix.os }} == 'macos-13' ]]; then
             echo "BREW_COMPILER_PREFIX=/usr/local/bin" >> "$GITHUB_ENV"
             echo "PATH=/usr/local/bin:$PATH" >> "$GITHUB_ENV"
@@ -499,14 +517,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mpi-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: mpi-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}-${{ matrix.mpi-type }}
           path: ${{ github.workspace }}/install/test/runs/mpi
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for MPI Version'
         uses: actions/download-artifact@v4
         with:
-          name: mpi-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: mpi-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}-${{ matrix.mpi-type }}
       - name: 'Display Artifacts'
         run: |
           ls -R

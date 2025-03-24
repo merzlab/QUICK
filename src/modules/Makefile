@@ -23,9 +23,9 @@ include $(MAKEIN)
 #  ! Variable declarations                                               !
 #  !---------------------------------------------------------------------!
 
-FOR=$(FC) $(FFLAGS)
+FOR = $(FC) $(FFLAGS)
 
-modobj=$(objfolder)/quick_exception_module.o $(objfolder)/quick_input_parser_module.o $(objfolder)/quick_mpi_module.o \
+modobj = $(objfolder)/quick_exception_module.o $(objfolder)/quick_input_parser_module.o $(objfolder)/quick_mpi_module.o \
 	$(objfolder)/quick_files_module.o $(objfolder)/quick_constants_module.o $(objfolder)/quick_method_module.o \
 	$(objfolder)/quick_molspec_module.o $(objfolder)/quick_gaussian_class_module.o $(objfolder)/quick_size_module.o \
 	$(objfolder)/quick_basis_module.o $(objfolder)/quick_calculated_module.o \
@@ -44,29 +44,22 @@ modobj=$(objfolder)/quick_exception_module.o $(objfolder)/quick_input_parser_mod
 	$(objfolder)/quick_sad_guess_module.o $(objfolder)/quick_dftd3_module.o \
 	$(objfolder)/quick_optimizer_module.o 
 
-opt_modobj=$(objfolder)/quick_optimizer_module.o
-
-apimodobj=$(objfolder)/quick_api_module.o  $(objfolder)/quick_api_test_module.o
+apimodobj = $(objfolder)/quick_api_test_module.o $(objfolder)/quick_api_module.o
 
 #  !---------------------------------------------------------------------!
 #  ! Build targets                                                !
 #  !---------------------------------------------------------------------!
 
-$(modobj):$(objfolder)/%.o:%.f90
+$(modobj): $(objfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FOR) -c $< -o $@
 
-$(apimodobj):$(objfolder)/%.o:%.f90
+$(apimodobj): $(objfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	 $(VB)$(FOR) -c $< -o $@
 
-$(opt_modobj):$(objfolder)/%.o:%.f90
-	@echo "[QUICK]  FC $@"
-	$(VB)$(FOR) -c $< -o $@
+all: $(modobj) $(apimodobj)
 
-all:$(modobj) $(opt_modobj) $(apimodobj)
-
-#post_dlfind:$(opt_modobj) $(apimodobj)
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
 #  !---------------------------------------------------------------------!
@@ -75,4 +68,3 @@ all:$(modobj) $(opt_modobj) $(apimodobj)
 
 clean:
 	@-rm -f *.mod *.o
-
