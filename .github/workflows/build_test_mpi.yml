@@ -146,7 +146,7 @@ jobs:
           fi
       - name: 'Configure MPI Version'
         run: |
-          ./configure --mpi --enablef --prefix $PWD/install \
+          ./configure --mpi --enablef --verbose --prefix $PWD/install \
             ${{ matrix.compiler-type }}
       - name: 'Build and Install MPI Version Using 2 Jobs'
         run: |
@@ -504,7 +504,7 @@ jobs:
             source /opt/intel/oneapi/setvars.sh
           fi
           cd build
-          cmake --build . --parallel 2
+          cmake --build . --parallel 2 --verbose
           cmake --install .
       - name: 'Run Tests for MPI Version Using 2 MPI Processes'
         run: |

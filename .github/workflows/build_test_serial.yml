@@ -105,7 +105,7 @@ jobs:
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
       - name: 'Configure Serial Version'
         run: |
-          ./configure --serial --enablef --prefix $PWD/install \
+          ./configure --serial --enablef --verbose --prefix $PWD/install \
             ${{ matrix.compiler-type }}
       - name: 'Build and Install Serial Version Using 2 Jobs'
         run: |
@@ -394,7 +394,7 @@ jobs:
             source /opt/intel/oneapi/setvars.sh
           fi
           cd build
-          cmake --build . --parallel 2
+          cmake --build . --parallel 2 --verbose
           cmake --install .
       - name: 'Run Tests for Serial Version'
         run: |
