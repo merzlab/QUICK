@@ -249,40 +249,40 @@ serial: cpmakein libxc_cpu dftd3 quick_modules dlfind octree quick_subs $(OBJ) $
 	@echo "[QUICK]  AR $(libfolder)/libquick.$(LIBEXT)"
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
 	@echo "[QUICK]  LD $(exefolder)/quick"
-	$(VB)$(FC) $(LDFLAGS) -L$(libfolder) -lquick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(MAIN) \
+	$(VB)$(FC) $(MAIN) -L$(libfolder) -lquick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS) \
 	-o $(exefolder)/quick
 	@echo "[QUICK]  LD $(exefolder)/test-quick"
-	$(VB)$(FC) $(LDFLAGS) -L$(libfolder) -lquick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(TESTAPI) \
+	$(VB)$(FC) $(TESTAPI) -L$(libfolder) -lquick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS) \
 	-o $(exefolder)/test-api
 
 mpi: cpmakein libxc_cpu dftd3 quick_modules dlfind octree quick_subs $(OBJ) $(MAIN) blas-quick lapack $(TESTAPI)
 	@echo "[QUICK]  AR $(libfolder)/libquick-mpi.$(LIBEXT)"
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-mpi.$(LIBEXT) $(objfolder)/*.o
 	@echo "[QUICK]  LD $(exefolder)/quick.MPI"
-	$(VB)$(FC) $(LDFLAGS) -L$(libfolder) -lquick-mpi -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(MAIN) \
+	$(VB)$(FC) $(MAIN) -L$(libfolder) -lquick-mpi -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS) \
 	-o $(exefolder)/quick.MPI
 	@echo "[QUICK]  LD $(exefolder)/test-api.MPI"
-	$(VB)$(FC) $(LDFLAGS) -L$(libfolder) -lquick-mpi -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(TESTAPI) \
+	$(VB)$(FC) $(TESTAPI) -L$(libfolder) -lquick-mpi -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS) \
 	-o $(exefolder)/test-api.MPI
 
 cuda: cpmakein libxc_gpu dftd3 quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) blas-quick lapack $(TESTAPI)
 	@echo "[QUICK]  AR $(libfolder)/libquick-cuda.$(LIBEXT)"
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cuda.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
 	@echo "[QUICK]  LD $(exefolder)/quick.cuda"
-	$(VB)$(FC) $(LDFLAGS) $(CFLAGS) -L$(libfolder) -lquick-cuda -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(MAIN) \
+	$(VB)$(FC) $(MAIN) -L$(libfolder) -lquick-cuda -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS) $(CFLAGS) \
 	-o $(exefolder)/quick.cuda 
 	@echo "[QUICK]  LD $(exefolder)/test-api.MPI"
-	$(VB)$(FC) $(LDFLAGS) $(CFLAGS) -L$(libfolder) -lquick-cuda -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(TESTAPI) \
+	$(VB)$(FC) $(TESTAPI) -L$(libfolder) -lquick-cuda -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS) $(CFLAGS) \
 	-o $(exefolder)/test-api.cuda 
 
 cudampi: cpmakein libxc_gpu dftd3 quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) blas-quick lapack $(TESTAPI)
 	@echo "[QUICK]  AR $(libfolder)/libquick-cudampi.$(LIBEXT)"
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cudampi.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
 	@echo "[QUICK]  LD $(exefolder)/quick.cuda.MPI"
-	$(VB)$(FC) $(LDFLAGS) $(CFLAGS) -L$(libfolder) -lquick-cudampi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(MAIN) \
+	$(VB)$(FC) $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS) $(CFLAGS) \
 	-o $(exefolder)/quick.cuda.MPI
 	@echo "[QUICK]  LD $(exefolder)/test-api.cuda.MPI"
-	$(VB)$(FC) $(LDFLAGS) $(CFLAGS) -L$(libfolder) -lquick-cudampi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(TESTAPI) \
+	$(VB)$(FC) $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS) $(CFLAGS) \
 	-o $(exefolder)/test-api.cuda.MPI
 
 hip: cpmakein libxc_gpu dftd3 octree quick_hip rocblas rocsolver quick_modules dlfind quick_subs $(OBJ) $(MAIN) blas-quick lapack $(TESTAPI)
@@ -290,12 +290,14 @@ hip: cpmakein libxc_gpu dftd3 octree quick_hip rocblas rocsolver quick_modules d
 	$(VB)$(ARCH) rcsD $(libfolder)/libquick-dev-hip.$(LIBEXT) $(libxcdevobjfolder)/*.o 
 	$(VB)$(ARCH) cr $(libfolder)/libquick-hip.$(LIBEXT) $(objfolder)/*.o
 	@echo "[QUICK]  LD $(exefolder)/quick.hip"
-	$(VB)$(HIPCC) $(HIP_LD_FLAGS) -fgpu-rdc $(cudaxcobj) \
-	$(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick -lgfortran $(MAIN) \
+	$(VB)$(HIPCC) -fgpu-rdc \
+	$(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick \
+	$(cudaxcobj) $(MAIN) -lgfortran $(HIP_LD_FLAGS) \
 	-o $(exefolder)/quick.hip 
 	@echo "[QUICK]  LD $(exefolder)/test-api.hip"
-	$(VB)$(HIPCC) $(HIP_LD_FLAGS) -fgpu-rdc $(cudaxcobj) \
-	$(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick -lgfortran $(TESTAPI) \
+	$(VB)$(HIPCC) -fgpu-rdc \
+	$(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick \
+	$(cudaxcobj) $(TESTAPI) -lgfortran $(HIP_LD_FLAGS) \
 	-o $(exefolder)/test-api.hip 
 
 hipmpi: cpmakein libxc_gpu dftd3 octree quick_hip rocblas rocsolver quick_modules dlfind quick_subs $(OBJ) $(MAIN) blas-quick lapack $(TESTAPI)
@@ -303,12 +305,14 @@ hipmpi: cpmakein libxc_gpu dftd3 octree quick_hip rocblas rocsolver quick_module
 	$(VB)$(ARCH) rcsD $(libfolder)/libquick-dev-hipmpi.$(LIBEXT) $(libxcdevobjfolder)/*.o 
 	$(VB)$(ARCH) cr $(libfolder)/libquick-hipmpi.$(LIBEXT) $(objfolder)/*.o
 	@echo "[QUICK]  LD $(exefolder)/quick.hip.MPI"
-	$(VB)$(HIPCC) $(HIP_MPI_LD_FLAGS) $(HIP_LD_FLAGS) -fgpu-rdc $(cudaxcobj) \
-	$(libfolder)/libquick-dev-hipmpi.a -L$(libfolder) -lquick-hipmpi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick -lgfortran $(MAIN) \
+	$(VB)$(HIPCC) $(HIP_MPI_LD_FLAGS) -fgpu-rdc \
+	$(libfolder)/libquick-dev-hipmpi.a -L$(libfolder) -lquick-hipmpi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick \
+	$(cudaxcobj) $(MAIN) -lgfortran $(HIP_LD_FLAGS) \
 	-o $(exefolder)/quick.hip.MPI 
 	@echo "[QUICK]  LD $(exefolder)/test-api.hip.MPI"
-	$(VB)$(HIPCC) $(HIP_MPI_LD_FLAGS) $(HIP_LD_FLAGS) -fgpu-rdc $(cudaxcobj) \
-	$(libfolder)/libquick-dev-hipmpi.a -L$(libfolder) -lquick-hipmpi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick -lgfortran $(TESTAPI) \
+	$(VB)$(HIPCC) $(HIP_MPI_LD_FLAGS) -fgpu-rdc \
+	$(libfolder)/libquick-dev-hipmpi.a -L$(libfolder) -lquick-hipmpi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick \
+	$(cudaxcobj) $(TESTAPI) -lgfortran $(HIP_LD_FLAGS) \
 	-o $(exefolder)/test-api.hip.MPI 
 
 #  !---------------------------------------------------------------------!
