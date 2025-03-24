@@ -150,7 +150,7 @@ jobs:
             ${{ matrix.compiler-type }}
       - name: 'Build and Install MPI Version Using 2 Jobs'
         run: |
-          make -j1 all install
+          make -j2 all install
       - name: 'Run Tests for MPI Version (Make) Using 2 MPI Processes'
         run: |
           make fulltest
