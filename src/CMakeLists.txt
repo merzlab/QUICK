@@ -159,6 +159,7 @@ if(MPI)
 	remove_link_libraries(libquick_mpi octree)
 	target_link_libraries(libquick_mpi PRIVATE octree_mpi)
 	if(INSIDE_AMBER)
+		remove_link_libraries(libquick_mpi octree)
 		target_link_libraries(libquick_mpi PRIVATE libcew_mpi)
 	endif()
 	config_module_dirs(libquick_mpi quick/mpi libxc/serial)
@@ -202,9 +203,7 @@ if(CUDA)
 			target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE lapack)
 		endif()
 
-		if(INSIDE_AMBER)
-			target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE libcew)
-		endif()
+		# INSIDE_AMBER: libcew link library copied from libquick target
 
 		config_module_dirs(libquick_${QUICK_GPU_TARGET_NAME} quick/${QUICK_GPU_TARGET_NAME} libxc/gpu)
 
@@ -221,9 +220,7 @@ if(CUDA)
 		target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu octree_gpu
 			quick_${QUICK_GPU_TARGET_NAME}_kernels cublas cusolver)
 
-		if(INSIDE_AMBER)
-			target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE libcew)
-		endif()
+		# INSIDE_AMBER: libcew link library copied from libquick target
 
 		config_module_dirs(libquick_${QUICK_GPU_TARGET_NAME} quick/${QUICK_GPU_TARGET_NAME} libxc/gpu)
 
@@ -262,9 +259,8 @@ if(MPI AND CUDA)
 		else()
 			target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE lapack)
 		endif()
-		if(INSIDE_AMBER)
-			target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE libcew_mpi)
-		endif()
+
+		# INSIDE_AMBER: libcew_mpi link library copied from libquick target
 
 		config_module_dirs(libquick_mpi_${QUICK_GPU_TARGET_NAME} quick/mpi_${QUICK_GPU_TARGET_NAME} libxc/gpu)
 
@@ -280,9 +276,7 @@ if(MPI AND CUDA)
 		target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu xc_${QUICK_GPU_TARGET_NAME} octree_gpu
 			quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi cublas cusolver)
 
-		if(INSIDE_AMBER)
-			target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE libcew_mpi)
-		endif()
+		# INSIDE_AMBER: libcew_mpi link library copied from libquick target
 
 		config_module_dirs(libquick_mpi_${QUICK_GPU_TARGET_NAME} quick/mpi_${QUICK_GPU_TARGET_NAME} libxc/gpu)
 
