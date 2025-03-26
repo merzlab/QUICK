@@ -1732,6 +1732,7 @@ if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
 fi
 
 cat >> "$quick_prefix/quick.rc" << EOF
+export LIBRARY_PATH=$libpaths\$LIBRARY_PATH
 export LD_LIBRARY_PATH=$libpaths\$LD_LIBRARY_PATH
 EOF
 fi
