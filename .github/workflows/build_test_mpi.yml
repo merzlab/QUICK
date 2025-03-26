@@ -146,7 +146,7 @@ jobs:
           fi
       - name: 'Configure MPI Version'
         run: |
-          ./configure --mpi --enablef --verbose --prefix $PWD/install \
+          ./configure --mpi --enablef --shared --verbose --prefix $PWD/install \
             ${{ matrix.compiler-type }}
       - name: 'Build and Install MPI Version Using 2 Jobs'
         run: |

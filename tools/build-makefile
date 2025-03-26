@@ -322,9 +322,9 @@ hipmpi: cpmakein libxc_gpu dftd3 octree quick_hip rocblas rocsolver quick_module
 .PHONY: clean
 
 clean:
-	@-rm -f $(objfolder)/*.o $(mainobjfolder)/*.o $(inclfolder)/* $(exefolder)/* $(libfolder)/*
-	@-rm -f $(libxcobjfolder)/*.o $(lapackfolder)/*.o $(dlfindobjfolder)/*.o $(blasobjfolder)/*.o $(libxcdevobjfolder)/*.o \
-	$(dftd3objfolder)/*.o
+	@-rm -f $(objfolder)/*.o $(mainobjfolder)/*.o $(inclfolder)/* $(exefolder)/* $(libfolder)/* \
+	$(libxcobjfolder)/*.o $(lapackobjfolder)/*.o $(dlfindobjfolder)/*.o $(blasobjfolder)/*.o \
+	$(libxcdevobjfolder)/*.o $(dftd3objfolder)/*.o
 	@cd $(cudafolder) && make --no-print-directory clean
 	@cd $(hipfolder) && make --no-print-directory clean
 	@cd $(subfolder) && make --no-print-directory clean
@@ -335,16 +335,4 @@ clean:
 	@cd $(dlfindfolder) && make --no-print-directory clean
 	@cd $(lapackfolder) && make --no-print-directory clean
 	@cd $(dftd3folder) && make --no-print-directory clean
-	@-rm -f ./make.in
-	@-rm -f $(libxcfolder)/make.in
-	@-rm -f $(libxcfolder)/make.in
-	@-rm -f $(libxcfolder)/maple2c_device/make.in
-	@-rm -f $(cudafolder)/make.in
-	@-rm -f $(hipfolder)/make.in
-	@-rm -f $(octfolder)/make.in
-	@-rm -f $(subfolder)/make.in
-	@-rm -f $(modfolder)/make.in
-	@-rm -f $(blasfolder)/make.in
-	@-rm -f $(dlfindfolder)/make.in
-	@-rm -f $(dftd3folder)/make.in
-	@-rm -f $(lapackfolder)/make.in
+	@-rm -f $(homefolder)/test/test-api*
