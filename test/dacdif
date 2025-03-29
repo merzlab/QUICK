@@ -300,12 +300,12 @@ do
     else
         if [ "$ndiff" = "$on" ]
         then
-            #  "$AMBERHOME/bin/ndiff" -r $relerr $old $new > $path.$dif_ext
-            awk -f "$AMBERHOME/test/ndiff.awk" -v RELERR=$relerr \
+            #  "$QUICK_HOME/bin/ndiff" -r $relerr $old $new > $path.$dif_ext
+            awk -f "$QUICK_HOME/test/ndiff.awk" -v RELERR=$relerr \
                  $old $new > $path.$dif_ext
         elif [ "$ndiffa" = "$on" ]
         then
-            awk -f "$AMBERHOME/test/ndiff.awk" -v ABSERR=$abserr \
+            awk -f "$QUICK_HOME/test/ndiff.awk" -v ABSERR=$abserr \
                  $old $new > $path.$dif_ext
         else
             diff $old $new > $path.$dif_ext
