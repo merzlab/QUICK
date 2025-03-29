@@ -27,7 +27,7 @@ gpu_libxc_info** init_gpu_libxc(int * const num_of_funcs, int * arr_func_id,
     int *arr_func_id_;
     double *arr_mix_coeffs_;
     xc_func_type hyb_func;
-    //A device array of pointers for gpu_libxc_info data
+    // array of device pointers for gpu_libxc_info data
     gpu_libxc_info** h_glinfo_array;
 
     if (*num_of_funcs == 1) {
