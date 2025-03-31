@@ -85,13 +85,15 @@ module quick_molsurface_module
     integer :: npoints, total_points
     integer :: i, j, k, ierr
     integer :: max_points
-    double precision, allocatable :: xyz_points(:,:)
+    double precision, allocatable :: xyz_points(:,:), temp(:,:)
 
     RECORD_TIME(timer_begin%TESPsurface)
 
     max_points = int(natom*200/(quick_method%espgrid_spacing)**2)
 
     allocate(xyz_points(3,max_points))
+    ! temporary array to facilitate reallocation
+    allocate(temp(1,1))
 
       ierr = 0
 
@@ -104,8 +106,15 @@ module quick_molsurface_module
         total_points = total_points + npoints
 
         if(total_points .gt. max_points) then
-          ierr = 41
-          call RaiseException(ierr)
+          deallocate(temp)
+          allocate(temp(3,total_points-npoints))
+          temp = xyz_points(1:3,1:total_points-npoints)
+
+          deallocate(xyz_points)
+          max_points = 2*max_points
+          allocate(xyz_points(3,max_points))
+
+          xyz_points(1:3,1:total_points-npoints) = temp
         end if
 
           do k = 1,3
@@ -119,6 +128,7 @@ module quick_molsurface_module
       quick_molspec%vdwpointxyz(1:3,1:total_points) = xyz_points(1:3,1:total_points)
 
       deallocate(xyz_points)
+      deallocate(temp)
 
       RECORD_TIME(timer_end%TESPsurface)
       timer_cumer%TESPsurface=timer_cumer%TESPsurface+timer_end%TESPsurface-timer_begin%TESPsurface
