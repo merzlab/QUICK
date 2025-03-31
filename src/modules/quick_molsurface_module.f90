@@ -147,11 +147,11 @@ module quick_molsurface_module
     double precision, external :: rootSquare
 
     integer, intent(out) :: npoints
-    integer :: i,j,k,ncircles,circle,npts,nphi
+    integer :: i,j,k,l,ii,ncircles,circle,npts,nphi,nneighbor
     double precision :: scale_factor,espgrid_spacing
     double precision :: start_theta,delta_theta,rcircle,radius,theta,delta_phi
     double precision :: Bondi_vdw_radii(118), Tkatchenko_vdw_radii(118)
-    integer :: Bondi_atom_list(38)
+    integer :: Bondi_atom_list(38), neighbor_list(natom), start_index(natom), end_index(natom)
     double precision :: atomic_vdw_radii(natom),xyz_sphere(3,4000)
     double precision, intent(out) :: surface_points(3,natom*2000)
     double precision :: thresh
@@ -219,6 +219,16 @@ module quick_molsurface_module
     ! Go over each atom and get points on their vanderwaals surface using 
     ! the correspnding atomic_vdw_radii
     do i = 1, natom
+      ! Create a list of neighbors for efficiency
+      nneighbor=0
+      do ii = 1, natom
+        if (ii .ne. i) then
+          if(rootSquare(xyz(1:3,ii),xyz(1:3,i),3) .le. (atomic_vdw_radii(ii)+atomic_vdw_radii(i)+thresh)) then
+            nneighbor=nneighbor+1
+            neighbor_list(nneighbor)=ii
+          endif
+        endif
+      enddo
       npts = 0
       radius = atomic_vdw_radii(i)
       ! We will make circles on the surface. Find the number of circles to make.
@@ -235,12 +245,10 @@ module quick_molsurface_module
           xyz_sphere(1,npts) = xyz(1,i) + radius*cos(theta)
           xyz_sphere(2,npts) = xyz(2,i) + radius*sin(theta)*cos((j-1)*delta_phi)
           xyz_sphere(3,npts) = xyz(3,i) + radius*sin(theta)*sin((j-1)*delta_phi)
-          do k = 1, natom
-            if (k .ne. i)then
-              if(rootSquare(xyz_sphere(1:3,npts),xyz(1:3,k),3).lt.atomic_vdw_radii(k))then
-                npts = npts - 1
-                exit
-              end if
+          do k = 1, nneighbor
+            if(rootSquare(xyz_sphere(1:3,npts),xyz(1:3,neighbor_list(k)),3).lt.atomic_vdw_radii(neighbor_list(k)))then
+              npts = npts - 1
+              exit
             end if
           end do
         end do
@@ -253,13 +261,21 @@ module quick_molsurface_module
           end do
         end do
         npoints = npts
+        start_index(i) = 1
+        end_index(i) = npoints
       else
+        start_index(i) = npoints + 1
         do j = 1, npts
           proximal = .False.
-          do k = 1, npoints
-            if (rootSquare(surface_points(1:3,k), xyz_sphere(1:3,j), 3).lt.thresh)then
-              proximal = .True.
-              exit
+          do k = 1, nneighbor
+            if(neighbor_list(k) .lt. i)then
+              do l = start_index(neighbor_list(k)), end_index(neighbor_list(k))
+                if (rootSquare(surface_points(1:3,l), xyz_sphere(1:3,j), 3).lt.thresh)then
+                  proximal = .True.
+                  exit
+                end if
+              end do
+              if (proximal)exit
             end if
           end do
           if (.not. proximal) then
@@ -269,6 +285,7 @@ module quick_molsurface_module
             end do
           end if
         end do
+        end_index(i) = npoints
       end if
     end do
 
