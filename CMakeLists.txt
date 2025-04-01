@@ -70,7 +70,21 @@ list(APPEND NO_OPT_CXXFLAGS "-O0")
 # GNU
 # --------------------------------------------------------------------
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
-    list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND TARGET_ARCH STREQUAL "arm64")
+	    execute_process(COMMAND sysctl machdep.cpu.brand_string OUTPUT_VARIABLE CPU_INFO)
+
+	    string(REGEX MATCH "* '(M[0-9]*)'*" _ "${CPU_INFO}")
+	    set(CPU_VERSION ${CMAKE_MATCH_1})
+
+	    if("${CPU_TYPE}" STREQUAL "M1" OR "${CPU_TYPE}" STREQUAL "M2")
+		    list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
+	    else()
+		    # workaround GCC code generation issues with M3 and newer CPUs
+		    list(APPEND OPT_CFLAGS "-O2")
+	    endif()
+    else()
+        list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
+    endif()
 
     if (WARNINGS)
 	add_flags(C -Wall -Wno-unused-function -Wno-unknown-pragmas)
@@ -86,7 +100,16 @@ if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    list(APPEND OPT_CXXFLAGS "-O2" "-mtune=native")
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND TARGET_ARCH STREQUAL "arm64")
+	    if("${CPU_TYPE}" STREQUAL "M1" OR "${CPU_TYPE}" STREQUAL "M2")
+		    list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
+	    else()
+		    # workaround GCC code generation issues with M3 and newer CPUs
+		    list(APPEND OPT_CFLAGS "-O2")
+	    endif()
+    else()
+        list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
+    endif()
 
     if (WARNINGS)
 	add_flags(CXX -Wall -Wno-unused-function -Wno-unknown-pragmas)
@@ -109,7 +132,17 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 endif()
 
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
-    list(APPEND OPT_FFLAGS "-O2" "-mtune=native")
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND TARGET_ARCH STREQUAL "arm64")
+	    if("${CPU_TYPE}" STREQUAL "M1" OR "${CPU_TYPE}" STREQUAL "M2")
+		    list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
+	    else()
+		    # workaround GCC code generation issues with M3 and newer CPUs
+		    list(APPEND OPT_CFLAGS "-O2")
+	    endif()
+    else()
+        list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
+    endif()
+
     add_flags(Fortran -ffree-line-length-none)
 
     if (WARNINGS)
