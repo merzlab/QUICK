@@ -76,7 +76,7 @@ if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 	    string(REGEX MATCH "(M[0-9]*)" _ "${CPU_INFO}")
 	    set(CPU_VERSION ${CMAKE_MATCH_1})
 
-	    if("${CPU_TYPE}" STREQUAL "M1" OR "${CPU_TYPE}" STREQUAL "M2")
+	    if("${CPU_VERSION}" STREQUAL "M1" OR "${CPU_VERSION}" STREQUAL "M2")
 		    list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
 	    else()
 		    # workaround GCC code generation issues with M3 and newer CPUs
@@ -101,7 +101,7 @@ endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND TARGET_ARCH STREQUAL "arm64")
-	    if("${CPU_TYPE}" STREQUAL "M1" OR "${CPU_TYPE}" STREQUAL "M2")
+	    if("${CPU_VERSION}" STREQUAL "M1" OR "${CPU_VERSION}" STREQUAL "M2")
 		    list(APPEND OPT_CXXFLAGS "-O2" "-mtune=native")
 	    else()
 		    # workaround GCC code generation issues with M3 and newer CPUs
@@ -133,7 +133,7 @@ endif()
 
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
     if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND TARGET_ARCH STREQUAL "arm64")
-	    if("${CPU_TYPE}" STREQUAL "M1" OR "${CPU_TYPE}" STREQUAL "M2")
+	    if("${CPU_VERSION}" STREQUAL "M1" OR "${CPU_VERSION}" STREQUAL "M2")
 		    list(APPEND OPT_FFLAGS "-O2" "-mtune=native")
 	    else()
 		    # workaround GCC code generation issues with M3 and newer CPUs
