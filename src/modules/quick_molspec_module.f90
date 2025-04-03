@@ -199,7 +199,9 @@ contains
        else
          current_size = 0
        endif
-       if(current_size < self%nextatom) then
+       ! if size changes at all, be safe and reallocate to avoid mismatches in array operations with external codes;
+       ! this can be potentially revisited in the future during optimization efforts
+       if(current_size /= self%nextatom) then
          deallocate(self%extchg, stat=ierr)
          deallocate(self%extxyz, stat=ierr)
          allocate(self%extchg(self%nextatom), stat=ierr)
@@ -215,13 +217,15 @@ contains
        else
          current_size = 0
        endif
-      if(current_size < 3*self%nextpoint) then
-        deallocate(self%extpointxyz, stat=ierr)
-        allocate(self%extpointxyz(3,self%nextpoint), stat=ierr)
-      endif
-      self%extchg=0.0d0
-      self%extpointxyz=0.0d0
-    endif
+       ! if size changes at all, be safe and reallocate to avoid mismatches in array operations with external codes;
+       ! this can be potentially revisited in the future during optimization efforts
+       if(current_size /= 3*self%nextpoint) then
+         deallocate(self%extpointxyz, stat=ierr)
+         allocate(self%extpointxyz(3,self%nextpoint), stat=ierr)
+       endif
+       self%extchg=0.0d0
+       self%extpointxyz=0.0d0
+     endif
 
    end subroutine reallocate_quick_molspec
 

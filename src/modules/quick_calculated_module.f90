@@ -324,7 +324,9 @@ contains
        else
          current_size = 0
        endif
-       if (current_size < 3*quick_molspec%nextatom) then
+       ! if size changes at all, be safe and reallocate to avoid mismatches in array operations with external codes;
+       ! this can be potentially revisited in the future during optimization efforts
+       if (current_size /= 3*quick_molspec%nextatom) then
          deallocate(self%ptchg_gradient, stat=ierr)
          allocate(self%ptchg_gradient(3*quick_molspec%nextatom), stat=ierr)
        endif
