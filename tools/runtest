@@ -443,7 +443,11 @@ run_test()
   fi
 
   if [ `check_f_error $1` -eq 1 ]; then
-    echo "SKIPPED."
+    echo "SKIPPED (code not compiled with f function support)."
+    echo "=============================================================="
+    echo ""
+  elif [ `check_mpi_gpu_mismatch $1` -eq 1 ]; then
+    echo "SKIPPED (DO_PARALLEL: # MPI procs > # GPUs)."
     echo "=============================================================="
     echo ""
   fi
@@ -863,6 +867,19 @@ check_f_error()
 }
 
 
+# Function to skip tests if the MPI+CUDA/MPI+HIP codes were executed with
+# more MPI processes than available GPUs on the system
+#
+# arguments:
+#   $1: test name
+check_mpi_gpu_mismatch()
+{
+    mpi_gpu_error_string=`grep 'Error: Number of launched processes is greater than the available number of GPUs.' "$1.out"`
+
+    if [ -z "$mpi_gpu_error_string" ]; then echo 0 ; else echo 1 ; fi
+}
+
+
 check_for_req_deps "cat" "date" "echo" "rm" "seq" "tee" "touch" "wc" "awk" "sed"
 
 #  !---------------------------------------------------------------------!
@@ -1109,7 +1126,7 @@ if [ -n "$PARALLEL_TEST_COUNT" ]; then
   export buildtype qbindir qexe apipath apiexe ismpirun has_parallel
   export -f set_job_gpus set_test run_test run_test_api run_energy_test run_grad_test run_opt_test run_api_test \
 	  run_esp_test check_energy check_gradient check_opt check_esp_charge check_esp_grid check_vdw_surface check_dipole \
-          clean_up check_f_error lock_file unlock_file
+          clean_up check_f_error check_mpi_gpu_mismatch lock_file unlock_file
 fi
 
 #  !---------------------------------------------------------------------!

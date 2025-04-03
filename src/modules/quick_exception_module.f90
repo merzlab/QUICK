@@ -145,6 +145,9 @@ contains
     case(41)
       msg='No of points out of range while creating vanderwaals surface for ESP charge calculation.'
 
+    case(42)
+      msg='Number of launched processes is greater than the available number of GPUs. Please relaunch with lower number of processes.'
+
     case default
       msg='Unknown error.'
 

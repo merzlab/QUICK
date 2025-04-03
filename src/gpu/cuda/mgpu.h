@@ -38,12 +38,11 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
     if (gpuCount == 0) {
         *ierr = 24;
         return;
+    } else if (gpuCount < *mpisize) {
+        *ierr = 42;
+        cudaDeviceReset();
+        return;
     }
-//    else if (gpuCount < *mpisize) {
-//        printf("Error: Number of launched processes is greater than the available number of GPUs. Please relaunch with lower number of processes. \n");
-//        cudaDeviceReset();
-//        exit(-1);
-//    }
 
     int devID = *mpirank % gpuCount;
     cudaDeviceProp devProp;
