@@ -52,7 +52,6 @@ contains
 
 ! This subroutine allocates memory for quick_scf type and initializes them to zero. 
   subroutine allocate_quick_scf(ierr)
-
     use quick_method_module
     use quick_basis_module
 
@@ -80,11 +79,10 @@ contains
     RHS         = 0.0d0
     allerror    = 0.0d0
     alloperator = 0.0d0
-
   end subroutine allocate_quick_scf 
 
-  subroutine deallocate_quick_scf(ierr)
 
+  subroutine deallocate_quick_scf(ierr)
     implicit none
 
     integer, intent(inout) :: ierr
@@ -98,8 +96,8 @@ contains
     if(allocated(RHS))         deallocate(RHS, stat=ierr)
     if(allocated(allerror))    deallocate(allerror, stat=ierr)
     if(allocated(alloperator)) deallocate(alloperator, stat=ierr)
-
   end subroutine deallocate_quick_scf
+
 
   ! Ed Brothers. November 27, 2001
   ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
@@ -148,14 +146,13 @@ contains
      jscf=jscf+1
   
      if (quick_method%debug)  call debug_SCF(jscf)
-  
   end subroutine scf
   
+
   ! electdiis
   !-------------------------------------------------------
-  ! 11/02/2010 Yipu Miao: Add paralle option for HF calculation
+  ! 11/02/2010 Yipu Miao: Add parallel option for HF calculation
   subroutine electdiis(jscf,ierr)
-  
      use allmod
      use quick_gridpoints_module
      use quick_scf_operator_module, only: scf_operator
@@ -167,24 +164,24 @@ contains
      use quick_cew_module, only : quick_cew
 #endif
 
-#if defined HIP || defined HIP_MPIV
+#if defined(HIP) || defined(HIP_MPIV)
      use quick_rocblas_module, only: rocDGEMM
-#if defined WITH_MAGMA
+#if defined(WITH_MAGMA)
      use quick_magma_module, only: magmaDIAG
-#else
-#if defined WITH_ROCSOLVER
+#elif defined(WITH_ROCSOLVER)
      use quick_rocsolver_module, only: rocDIAG
 #endif
 #endif
-#endif
-#ifdef MPIV
+#if defined(MPIV)
      use mpi
 #endif
 
      implicit none
-  
+ 
+     integer :: fail
+ 
      ! variable inputed to return
-     integer :: jscf                ! scf interation
+     integer :: jscf                ! scf iteration
      integer, intent(inout) :: ierr
   
      logical :: diisdone = .false.  ! flag to indicate if diis is done
@@ -197,7 +194,7 @@ contains
      double precision :: Sum2Mat,rms
      integer :: I,J,K,L,IERROR
   
-     double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
+     double precision :: oldEnergy=0.0d0,E1e ! energy for last iteration, and 1e-energy
      double precision :: PRMS,PCHANGE, tmp
 
      double precision :: c_coords(3),c_zeta,c_chg
@@ -267,7 +264,17 @@ contains
      if (bMPI) call MPI_setup_hfoperator
      !-------------- END MPI / ALL NODE -----------
 #endif
-  
+        if(quick_method%readden)then
+          nbasis = quick_molspec%nbasis
+          if(master)then
+            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
+            rewind(iDataFile)
+            call rchk_int(iDataFile, "nbasis", nbasis, fail)
+            call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+            close(iDataFile)
+          endif
+        endif
+ 
 #ifdef MPIV
      if (bMPI) then
   !      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -280,8 +287,8 @@ contains
      endif
 #endif
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-     if(quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+     if(quick_method%bGPU) then
   
         if (quick_method%DFT &
 #ifdef CEW
@@ -296,7 +303,7 @@ contains
         quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2, quick_method%DMCutoff, &
         quick_method%XCCutoff)
   
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
         call mgpu_get_xclb_time(timer_cumer%TDFTlb)
 #endif
   
@@ -374,15 +381,14 @@ contains
            !-----------------------------------------------
            ! The matrix multiplier comes from Steve Dixon. It calculates
            ! C = Transpose(A) B.  Thus to utilize this we have to make sure that the
-           ! A matrix is symetric. First, calculate DENSE*S and store in the scratch
+           ! A matrix is symmetric. First, calculate DENSE*S and store in the scratch
            ! matrix hold.Then calculate O*(DENSE*S).  As the operator matrix is symmetric, the
            ! above code can be used. Store this (the ODS term) in the all error
            ! matrix.
   
            ! The first part is ODS
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  
+#if defined(GPU) || defined(MPIV_GPU)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
                  nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
   
@@ -401,8 +407,7 @@ contains
            ! Calculate D O. then calculate S (do) and subtract that from the allerror matrix.
            ! This means we now have the e(i) matrix.
            ! allerror=ODS-SDO
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  
+#if defined(GPU) || defined(MPIV_GPU)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
                  nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
   
@@ -431,15 +436,13 @@ contains
            !-----------------------------------------------
            quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  
+#if defined(GPU) || defined(MPIV_GPU)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
   
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                  nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
 #else
-  
            call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
   
@@ -614,54 +617,57 @@ contains
            ! First you have to transpose this into an orthogonal basis, which
            ! is accomplished by calculating Transpose[X] . O . X.
            !-----------------------------------------------
-#if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
-  
+#if defined(CUDA) || defined(CUDA_MPIV)
           RECORD_TIME(timer_begin%TDiag)
-          call cuda_diag(quick_qm_struct%o, quick_qm_struct%x, quick_scratch%hold,&
+          call cuda_diag(quick_qm_struct%o, quick_qm_struct%x, quick_scratch%hold, &
                 quick_qm_struct%E, quick_qm_struct%idegen, &
                 quick_qm_struct%vec, quick_qm_struct%co, &
                 V2, nbasis)
            RECORD_TIME(timer_end%TDiag)
-  
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
 #else
-
-#if defined HIP || defined HIP_MPIV
-
+#if defined(HIP) || defined(HIP_MPIV)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold, nbasis)
 
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
-
+                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o, nbasis)
 #else
            call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold, nbasis)
   
            call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
+                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o, nbasis)
 #endif  
            ! Now diagonalize the operator matrix.
            RECORD_TIME(timer_begin%TDiag)
-#if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
-           call magmaDIAG(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
+#if defined(HIP) || defined(HIP_MPIV)
+#if defined(WITH_MAGMA)
+           call magmaDIAG(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
+#elif defined(WITH_ROCSOLVER)
+           call rocDIAG(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
 #else
-#if defined LAPACK || defined MKL
-           call DIAGMKL(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
+#if defined(LAPACK) || defined(MKL)
+           call DIAGMKL(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
 #else
-           call DIAG(nbasis,quick_qm_struct%o,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%E,&
-                 quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
+           call DIAG(nbasis, quick_qm_struct%o, nbasis, quick_method%DMCutoff, V2, quick_qm_struct%E, &
+                 quick_qm_struct%idegen, quick_qm_struct%vec, IERROR)
 #endif
+#endif
+#else
+#if defined(LAPACK) || defined(MKL)
+           call DIAGMKL(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
+#else
+           call DIAG(nbasis, quick_qm_struct%o, nbasis, quick_method%DMCutoff, V2, quick_qm_struct%E, &
+                 quick_qm_struct%idegen, quick_qm_struct%vec, IERROR)
+#endif
+#endif
+           RECORD_TIME(timer_end%TDiag)
+
 !        do i = 1,nbasis
 !          do j=1,nbasis
 !            write(*,*) "DSYEVD", i, j, quick_qm_struct%o(j,i), quick_qm_struct%vec(j,i), quick_qm_struct%E(j)
 !          enddo
 !        end do
-
-#endif
-           RECORD_TIME(timer_end%TDiag)
-  
 #endif
   
            ! Calculate C = XC' and form a new density matrix.
@@ -669,8 +675,7 @@ contains
            ! Density matrix to check for convergence.
            !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  
+#if defined(GPU) || defined(MPIV_GPU)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                  nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
 #else
@@ -681,7 +686,7 @@ contains
            quick_scratch%hold(:,:) = quick_qm_struct%dense(:,:) 
   
            ! Form new density matrix using MO coefficients
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
            call GPU_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
                  nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)         
 #else
@@ -714,7 +719,15 @@ contains
         !--------------- END MPI/ALL NODES -------------------------------------
   
         if (master) then
-  
+
+           if(quick_method%writeden)then 
+             ! open data file then write calculated info to dat file
+             call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
+             call wchk_int(iDataFile, "nbasis", nbasis, fail)
+             call wchk_darray(iDataFile, "dense",    nbasis, nbasis, 1, quick_qm_struct%dense,    fail)
+             close(iDataFile)
+           endif 
+
 #ifdef USEDAT
            ! open data file then write calculated info to dat file
            SAFE_CALL(quick_open(iDataFile, dataFileName, 'R', 'U', 'R',.true.,ierr)
@@ -808,20 +821,17 @@ contains
         if (quick_method%debug)  call debug_SCF(jscf)
      enddo
 
-
      if(master .and. write_molden) then 
          quick_molden%nscf_snapshots(quick_molden%iexport_snapshot)=jscf 
      endif
 
 #if (defined CUDA || defined CUDA_MPIV) && !defined(HIP)
-
-
      ! sign of the coefficient matrix resulting from cusolver is not consistent
      ! with rest of the code (e.g. gradients). We have to correct this.
      call scalarMatMul(quick_qm_struct%co,nbasis,nbasis,-1.0d0)
 #endif
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
     if (quick_method%DFT &
 #ifdef CEW
        .or. quick_cew%use_cew &

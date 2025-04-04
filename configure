@@ -19,7 +19,7 @@
 #  !---------------------------------------------------------------------!
 #  ! Set version                                                         !
 #  !---------------------------------------------------------------------!
-QUICK_VERSION='QUICK-24.03'
+QUICK_VERSION='QUICK-25.03'
 QUICK_HOME=`pwd`
 cdate=`date +'%m/%d/%Y'`
 ctime=`date +'%r'`
@@ -76,7 +76,7 @@ echo  "
                      mirp and dependency installation directories. These paths must 
                      contain lib and include directories.
 
-  Supported compilers are: gnu, intel, pgi, nvidia
+  Supported compilers are: gnu, intel, pgi, clang, nvidia
 
   For example, cuda version with intel compiler tool chain can be compiled as
   follows:
@@ -200,9 +200,9 @@ case "$compiler" in
       if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi
     fi
 
-      fort_search='gfortran'
-      cc_search='gcc'
-      cxx_search='g++'
+    fort_search='gcc'
+    cc_search='gcc'
+    cxx_search='gcc'
     ;;
 
   intel)
@@ -218,9 +218,9 @@ case "$compiler" in
       if [ -z "$MPICXX" ]; then cxx='mpiicpc'; else cxx="$MPICXX";fi
     fi
 
-      fort_search='ifort'
-      cc_search='icc'
-      cxx_search='icpc'
+    fort_search='ifort'
+    cc_search='icc'
+    cxx_search='icpc'
     ;;
 
   pgi)
@@ -236,9 +236,27 @@ case "$compiler" in
       if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi
     fi
 
-      fort_search='pgfortran'
-      cc_search='pgcc'
-      cxx_search='pgc++'
+    fort_search='pgfortran'
+    cc_search='pgcc'
+    cxx_search='pgc++'
+    ;;
+
+  clang)
+    echo "Requested compiler: Clang."
+
+    if [ "$mpi" = 'no' ] && [ "$cudampi" = 'no' ] && [ "$hipmpi" = 'no' ]; then
+      if [ -z "$FC" ]; then fort='gfortran'; else fort="$FC";fi
+      if [ -z "$CC" ]; then cc='clang'; else cc="$CC";fi
+      if [ -z "$CXX" ]; then cxx='clang++'; else cxx="$CXX";fi
+    else
+      if [ -z "$MPIF90" ]; then fort='mpif90'; else fort="$MPIF90";fi
+      if [ -z "$MPICC" ]; then cc='mpicc'; else cc="$MPICC";fi
+      if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi
+    fi
+
+    fort_search='gcc'
+    cc_search='clang'
+    cxx_search='clang'
     ;;
 
   nvidia)
@@ -259,9 +277,9 @@ case "$compiler" in
       if [ -z "$MPICXX" ]; then cxx='mpicxx'; else cxx="$MPICXX";fi
     fi
 
-      fort_search='nvfortran'
-      cc_search='nvc'
-      cxx_search='nvc++'
+    fort_search='nvfortran'
+    cc_search='nvc'
+    cxx_search='nvc++'
     ;;
 
   *)
@@ -714,6 +732,7 @@ while [ $# -gt 0 ]; do
     gnu)           compiler='gnu';;
     intel)         compiler='intel';;
     pgi)           compiler='pgi';;
+    clang)         compiler='clang';;
     nvidia)        compiler='nvidia';;
     -h| -H| -help| --help) print_help;;
      *)  echo  "Error: $1 is an unknown flag."
@@ -853,8 +872,8 @@ fi
 #  ! Create essential build directories                                  !
 #  !---------------------------------------------------------------------!
 
-if [ ! -d "$QUICK_HOME/bin" ]; then
-  mkdir -p "$QUICK_HOME/bin"
+if [ ! -d "$QUICK_HOME/build/bin" ]; then
+  mkdir -p "$QUICK_HOME/build/bin"
 fi
 
 for buildtype in $buildtypes; do
@@ -1181,7 +1200,7 @@ if [ "$debug" = 'yes' ]; then
   blas_opt_flags='-O0'
 
   case "$compiler" in
-    gnu | pgi | nvidia)
+    gnu | pgi | clang | nvidia)
       fort_debug_flags='-g -DDEBUG -DDEBUGTIME'
       cc_debug_flags='-g -DDEBUG'
       cxx_debug_flags='-g -DDEBUG'
@@ -1223,7 +1242,7 @@ if [ "$shared" = 'yes' ]; then
   lib_flags='-fPIC'
   cuda_lib_flags="--compiler-options '-fPIC'"
   arch="$fort"
-  arch_flags='-shared -o'
+  arch_flags='-fPIC -shared -o'
   ranlib='echo'
   libext='so'
 
@@ -1243,6 +1262,15 @@ for buildtype in $buildtypes; do
   # set compiler specific flags
   case "$compiler" in
     gnu)
+      fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -I$QUICK_HOME/build/include/$buildtype -J$QUICK_HOME/build/include/$buildtype"
+      if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
+        cflags="-lgfortran -L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
+		if [ `echo "$cudaversion < 10.0 "| bc` -gt 0 ]; then  
+		  cflags="$cflags -fopenmp"
+		fi
+      fi
+      ;;
+    clang)
       fort_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -I$QUICK_HOME/build/include/$buildtype -J$QUICK_HOME/build/include/$buildtype"
       if [ "$cuda" = 'yes' ] || [ "$cudampi" = 'yes' ]; then
         cflags="-lgfortran -L$CUDA_HOME/lib64 -lcuda -lm -lcudart -lcudadevrt -lcublas -lcusolver"
@@ -1292,7 +1320,7 @@ for buildtype in $buildtypes; do
 
     if [ "$enablef" = 'yes' ]; then
       echo "F functions will be compiled in the $buildtype version."
-      cuda_incl_flags="$cuda_incl_flags -DCUDA_SPDF"
+      cuda_incl_flags="$cuda_incl_flags -DGPU_SPDF"
     fi
 
     # set cew flag for nvcc
@@ -1317,7 +1345,7 @@ for buildtype in $buildtypes; do
 
     if [ "$enablef" = 'yes' ]; then
       echo "F functions will be compiled in the $buildtype version."
-      hip_incl_flags="$hip_incl_flags -DHIP_SPDF"
+      hip_incl_flags="$hip_incl_flags -DGPU_SPDF"
     fi
 
   fi
@@ -1331,31 +1359,31 @@ for buildtype in $buildtypes; do
 
   elif [ "$buildtype" = 'cuda' ]; then
 
-    fort_flags="$fort_flags -DCUDA"
-    cc_flags="$cc_flags -DCUDA"
-    cxx_flags="$cxx_flags -DCUDA"
-    cuda_incl_flags="$cuda_incl_flags -DCUDA"
+    fort_flags="$fort_flags -DGPU -DCUDA"
+    cc_flags="$cc_flags -DGPU -DCUDA"
+    cxx_flags="$cxx_flags -DGPU -DCUDA"
+    cuda_incl_flags="$cuda_incl_flags -DGPU -DCUDA"
 
   elif [ "$buildtype" = 'cudampi' ]; then
 
-    fort_flags="$fort_flags -DMPIV -DCUDA_MPIV"
-    cc_flags="$cc_flags -DMPIV -DCUDA_MPIV"
-    cxx_flags="$cxx_flags -DMPIV -DCUDA_MPIV"
-    cuda_incl_flags="$cuda_incl_flags -DMPIV -DCUDA_MPIV"
+    fort_flags="$fort_flags -DMPIV -DMPIV_GPU -DCUDA_MPIV"
+    cc_flags="$cc_flags -DMPIV -DMPIV_GPU -DCUDA_MPIV"
+    cxx_flags="$cxx_flags -DMPIV -DMPIV_GPU -DCUDA_MPIV"
+    cuda_incl_flags="$cuda_incl_flags -DMPIV -DMPIV_GPU -DCUDA_MPIV"
 
   elif [ "$buildtype" = 'hip' ]; then
 
-    fort_flags="$fort_flags -DHIP"
-    cc_flags="$cc_flags -DHIP"
-    cxx_flags="$cxx_flags -DHIP"
-    hip_incl_flags="$hip_incl_flags -DHIP"
+    fort_flags="$fort_flags -DGPU -DHIP"
+    cc_flags="$cc_flags -DGPU -DHIP"
+    cxx_flags="$cxx_flags -DGPU -DHIP"
+    hip_incl_flags="$hip_incl_flags -DGPU -DHIP"
 
   elif [ "$buildtype" = 'hipmpi' ]; then
 
-    fort_flags="$fort_flags -DMPIV -DHIP_MPIV"
-    cc_flags="$cc_flags -DMPIV -DHIP_MPIV"
-    cxx_flags="$cxx_flags -DMPIV -DHIP_MPIV"
-    hip_incl_flags="$hip_incl_flags -DMPIV -DHIP_MPIV"
+    fort_flags="$fort_flags -DMPIV -DMPIV_GPU -DHIP_MPIV"
+    cc_flags="$cc_flags -DMPIV -DMPIV_GPU -DHIP_MPIV"
+    cxx_flags="$cxx_flags -DMPIV -DMPIV_GPU -DHIP_MPIV"
+    hip_incl_flags="$hip_incl_flags -DMPIV -DMPIV_GPU -DHIP_MPIV"
 
   fi
 
@@ -1414,6 +1442,9 @@ for buildtype in $buildtypes; do
     gnu)
       fort_ext_lib_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -J$QUICK_HOME/build/include/common"
       ;;
+    clang)
+      fort_ext_lib_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -J$QUICK_HOME/build/include/common"
+      ;;
     intel|pgi|nvidia)
       fort_ext_lib_flags="$opt_flags $fort_debug_flags -mtune=native -ffree-form -cpp -DGNU $fort_vspec_flags $lib_flags -module$QUICK_HOME/build/include/common"
       ;;
@@ -1424,13 +1455,13 @@ for buildtype in $buildtypes; do
   if [ "$buildtype" = 'mpi' ]; then
     fort_ext_lib_flags="$fort_ext_lib_flags -DMPIV"
   elif [ "$buildtype" = 'cuda' ]; then
-    fort_ext_lib_flags="$fort_ext_lib_flags -DCUDA"
+    fort_ext_lib_flags="$fort_ext_lib_flags -DGPU -DCUDA"
   elif [ "$buildtype" = 'cudampi' ]; then
-    fort_ext_lib_flags="$fort_ext_lib_flags -DMPIV -DCUDA_MPIV"
+    fort_ext_lib_flags="$fort_ext_lib_flags -DMPIV -DMPIV_GPU -DCUDA_MPIV"
   elif [ "$buildtype" = 'hip' ]; then
-    fort_ext_lib_flags="$fort_ext_lib_flags -DHIP"
+    fort_ext_lib_flags="$fort_ext_lib_flags -DGPU -DHIP"
   elif [ "$buildtype" = 'hipmpi' ]; then
-    fort_ext_lib_flags="$fort_ext_lib_flags -DMPIV -DHIP_MPIV"
+    fort_ext_lib_flags="$fort_ext_lib_flags -DMPIV -DMPIV_GPU -DHIP_MPIV"
   fi
 
   # set the installer
@@ -1506,17 +1537,17 @@ lapackfolder=$QUICK_HOME/src/lapack
 libxcfolder=$QUICK_HOME/src/libxc
 dlfindfolder=$QUICK_HOME/src/dlfind
 dftd3folder=$QUICK_HOME/src/dftd3
-cudafolder=$QUICK_HOME/src/cuda
-cublasfolder=$QUICK_HOME/src/cuda/cublas
-cusolverfolder=$QUICK_HOME/src/cuda/cusolver
-hipfolder=$QUICK_HOME/src/hip
-rocblasfolder=$QUICK_HOME/src/hip/rocblas
-rocsolverfolder=$QUICK_HOME/src/hip/rocsolver
+cudafolder=$QUICK_HOME/src/gpu/cuda
+cublasfolder=$QUICK_HOME/src/gpu/cuda/cublas
+cusolverfolder=$QUICK_HOME/src/gpu/cuda/cusolver
+hipfolder=$QUICK_HOME/src/gpu/hip
+rocblasfolder=$QUICK_HOME/src/gpu/hip/rocblas
+rocsolverfolder=$QUICK_HOME/src/gpu/hip/rocsolver
 octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules
 
 # build directories
-exefolder=$QUICK_HOME/bin
+exefolder=$QUICK_HOME/build/bin
 objfolder=$QUICK_HOME/build/obj/$buildtype
 libxcobjfolder=$libxcobjfolder
 libxcdevobjfolder=$libxcdevobjfolder
@@ -1624,7 +1655,7 @@ TESTTYPE=$testtype
 #!---------------------------------------------------------------------!
 
 homefolder=$QUICK_HOME
-exefolder=$QUICK_HOME/bin
+exefolder=$QUICK_HOME/build/bin
 buildfolder=$QUICK_HOME/build
 toolsfolder=$QUICK_HOME/tools
 installfolder=$quick_prefix
@@ -1635,8 +1666,8 @@ lapackfolder=$QUICK_HOME/src/lapack
 libxcfolder=$QUICK_HOME/src/libxc
 dlfindfolder=$QUICK_HOME/src/dlfind
 dftd3folder=$QUICK_HOME/src/dftd3
-cudafolder=$QUICK_HOME/src/cuda
-hipfolder=$QUICK_HOME/src/hip
+cudafolder=$QUICK_HOME/src/gpu/cuda
+hipfolder=$QUICK_HOME/src/gpu/hip
 octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules
 
@@ -1697,6 +1728,7 @@ if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
 fi
 
 cat >> "$quick_prefix/quick.rc" << EOF
+export LIBRARY_PATH=$libpaths\$LIBRARY_PATH
 export LD_LIBRARY_PATH=$libpaths\$LD_LIBRARY_PATH
 EOF
 fi

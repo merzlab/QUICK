@@ -62,8 +62,8 @@ module quick_api_module
     double precision, allocatable, dimension(:,:) :: ptchg_crd
 
     ! job card for quick job, essentially the first line of regular quick input file
-    ! default length is 256 characters
-    character(len=256) :: keywd
+    ! default length is 300 characters
+    character(len=300) :: keywd
 
     ! Is the job card provided by passing a string? default is false
     logical :: hasKeywd = .false.
@@ -186,7 +186,6 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
   use quick_molspec_module, only : quick_molspec, alloc
   use quick_exception_module
   use quick_method_module
-
 #ifdef MPIV
   use quick_mpi_module
 #endif
@@ -259,40 +258,25 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
   endif
 #endif
 
-#if defined CUDA || defined HIP
-
-  ! startup cuda device
-  SAFE_CALL(gpu_startup(ierr))
-
-  SAFE_CALL(gpu_set_device(-1,ierr))
-
-  SAFE_CALL(gpu_init(ierr))
-
-  ! write cuda information
-  SAFE_CALL(gpu_write_info(iOutFile,ierr))
-    !------------------- END CUDA ---------------------------------------
-#endif
-
-#if defined CUDA_MPIV || defined HIP_MPIV
-
+#if defined(GPU) || defined(MPIV_GPU)
+#if defined(GPU)
+  SAFE_CALL(gpu_new(ierr))
+  SAFE_CALL(gpu_init_device(ierr))
+  SAFE_CALL(gpu_write_info(iOutFile, ierr))
+#elif defined(MPIV_GPU)
+  SAFE_CALL(gpu_new(mpirank, ierr))
   SAFE_CALL(mgpu_query(mpisize, mpirank, mgpu_id, ierr))
-
   SAFE_CALL(mgpu_setup(ierr))
-
-  if(master) SAFE_CALL(mgpu_write_info(iOutFile, mpisize, mgpu_ids, ierr))
-  
-  SAFE_CALL(mgpu_init(mpirank, mpisize, mgpu_id, ierr))
-
+  if (master) SAFE_CALL(mgpu_write_info(iOutFile, mpisize, mgpu_ids, ierr))
+  SAFE_CALL(mgpu_init_device(mpirank, mpisize, mgpu_id, ierr))
 #endif
-
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   call gpu_allocate_scratch(.true.)
 #endif
 
   ! read job specifications
   SAFE_CALL(read_Job_and_Atom(ierr))
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
   call upload(quick_method, ierr)
 #endif
 
@@ -349,8 +333,8 @@ end subroutine get_atom_types
 ! allocate memory for point charges and gradients
 subroutine allocate_point_charge(isgrad,ierr)
 
-  use quick_molspec_module
-  use quick_calculated_module
+  use quick_molspec_module, only: quick_molspec, realloc
+  use quick_calculated_module, only: quick_qm_struct, realloc
   implicit none
   logical, intent(in) :: isgrad
   integer, intent(inout) :: ierr
@@ -372,7 +356,6 @@ end subroutine allocate_point_charge
 ! allocate memory for point charges and gradients
 subroutine deallocate_point_charge(isgrad,ierr)
 
-  use quick_molspec_module
   use quick_calculated_module
   implicit none
   logical, intent(in) :: isgrad
@@ -389,7 +372,7 @@ end subroutine deallocate_point_charge
 ! returns quick qm energy
 subroutine get_quick_energy(coords, nxt_ptchg, ptchg_crd, energy, ierr)
 
-  use quick_molspec_module
+  use quick_molspec_module, only: quick_molspec
   implicit none
   
   integer, intent(in)           :: nxt_ptchg
@@ -425,7 +408,7 @@ end subroutine get_quick_energy
 subroutine get_quick_energy_gradients(coords, nxt_ptchg, ptchg_crd, &
            energy, gradients, ptchg_grad, ierr)
 
-  use quick_molspec_module
+  use quick_molspec_module, only: quick_molspec
   implicit none
 
   integer, intent(in)             :: nxt_ptchg 
@@ -467,18 +450,18 @@ end subroutine get_quick_energy_gradients
 subroutine run_quick(self,ierr)
 
   use quick_timer_module
-  use quick_method_module, only : quick_method
+  use quick_method_module, only: quick_method
   use quick_files_module
-  use quick_calculated_module, only : quick_qm_struct
-  use quick_gridpoints_module, only : quick_dft_grid, deform_dft_grid
+  use quick_calculated_module, only: quick_qm_struct
+  use quick_gridpoints_module, only: quick_dft_grid, deform_dft_grid
   use quick_cutoff_module, only: schwarzoff
   use quick_exception_module
-  use quick_cshell_eri_module, only: getEriPrecomputables
-  use quick_cshell_gradient_module, only: cshell_gradient
-  use quick_oshell_gradient_module, only: oshell_gradient
+  use quick_eri_cshell_module, only: getEriPrecomputables
+  use quick_grad_cshell_module, only: cshell_gradient
+  use quick_grad_oshell_module, only: oshell_gradient
   use quick_optimizer_module
   use quick_sad_guess_module, only: getSadGuess
-  use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
+  use quick_molden_module, only: quick_molden, initializeExport, exportCoordinates, exportBasis, &
       exportMO, exportSCF, exportOPT
 
 
@@ -544,7 +527,7 @@ subroutine run_quick(self,ierr)
     call schwarzoff
   endif
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
   ! upload molecular and basis information to gpu
   if(.not.quick_method%opt) call gpu_upload_molspecs(ierr)
 
@@ -567,7 +550,7 @@ subroutine run_quick(self,ierr)
   ! stop the timer for initial guess
   RECORD_TIME(timer_end%TIniGuess)
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
     timer_begin%T2elb = timer_end%T2elb
     call mgpu_get_2elb_time(timer_end%T2elb)
     timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
@@ -620,8 +603,8 @@ subroutine run_quick(self,ierr)
 #endif
   endif
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-      if (quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+      if (quick_method%bGPU) then
         call gpu_cleanup()
       endif
 #endif
@@ -760,7 +743,7 @@ subroutine set_quick_molspecs(self,ierr)
 
 end subroutine set_quick_molspecs
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
 
 ! uploads molecular information into gpu
 subroutine gpu_upload_molspecs(ierr)
@@ -787,7 +770,7 @@ subroutine gpu_upload_molspecs(ierr)
 
   call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
 
-  call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
+  call gpu_upload_oei(quick_molspec%nextatom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
 
 end subroutine gpu_upload_molspecs
 
@@ -846,21 +829,13 @@ subroutine delete_quick_job(ierr)
   integer, intent(out) :: ierr
   ierr=0
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  call delete(quick_method,ierr)
-#endif
-
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
+  call delete(quick_method, ierr)
   call gpu_deallocate_scratch(.true.)
-#endif
-
-#if defined CUDA || defined HIP
-  SAFE_CALL(gpu_shutdown(ierr))
-#endif
-
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
   SAFE_CALL(delete_mgpu_setup(ierr))
-  SAFE_CALL(mgpu_shutdown(ierr))
+#endif
+  SAFE_CALL(gpu_delete(ierr))
 #endif
 
   ! finalize quick

@@ -29,7 +29,7 @@ contains
   subroutine calculate_dispersion_energy(ierr)
 
     use dftd3_api
-    use quick_molspec_module
+    use quick_molspec_module, only: quick_molspec, xyz
     use quick_method_module, only: quick_method
     use quick_calculated_module, only: quick_qm_struct
     use quick_timer_module

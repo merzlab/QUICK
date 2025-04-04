@@ -105,6 +105,10 @@ contains
      if (quick_method%diisscf .and. .not. quick_method%divcon) call uelectdiis(jscf,ierr)       ! normal scf
   
      jscf=jscf+1
+
+!    After SCF is done the total density is calculated for
+!    property calculations.
+     quick_qm_struct%denseab = quick_qm_struct%dense+quick_qm_struct%denseb
   
      !if (quick_method%debug)  call debug_SCF(jscf)
 
@@ -132,14 +136,12 @@ contains
      use quick_oei_module, only: bCalc1e
      use quick_molden_module, only: quick_molden
 
-#if defined HIP || defined HIP_MPIV
+#if defined(HIP) || defined(HIP_MPIV)
      use quick_rocblas_module, only: rocDGEMM
-#if defined WITH_MAGMA
+#if defined(WITH_MAGMA)
      use quick_magma_module, only: magmaDIAG
-#else
-#if defined WITH_ROCSOLVER
+#elif defined(WITH_ROCSOLVER)
      use quick_rocsolver_module, only: rocDIAG
-#endif
 #endif
 #endif
 #ifdef MPIV
@@ -147,9 +149,11 @@ contains
 #endif
 
      implicit none
-  
+ 
+     integer :: fail
+ 
      ! variable inputed to return
-     integer :: jscf                ! scf interation
+     integer :: jscf                ! scf iteration
      integer, intent(inout) :: ierr
   
      logical :: diisdone = .false.  ! flag to indicate if diis is done
@@ -231,6 +235,17 @@ contains
      !-------------- END MPI / ALL NODE -----------
 #endif
   
+        if(quick_method%readden)then
+          nbasis = quick_molspec%nbasis
+          if(master)then
+            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
+            call rchk_int(iDataFile, "nbasis", nbasis, fail)
+            call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+            call rchk_darray(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%denseb, fail)
+            close(iDataFile)
+          endif
+        endif
+ 
 #ifdef MPIV
      if (bMPI) then
         call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -245,8 +260,8 @@ contains
      endif
 #endif
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-     if(quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+     if(quick_method%bGPU) then
   
         if (quick_method%DFT) then
 
@@ -257,7 +272,7 @@ contains
         quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2, quick_method%DMCutoff, &
         quick_method%XCCutoff)
   
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
         call mgpu_get_xclb_time(timer_cumer%TDFTlb)
 #endif
   
@@ -332,8 +347,7 @@ contains
   
            ! The first part is ODS
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  
+#if defined(MPIV_GPU)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
                  nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
   
@@ -352,8 +366,7 @@ contains
            ! Calculate D O. then calculate S (do) and subtract that from the allerror matrix.
            ! This means we now have the e(i) matrix.
            ! allerror=ODS-SDO
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  
+#if defined(GPU) || defined(MPIV_GPU)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
                  nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
   
@@ -382,7 +395,7 @@ contains
            ! symmetric, the above code can be used. Add this (the ODS term) into the allerror
            ! matrix.
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%denseb, &
                  nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
            
@@ -405,8 +418,7 @@ contains
            ! Calculate Db O.Then calculate S (DbO) and subtract that from the allerror matrix.
            ! This means we now have the complete e(i) matrix.
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-
+#if defined(GPU) || defined(MPIV_GPU)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%denseb, &
                  nbasis, quick_qm_struct%ob, nbasis, 0.0d0, quick_scratch%hold,nbasis)
         
@@ -435,8 +447,7 @@ contains
            !-----------------------------------------------
            quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  
+#if defined(GPU) || defined(MPIV_GPU)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
   
@@ -621,56 +632,61 @@ contains
            ! First you have to transpose this into an orthogonal basis, which
            ! is accomplished by calculating Transpose[X] . O . X.
            !-----------------------------------------------
-#if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
- 
+#if defined(CUDA) || defined(CUDA_MPIV)
           RECORD_TIME(timer_begin%TDiag)
-          call cuda_diag(quick_qm_struct%o, quick_qm_struct%x, quick_scratch%hold,&
+          call cuda_diag(quick_qm_struct%o, quick_qm_struct%x, quick_scratch%hold, &
                 quick_qm_struct%E, quick_qm_struct%idegen, &
                 quick_qm_struct%vec, quick_qm_struct%co, &
                 V2, nbasis)
            RECORD_TIME(timer_end%TDiag)
-  
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
 #else
-#if defined HIP || defined HIP_MPIV
+#if defined(HIP) || defined(HIP_MPIV)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold, nbasis)
 
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
+                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o, nbasis)
 #else
            call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold, nbasis)
   
            call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
+                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o, nbasis)
 #endif
            ! Now diagonalize the operator matrix.
            RECORD_TIME(timer_begin%TDiag)
-#if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
-           call magmaDIAG(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
-#else 
-#if defined LAPACK || defined MKL
-           call DIAGMKL(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
+#if defined(HIP) || defined(HIP_MPIV)
+#if defined(WITH_MAGMA)
+           call magmaDIAG(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
+#elif defined(WITH_ROCSOLVER)
+           call rocDIAG(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
 #else
-           call DIAG(nbasis,quick_qm_struct%o,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%E,&
-                 quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
+#if defined(LAPACK) || defined(MKL)
+           call DIAGMKL(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
+#else
+           call DIAG(nbasis, quick_qm_struct%o, nbasis, quick_method%DMCutoff, V2, quick_qm_struct%E, &
+                 quick_qm_struct%idegen, quick_qm_struct%vec, IERROR)
+#endif
+#endif
+#else
+#if defined(LAPACK) || defined(MKL)
+           call DIAGMKL(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
+#else
+           call DIAG(nbasis, quick_qm_struct%o, nbasis, quick_method%DMCutoff, V2, quick_qm_struct%E, &
+                 quick_qm_struct%idegen, quick_qm_struct%vec, IERROR)
 #endif
 #endif
            RECORD_TIME(timer_end%TDiag)
-  
 #endif
 
-           timer_cumer%TDiag=timer_end%TDiag-timer_begin%TDiag
+           timer_cumer%TDiag = timer_end%TDiag - timer_begin%TDiag
   
            ! Calculate C = XC' and form a new density matrix.
            ! The C' is from the above diagonalization.  Also, save the previous
            ! Density matrix to check for convergence.
            !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  
+#if defined(GPU) || defined(MPIV_GPU)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                  nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
 #else
@@ -681,7 +697,7 @@ contains
            quick_scratch%hold(:,:) = quick_qm_struct%dense(:,:) 
   
            ! Form new density matrix using MO coefficients
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
            call GPU_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec, 1.0d0, quick_qm_struct%co, &
                  nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)
 #else
@@ -724,19 +740,15 @@ contains
            ! First you have to transpose this into an orthogonal basis, which
            ! is accomplished by calculating Transpose[X] . O . X.
            !-----------------------------------------------
-#if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
-
+#if defined(CUDA) || defined(CUDA_MPIV)
           RECORD_TIME(timer_begin%TDiag)
           call cuda_diag(quick_qm_struct%ob, quick_qm_struct%x, quick_scratch%hold,&
                 quick_qm_struct%EB, quick_qm_struct%idegen, &
                 quick_qm_struct%vec, quick_qm_struct%cob, &
                 V2, nbasis)
            RECORD_TIME(timer_end%TDiag)
-
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%ob,nbasis)
 #else
-#if defined HIP || defined HIP_MPIV
+#if defined(HIP) || defined(HIP_MPIV)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%ob, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
@@ -751,10 +763,21 @@ contains
 #endif
            ! Now diagonalize the operator matrix.
            RECORD_TIME(timer_begin%TDiag)
-#if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
+#if defined(HIP) || defined(HIP_MPIV)
+#if defined(WITH_MAGMA)
            call magmaDIAG(nbasis,quick_qm_struct%ob,quick_qm_struct%EB,quick_qm_struct%vec,IERROR)
-#else 
-#if defined LAPACK || defined MKL
+#elif defined(WITH_ROCSOLVER)
+           call rocDIAG(nbasis,quick_qm_struct%ob,quick_qm_struct%EB,quick_qm_struct%vec,IERROR)
+#else
+#if defined(LAPACK) || defined(MKL)
+           call DIAGMKL(nbasis,quick_qm_struct%ob,quick_qm_struct%EB,quick_qm_struct%vec,IERROR)
+#else
+           call DIAG(nbasis,quick_qm_struct%ob,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%EB,&
+                 quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
+#endif
+#endif
+#else
+#if defined(LAPACK) || defined(MKL)
            call DIAGMKL(nbasis,quick_qm_struct%ob,quick_qm_struct%EB,quick_qm_struct%vec,IERROR)
 #else
            call DIAG(nbasis,quick_qm_struct%ob,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%EB,&
@@ -762,8 +785,8 @@ contains
 #endif
 #endif
            RECORD_TIME(timer_end%TDiag)
-
 #endif
+
            timer_cumer%TDiag=timer_cumer%TDiag+timer_end%TDiag-timer_begin%TDiag
 
            ! Calculate C = XC' and form a new density matrix.
@@ -771,8 +794,7 @@ contains
            ! Density matrix to check for convergence.
            !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-
+#if defined(GPU) || defined(MPIV_GPU)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                  nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%cob,nbasis)
 #else
@@ -783,7 +805,7 @@ contains
            quick_scratch%hold(:,:) = quick_qm_struct%denseb(:,:)
 
            ! Form new density matrix using MO coefficients
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
            call GPU_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelecb, 1.0d0, quick_qm_struct%cob, &
                  nbasis, quick_qm_struct%cob, nbasis, 0.0d0, quick_qm_struct%denseb,nbasis)
 #else
@@ -822,6 +844,15 @@ contains
   
         if (master) then
   
+           if(quick_method%writeden)then 
+             ! open data file then write calculated info to dat file
+             call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
+             call wchk_int(iDataFile, "nbasis", nbasis, fail)
+             call wchk_darray(iDataFile, "dense",    nbasis, nbasis, 1, quick_qm_struct%dense,    fail)
+             call wchk_darray(iDataFile, "denseb",    nbasis, nbasis, 1, quick_qm_struct%denseb,    fail)
+             close(iDataFile)
+           endif 
+
 #ifdef USEDAT
            ! open data file then write calculated info to dat file
            SAFE_CALL(quick_open(iDataFile, dataFileName, 'R', 'U', 'R',.true.,ierr)
@@ -914,15 +945,13 @@ contains
      endif  
 
 #if (defined CUDA || defined CUDA_MPIV) && !defined(HIP)
-
-
      ! sign of the coefficient matrix resulting from cusolver is not consistent
      ! with rest of the code (e.g. gradients). We have to correct this.
      call scalarMatMul(quick_qm_struct%co,nbasis,nbasis,-1.0d0)
      call scalarMatMul(quick_qm_struct%cob,nbasis,nbasis,-1.0d0)
 #endif
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
     if (quick_method%DFT) then
        if(quick_method%grad) then
          call gpu_delete_dft_dev_grid()

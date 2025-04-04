@@ -8,8 +8,8 @@ subroutine optimize(ierr)
    use allmod
    use quick_gridpoints_module
    use quick_cutoff_module, only: schwarzoff
-   use quick_cshell_eri_module, only: getEriPrecomputables
-   use quick_gradient_module, only: scf_gradient
+   use quick_eri_cshell_module, only: getEriPrecomputables
+   use quick_grad_cshell_module, only: scf_gradient
 #ifdef MPIV
    use mpi
 #endif
@@ -119,7 +119,7 @@ subroutine optimize(ierr)
          enddo
       endif
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
       call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
             quick_molspec%molchg, quick_molspec%iAtomType)
       call gpu_upload_xyz(xyz)
@@ -130,7 +130,7 @@ subroutine optimize(ierr)
       call getEriPrecomputables
       call schwarzoff
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
       call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
             ncontract, itype, aexp, dcoeff, &
             quick_basis%first_basis_function, quick_basis%last_basis_function, &
@@ -142,18 +142,17 @@ subroutine optimize(ierr)
 
       call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
 
-#ifdef CUDA_MPIV
+#if defined(MPIV_GPU)
     timer_begin%T2elb = timer_end%T2elb
     call mgpu_get_2elb_time(timer_end%T2elb)
     timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
 #endif
-
 #endif
 
       call getEnergy(.false., ierr)
 
       !   This line is for test only
-      !   quick_method%bCUDA = .false.
+      !   quick_method%bGPU = .false.
       ! Now we have several scheme to obtain gradient. For now,
       ! only analytical gradient is available
 
@@ -168,12 +167,12 @@ subroutine optimize(ierr)
          !            endif
       endif
 
-#if defined CUDA || defined CUDA_MPIV
-      if (quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+      if (quick_method%bGPU) then
         call gpu_cleanup()
       endif
 #endif
-        !quick_method%bCUDA=.true.
+        !quick_method%bGPU=.true.
       if (master) then
 
          !-----------------------------------------------------------------------

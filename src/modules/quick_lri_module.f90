@@ -102,7 +102,7 @@ contains
 
     use quick_basis_module
     use quick_method_module, only: quick_method
-#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
+#if defined(MPIV) && !defined(MPIV_GPU)
     use quick_mpi_module
 #endif
 
@@ -111,7 +111,7 @@ contains
     double precision :: c0c0
     integer :: II, JJ         ! shell pairs
 
-#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
+#if defined(MPIV) && !defined(MPIV_GPU)
     integer :: i
 #endif 
 
@@ -123,7 +123,7 @@ contains
 
     call compute_c0c0(RC, Zc, Cc, c0c0)
 
-#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
+#if defined(MPIV) && !defined(MPIV_GPU)
   !  Every nodes will take about jshell/nodes shells integrals such as 1 water,
   !  which has 
   !  4 jshell, and 2 nodes will take 2 jshell respectively.
@@ -167,17 +167,15 @@ contains
   end subroutine prescreen_compute_lri
 
 
+  !----------------------------------------------------------------------!
+  ! This subroutine computes quantities required for OSHGP algorithm,    !
+  ! values of Boys function and calls appropriate subroutines to that    !
+  ! performs VRR and HRR.                                                !
+  !______________________________________________________________________!
   subroutine compute_long_range_integral(II,JJ,c0c0)
-
-    !----------------------------------------------------------------------!
-    ! This subroutine computes quantities required for OSHGP algorithm,    !
-    ! values of Boys function and calls appropriate subroutines to that    !
-    ! performs VRR and HRR.                                                !
-    !______________________________________________________________________!
-
     use quick_basis_module
     use quick_method_module
-    use quick_molspec_module
+    use quick_molspec_module, only: xyz
     use quick_params_module
 
     integer, intent(in) :: II, JJ
@@ -392,18 +390,15 @@ contains
 
   end subroutine compute_long_range_integral
 
+  !----------------------------------------------------------------------!
+  ! This subroutine computes contracted 3 center integrals by calling    !
+  ! the appropriate subroutine and adds the integral contributions into  !
+  ! core hamiltonian.                                                    !
+  !______________________________________________________________________!
   subroutine iclass_lri(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
-
-    !----------------------------------------------------------------------!
-    ! This subroutine computes contracted 3 center integrals by calling    !
-    ! the appropriate subroutine and adds the integral contributions into  !
-    ! core hamiltonian.                                                    !
-    !______________________________________________________________________!
-
     use quick_basis_module
     use quick_constants_module
     use quick_method_module
-    use quick_molspec_module
     use quick_calculated_module
     use quick_scratch_module
 

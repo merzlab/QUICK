@@ -7,7 +7,9 @@
 !
 #include "util.fh"
 
+
 #define FUNCTIONAL_ID_SIZE (10)
+
 
 module quick_method_module
     use quick_constants_module
@@ -44,7 +46,10 @@ module quick_method_module
         logical :: debug =  .false.    ! debug mode
         logical :: nodirect = .false.  ! conventional scf
         logical :: readDMX =  .false.  ! flag to read density matrix
-        logical :: writePMat = .false. ! flag to write density matrix
+        logical :: readden = .false.  ! flag to read density matrix
+        logical :: read_coord = .false.  ! flag to read coordinates
+        logical :: writeden = .false. ! flag to write density matrix
+        logical :: writexyz = .false. ! flag to write coordinates
         logical :: readSAD = .true.    ! flag to read SAD guess
         logical :: writeSAD = .false.  ! flag to write SAD guess
         logical :: diisSCF =  .false.  ! DIIS SCF
@@ -53,6 +58,12 @@ module quick_method_module
         logical :: grad = .false.      ! if calculate gradient
         logical :: analGrad =  .false. ! Analytical Gradient
         logical :: analHess =  .false. ! Analytical Hessian Matrix
+        logical :: esp_charge =  .false.    ! ESP charge on atoms
+        double precision :: espgrid_spacing =  0.25    ! grid density (in Angstroms) to obtain ESP charge
+        character(len=5) :: vdw_radii       ! Van der waals radius type
+        logical :: esp_grid =  .false.      ! Electrostatic potential on a grid (ESP)
+        logical :: efield_grid =  .false.   ! Electrostatic field (EFIELD)
+        logical :: efg_grid =  .false.      ! Electrostatic field gradient (EFG)
         logical :: diisOpt =  .false.  ! DIIS Optimization
         logical :: core =  .false.     ! Add core
         logical :: annil =  .false.    ! Annil Spin Contamination
@@ -62,15 +73,17 @@ module quick_method_module
         logical :: printEnergy = .true.! Print Energy each cycle, since it's cheap but useful, set it's true for default.
         logical :: hasF= .false.       ! If f functions present
         logical :: calcDens = .false.  ! calculate density
-        logical :: calcDensLap = .false.
-                                       ! calculate density lap
+        logical :: calcDensLap = .false. !calculate density lap
+
         double precision :: gridSpacing = 0.1d0
                                        ! Density file gridspacing
         double precision :: lapGridSpacing = 0.1d0
                                        ! Density lapcacian file gridspacing
 
         logical :: PDB = .false.       ! PDB input
-        logical :: extCharges = .false.! external charge
+        logical :: extCharges = .false.! external charge (x,y,z,q)
+        logical :: ext_grid = .false.  ! external grid points (x,y,z)
+        logical :: extgrid_angstrom =  .false.  ! will print external X, Y, Z points in Angstrom as opposed to Bohr in properties file
 
 
         ! those methods are mostly for research use
@@ -82,7 +95,7 @@ module quick_method_module
         integer :: iSG = 1             ! =0. SG0, =1. SG1(DEFAULT)
 
         ! Initial guess part
-        logical :: SAD = .true.        ! SAD initial guess(defualt
+        logical :: SAD = .true.        ! SAD initial guess(default)
         logical :: MFCC = .false.      ! MFCC
 
         ! this part is about ECP
@@ -98,7 +111,7 @@ module quick_method_module
         integer :: maxdiisscf = 10
 
         ! start cycle for delta density cycle
-        integer :: ncyc =3
+        integer :: ncyc = 3
 
         ! following are some cutoff criteria
         double precision :: coreIntegralCutoff = 1.0d-12 ! cutoff for 1e integral prescreening
@@ -143,8 +156,8 @@ module quick_method_module
         integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
         integer :: dlfind_icoord                 = 3        ! type of internal coordinates
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
-        logical :: bCUDA                ! if CUDA is used here
+#if defined(GPU) || defined(MPIV_GPU)
+        logical :: bGPU                 ! if GPU is used here
 #endif
 
     end type quick_method_type
@@ -173,7 +186,7 @@ module quick_method_module
         module procedure check_quick_method
     end interface check
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
+#if defined(GPU) || defined(MPIV_GPU)
     interface upload
         module procedure upload_method
     end interface upload
@@ -185,6 +198,7 @@ module quick_method_module
 #endif
 
     contains
+
 #ifdef MPIV
         !------------------------
         ! Broadcast quick_method
@@ -219,6 +233,12 @@ module quick_method_module
             call MPI_BCAST(self%grad,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%analGrad,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%analHess,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%esp_charge,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%espgrid_spacing,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%vdw_radii,5,mpi_character,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%esp_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%efield_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%efg_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%diisOpt,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%core,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%annil,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -234,8 +254,13 @@ module quick_method_module
             call MPI_BCAST(self%calcDensLap,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%gridspacing,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%lapGridSpacing,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%writePMat,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%readden,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%read_coord,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%writeden,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%writexyz,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%extCharges,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%ext_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%extgrid_angstrom,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%PDB,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%SAD,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%FMM,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
@@ -273,9 +298,9 @@ module quick_method_module
             call MPI_BCAST(self%allow_bad_scf,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
 
         end subroutine broadcast_quick_method
-
-
 #endif
+
+
         !------------------------
         ! print quick_method
         !------------------------
@@ -283,7 +308,7 @@ module quick_method_module
             use xc_f90_types_m
             use xc_f90_lib_m
             use quick_exception_module
-#if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
+#if (defined(HIP) || defined(HIP_MPIV)) && defined(WITH_MAGMA)
             use quick_magma_module, only: magmaPrintInfo
 #endif
             implicit none
@@ -300,7 +325,7 @@ module quick_method_module
             if (io.ne.0) then
             write(io,'(" ============== JOB CARD =============")')
             if (self%HF) then
-                write(io,'(" METHOD = HATREE FOCK")')
+                write(io,'(" METHOD = HARTREE FOCK")')
             else if (self%MP2) then
                 write(io,'(" METHOD = SECOND ORDER PERTURBATION THEORY")')
             else if (self%DFT) then
@@ -389,7 +414,7 @@ module quick_method_module
               write(io,'(" DIRECT SCF ")')
             endif
 
-#if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
+#if (defined(HIP) || defined(HIP_MPIV)) && defined(WITH_MAGMA)
             call magmaPrintInfo(io, ierr)
 #endif
 
@@ -408,7 +433,10 @@ module quick_method_module
             if (self%printEnergy) write(io,'(" PRINT ENERGY EVERY CYCLE")')
 
             if (self%readDMX)   write(io,'(" READ DENSITY MATRIX FROM FILE")')
-            if (self%writePMat) write(io,'(" WRITE DENSITY MATRIX TO FILE")')
+            if (self%read_coord) write(io,'(" READ COORDINATES From DATAFILE")')
+            if (self%readden) write(io,'(" READ DENSITY MATRIX From DATAFILE")')
+            if (self%writeden) write(io,'(" WRITE DENSITY MATRIX TO DATA FILE")')
+            if (self%writexyz) write(io,'(" WRITE COORDINATES TO DATA FILE")')
             if (self%readSAD)   write(io,'(" READ SAD GUESS FROM FILE")')
             if (self%writeSAD)   write(io,'(" WRITE SAD GUESS TO FILE")')
     
@@ -418,6 +446,7 @@ module quick_method_module
             if (self%custECP)   write(io,'(" CUSTOM ECP BASIS SET")')
 
             if (self%extCharges)write(io,'(" EXTERNAL CHARGES")')
+            if (self%ext_grid)write(io,'(" EXTERNAL GRID POINTS")')
             if (self%core)      write(io,'(" SUM INNER ELECTRONS INTO CORE")')
             if (self%debug)     write(io,'(" DEBUG MODE")')
 
@@ -453,6 +482,27 @@ module quick_method_module
             endif
 
             if (self%grad)      write(io,'(" GRADIENT CALCULATION")')
+
+            ! computing esp, efield and efg
+            if (self%esp_charge)then
+              write(io,'(" ESP CHARGE CALCULATION")')
+              write(io,'(" ESP grids are created at " F5.3 " A spacing ")') self%espgrid_spacing
+              if (self%vdw_radii == "BONDI")then
+                write(io,'(" Van der waals radii for ESP charges are obtained from " A)') &
+                  "J. Phys. Chem. 1964, 68, 3, 441–451"
+              else if (self%vdw_radii == "TC")then
+                write(io,'(" Van der waals radii for ESP charges are obtained from " A)') &
+                  "J. Chem. Theory Comput. 2024, 20, 17, 7469–7478"
+              else
+                call PrtErr(OUTFILEHANDLE, 'The keyword vdw_radii has unknown value. Please use either BONDI or TC.')
+                call quick_exit(OUTFILEHANDLE,1)
+                
+              end if
+            end if
+
+            if (self%esp_grid)      write(io,'(" ELECTROSTATIC POTENTIAL CALCULATION")')
+            if (self%efield_grid)      write(io,'(" ELECTROSTATIC FIELD CALCULATION")')
+            if (self%efg_grid)      write(io,'(" ELECTRIC FIELD GRADIENT CALCULATION")')
 
             if (self%DIVCON) then
                 write(io,'(" DIV & CON METHOD")',advance="no")
@@ -492,7 +542,6 @@ module quick_method_module
         end subroutine print_quick_method
 
 
-
         !------------------------
         ! read quick_method
         !------------------------
@@ -501,13 +550,13 @@ module quick_method_module
             use quick_mpi_module
             use quick_files_module, only : write_molden
             implicit none
-            character(len=200) :: keyWD
-            character(len=200) :: tempstring
+            character(len=300) :: keyWD
+            character(len=300) :: tempstring
             integer :: itemp,i,j
             type (quick_method_type) self
             integer, intent(inout) :: ierr
 
-            call upcase(keyWD,200)
+            call upcase(keyWD,300)
             if (index(keyWD,'PDB').ne. 0)       self%PDB=.true.
             if (index(keyWD,'MFCC').ne.0)       self%MFCC=.true.
             if (index(keyWD,'FMM').ne.0)        self%FMM=.true.
@@ -630,8 +679,13 @@ module quick_method_module
             end if
             if (index(keyWD,'ZMAKE').ne.0)      self%zmat=.true.
             if (index(keyWD,'DIPOLE').ne.0)     self%dipole=.true.
-            if (index(keyWD,'WRITE').ne.0)      self%writePMat=.true.
+            if (index(keyWD,'WRITE').ne.0)then
+                self%writeden=.true.
+                self%writexyz=.true.
+            end if
+
             if (index(keyWD,'EXTCHARGES').ne.0) self%EXTCHARGES=.true.
+            if (index(keyWD,'EXTGRID').ne.0) self%ext_grid=.true.
             if (index(keyWD,'FORCE').ne.0)      self%grad=.true.
 
             if (index(keyWD,'NODIRECT').ne.0)      self%NODIRECT=.true.
@@ -648,6 +702,12 @@ module quick_method_module
                     self%ifragbasis=1
                 endif
             endif
+
+            !Read density matrix
+            if (index(keyWD,'READDEN').ne.0) self%readden=.true.
+
+            !Read coordinates
+            if (index(keyWD,'READ_COORD').ne.0) self%read_coord=.true.
 
             if (self%DFT) then
                 if (index(keyWD,'SG0').ne.0) then
@@ -782,7 +842,35 @@ module quick_method_module
             endif
             CHECK_ERROR(ierr)
 
+           ! Electrostatic Potential(ESP), Field (EF), Field Gradient (EFG) on a grid
+           if (index(keyWD,'EFG_GRID').ne.0) then
+               self%efg_grid=.true.
+               self%ext_grid=.true.
+           endif
+           if (index(keyWD,'EFIELD_GRID').ne.0) then
+               self%efield_grid=.true.
+               self%ext_grid=.true.
+           endif
+           if (index(keyWD,'ESP_GRID').ne.0) then
+               self%esp_grid=.true.
+               self%ext_grid=.true.
+           endif
+           if (index(keyWD,'ESP_CHARGE').ne.0) then
+               self%esp_charge=.true.
+               if (index(keyWD,'ESPGRID_SPACING').ne.0) then
+                 call read(keywd,'ESPGRID_SPACING', self%espgrid_spacing)
+               endif
+               if (index(keyWD,'VDW_RADII').ne.0) then
+                 call read(keywd,'VDW_RADII', tempstring)
+                 self%vdw_radii = trim(tempstring)
+               endif
+           endif
+           if (index(keyWD,'EXTGRID_ANGSTROM').ne.0) then
+               self%extgrid_angstrom=.true.
+               self%ext_grid=.true.
+           endif
         end subroutine read_quick_method
+
 
         !------------------------
         ! initial quick_method
@@ -813,17 +901,23 @@ module quick_method_module
             self%PBSOL = .false.     ! PB Solvent
             self%UNRST =  .false.    ! Unrestricted
 
-            self%debug =  .false.    ! debug mode
-            self%nodirect = .false.  ! conventional SCF
-            self%readDMX =  .false.  ! flag to read density matrix
-            self%readSAD =  .true.   ! flag to read sad guess
-            self%writeSAD = .false.  ! flag to write sad guess
-            self%diisSCF =  .false.  ! DIIS SCF
-            self%prtGap =  .false.   ! flag to print HOMO-LUMO gap
-            self%opt =  .false.      ! optimization
-            self%grad =  .false.     ! gradient
-            self%analGrad =  .true. ! Analytical Gradient
-            self%analHess =  .false. ! Analytical Hessian Matrix
+            self%debug =  .false.     ! debug mode
+            self%nodirect = .false.   ! conventional SCF
+            self%readDMX =  .false.   ! flag to read density matrix
+            self%readSAD =  .true.    ! flag to read sad guess
+            self%writeSAD = .false.   ! flag to write sad guess
+            self%diisSCF =  .false.   ! DIIS SCF
+            self%prtGap =  .false.    ! flag to print HOMO-LUMO gap
+            self%opt =  .false.       ! optimization
+            self%grad =  .false.      ! gradient
+            self%analGrad =  .true.   ! Analytical Gradient
+            self%analHess =  .false.  ! Analytical Hessian Matrix
+            self%esp_charge = .false.        ! ESP charge on atoms
+            self%espgrid_spacing =  0.25    ! grid density (in Angstroms) to obtain ESP charge
+            self%vdw_radii = "BONDI"     ! Van der waals radius type
+            self%esp_grid = .false.        ! Electrostatic potential (ESP) on grid
+            self%efield_grid = .false.     ! Electric field (EFIELD) evaluated on grid
+            self%efg_grid = .false.        ! Electric field gradient (EFG)
 
             self%diisOpt =  .false.  ! DIIS Optimization
             self%core =  .false.     !
@@ -837,8 +931,13 @@ module quick_method_module
             self%hasF = .false.            ! If f orbitial is contained
             self%calcDens = .false.    ! calculate density
             self%calcDensLap = .false. ! calculate density lap
-            self%writePMat = .false.   ! Output density matrix
+            self%readden = .false.    ! Input density matrix
+            self%read_coord = .false.    ! Input coordinates
+            self%writeden = .false.   ! Write density matrix to data file
+            self%writexyz = .false.   ! Write coordinates to data file
             self%extCharges = .false.  ! external charge
+            self%ext_grid = .false.    ! external grid points
+            self%extgrid_angstrom = .false.   ! external grid points (same as above) output in angstrom
             self%PDB = .false.         ! PDB input
             self%SAD = .true.          ! SAD initial guess
             self%FMM = .false.         ! Fast Multipole
@@ -888,11 +987,11 @@ module quick_method_module
             self%coarse_cutoff=.false.
             self%tight_cutoff=.false.
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
-            self%bCUDA  = .true.
+#if defined(GPU) || defined(MPIV_GPU)
+            self%bGPU   = .true.
 #endif
-
         end subroutine init_quick_method
+
 
         !------------------------
         ! check quick_method
@@ -951,8 +1050,8 @@ module quick_method_module
 
             ! tighten XCCutoff if diffuse functions exist
             if(self%diffuse_basis_funcs .and. self%DFT .and. self%isDefaultXCCutoff) self%XCCutoff=self%XCCutoff*0.1d0
-
         end subroutine check_quick_method
+
 
         subroutine obtain_leastIntCutoff(self,ierr)
             use quick_constants_module
@@ -975,7 +1074,6 @@ module quick_method_module
             if (self%pmaxrms .gt. 1.0d0/10.0d0**8.5) self%maxIntegralCutoff = TEN_TO_MINUS9
             if (self%pmaxrms .gt. 1.0d0/10.0d0**7.5) self%maxIntegralCutoff = TEN_TO_MINUS8
             if (self%integralCutoff .le. self%maxIntegralCutoff) self%maxIntegralCutoff=self%integralCutoff
-
         end subroutine obtain_leastIntCutoff
 
 
@@ -1001,8 +1099,8 @@ module quick_method_module
             quick_method%integralCutoff=TEN_TO_MINUS11
             quick_method%primLimit=min(quick_method%integralCutoff,self%primLimit)
             endif
-
         end subroutine adjust_Cutoff
+
 
         !Madu Manathunga 05/31/2019
         !This subroutine set the functional id and  x_hybrid_coeff
@@ -1013,15 +1111,19 @@ module quick_method_module
            use quick_exception_module
 
            implicit none
-           character(len=200), intent(in) :: f_keywd
+           character(len=300), intent(in) :: f_keywd
            type(quick_method_type), intent(inout) :: self
            integer, intent(inout) :: ierr
-           character(len=200) :: func1, func2 
+           character(len=300) :: func1, func2 
            character(len=256) :: functional_name
            integer :: f_id, nof_f, istart, iend, imid
            double precision :: x_hyb_coeff
            type(xc_f90_pointer_t) :: xc_func
            type(xc_f90_pointer_t) :: xc_info
+ 
+           functional_name = ''
+           func1 = ''
+           func2 = ''
 
         !We now set the functional ids corresponding to each functional.
         !Note that these ids are coming from libxc. One should obtain them
@@ -1054,7 +1156,7 @@ module quick_method_module
             .and. (index(functional_name,'mgga') .eq. 0))  then
                 functional_name=trim(functional_name)
 
-                call upcase(functional_name,200)
+                call upcase(functional_name,300)
 
                 if((trim(functional_name) == trim(func1)) .or. (trim(functional_name) == trim(func2))) then 
                         nof_f=nof_f+1
@@ -1077,11 +1179,11 @@ module quick_method_module
           ierr=32
           return
         endif
-
         end subroutine set_libxc_func_info
 
+
+#if defined(GPU) || defined(MPIV_GPU)
         ! subroutine to upload method and libxc info in to gpu
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV 
         subroutine upload_method(self, ierr)
           
           implicit none
@@ -1091,7 +1193,7 @@ module quick_method_module
 
           
 
-          if (self%bCUDA) then
+          if (self%bGPU ) then
             if(self%HF)then
               call gpu_upload_method(0, self%UNRST, 1.0d0)
             elseif(self%uselibxc)then
@@ -1105,6 +1207,7 @@ module quick_method_module
 
           endif
         end subroutine upload_method
+
 
         subroutine delete_method(self,ierr)
 

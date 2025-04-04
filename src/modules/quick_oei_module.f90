@@ -30,6 +30,10 @@ module quick_oei_module
 
 contains
 
+#define OEI
+#include "./include/attrashell.fh"
+#undef OEI
+
   !------------------------------------------------
   ! get1eEnergy
   !------------------------------------------------
@@ -110,7 +114,7 @@ subroutine get1e(deltaO)
          !-----------------------------------------------------------------
          RECORD_TIME(timer_begin%T1eV)
 
-#if defined CUDA || defined HIP
+#if defined(GPU)
          if(.not. quick_method%hasF) then
            call gpu_get_oei(quick_qm_struct%o)
          else
@@ -196,7 +200,7 @@ subroutine get1e(deltaO)
       !-----------------------------------------------------------------
       RECORD_TIME(timer_begin%T1eV)
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
       if(.not. quick_method%hasF) then
         call gpu_get_oei(quick_qm_struct%o)
       else
@@ -311,244 +315,6 @@ subroutine kineticO(IBAS)
    enddo
 
 end subroutine kineticO
-
-
-subroutine attrashell(IIsh,JJsh)
-   use allmod
-   use quick_overlap_module, only: gpt, opf, overlap_core
-   !    use xiaoconstants
-   implicit double precision(a-h,o-z)
-   dimension aux(0:20)
-   double precision AA(3),BB(3),CC(3),PP(3)
-   common /xiaoattra/attra,aux,AA,BB,CC,PP,g
-
-   double precision RA(3),RB(3),RP(3),inv_g,g_table(200), valopf
-
-   Ax=xyz(1,quick_basis%katom(IIsh))
-   Ay=xyz(2,quick_basis%katom(IIsh))
-   Az=xyz(3,quick_basis%katom(IIsh))
-
-   Bx=xyz(1,quick_basis%katom(JJsh))
-   By=xyz(2,quick_basis%katom(JJsh))
-   Bz=xyz(3,quick_basis%katom(JJsh))
-
-   ! The purpose of this subroutine is to calculate the nuclear attraction
-   ! of an electron  distributed between gtfs with orbital exponents a
-   ! and b on A and B with angular momentums defined by i,j,k (a's x, y
-   ! and z exponents, respectively) and ii,jj,k and kk on B with the core at
-   ! (Cx,Cy,Cz) with charge Z. m is the "order" of the integral which
-   ! arises from the recusion relationship.
-
-   ! The this is taken from the recursive relation found in Obara and Saika,
-   ! J. Chem. Phys. 84 (7) 1986, 3963.
-
-   ! The first step is generating all the necessary auxillary integrals.
-   ! These are (0|1/rc|0)^(m) = 2 Sqrt (g/Pi) (0||0) Fm(g(Rpc)^2)
-   ! The values of m range from 0 to i+j+k+ii+jj+kk.
-
-   NII2=quick_basis%Qfinal(IIsh)
-   NJJ2=quick_basis%Qfinal(JJsh)
-   Maxm=NII2+NJJ2
-
-   do ips=1,quick_basis%kprim(IIsh)
-      a=quick_basis%gcexpo(ips,quick_basis%ksumtype(IIsh))
-      do jps=1,quick_basis%kprim(JJsh)
-         b=quick_basis%gcexpo(jps,quick_basis%ksumtype(JJsh))
-
-         valopf = opf(a, b, quick_basis%gccoeff(ips,quick_basis%ksumtype(IIsh)), &
-         quick_basis%gccoeff(jps,quick_basis%ksumtype(JJsh)), Ax, Ay, Az, Bx, By, Bz)
-
-         if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
-
-           !Eqn 14 O&S
-           call gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,0,g_table)
-           g = a+b
-           !Eqn 15 O&S
-           inv_g = 1.0d0 / dble(g)
-
-           !Calculate first two terms of O&S Eqn A20
-           constanttemp=dexp(-((a*b*((Ax - Bx)**2.d0 + (Ay - By)**2.d0 + (Az - Bz)**2.d0))*inv_g))
-           constant = overlap_core(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) * 2.d0 * sqrt(g/Pi)*constanttemp
-
-           !nextatom=number of external MM point charges. set to 0 if none used
-           do iatom=1,natom+quick_molspec%nextatom
-             if(iatom<=natom)then
-               Cx=xyz(1,iatom)
-               Cy=xyz(2,iatom)
-               Cz=xyz(3,iatom)
-               Z=-1.0d0*quick_molspec%chg(iatom)
-             else
-               Cx=quick_molspec%extxyz(1,iatom-natom)
-               Cy=quick_molspec%extxyz(2,iatom-natom)
-               Cz=quick_molspec%extxyz(3,iatom-natom)
-               Z=-quick_molspec%extchg(iatom-natom)
-             endif
-             constant2=constanttemp*Z
-
-             !Calculate the last term of O&S Eqn A21
-             PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
-!            if(quick_method%fMM .and. a*b*PCsquare/g.gt.33.0d0)then
-!               xdistance=1.0d0/dsqrt(PCsquare)
-!               call fmmone(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
-!                     Cx,Cy,Cz,Px,Py,Pz,iatom,constant2,a,b,xdistance)
-!            else
-
-               !Compute O&S Eqn A21
-               U = g* PCsquare
-
-               !Calculate the last term of O&S Eqn A20
-               call FmT(Maxm,U,aux)
-
-               !Calculate all the auxilary integrals and store in attraxiao
-               !array
-               do L = 0,maxm
-                  aux(L) = aux(L)*constant*Z
-                  attraxiao(1,1,L)=aux(L)
-               enddo
-
-               ! At this point all the auxillary integrals have been calculated.
-               ! It is now time to decompase the attraction integral to it's
-               ! auxillary integrals through the recursion scheme.  To do this we use
-               ! a recursive function.
-
-               !    attraction = attrecurse(i,j,k,ii,jj,kk,0,aux,Ax,Ay,Az,Bx,By,Bz, &
-                     !    Cx,Cy,Cz,Px,Py,Pz,g)
-               NIJ1=10*NII2+NJJ2
-
-               call nuclearattra(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
-                     Cx,Cy,Cz,Px,Py,Pz,iatom)
-
-!            endif
-
-           enddo
-         endif
-      enddo
-   enddo
-
-   ! Xiao HE remember to multiply Z   01/12/2008
-   !    attraction = attraction*(-1.d0)* Z
-   201 return
-end subroutine attrashell
-
-
-
-  subroutine attrashellopt(IIsh,JJsh)
-     use allmod
-     use quick_overlap_module, only: opf, overlap
-     !    use xiaoconstants
-#ifdef MPIV
-     use mpi
-#endif
-     implicit double precision(a-h,o-z)
-     dimension aux(0:20)
-     double precision AA(3),BB(3),CC(3),PP(3)
-     common /xiaoattra/attra,aux,AA,BB,CC,PP,g
-  
-     double precision RA(3),RB(3),RP(3), valopf, g_table(200)
-  
-     Ax=xyz(1,quick_basis%katom(IIsh))
-     Ay=xyz(2,quick_basis%katom(IIsh))
-     Az=xyz(3,quick_basis%katom(IIsh))
-  
-     Bx=xyz(1,quick_basis%katom(JJsh))
-     By=xyz(2,quick_basis%katom(JJsh))
-     Bz=xyz(3,quick_basis%katom(JJsh))
-  
-     ! The purpose of this subroutine is to calculate the nuclear attraction
-     ! of an electron  distributed between gtfs with orbital exponents a
-     ! and b on A and B with angular momentums defined by i,j,k (a's x, y
-     ! and z exponents, respectively) and ii,jj,k and kk on B with the core at
-     ! (Cx,Cy,Cz) with charge Z. m is the "order" of the integral which
-     ! arises from the recusion relationship.
-  
-     ! The this is taken from the recursive relation found in Obara and Saika,
-     ! J. Chem. Phys. 84 (7) 1986, 3963.
-  
-     ! The first step is generating all the necessary auxillary integrals.
-     ! These are (0|1/rc|0)^(m) = 2 Sqrt (g/Pi) (0||0) Fm(g(Rpc)^2)
-     ! The values of m range from 0 to i+j+k+ii+jj+kk.
-  
-     NII2=quick_basis%Qfinal(IIsh)
-     NJJ2=quick_basis%Qfinal(JJsh)
-     Maxm=NII2+NJJ2+1+1
-  
-     do ips=1,quick_basis%kprim(IIsh)
-        a=quick_basis%gcexpo(ips,quick_basis%ksumtype(IIsh))
-        do jps=1,quick_basis%kprim(JJsh)
-           b=quick_basis%gcexpo(jps,quick_basis%ksumtype(JJsh))
-  
-           valopf = opf(a, b, quick_basis%gccoeff(ips,quick_basis%ksumtype(IIsh)),&
-           quick_basis%gccoeff(jps,quick_basis%ksumtype(JJsh)), Ax, Ay, Az, Bx, By, Bz)
-  
-           if(abs(valopf) .gt. quick_method%coreIntegralCutoff) then
-  
-             g = a+b
-             Px = (a*Ax + b*Bx)/g
-             Py = (a*Ay + b*By)/g
-             Pz = (a*Az + b*Bz)/g
-             g_table = g**(-1.5)
-  
-             constant = overlap(a,b,0,0,0,0,0,0,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) &
-                   * 2.d0 * sqrt(g/Pi)
-  
-             do iatom=1,natom+quick_molspec%nextatom
-                if(quick_basis%katom(IIsh).eq.iatom.and.quick_basis%katom(JJsh).eq.iatom)then
-                    continue
-                 else
-                   if(iatom<=natom)then
-                    Cx=xyz(1,iatom)
-                    Cy=xyz(2,iatom)
-                    Cz=xyz(3,iatom)
-                    Z=-1.0d0*quick_molspec%chg(iatom)
-                   else
-                    Cx=quick_molspec%extxyz(1,iatom-natom)
-                    Cy=quick_molspec%extxyz(2,iatom-natom)
-                    Cz=quick_molspec%extxyz(3,iatom-natom)
-                    Z=-1.0d0*quick_molspec%extchg(iatom-natom)
-                   endif
-  
-                   PCsquare = (Px-Cx)**2 + (Py -Cy)**2 + (Pz -Cz)**2
-  
-                   U = g* PCsquare
-                   !    Maxm = i+j+k+ii+jj+kk
-                   call FmT(Maxm,U,aux)
-                   do L = 0,maxm
-                      aux(L) = aux(L)*constant*Z
-                      attraxiao(1,1,L)=aux(L)
-                   enddo
-  
-                   do L = 0,maxm-1
-                      attraxiaoopt(1,1,1,L)=2.0d0*g*(Px-Cx)*aux(L+1)
-                      attraxiaoopt(2,1,1,L)=2.0d0*g*(Py-Cy)*aux(L+1)
-                      attraxiaoopt(3,1,1,L)=2.0d0*g*(Pz-Cz)*aux(L+1)
-                   enddo
-  
-                   ! At this point all the auxillary integrals have been calculated.
-                   ! It is now time to decompase the attraction integral to it's
-                   ! auxillary integrals through the recursion scheme.  To do this we use
-                   ! a recursive function.
-  
-                   !    attraction = attrecurse(i,j,k,ii,jj,kk,0,aux,Ax,Ay,Az,Bx,By,Bz, &
-  
-                         !    Cx,Cy,Cz,Px,Py,Pz,g)
-                   NIJ1=10*NII2+NJJ2
-  
-                   call nuclearattraopt(ips,jps,IIsh,JJsh,NIJ1,Ax,Ay,Az,Bx,By,Bz, &
-  
-                         Cx,Cy,Cz,Px,Py,Pz,iatom)
-  
-                endif
-  
-             enddo
-           endif
-        enddo
-     enddo
-  
-     ! Xiao HE remember to multiply Z   01/12/2008
-     !    attraction = attraction*(-1.d0)* Z
-     return
-  end subroutine attrashellopt
-
 
 double precision function ekinetic(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table)
    use quick_overlap_module, only: overlap_core

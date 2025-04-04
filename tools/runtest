@@ -20,7 +20,7 @@
 #  !---------------------------------------------------------------------!
 #  ! QUICK version                                                       !
 #  !---------------------------------------------------------------------!
-QUICK_VERSION='QUICK-24.03'
+QUICK_VERSION='QUICK-25.03'
 
 #  !---------------------------------------------------------------------!
 #  ! Variable definitions                                                !
@@ -57,6 +57,7 @@ test_ene='no'
 test_grad='no'
 test_opt='no'
 test_api='no'
+test_esp='no'
 uspec_test='no'
 test_length='short'
 
@@ -110,8 +111,9 @@ print_help()
       --grad                Run only gradient tests
       --opt                 Run only geometry optimization tests
       --api                 Run only api tests
+      --esp                 Run only ESP tests
       --full                Run a large set of tests (Default: no)
-      --nolog               Disable writing output into runtest.log (Default: no)
+      --nolog               Disable writing output into runtest.log/runtest-verbose.log (Default: no)
                                                                             
   If the version flags are not specified, the script will try to detect
   the executables and test them.
@@ -284,7 +286,7 @@ set_job_gpus()
   gpus_per_job=$(($total_gpus/$PARALLEL_TEST_COUNT))
 
   if [ "$total_gpus" -lt "$PARALLEL_TEST_COUNT" ]; then
-    echo "Error: invalid # GPUs detected in HIP_VISIBLE_DEVICES/CUDA_VISIBLE_DEVICES (# GPUs >= PARALLEL_TEST_COUNT)."
+    echo "Error: invalid # GPUs detected in HIP_VISIBLE_DEVICES/CUDA_VISIBLE_DEVICES (# GPUs <= PARALLEL_TEST_COUNT)."
     exit 1;
   fi
 
@@ -303,11 +305,12 @@ set_job_gpus()
 #   $2: run gradient tests ['yes'|'no']
 #   $3: run geometry optimization tests ['yes'|'no']
 #   $4: run API tests ['yes'|'no']
+#   $5: run ESP tests ['yes'|'no']
 #
 # outputs:
 #   tests: array of tests
 #   test_names: array of test names
-#   tot_{ene,grad,opt,api}_tests: counts for test lists by type
+#   tot_{ene,grad,opt,api,esp}_tests: counts for test lists by type
 #   total_tests: sum of counts for all test types
 get_total_tests()
 {
@@ -317,6 +320,7 @@ get_total_tests()
   tot_grad_tests=0 
   tot_opt_tests=0 
   tot_api_tests=0 
+  tot_esp_tests=0 
   total_tests=0 
 
   if [ "$1" = 'yes' ]; then
@@ -358,6 +362,16 @@ get_total_tests()
     total_tests="${#tests[@]}"
     tot_api_tests=$(($total_tests-$tot_api_tests))
   fi
+
+  if [ "$5" = 'yes' ]; then
+    tot_esp_tests="${#tests[@]}"
+    tests+=(`grep "^esp_" "$test_list" | awk '{print $1}'`)
+    while IFS= read -r line; do
+        test_names+=("$line")
+    done < <(grep "^esp_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')
+    total_tests="${#tests[@]}"
+    tot_esp_tests=$(($total_tests-$tot_esp_tests))
+  fi
 }
 
 
@@ -370,23 +384,35 @@ get_total_tests()
 set_test()
 {
   if [ $has_parallel = 'yes' ]; then
-    if [ -n "$HIP_VISIBLE_DEVICES" ]; then
-      set_job_gpus "$HIP_VISIBLE_DEVICES"
-      export HIP_VISIBLE_DEVICES="${job_gpus[$(($3-1))]}"
-      export CUDA_VISIBLE_DEVICES=""
-    elif [ -n "$CUDA_VISIBLE_DEVICES" ]; then
-      set_job_gpus "$CUDA_VISIBLE_DEVICES"
-      export HIP_VISIBLE_DEVICES=""
-      export CUDA_VISIBLE_DEVICES="${job_gpus[$(($3-1))]}"
+    if [ "$hip" = 'yes' -o "$hipmpi" = 'yes' ]; then
+      if [ -n "$HIP_VISIBLE_DEVICES" ]; then
+        set_job_gpus "$HIP_VISIBLE_DEVICES"
+        export HIP_VISIBLE_DEVICES="${job_gpus[$(($3-1))]}"
+        export CUDA_VISIBLE_DEVICES=""
+      fi
+    elif [ "$cuda" = 'yes' -o "$cudampi" = 'yes' ]; then
+      if [ -n "$CUDA_VISIBLE_DEVICES" ]; then
+        set_job_gpus "$CUDA_VISIBLE_DEVICES"
+        export HIP_VISIBLE_DEVICES=""
+        export CUDA_VISIBLE_DEVICES="${job_gpus[$(($3-1))]}"
+      fi
     fi
   fi
 
   # copy input if the test is not an api test
-  if [ `echo "$1" | grep 'api_' | wc -l` -lt 1 ]; then
+  if [ `echo "$1" | grep '^api_' | wc -l` -lt 1 ]; then
     cp "$2/$1.in" ./
   fi
 
   cp "$2/saved/$1.out" "$1.ref.out"
+
+  # copy extra files generated while computing ESP on grid points
+  if [ `echo "$1" | grep '^esp_grid_'| wc -l` -gt 0 ]; then
+    cp "$2/saved/$1.esp" "$1.ref.esp"
+  elif [ `echo "$1" | grep '^esp_'| wc -l` -gt 0 ]; then
+    cp "$2/saved/$1.vdw" "$1.ref.vdw"
+  fi
+
 }
 
 
@@ -397,17 +423,35 @@ set_test()
 #   $2: test name
 #   $3: test number
 #   $4: total number of tests
-#   $5: log file
+#   $5: test summary log file
+#   $6: test verbose log file (captures stdout/stderr from running QUICK executables)
 run_test()
 {
   # Run the test case
+  rm -f "$1.tmp"
   if [ $buildtype = 'mpi' ] || [ $buildtype = 'cudampi' ] || [ $buildtype = 'hipmpi' ] && [ $ismpirun = 'yes' ]; then
-    eval "$DO_PARALLEL $qbindir/$qexe $1.in" > /dev/null 2>&1
+    eval "$DO_PARALLEL $qbindir/$qexe $1.in" >"$1.tmp" 2>&1
   else
-    "$qbindir/$qexe" "$1.in" > /dev/null 2>&1
+    "$qbindir/$qexe" "$1.in" >"$1.tmp" 2>&1
   fi
+  qexe_ret="$?"
 
-  if [ "$?" -ne 0 ] && [ `check_f_error $1` -eq 0 ]; then
+  lock_file "$6"
+  echo "Test $3 of $4" >> "$6"
+  echo "$2" >> "$6"
+  echo "QUICK executable output (stdout/stderr):" >> "$6"
+  cat "$1.tmp" >> "$6"
+  rm -f  "$1.tmp"
+  echo >> "$6"
+  echo >> "$6"
+  unlock_file "$6"
+
+  check_f_error $1
+  check_f_error_ret="$?"
+  check_mpi_gpu_mismatch $1
+  check_mpi_gpu_mismatch_ret="$?"
+
+  if [ "$qexe_ret" -ne 0 ] && [ "$check_f_error_ret" -eq 0 ] && [ "$check_mpi_gpu_mismatch_ret" -eq 0 ]; then
     echo "Error: $qexe execution failed."
     echo ""
   
@@ -419,12 +463,6 @@ run_test()
   
     exit 1
   fi
-
-  if [ `check_f_error $1` -eq 1 ]; then
-    echo "SKIPPED."
-    echo "=============================================================="
-    echo ""
-  fi
 }
 
 
@@ -435,17 +473,33 @@ run_test()
 #   $2: test name
 #   $3: test number
 #   $4: total number of tests
-#   $5: log file
+#   $5: test summary log file
+#   $6: test verbose log file (captures stdout/stderr from running QUICK executables)
 run_test_api()
 {
   #Run test
+  rm -f "$1.tmp"
   if [ $buildtype = 'mpi' ] || [ $buildtype = 'cudampi' ] || [ $buildtype = 'hipmpi' ] && [ $ismpirun = 'yes' ]; then
-    eval "$DO_PARALLEL $apipath/$apiexe" > /dev/null 2>&1
+    eval "$DO_PARALLEL $apipath/$apiexe" >"$1.tmp" 2>&1
   else
-    "$apipath/$apiexe" > /dev/null 2>&1
+    "$apipath/$apiexe" >"$1.tmp" 2>&1
   fi
+  apiexe_ret="$?"
 
-  if [ "$?" -ne 0 ]; then
+  lock_file "$6"
+  echo "Test $3 of $4" >> "$6"
+  echo "$2" >> "$6"
+  echo "QUICK executable output (stdout/stderr):" >> "$6"
+  cat "$1.tmp" >> "$6"
+  rm -f  "$1.tmp"
+  echo >> "$6"
+  echo >> "$6"
+  unlock_file "$6"
+
+  check_mpi_gpu_mismatch $1
+  check_mpi_gpu_mismatch_ret="$?"
+
+  if [ "$apiexe_ret" -ne 0 ] && [ "$check_mpi_gpu_mismatch_ret" -eq 0 ]; then
     echo "Error: $apiexe execution failed."
     echo ""
 
@@ -468,21 +522,33 @@ run_test_api()
 #   $3: test number for this test
 #   $4: total number of tests
 #   $5: directory containing test files and scripts
-#   $6: log file
-#   $7: job slot (GNU parallel) (1-based indexing)
+#   $6: test summary log file
+#   $7: test verbose log file (captures stdout/stderr from running QUICK executables)
+#   $8: job slot (GNU parallel) (1-based indexing)
 run_energy_test()
 {
-  set_test "$1" "$5" "$7"
-  run_test "$1" "$2" "$3" "$4" "$6"
+  set_test "$1" "$5" "$8"
+  run_test "$1" "$2" "$3" "$4" "$6" "$7"
+
+  check_f_error $1
+  check_f_error_ret="$?"
+  check_mpi_gpu_mismatch $1
+  check_mpi_gpu_mismatch_ret="$?"
+
   lock_file "$6"
   echo "Running test $3 of $4" | tee -a "$6"
   echo "$2" | tee -a "$6"
-  if [ `check_f_error $1` -eq 0 ]; then
+
+  if [ "$check_f_error_ret" -eq 0 ] && [ "$check_mpi_gpu_mismatch_ret" -eq 0 ]; then
     check_energy "$1" "$5" "$6"
     check_dipole "$1" "$5" "$6"
     echo "" | tee -a "$6"
-  else
-    echo "SKIPPED." | tee -a "$6"
+  elif [ "$check_f_error_ret" -eq 1 ]; then
+    echo "SKIPPED (code not compiled with f function support)." | tee -a "$6"
+    echo "==============================================================" | tee -a "$6"
+    echo "" | tee -a "$6"
+  elif [ "$check_mpi_gpu_mismatch_ret" -eq 1 ]; then
+    echo "SKIPPED (DO_PARALLEL: # MPI procs > # GPUs)." | tee -a "$6"
     echo "==============================================================" | tee -a "$6"
     echo "" | tee -a "$6"
   fi
@@ -499,22 +565,34 @@ run_energy_test()
 #   $3: test number for this test
 #   $4: total number of tests
 #   $5: directory containing test files and scripts
-#   $6: log file
-#   $7: job slot (GNU parallel) (1-based indexing)
+#   $6: test summary log file
+#   $7: test verbose log file (captures stdout/stderr from running QUICK executables)
+#   $8: job slot (GNU parallel) (1-based indexing)
 run_grad_test()
 {
-  set_test "$1" "$5" "$7"
-  run_test "$1" "$2" "$3" "$4" "$6"
+  set_test "$1" "$5" "$8"
+  run_test "$1" "$2" "$3" "$4" "$6" "$7"
+
+  check_f_error $1
+  check_f_error_ret="$?"
+  check_mpi_gpu_mismatch $1
+  check_mpi_gpu_mismatch_ret="$?"
+
   lock_file "$6"
   echo "Running test $3 of $4" | tee -a "$6"
   echo "$2" | tee -a "$6"
-  if [ `check_f_error $1` -eq 0 ]; then
+
+  if [ "$check_f_error_ret" -eq 0 ] && [ "$check_mpi_gpu_mismatch_ret" -eq 0 ]; then
     check_energy "$1" "$5" "$6"
     check_gradient "$1" "$5" "$6"
     check_dipole "$1" "$5" "$6"
     echo "" | tee -a "$6"
-  else
-    echo "SKIPPED." | tee -a "$6"
+  elif [ "$check_f_error_ret" -eq 1 ]; then
+    echo "SKIPPED (code not compiled with f function support)." | tee -a "$6"
+    echo "==============================================================" | tee -a "$6"
+    echo "" | tee -a "$6"
+  elif [ "$check_mpi_gpu_mismatch_ret" -eq 1 ]; then
+    echo "SKIPPED (DO_PARALLEL: # MPI procs > # GPUs)." | tee -a "$6"
     echo "==============================================================" | tee -a "$6"
     echo "" | tee -a "$6"
   fi
@@ -531,21 +609,33 @@ run_grad_test()
 #   $3: test number for this test
 #   $4: total number of tests
 #   $5: directory containing test files and scripts
-#   $6: log file
-#   $7: job slot (GNU parallel) (1-based indexing)
+#   $6: test summary log file
+#   $7: test verbose log file (captures stdout/stderr from running QUICK executables)
+#   $8: job slot (GNU parallel) (1-based indexing)
 run_opt_test()
 {
-  set_test "$1" "$5" "$7"
-  run_test "$1" "$2" "$3" "$4" "$6"
+  set_test "$1" "$5" "$8"
+  run_test "$1" "$2" "$3" "$4" "$6" "$7"
+
+  check_f_error $1
+  check_f_error_ret="$?"
+  check_mpi_gpu_mismatch $1
+  check_mpi_gpu_mismatch_ret="$?"
+
   lock_file "$6"
   echo "Running test $3 of $4" | tee -a "$6"
   echo "$2" | tee -a "$6"
-  if [ `check_f_error $1` -eq 0 ]; then
+
+  if [ "$check_f_error_ret" -eq 0 ] && [ "$check_mpi_gpu_mismatch_ret" -eq 0 ]; then
     check_opt "$1" "$5" "$6"
     check_dipole "$1" "$5" "$6"
     echo "" | tee -a "$6"
-  else
-    echo "SKIPPED." | tee -a "$6"
+  elif [ "$check_f_error_ret" -eq 1 ]; then
+    echo "SKIPPED (code not compiled with f function support)." | tee -a "$6"
+    echo "==============================================================" | tee -a "$6"
+    echo "" | tee -a "$6"
+  elif [ "$check_mpi_gpu_mismatch_ret" -eq 1 ]; then
+    echo "SKIPPED (DO_PARALLEL: # MPI procs > # GPUs)." | tee -a "$6"
     echo "==============================================================" | tee -a "$6"
     echo "" | tee -a "$6"
   fi
@@ -562,18 +652,78 @@ run_opt_test()
 #   $3: test number for this test
 #   $4: total number of tests
 #   $5: directory containing test files and scripts
-#   $6: log file
-#   $7: job slot (GNU parallel) (1-based indexing)
+#   $6: test summary log file
+#   $7: test verbose log file (captures stdout/stderr from running QUICK executables)
+#   $8: job slot (GNU parallel) (1-based indexing)
 run_api_test()
 {
-  set_test "$1" "$5" "$7"
-  run_test_api "$1" "$2" "$3" "$4" "$6"
+  set_test "$1" "$5" "$8"
+  run_test_api "$1" "$2" "$3" "$4" "$6" "$7"
+
+  check_mpi_gpu_mismatch $1
+  check_mpi_gpu_mismatch_ret="$?"
+
   lock_file "$6"
   echo "Running test $3 of $4" | tee -a "$6"
   echo "$2" | tee -a "$6"
-  check_energy "$1" "$5" "$6"
-  check_gradient "$1" "$5" "$6"
-  echo "" | tee -a "$6"
+
+  if [ "$check_mpi_gpu_mismatch_ret" -eq 0 ]; then
+    check_energy "$1" "$5" "$6"
+    check_gradient "$1" "$5" "$6"
+    echo "" | tee -a "$6"
+  else
+    echo "SKIPPED (DO_PARALLEL: # MPI procs > # GPUs)." | tee -a "$6"
+    echo "==============================================================" | tee -a "$6"
+    echo "" | tee -a "$6"
+  fi
+  unlock_file "$6"
+  clean_up "$1"
+}
+
+
+# wrapper function for esp tests.
+#
+# arguments:
+#   $1: test
+#   $2: test name
+#   $3: test number for this test
+#   $4: total number of tests
+#   $5: directory containing test files and scripts
+#   $6: test summary log file
+#   $7: test verbose log file (captures stdout/stderr from running QUICK executables)
+#   $8: job slot (GNU parallel) (1-based indexing)
+run_esp_test()
+{
+  set_test "$1" "$5" "$8"
+  run_test "$1" "$2" "$3" "$4" "$6" "$7"
+
+  check_f_error $1
+  check_f_error_ret="$?"
+  check_mpi_gpu_mismatch $1
+  check_mpi_gpu_mismatch_ret="$?"
+
+  lock_file "$6"
+  echo "Running test $3 of $4" | tee -a "$6"
+  echo "$2" | tee -a "$6"
+
+  if [ "$check_f_error_ret" -eq 0 ] && [ "$check_mpi_gpu_mismatch_ret" -eq 0 ]; then
+    check_energy "$1" "$5" "$6"
+    if [ `echo "$1" | grep '^esp_grid_'| wc -l` -gt 0 ]; then
+      check_esp_grid "$1" "$5" "$6"
+    elif [ `echo "$1" | grep '^esp_'| wc -l` -gt 0 ]; then
+      check_esp_charge "$1" "$5" "$6"
+      check_vdw_surface "$1" "$5" "$6"
+    fi
+    echo "" | tee -a "$6"
+  elif [ "$check_f_error_ret" -eq 1 ]; then
+    echo "SKIPPED (code not compiled with f function support)." | tee -a "$6"
+    echo "==============================================================" | tee -a "$6"
+    echo "" | tee -a "$6"
+  elif [ "$check_mpi_gpu_mismatch_ret" -eq 1 ]; then
+    echo "SKIPPED (DO_PARALLEL: # MPI procs > # GPUs)." | tee -a "$6"
+    echo "==============================================================" | tee -a "$6"
+    echo "" | tee -a "$6"
+  fi
   unlock_file "$6"
   clean_up "$1"
 }
@@ -584,7 +734,7 @@ run_api_test()
 # arguments:
 #   $1: test name
 #   $2: directory containing test files and scripts
-#   $3: log file
+#   $3: test summary log file
 check_energy()
 {
   awk '/Begin Energy Calculation/,/End Energy calculation/ {print}' "$1.ref.out" > "$1.ref.ene"
@@ -594,12 +744,48 @@ check_energy()
 }
 
 
+# check ESP charge output from test.
+#
+# arguments:
+#   $1: test name
+#   $2: directory containing test files and scripts
+#   $3: test summary log file
+check_esp_charge()
+{
+  awk '/ESP charges:/,/Net charge/ {print}' "$1.ref.out" > "$1.ref.charge"
+  awk '/ESP charges:/,/Net charge/ {print}' "$1.out" > "$1.charge"
+
+  "$2/dacdif" -k -a '1.0e-5' "$1.ref.charge" "$1.charge" | tee -a "$3"
+}
+
+# check ESP on points on van der Waals surface output from test.
+#
+# arguments:
+#   $1: test name
+#   $2: directory containing test files and scripts
+#   $3: test summary log file
+check_vdw_surface()
+{
+  "$2/dacdif" -k -a '2.0e-7' "$1.ref.vdw" "$1.vdw" | tee -a "$3"
+}
+
+# check ESP on external points output from test.
+#
+# arguments:
+#   $1: test name
+#   $2: directory containing test files and scripts
+#   $3: test summary log file
+check_esp_grid()
+{
+  "$2/dacdif" -k -a '2.0e-7' "$1.ref.esp" "$1.esp" | tee -a "$3"
+}
+
 # check nuclear and point charge gradients output from test.
 #
 # arguments:
 #   $1: test name
 #   $2: directory containing test files and scripts
-#   $3: log file
+#   $3: test summary log file
 check_gradient()
 {
   awk '/Begin Gradient Calculation/,/End Gradient Calculation/ {print}' "$1.ref.out" > "$1.ref.grad"
@@ -614,7 +800,7 @@ check_gradient()
 # arguments:
 #   $1: test name
 #   $2: directory containing test files and scripts
-#   $3: log file
+#   $3: test summary log file
 check_opt()
 {
   awk '/GEOMETRY INFORMATION/,/Finish Optimization Job/ {print}' "$1.ref.out" > "$1.ref.opt"
@@ -630,7 +816,7 @@ check_opt()
 # arguments:
 #   $1: test name
 #   $2: directory containing test files and scripts
-#   $3: log file
+#   $3: test summary log file
 check_dipole()
 {
   accuracy='4.0e-3'
@@ -648,7 +834,7 @@ check_dipole()
 #   $1: test name
 clean_up()
 {
-  rm -f $1.ref.out $1.in ddtmp.$1* $1.*ene $1.*grad $1.*dipole $1.*opt
+  rm -f $1.ref.out $1.ref.vdw $1.ref.esp $1.in $1.tmp ddtmp.$1* $1.*ene $1.*grad $1.*dipole $1.*opt $1.*charge
 }
 
 
@@ -671,16 +857,18 @@ print_summary()
     total_grad=0
     total_opt=0
     total_api=0
+    total_esp=0
     failed_ene=0
     failed_grad=0
     failed_opt=0
     failed_api=0
+    failed_esp=0
  
     # set testlist
     set_qexe_testlist "$buildtype"
  
     # get the number of tests to run
-    get_total_tests "$test_ene" "$test_grad" "$test_opt" "$test_api"
+    get_total_tests "$test_ene" "$test_grad" "$test_opt" "$test_api" "$test_esp"
  
     # grab stuff from temporary log files
     sed -n '/'$buildtype' version started/,/All '$buildtype' tests are done/p' $QUICK_HOME/.quick.${buildtype}.runtest.log > .quick.runtest.${buildtype}.summary.tmp1
@@ -714,12 +902,17 @@ print_summary()
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_api=$(($failed_api+1))
         fi
+      elif [ `sed -n '/ESP test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+        total_esp=$(($total_esp+1))
+        if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+          failed_esp=$(($failed_esp+1))
+        fi
       fi
       
       rm -f .quick.runtest.${buildtype}.summary.tmp2
     done
     
-    failed_total=$(($failed_ene+$failed_grad+$failed_opt+$failed_api))
+    failed_total=$(($failed_ene+$failed_grad+$failed_opt+$failed_api+$failed_esp))
 
     # update cumulative failed tests too
     ncum_failed_tests=$(($ncum_failed_tests+$failed_total))
@@ -729,6 +922,7 @@ print_summary()
     echo "    Gradient tests: $failed_grad/$total_grad (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Optimization tests: $failed_opt/$total_opt (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    API tests: $failed_api/$total_api (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    ESP tests: $failed_esp/$total_esp (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Total tests: $failed_total/$total_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "" >> .quick.runtest.${buildtype}.summary.tmp0
  
@@ -757,7 +951,24 @@ check_f_error()
 {
     f_error_string=`grep 'Error: Support for F functions is disabled' "$1.out"`
 
-    if [ -z "$f_error_string" ]; then echo 0 ; else echo 1 ; fi
+    if [ -z "$f_error_string" ]; then ret=0 ; else ret=1 ; fi
+
+    return "$ret"
+}
+
+
+# Function to skip tests if the MPI+CUDA/MPI+HIP codes were executed with
+# more MPI processes than available GPUs on the system
+#
+# arguments:
+#   $1: test name
+check_mpi_gpu_mismatch()
+{
+    mpi_gpu_error_string=`grep 'Error: Number of launched processes is greater than the available number of GPUs.' "$1.out"`
+
+    if [ -z "$mpi_gpu_error_string" ]; then ret=0 ; else ret=1 ; fi
+
+    return "$ret"
 }
 
 
@@ -778,6 +989,7 @@ while [ $# -gt 0 ]; do
     --grad)        test_grad='yes';uspec_test='yes';;
     --opt)         test_opt='yes';uspec_test='yes';;
     --api)         test_api='yes';uspec_test='yes';;
+    --esp)         test_esp='yes';uspec_test='yes';;
     --full)        test_length='full';;
     --nolog)       log='no';;   
     -h| -H| -help| --help) print_help;;
@@ -786,6 +998,7 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
+
 
 #  !---------------------------------------------------------------------!
 #  ! Check directories & executables                                     !
@@ -1003,9 +1216,10 @@ if [ -n "$PARALLEL_TEST_COUNT" ]; then
   # note: function exporting for invocation with GNU parallel is bash-specific;
   #       an alternative would be to install and use env_parallel (which for non-bash shells
   #       utilizes a export and eval approach for string representation of shell functions)
-  export buildtype qbindir qexe apipath apiexe ismpirun has_parallel
+  export buildtype qbindir qexe apipath apiexe ismpirun has_parallel cuda cudampi hip hipmpi
   export -f set_job_gpus set_test run_test run_test_api run_energy_test run_grad_test run_opt_test run_api_test \
-	  check_energy check_gradient check_opt check_dipole clean_up check_f_error lock_file unlock_file
+	  run_esp_test check_energy check_gradient check_opt check_esp_charge check_esp_grid check_vdw_surface check_dipole \
+          clean_up check_f_error check_mpi_gpu_mismatch lock_file unlock_file
 fi
 
 #  !---------------------------------------------------------------------!
@@ -1028,6 +1242,7 @@ if [ "$uspec_test" = 'no' ]; then
   test_grad='yes'
   test_opt='yes'
   test_api='yes'
+  test_esp='yes'
 fi
 
 #  !---------------------------------------------------------------------!
@@ -1042,11 +1257,15 @@ for buildtype in $buildtypes; do
   echo  "Testing $QUICK_VERSION $buildtype version started on $cdate at $ctime. " | tee -a $QUICK_HOME/.quick.${buildtype}.runtest.log
   echo "" | tee -a $QUICK_HOME/.quick.${buildtype}.runtest.log
 
+  echo "" >> $QUICK_HOME/.quick.${buildtype}.runtest-verbose.log
+  echo  "Testing $QUICK_VERSION $buildtype version started on $cdate at $ctime. " >> $QUICK_HOME/.quick.${buildtype}.runtest-verbose.log
+  echo "" >> $QUICK_HOME/.quick.${buildtype}.runtest-verbose.log
+
   # set qexe and testlist
   set_qexe_testlist "$buildtype"
 
   # get the number of tests to run
-  get_total_tests "$test_ene" "$test_grad" "$test_opt" "$test_api"
+  get_total_tests "$test_ene" "$test_grad" "$test_opt" "$test_api" "$test_esp"
 
   cd "$testdir/runs/$buildtype"
 
@@ -1065,11 +1284,13 @@ for buildtype in $buildtypes; do
     if [ $has_parallel = 'no' ]; then
       for tc in `seq $tc_start $tc_end`; do
         run_energy_test "${tests[$(($tc-1))]}" "${test_names[$(($tc-1))]}" "$tc" "$total_tests" \
-		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log"
+		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" \
+                "$QUICK_HOME/.quick.${buildtype}.runtest-verbose.log"
       done
     elif [ $has_parallel = 'yes' ]; then
       parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --xapply --will-cite run_energy_test {1} {2} {3} \
-	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" {%} \
+	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" \
+	      "$QUICK_HOME/.quick.${buildtype}.runtest-verbose.log" {%} \
 	      ::: "${tests[@]:$(($tc_start-1)):$tot_ene_tests}" ::: "${test_names[@]:$(($tc_start-1)):$tot_ene_tests}" \
 	      ::: `seq $tc_start $tc_end`
     fi
@@ -1082,11 +1303,13 @@ for buildtype in $buildtypes; do
     if [ $has_parallel = 'no' ]; then
       for tc in `seq $tc_start $tc_end`; do
         run_grad_test "${tests[$(($tc-1))]}" "${test_names[$(($tc-1))]}" "$tc" "$total_tests" \
-		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log"
+		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" \
+                "$QUICK_HOME/.quick.${buildtype}.runtest-verbose.log"
       done
     elif [ $has_parallel = 'yes' ]; then
       parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --xapply --will-cite run_grad_test {1} {2} {3} \
-	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" {%} \
+	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" \
+	      "$QUICK_HOME/.quick.${buildtype}.runtest-verbose.log" {%} \
 	      ::: "${tests[@]:$(($tc_start-1)):$tot_grad_tests}" ::: "${test_names[@]:$(($tc_start-1)):$tot_grad_tests}" \
 	      ::: `seq $tc_start $tc_end`
     fi
@@ -1099,11 +1322,13 @@ for buildtype in $buildtypes; do
     if [ $has_parallel = 'no' ]; then
       for tc in `seq $tc_start $tc_end`; do
         run_opt_test "${tests[$(($tc-1))]}" "${test_names[$(($tc-1))]}" "$tc" "$total_tests" \
-		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log"
+		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" \
+                "$QUICK_HOME/.quick.${buildtype}.runtest-verbose.log"
       done
     elif [ $has_parallel = 'yes' ]; then
       parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --xapply --will-cite run_opt_test {1} {2} {3} \
-	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" {%} \
+	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" \
+	      "$QUICK_HOME/.quick.${buildtype}.runtest-verbose.log" {%} \
 	      ::: "${tests[@]:$(($tc_start-1)):$tot_opt_tests}" ::: "${test_names[@]:$(($tc_start-1)):$tot_opt_tests}" \
 	      ::: `seq $tc_start $tc_end`
     fi
@@ -1116,12 +1341,33 @@ for buildtype in $buildtypes; do
     if [ $has_parallel = 'no' ]; then
       for tc in `seq $tc_start $tc_end`; do
         run_api_test "${tests[$(($tc-1))]}" "${test_names[$(($tc-1))]}" "$tc" "$total_tests" \
-		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log"
+		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" \
+                "$QUICK_HOME/.quick.${buildtype}.runtest-verbose.log"
       done
     elif [ $has_parallel = 'yes' ]; then
       parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --xapply --will-cite run_api_test {1} {2} {3} \
-	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" {%} \
+	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" \
+	      "$QUICK_HOME/.quick.${buildtype}.runtest-verbose.log" {%} \
 	      ::: "${tests[@]:$(($tc_start-1)):$tot_api_tests}" ::: "${test_names[@]:$(($tc_start-1)):$tot_api_tests}" \
+	      ::: `seq $tc_start $tc_end`
+    fi
+  fi
+
+  # Run ESP test
+  if [ "$test_esp" = 'yes' ]; then
+    tc_start=$(($tc_end+1))
+    tc_end=$(($tc_end+$tot_esp_tests))
+    if [ $has_parallel = 'no' ]; then
+      for tc in `seq $tc_start $tc_end`; do
+        run_esp_test "${tests[$(($tc-1))]}" "${test_names[$(($tc-1))]}" "$tc" "$total_tests" \
+		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" \
+                "$QUICK_HOME/.quick.${buildtype}.runtest-verbose.log"
+      done
+    elif [ $has_parallel = 'yes' ]; then
+      parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --xapply --will-cite run_esp_test {1} {2} {3} \
+	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" \
+	      "$QUICK_HOME/.quick.${buildtype}.runtest-verbose.log" {%} \
+	      ::: "${tests[@]:$(($tc_start-1)):$tot_esp_tests}" ::: "${test_names[@]:$(($tc_start-1)):$tot_esp_tests}" \
 	      ::: `seq $tc_start $tc_end`
     fi
   fi
@@ -1139,18 +1385,20 @@ print_summary
 
 # create final .log file or delete temp .log files
 if [ "$log" = 'yes' ]; then
-  touch runtest.log
+  touch runtest.log runtest-verbose.log
   for buildtype in $buildtypes; do
     cat $QUICK_HOME/.quick.${buildtype}.runtest.log >> $QUICK_HOME/runtest.log
-    rm -f $QUICK_HOME/.quick.${buildtype}.runtest.log
+    cat $QUICK_HOME/.quick.${buildtype}.runtest-verbose.log >> $QUICK_HOME/runtest-verbose.log
+    rm -f $QUICK_HOME/.quick.${buildtype}.runtest.log $QUICK_HOME/.quick.${buildtype}.runtest-verbose.log
   done
   cat $QUICK_HOME/.quick.runtest.summary.log >> $QUICK_HOME/runtest.log
   rm -f $QUICK_HOME/.quick.runtest.summary.log
 
   echo "Output of runtest script has been written into $QUICK_HOME/runtest.log file."
+  echo "Verbose output of runtest script has been written into $QUICK_HOME/runtest-verbose.log file."
 else
   for buildtype in $buildtypes; do
-    rm -f $QUICK_HOME/.quick.${buildtype}.runtest.log
+    rm -f $QUICK_HOME/.quick.${buildtype}.runtest.log $QUICK_HOME/.quick.${buildtype}.runtest-verbose.log 
   done
 fi
 

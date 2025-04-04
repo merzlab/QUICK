@@ -35,8 +35,8 @@ contains
   !-------------------------------------------------------
      use allmod
      use quick_cutoff_module, only: oshell_density_cutoff
-     use quick_oshell_eri_module, only: getOshellEri, getOshellEriEnergy 
-     use quick_oei_module, only:get1eEnergy, get1e
+     use quick_eri_oshell_module, only: getOshellEri, getOshellEriEnergy 
+     use quick_oei_module, only: get1eEnergy, get1e
 #ifdef MPIV
      use mpi
 #endif
@@ -92,8 +92,8 @@ contains
      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
 #endif
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-     if (quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+     if (quick_method%bGPU) then
   
         call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
         quick_qm_struct%vec,quick_qm_struct%dense)
@@ -111,15 +111,6 @@ contains
   
      if(quick_method%printEnergy) call get1eEnergy(deltaO)
 
-!     if (quick_method%nodirect) then
-!#ifdef CUDA
-!        call gpu_addint(quick_qm_struct%o, intindex, intFileName)
-!#else
-!#ifndef MPI
-        !call addInt
-!#endif
-!#endif
-!     else
   !-----------------------------------------------------------------
   ! Step 2. evaluate 2e integrals
   !-----------------------------------------------------------------
@@ -131,8 +122,8 @@ contains
   !  Start the timer for 2e-integrals
      RECORD_TIME(timer_begin%T2e)
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-        if (quick_method%bCUDA) then   
+#if defined(GPU) || defined(MPIV_GPU)
+        if (quick_method%bGPU) then   
        
            call gpu_get_oshell_eri(deltaO, quick_qm_struct%o, quick_qm_struct%ob)
 
@@ -141,7 +132,7 @@ contains
   !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
   !  Reference: Strout DL and Scuseria JCP 102(1995),8448.
   
-#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
+#if defined(MPIV) && !defined(MPIV_GPU)
   !  Every nodes will take about jshell/nodes shells integrals such as 1 water, which has 
   !  4 jshell, and 2 nodes will take 2 jshell respectively.
      if(bMPI) then
@@ -160,7 +151,7 @@ contains
         enddo
 #endif
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
         endif                             
 #endif
 !     endif
@@ -170,8 +161,10 @@ contains
      call copySym(quick_qm_struct%ob,nbasis)
 
   !  recover density if calculate difference
-     if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
-     if (deltaO) quick_qm_struct%denseb(:,:) = quick_qm_struct%densebSave(:,:)
+     if (deltaO) then
+       quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
+       quick_qm_struct%denseb(:,:) = quick_qm_struct%densebSave(:,:)
+     endif
   
   !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
      if(quick_method%printEnergy) call getOshellEriEnergy
@@ -330,9 +323,9 @@ contains
      quick_qm_struct%belec=0.d0
   
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
   
-     if(quick_method%bCUDA) then
+     if(quick_method%bGPU) then
         if(deltaO) then
           call gpu_upload_density_matrix(quick_qm_struct%dense)
           call gpu_upload_beta_density_matrix(quick_qm_struct%denseb)
@@ -362,7 +355,7 @@ contains
      endif
   
   
-#if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
+#if defined(MPIV) && !defined(MPIV_GPU)
         if(bMPI) then
            irad_init = quick_dft_grid%igridptll(mpirank+1)
            irad_end = quick_dft_grid%igridptul(mpirank+1)

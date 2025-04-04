@@ -21,6 +21,8 @@ subroutine getMol(ierr)
 
    implicit none
 
+   integer :: fail
+
    logical :: present
    integer :: i,j,k,itemp
    integer, intent(inout) :: ierr
@@ -33,11 +35,24 @@ subroutine getMol(ierr)
 
       ! read xyz coordinates from the .in file 
       if(.not. isTemplate) then
-       call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
-       CHECK_ERROR(ierr)
-        ! read molecule coordinates
-        call read2(quick_molspec,inFile,ierr)
-        close(inFile)
+        if(quick_method%read_coord)then
+
+          open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
+          call rchk_darray(iDataFile, "xyz", 3, natom, 1, xyz, fail)
+          call rchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+          close(iDataFile)
+
+          quick_molspec%xyz => xyz
+
+        else
+
+          call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
+          CHECK_ERROR(ierr)
+          ! read molecule coordinates
+          call read2(quick_molspec,inFile,ierr)
+          close(inFile)
+
+        endif
       endif
 
       quick_molspec%nbasis   => nbasis
@@ -65,7 +80,7 @@ subroutine getMol(ierr)
    call readbasis(natom,0,0,0,0,ierr)
    ! F implementation of GPU ERI code currently doesnt support open shell
    ! gradient calculations
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
    if(quick_method%hasF .and. quick_method%unrst .and. quick_method%grad) then
        ierr=39
        return
@@ -78,9 +93,9 @@ subroutine getMol(ierr)
 
    call alloc(quick_basis)
    call alloc(quick_qm_struct)
+   cutprim = 0.0d0
+   quick_basis%Xcoeff = 0.0d0
    call init(quick_qm_struct)
-
-
 
    !-----------MPI/MASTER------------------------
    if (master) then
@@ -222,6 +237,7 @@ end subroutine check_quick_method_and_molspec
 subroutine initialGuess(ierr)
    use allmod
    use quick_sad_guess_module, only: getSadDense 
+   use quick_exception_module
    implicit none
    logical :: present
    integer :: failed
