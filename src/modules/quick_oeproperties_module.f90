@@ -274,24 +274,18 @@ module quick_oeproperties_module
    double precision :: A(natom+1,natom+1), B(natom+1), q(natom+1)
    double precision :: distance, distanceb, invdistance, Net_charge
 
-   double precision :: One = 1.0d0, Zero = 0.0d0
+   double precision, parameter :: One = 1.0d0, Zero = 0.0d0
 
-!  A and B are initialized. A(natom+1,natom+1) is set to a small number
+!  A, B and q are initialized. A(natom+1,natom+1) is set to a small number
 !  instead of zero to facilitate diagonalization of A.
 
-   do iatom = 1, natom
-     B(iatom) = 0
-     do jatom = 1, natom
-       A(jatom,iatom) = 0
-     end do
-   end do
+   q = Zero
 
+   B = Zero
    B(natom+1) = quick_molspec%molchg
 
-   do jatom = 1, natom
-     A(jatom,natom+1) = 1
-   end do
-   A(natom+1,natom+1) = 0
+   A = Zero
+   A(1:natom,natom+1) = One
 
 ! The matrix A and vector B is formed.
 
@@ -328,7 +322,7 @@ module quick_oeproperties_module
    end if
 
 !  q = A-1*B
-
+   
 #if defined CUDA
    call CUBLAS_DGEMV('N',natom+1,natom+1,One,A,LDA,B,1,Zero,q,1)
 #else
@@ -337,7 +331,7 @@ module quick_oeproperties_module
 
 !  B is copied to charge array.
 
-   Net_charge = 0.d0
+   Net_charge = Zero
 
    write (ioutfile,'("  ESP charges:")')
    write (ioutfile,'("  ----------------")')
