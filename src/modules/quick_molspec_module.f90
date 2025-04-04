@@ -22,14 +22,14 @@ module quick_molspec_module
    type quick_molspec_type
 
       ! number of atoms
-      integer,pointer :: natom
+      integer, pointer :: natom
 
       ! number of electron and beta electron
-      integer :: nElec = 0
-      integer :: nElecb = 0
+      integer :: nelec = 0
+      integer :: nelecb = 0
 
       ! number of external atoms
-      integer :: nExtAtom = 0
+      integer :: nextatom = 0
 
       ! number of external grid points 
       integer :: nextpoint = 0
@@ -74,13 +74,13 @@ module quick_molspec_module
       double precision, dimension(:), allocatable ::chg,extchg
 
       ! basis set number
-      integer,pointer:: nbasis
+      integer, pointer:: nbasis
 
    end type quick_molspec_type
 
-   type (quick_molspec_type),save:: quick_molspec
+   type (quick_molspec_type), save :: quick_molspec
    double precision, dimension(:,:), allocatable,target :: xyz
-   integer,target :: natom
+   integer, target :: natom
 
    ! interface lists
 
@@ -137,7 +137,7 @@ contains
       integer i,j
       integer, intent(inout) :: ierr
 
-      type (quick_molspec_type) self
+      type (quick_molspec_type), intent(inout) :: self
 
       if (.not. allocated(xyz)) allocate(xyz(3,natom))
 !      allocate(self%xyz(3,natom))
@@ -193,26 +193,39 @@ contains
      integer, intent(inout) :: ierr
      integer :: current_size
 
-     if(self%nextatom .gt. 0) then
-       if(allocated(self%extchg)) current_size= size(self%extchg)
+     if(self%nextatom > 0) then
+       if(allocated(self%extchg)) then
+         current_size = size(self%extchg)
+       else
+         current_size = 0
+       endif
+       ! if size changes at all, be safe and reallocate to avoid mismatches in array operations with external codes;
+       ! this can be potentially revisited in the future during optimization efforts
        if(current_size /= self%nextatom) then
          deallocate(self%extchg, stat=ierr)
          deallocate(self%extxyz, stat=ierr)
          allocate(self%extchg(self%nextatom), stat=ierr)
          allocate(self%extxyz(3,self%nextatom), stat=ierr)
-         self%extchg=0.0d0
-         self%extxyz=0.0d0
        endif
+       self%extchg=0.0d0
+       self%extxyz=0.0d0
      endif
 
-     if(self%nextpoint .gt. 0) then
-      if(current_size /= self%nextpoint) then
-        deallocate(self%extpointxyz, stat=ierr)
-        allocate(self%extpointxyz(3,self%nextpoint), stat=ierr)
-        self%extchg=0.0d0
-        self%extpointxyz=0.0d0
-      endif
-    endif
+     if(self%nextpoint > 0) then
+       if(allocated(self%extpointxyz)) then
+         current_size = size(self%extpointxyz)
+       else
+         current_size = 0
+       endif
+       ! if size changes at all, be safe and reallocate to avoid mismatches in array operations with external codes;
+       ! this can be potentially revisited in the future during optimization efforts
+       if(current_size /= 3*self%nextpoint) then
+         deallocate(self%extpointxyz, stat=ierr)
+         allocate(self%extpointxyz(3,self%nextpoint), stat=ierr)
+       endif
+       self%extchg=0.0d0
+       self%extpointxyz=0.0d0
+     endif
 
    end subroutine reallocate_quick_molspec
 
@@ -223,13 +236,13 @@ contains
       use quick_exception_module
       implicit none
 
-      type (quick_molspec_type) self
+      type (quick_molspec_type), intent(inout) :: self
       integer, intent(inout) :: ierr
 
       self%natom => natom
-      self%nElec = 0
-      self%nElecb = 0
-      self%nExtAtom = 0
+      self%nelec = 0
+      self%nelecb = 0
+      self%nextatom = 0
       self%nextpoint = 0
       self%imult = 1
       self%molchg = 0
@@ -247,7 +260,7 @@ contains
       use quick_exception_module
       implicit none
 
-      type (quick_molspec_type) self
+      type (quick_molspec_type), intent(inout) :: self
       integer, intent(inout) :: ierr
 
       if (allocated(xyz)) deallocate(xyz)
@@ -265,7 +278,7 @@ contains
       ! if exist external grid
       if (self%nextpoint.gt.0) then
          if (allocated(self%extpointxyz)) deallocate(self%extpointxyz)
-       endif   
+      endif   
 
    end subroutine deallocate_quick_molspec
 
@@ -279,7 +292,7 @@ contains
       use mpi
 
       implicit none
-      type (quick_molspec_type) self
+      type (quick_molspec_type), intent(inout) :: self
       integer natom2
       integer, intent(inout) :: ierr
 
@@ -287,8 +300,8 @@ contains
       call MPI_BCAST(self%natom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
 
       natom2=natom**2
-      call MPI_BCAST(self%nElec,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nElecb,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%nelec,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%nelecb,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%nextatom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%imult,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%molchg,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -335,7 +348,7 @@ contains
 
     integer :: fail
 
-    type (quick_molspec_type) :: self
+    type (quick_molspec_type), intent(inout) :: self
     integer, intent(inout) :: ierr
     integer :: input,rdinml,i,j,k
     integer :: ierror
@@ -382,104 +395,108 @@ contains
     ! determine if external charge exists
     if (index(keywd,'EXTCHARGES') /= 0) is_extcharge=.true.
 
-   ! determine if external grid points exist
+    ! determine if external grid points exist
     if (index(keywd,'ESP_GRID') /= 0) is_extgrid=.true.
    
-   ! determine if external grid points exist
+    ! determine if external grid points exist
     if (index(keywd,'EFIELD_GRID') /= 0) is_extgrid=.true.
    
-   ! determine if external grid points exist
+    ! determine if external grid points exist
     if (index(keywd,'EFG_GRID') /= 0) is_extgrid=.true.
 
     ! get the atom number, type and number of external charges
 
-  if( .not. isTemplate) then
+    if( .not. isTemplate) then
+
+      ! If reading from data file
+      if(quick_method%read_coord)then
 
 #if defined(RESTART_HDF5)
-    ! If reading from data file
-    if(quick_method%read_coord)then
-
-      call iread('molinfo', 1, natom)
-      if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
-      call iread('iattype', 1, natom, self%iattype)
-
-      ! Reading external charges from data file is not yet implemented
-      nextatom = 0
-      self%nextatom = nextatom
-
-      iAtomType = 0
-
-      do i = 1, natom
-        if (.not.(any(self%atom_type_sym(1:iAtomType).eq.symbol(self%iattype(i))))) then
-          iAtomType=iAtomType+1
-          self%atom_type_sym(iAtomType) = symbol(self%iattype(i))
-        endif
-      enddo
-
-      self%iAtomType = iAtomType
-
-    ! Reading from input file
-    else
+        call iread('molinfo', 1, natom)
+        if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
+        call iread('iattype', 1, natom, self%iattype)
+#else
+        open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
+        call rchk_int(iDataFile, "natom", natom, fail)
+        if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
+        call rchk_iarray(iDataFile, "iattype", natom, 1, 1, self%iattype, fail)
+        close(iDataFile)
 #endif
-      call findBlock(input,1)
 
-      ! first is to read atom and atom kind
-      iAtomType = 1
-      natom = 0
-      nextatom = 0
-      nextpoint = 0
-      do
-        read(input,'(A80)',end=111,err=111) keywd
-        i=1;j=80
-        call upcase(keywd,80)
-        call rdword(keywd,i,j)
-        if (is_blank(keywd,1,80)) exit
-        do k=0,92
-          if (keywd(i:j) == symbol(k)) then
-            natom=natom+1
-            ! check if atom type has been shown before
-            if (.not.(any(self%atom_type_sym(1:iatomtype).eq.symbol(k)))) then
-              !write(*,*) "Assigning value to atom_type_sym:", k, symbol(k)
-              self%atom_type_sym(iAtomType)=symbol(k)
-              iAtomType=iAtomType+1
-            endif
+        ! Reading external charges from data file is not yet implemented
+        nextatom = 0
+        self%nextatom = nextatom
+
+        iAtomType = 0
+
+        do i = 1, natom
+          if (.not.(any(self%atom_type_sym(1:iAtomType).eq.symbol(self%iattype(i))))) then
+            iAtomType=iAtomType+1
+            self%atom_type_sym(iAtomType) = symbol(self%iattype(i))
           endif
         enddo
-      enddo
-      111     continue
 
-      ! read external charge part
-      if (is_extcharge)  then
-        rewind(input)
-        call findBlock(input,2)
+        self%iAtomType = iAtomType
+
+      ! Reading from input file
+      else
+        call findBlock(input,1)
+
+        ! first is to read atom and atom kind
+        iAtomType = 1
+        natom = 0
+        nextatom = 0
+        nextpoint = 0
         do
-          read(input,'(A80)',end=112,err=112) keywd
+          read(input,'(A80)',end=111,err=111) keywd
+          i=1;j=80
+          call upcase(keywd,80)
+          call rdword(keywd,i,j)
           if (is_blank(keywd,1,80)) exit
-          nextatom=nextatom+1
+          do k=0,92
+            if (keywd(i:j) == symbol(k)) then
+              natom=natom+1
+              ! check if atom type has been shown before
+              if (.not.(any(self%atom_type_sym(1:iatomtype).eq.symbol(k)))) then
+                !write(*,*) "Assigning value to atom_type_sym:", k, symbol(k)
+                self%atom_type_sym(iAtomType)=symbol(k)
+                iAtomType=iAtomType+1
+              endif
+            endif
+          enddo
         enddo
-      endif
+        111     continue
 
-      ! read external grid part
-      if (is_extgrid) then
-         rewind(input)
-         call findBlock(input,2)
-         do
+        ! read external charge part
+        if (is_extcharge)  then
+          rewind(input)
+          call findBlock(input,2)
+          do
             read(input,'(A80)',end=112,err=112) keywd
             if (is_blank(keywd,1,80)) exit
-            nextpoint = nextpoint + 1
-         enddo
+            nextatom=nextatom+1
+          enddo
+        endif
+
+        ! read external grid part
+        if (is_extgrid) then
+           rewind(input)
+           call findBlock(input,2)
+           do
+              read(input,'(A80)',end=112,err=112) keywd
+              if (is_blank(keywd,1,80)) exit
+              nextpoint = nextpoint + 1
+           enddo
+        endif
+
+        112     continue
+
+        iAtomType=iAtomType-1
+        self%iAtomType = iAtomType
+        self%nextatom = nextatom
+        self%nextpoint = nextpoint
       endif
-
-      112     continue
-
-      iAtomType=iAtomType-1
-      self%iAtomType = iAtomType
-      self%nextatom = nextatom
-      self%nextpoint = nextpoint
-#if defined(RESTART_HDF5)
     endif
-#endif
-  endif
 
   end subroutine read_quick_molspec
 
@@ -492,7 +509,7 @@ contains
 
       implicit none
       ! parameter
-      type (quick_molspec_type) self
+      type (quick_molspec_type), intent(inout) :: self
       integer input
       integer, intent(inout) :: ierr
       ! inner varibles
@@ -545,85 +562,85 @@ contains
 
 
 
-    subroutine read_quick_molespec_extcharges(self,input,ierr)
-        use quick_constants_module
-        use quick_exception_module
+   subroutine read_quick_molespec_extcharges(self,input,ierr)
+       use quick_constants_module
+       use quick_exception_module
 
-        implicit none
+       implicit none
 
-        ! parameter
-        type (quick_molspec_type) self
-        integer input
-        integer, intent(inout) :: ierr
-        ! inner varibles
-        integer i,j,k,istart,ifinal
-        integer nextatom,ierror
-        double precision temp
-        character(len=300) keywd
+       ! parameter
+       type (quick_molspec_type), intent(inout) :: self
+       integer input
+       integer, intent(inout) :: ierr
+       ! inner varibles
+       integer i,j,k,istart,ifinal
+       integer nextatom,ierror
+       double precision temp
+       character(len=300) keywd
 
-        rewind(input)
-        call findBlock(input,2)
-        nextatom=self%nextatom
+       rewind(input)
+       call findBlock(input,2)
+       nextatom=self%nextatom
 
-        do i=1,nextatom
-            istart = 1
-            ifinal = 80
+       do i=1,nextatom
+           istart = 1
+           ifinal = 80
 
-            read(input,'(A80)') keywd
+           read(input,'(A80)') keywd
 
-            do j=1,3
-                ifinal=80
-                call rdword(keywd,istart,ifinal)
-                call rdnum(keywd,istart,temp,ierror)
-                self%extxyz(j,i) = temp*A_TO_BOHRS
-                istart=ifinal+1
-            enddo
+           do j=1,3
+               ifinal=80
+               call rdword(keywd,istart,ifinal)
+               call rdnum(keywd,istart,temp,ierror)
+               self%extxyz(j,i) = temp*A_TO_BOHRS
+               istart=ifinal+1
+           enddo
 
-            call rdword(keywd,istart,ifinal)
-            call rdnum(keywd,istart,self%extchg(i),ierror)
+           call rdword(keywd,istart,ifinal)
+           call rdnum(keywd,istart,self%extchg(i),ierror)
 
-        enddo
+       enddo
 
-    end subroutine read_quick_molespec_extcharges
+   end subroutine read_quick_molespec_extcharges
 
-    subroutine read_quick_molespec_extgridpoints(self,input,ierr)
-      use quick_constants_module
-      use quick_exception_module
+   subroutine read_quick_molespec_extgridpoints(self,input,ierr)
+     use quick_constants_module
+     use quick_exception_module
 
-      implicit none
+     implicit none
 
-      ! parameter
-      type (quick_molspec_type) self
-      integer input
-      integer, intent(inout) :: ierr
-      ! inner varibles
-      integer i,j,k,istart,ifinal
-      integer nextpoint,ierror
-      double precision temp
-      character(len=200) keywd
+     ! parameter
+     type (quick_molspec_type), intent(inout) :: self
+     integer input
+     integer, intent(inout) :: ierr
+     ! inner varibles
+     integer i,j,k,istart,ifinal
+     integer nextpoint,ierror
+     double precision temp
+     character(len=200) keywd
 
-      rewind(input)
-      call findBlock(input,2)
-      nextpoint=self%nextpoint
+     rewind(input)
+     call findBlock(input,2)
+     nextpoint=self%nextpoint
 
-      do i=1,nextpoint
-          istart = 1
-          ifinal = 80
+     do i=1,nextpoint
+         istart = 1
+         ifinal = 80
 
-          read(input,'(A80)') keywd
+         read(input,'(A80)') keywd
 
-          do j=1,3
-              ifinal=80
-              call rdword(keywd,istart,ifinal)
-              call rdnum(keywd,istart,temp,ierror)
-              self%extpointxyz(j,i) = temp*A_TO_BOHRS
-              istart=ifinal+1
-          enddo
+         do j=1,3
+             ifinal=80
+             call rdword(keywd,istart,ifinal)
+             call rdnum(keywd,istart,temp,ierror)
+             self%extpointxyz(j,i) = temp*A_TO_BOHRS
+             istart=ifinal+1
+         enddo
 
-          call rdword(keywd,istart,ifinal)
-      enddo
+         call rdword(keywd,istart,ifinal)
+     enddo
 
-  end subroutine read_quick_molespec_extgridpoints
+   end subroutine read_quick_molespec_extgridpoints
 
    ! check if molecular specifications are correct
    subroutine check_quick_molspec(self, ierr)
@@ -649,7 +666,7 @@ contains
        
       integer, intent(inout) :: ierr
       integer io,i,j
-      type(quick_molspec_type) self
+      type(quick_molspec_type), intent(in) :: self
       if (io.ne.0) then
          write(io,'(/," =========== Molecule Input ==========")')
          write(io,'(" TOTAL MOLECULAR CHARGE  = ",I4,4x,"MULTIPLICITY                = ",I4)') self%molchg,self%imult
@@ -709,7 +726,7 @@ contains
 
       integer, intent(inout) :: ierr
       integer i,j,k
-      type (quick_molspec_type) self
+      type (quick_molspec_type), intent(inout) :: self
 
       self%nelec=-self%molchg
       ! get atom charge and molecule charge before everything

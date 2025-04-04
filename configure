@@ -882,8 +882,8 @@ fi
 #  ! Create essential build directories                                  !
 #  !---------------------------------------------------------------------!
 
-if [ ! -d "$QUICK_HOME/bin" ]; then
-  mkdir -p "$QUICK_HOME/bin"
+if [ ! -d "$QUICK_HOME/build/bin" ]; then
+  mkdir -p "$QUICK_HOME/build/bin"
 fi
 
 for buildtype in $buildtypes; do
@@ -1264,7 +1264,7 @@ if [ "$shared" = 'yes' ]; then
   lib_flags='-fPIC'
   cuda_lib_flags="--compiler-options '-fPIC'"
   arch="$fort"
-  arch_flags='-shared -o'
+  arch_flags='-fPIC -shared -o'
   ranlib='echo'
   libext='so'
 
@@ -1583,7 +1583,7 @@ octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules
 
 # build directories
-exefolder=$QUICK_HOME/bin
+exefolder=$QUICK_HOME/build/bin
 objfolder=$QUICK_HOME/build/obj/$buildtype
 libxcobjfolder=$libxcobjfolder
 libxcdevobjfolder=$libxcdevobjfolder
@@ -1693,7 +1693,7 @@ TESTTYPE=$testtype
 #!---------------------------------------------------------------------!
 
 homefolder=$QUICK_HOME
-exefolder=$QUICK_HOME/bin
+exefolder=$QUICK_HOME/build/bin
 buildfolder=$QUICK_HOME/build
 toolsfolder=$QUICK_HOME/tools
 installfolder=$quick_prefix
@@ -1746,6 +1746,7 @@ if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
 fi
 
 cat >> "$quick_prefix/quick.rc" << EOF
+export LIBRARY_PATH=$libpaths\$LIBRARY_PATH
 export LD_LIBRARY_PATH=$libpaths\$LD_LIBRARY_PATH
 EOF
 fi
