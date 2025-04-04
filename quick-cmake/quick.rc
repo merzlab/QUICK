@@ -19,6 +19,6 @@ fi
 export QUICK_INSTALL=$(cd "$(dirname "$this_script")"; pwd)
 export QUICK_BASIS="$QUICK_INSTALL/basis"
 # prepend to search paths for QUICK executables and library files
-export PATH="$QUICK_INSTALL/bin":$PATH
-export LIBRARY_PATH="$QUICK_INSTALL/lib":$LIBRARY_PATH
-export LD_LIBRARY_PATH="$QUICK_INSTALL/lib":$LD_LIBRARY_PATH
+export PATH="$QUICK_INSTALL/bin:$PATH"
+export LIBRARY_PATH="$QUICK_INSTALL/lib:$QUICK_INSTALL/lib64:$LIBRARY_PATH"
+export LD_LIBRARY_PATH="$QUICK_INSTALL/lib:$QUICK_INSTALL/lib64:$LD_LIBRARY_PATH"
