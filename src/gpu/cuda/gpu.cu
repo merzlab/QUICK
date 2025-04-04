@@ -1,10 +1,6 @@
 /*
- *  gpu_startup.cu
- *  new_quick
- *
  *  Created by Yipu Miao on 4/20/11.
  *  Copyright 2011 University of Florida. All rights reserved.
- *
  */
 
 #include <stdio.h>
@@ -195,14 +191,26 @@ extern "C" void gpu_set_device_(int* gpu_dev_id, int* ierr)
 
 
 //-----------------------------------------------
-// create gpu class
+// Allocates and initializes top-level GPU
+// data structures
 //-----------------------------------------------
-extern "C" void gpu_startup_(int* ierr)
+extern "C" void gpu_new_(
+#if defined(MPIV_GPU)
+        int mpirank,
+#endif
+        int* ierr)
 {
-#if defined DEBUG || defined DEBUGTIME
+#if defined(DEBUG) || defined(DEBUGTIME)
+#if defined(MPIV_GPU)
+    char fname[16];
+
+    sprintf(fname, "debug.gpu.%i", mpirank);
+    debugFile = fopen(fname, "w+");
+#else
     debugFile = fopen("debug.gpu", "w+");
 #endif
-    PRINTDEBUGNS("BEGIN TO WARM UP")
+#endif
+    PRINTDEBUGNS("BEGIN NEW GPU ALLOC AND INIT")
 
     gpu = new gpu_type;
 
@@ -255,76 +263,79 @@ extern "C" void gpu_startup_(int* ierr)
     gpu->scratch = NULL;
     gpu->lri_data = NULL;
 
-    PRINTDEBUG("CREATE NEW GPU");
+#if defined(MPIV_GPU)
+    gpu->timer = new gpu_timer_type;
+    gpu->timer->t_2elb = 0.0;
+    gpu->timer->t_xclb = 0.0;
+    gpu->timer->t_xcrb = 0.0;
+#endif
+
+    PRINTDEBUG("END NEW GPU ALLOC AND INIT");
 }
 
 
 //-----------------------------------------------
-// Initialize the device
+// Determines of num. of capable GPU devices and
+// assigns the GPU to be used for calculations
 //-----------------------------------------------
-extern "C" void gpu_init_(int* ierr)
+extern "C" void gpu_init_device_(int* ierr)
 {
-    PRINTDEBUG("BEGIN TO INIT");
-    int device = -1;
-    int gpuCount = 0;
+    int gpuCount, device;
     cudaError_t status;
     cudaDeviceProp deviceProp;
 
-    status = cudaGetDeviceCount(&gpuCount);
-    PRINTERROR(status,"cudaGetDeviceCount gpu_init failed!");
+    PRINTDEBUG("BEGIN GPU INIT");
 
-#ifdef DEBUG
-    fprintf(gpu->debugFile,"Number of gpus %i \n", gpuCount);
+    status = cudaGetDeviceCount(&gpuCount);
+    PRINTERROR(status, "cudaGetDeviceCount gpu_init failed!");
+
+#if defined(DEBUG)
+    fprintf(gpu->debugFile, "Number of gpus %i \n", gpuCount);
 #endif
 
-    if (gpuCount == 0)
-    {
+    if (gpuCount == 0) {
         *ierr = 24;
         return;
     }
 
+    device = -1;
     if (gpu->gpu_dev_id == -1) {
-        device = 0;
+        // if gpu count is greater than 1 (multi-gpu), select capable GPU with large available memory
+        size_t maxMem = 0;
+        for (int i = 0; i < gpuCount; ++i) {
+            status = cudaGetDeviceProperties(&deviceProp, i);
+            PRINTERROR(status, "cudaGetDeviceProperties gpu_init failed!");
 
-        // if gpu count is greater than 1(multi-gpu) select one with bigger free memory, or available.
-        if (gpuCount > 1) {
-            size_t maxMem = 0;
-            for (int i = gpuCount - 1; i >= 0; i--) {
-                cudaGetDeviceProperties(&deviceProp, i);
-
-                if ((deviceProp.major >= 2 || (deviceProp.major == 1 && deviceProp.minor == 3))
-                        && (deviceProp.totalGlobalMem >= maxMem))
-                {
-                    maxMem = deviceProp.totalGlobalMem;
-                    device = i;
-                }
+            if ((deviceProp.major >= 2 || (deviceProp.major == 1 && deviceProp.minor == 3))
+                    && deviceProp.totalGlobalMem >= maxMem) {
+                maxMem = deviceProp.totalGlobalMem;
+                device = i;
             }
         }
-        gpu->gpu_dev_id = device;
     } else {
-        if (gpu->gpu_dev_id >= gpuCount)
-        {
+        if (gpu->gpu_dev_id >= gpuCount) {
             *ierr = 25;
             return;
         }
 
         cudaGetDeviceProperties(&deviceProp, gpu->gpu_dev_id);
 
-        if (deviceProp.major >= 2 || (deviceProp.major == 1 && deviceProp.minor == 3))
+        if (deviceProp.major >= 2 || (deviceProp.major == 1 && deviceProp.minor == 3)) {
             device = gpu->gpu_dev_id;
-        else {
+        } else {
             *ierr = 26;
             return;
         }
-        device = gpu->gpu_dev_id;
     }
 
-#ifdef DEBUG
-    fprintf(gpu->debugFile,"using gpu: %i\n", device);
+    gpu->gpu_dev_id = device;
+
+#if defined(DEBUG)
+    fprintf(gpu->debugFile, "using gpu: %i\n", device);
 #endif
 
     if (device == -1) {
-        gpu_shutdown_(ierr);
+        gpu_delete_(ierr);
         *ierr = 27;
         return;
     }
@@ -345,9 +356,7 @@ extern "C" void gpu_init_(int* ierr)
 
     cudaDeviceGetLimit(&val, cudaLimitMallocHeapSize);
     fprintf(gpu->debugFile, "Heap size limit:     %zu\n", val);
-#endif
 
-#if defined(DEBUG)
     cudaDeviceGetLimit(&val, cudaLimitStackSize);
     fprintf(gpu->debugFile, "New Stack size limit:    %zu\n", val);
 #endif
@@ -359,7 +368,7 @@ extern "C" void gpu_init_(int* ierr)
             case 1:
             case 2:
             case 5:
-                gpu_shutdown_(ierr);
+                gpu_delete_(ierr);
                 *ierr = 28;
                 return;
                 break;
@@ -380,7 +389,7 @@ extern "C" void gpu_init_(int* ierr)
         gpu->sswGradThreadsPerBlock = SM_2X_SSW_GRAD_THREADS_PER_BLOCK;
     }
 
-    PRINTDEBUG("FINISH INIT");
+    PRINTDEBUG("FINISH GPU INIT");
 }
 
 
@@ -489,16 +498,24 @@ extern "C" void gpu_deallocate_scratch_(bool* deallocate_gradient_scratch)
 
 
 //-----------------------------------------------
-// shutdown gpu and terminate gpu calculation part
+// Deallocate top-level GPU data structures
+// and reset assigned GPU device
 //-----------------------------------------------
-extern "C" void gpu_shutdown_(int* ierr)
+extern "C" void gpu_delete_(int* ierr)
 {
-    PRINTDEBUG("BEGIN TO SHUTDOWN");
+    cudaError_t status;
 
+    PRINTDEBUG("BEGIN GPU DELETE");
+
+#if defined(MPIV_GPU)
+    delete gpu->timer;
+#endif
     delete gpu;
-    cudaDeviceReset( );
 
-    PRINTDEBUGNS("SHUTDOWN NORMALLY")
+    status = cudaDeviceReset( );
+    PRINTERROR(status, "cudaDeviceReset gpu_delete failed!");
+
+    PRINTDEBUGNS("END GPU DELETE");
 
 #if defined(DEBUG) || defined(DEBUGTIME)
     fclose(debugFile);
@@ -538,6 +555,10 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu->gpu_calculated->obULL = NULL;
 #endif
     gpu->gpu_calculated->distance = NULL;
+    gpu->gpu_calculated->esp_electronic = NULL;
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gpu_calculated->esp_electronicULL = NULL;
+#endif
 
     gpu->gpu_basis = new gpu_basis_type;
     gpu->gpu_basis->natom = *natom;
@@ -1619,6 +1640,35 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
     gpu->gpu_basis->Qfinal->DeleteCPU();
     gpu->gpu_basis->gccoeff->DeleteCPU();
     gpu->gpu_basis->gcexpo->DeleteCPU();
+}
+
+
+//-----------------------------------------------
+//  upload information for OEPROP calculation
+//-----------------------------------------------
+extern "C" void gpu_upload_oeprop_(int * nextpoint, QUICKDouble * extpointxyz,
+        QUICKDouble * esp_electronic, int *ierr)
+{
+    // store coordinates and charges for oeprop calculation
+    gpu->nextpoint = *nextpoint;
+    gpu->extpointxyz = new gpu_buffer_type<QUICKDouble>(extpointxyz, 3, gpu->nextpoint);
+
+    gpu->extpointxyz->Upload();
+
+    gpu->gpu_sim.nextpoint = *nextpoint;
+    gpu->gpu_sim.extpointxyz = gpu->extpointxyz->_devData;
+
+    gpu->gpu_calculated->esp_electronic = new gpu_buffer_type<QUICKDouble>(1, gpu->nextpoint);
+
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->gpu_calculated->esp_electronic->DeleteGPU();
+    gpu->gpu_calculated->esp_electronicULL = new gpu_buffer_type<QUICKULL>(1, gpu->nextpoint);
+    gpu->gpu_calculated->esp_electronicULL->Upload();
+    gpu->gpu_sim.esp_electronicULL = gpu->gpu_calculated->esp_electronicULL->_devData;
+#else
+    gpu->gpu_calculated->esp_electronic->Upload();
+    gpu->gpu_sim.esp_electronic = gpu->gpu_calculated->esp_electronic->_devData;
+#endif
 }
 
 

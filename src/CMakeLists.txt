@@ -33,10 +33,10 @@ set(QUICK_MODULES_SOURCES
 	quick_uscf_module.f90 quick_sad_guess_module.f90 quick_optimizer_module.f90
         quick_cew_module.f90 quick_lri_module.f90 quick_lri_grad_module.f90
 	quick_eri_oshell_module.f90 quick_eri_grad_oshell_module.f90
-        quick_eri_fock1_oshell_module.f90 quick_eri_fock1_cshell_module.f90
-	quick_grad_oshell_module.f90 quick_dftd3_module.f90 quick_molden_module.f90)
+        quick_eri_fock1_oshell_module.f90 quick_eri_fock1_cshell_module.f90 quick_molsurface_module.f90
+	quick_grad_oshell_module.f90 quick_dftd3_module.f90 quick_molden_module.f90 quick_oeproperties_module.f90)
 
-set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
+set(QUICK_SUBS_FORTRAN_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	degen.f90 denspt.f90 diag.f90 dipole.f90
 	EffChar.f90 eigvec.f90
 	findBlock.f90 fmt.f90 getinum.f90
@@ -45,15 +45,18 @@ set(QUICK_SUBS_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	lbfgs.f90 Lsolve.f90 matComp.f90 matMul.f90
 	order.f90 orthog.f90 PriCol.f90 PriSym.f90
 	PrtAct.f90 PrtDat.f90 PrtErr.f90 PrtLab.f90
-	PrtMsg.f90 PrtTim.f90 PrtWrn.f90 pteval.f90
+	PrtMsg.f90 PrtTim.f90 PrtWrn.f90 pteval.f90 QuickErr.f90
 	quick_open.f90 random.f90 rdinum.f90 rdnml.f90
 	rdnum.f90 rdword.f90 readPDB.f90 spdfgh.f90
-	ssw.f90 sum2Mat.f90 transpose.f90 tridi.f90
-	upcase.f90 vett.f90 whatis.f90 whole.f90
+	ssw.f90 sum2Mat.f90 symmetrize.f90 transpose.f90
+        tridi.f90 upcase.f90 vett.f90 whatis.f90 whole.f90
 	wrtRestart.f90 xnorm.f90 zeroMatrix.f90 zmake.f90
 	pt3der.f90  pt2der.f90 sswder.f90 denspt_new_imp.f90
 	pteval_new_imp.f90 scaMatMul.f90 diagmkl.f90
-	oshell_denspt.f90 naive_distribute.f90 time.cpp)
+	oshell_denspt.f90 naive_distribute.f90)
+
+set(QUICK_SUBS_CXX_SOURCES
+	time.cpp)
 
 set(DLFIND_MODULES_SOURCES
 	dlf_allocate.f90 dlf_checkpoint.f90
@@ -76,7 +79,7 @@ set(DFTD3_SOURCES
 	api.f90  common.f90  core.f90  pars.f90  sizes.f90)
 
 if(mirp_ENABLED)
-	list(APPEND QUICK_SUBS_SOURCES mirp_fmt.cpp)
+	list(APPEND QUICK_SUBS_CXX_SOURCES mirp_fmt.cpp)
 endif()
 
 set(QUICK_GENERAL_SOURCES initialize.f90 read_job_and_atom.f90
@@ -94,7 +97,8 @@ set(MAIN_SOURCES main.f90)
 # --------------------------------------------------------------------
 
 set(QUICK_MODULES_SOURCES_FULLPATH "")
-set(QUICK_SUBS_SOURCES_FULLPATH "")
+set(QUICK_SUBS_FORTRAN_SOURCES_FULLPATH "")
+set(QUICK_SUBS_CXX_SOURCES_FULLPATH "")
 set(DLFIND_MODULES_SOURCES_FULLPATH "")
 set(DFTD3_SOURCES_FULLPATH "")
 
@@ -102,8 +106,12 @@ foreach(MODULES_SOURCE ${QUICK_MODULES_SOURCES})
 	list(APPEND QUICK_MODULES_SOURCES_FULLPATH "modules/${MODULES_SOURCE}")
 endforeach()
 
-foreach(SUBS_SOURCE ${QUICK_SUBS_SOURCES})
-	list(APPEND QUICK_SUBS_SOURCES_FULLPATH "subs/${SUBS_SOURCE}")
+foreach(SUBS_SOURCE ${QUICK_SUBS_FORTRAN_SOURCES})
+	list(APPEND QUICK_SUBS_FORTRAN_SOURCES_FULLPATH "subs/${SUBS_SOURCE}")
+endforeach()
+
+foreach(SUBS_SOURCE ${QUICK_SUBS_CXX_SOURCES})
+	list(APPEND QUICK_SUBS_CXX_SOURCES_FULLPATH "subs/${SUBS_SOURCE}")
 endforeach()
 
 foreach(DLFIND_SOURCE ${DLFIND_MODULES_SOURCES})
@@ -119,8 +127,13 @@ endforeach()
 
 include_directories(util)
 
-add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${DFTD3_SOURCES_FULLPATH} ${QUICK_SUBS_SOURCES_FULLPATH} ${DLFIND_MODULES_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
-target_compile_options(libquick PRIVATE ${OPT_FFLAGS})
+add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${DFTD3_SOURCES_FULLPATH}
+	${QUICK_SUBS_FORTRAN_SOURCES_FULLPATH} ${QUICK_SUBS_CXX_SOURCES_FULLPATH}
+	${DLFIND_MODULES_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
+target_compile_options(libquick PRIVATE
+	"$<$<COMPILE_LANGUAGE:FORTRAN>:${OPT_FFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:C>:${OPT_CFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:CXX>:${OPT_CXXFLAGS}>")
 config_module_dirs(libquick quick/serial libxc/serial)
 
 target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS})
@@ -147,6 +160,7 @@ if(MPI)
 	remove_link_libraries(libquick_mpi octree)
 	target_link_libraries(libquick_mpi PRIVATE octree_mpi)
 	if(INSIDE_AMBER)
+		remove_link_libraries(libquick_mpi libcew)
 		target_link_libraries(libquick_mpi PRIVATE libcew_mpi)
 	endif()
 	config_module_dirs(libquick_mpi quick/mpi libxc/serial)
@@ -158,15 +172,18 @@ endif()
 if(CUDA)
 	if(HIP)
 		if(MAGMA)
-			copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:rocblas_fortran_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+			copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
+				$<TARGET_OBJECTS:rocblas_fortran_obj> ${QUICK_GPU_FORTRAN_SOURCE})
 			target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE WITH_MAGMA)
 		elseif(${HIP_VERSION} VERSION_GREATER_EQUAL 5.3.0)
-			copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:rocblas_fortran_obj> $<TARGET_OBJECTS:rocsolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+			copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
+				$<TARGET_OBJECTS:rocblas_fortran_obj> $<TARGET_OBJECTS:rocsolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
 			target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE WITH_ROCSOLVER)
 		# avoid diagonalization on GPU with rocSOLVER on older ROCm versions due to poor performance,
 		# and instead fall back to CPU diagonalization
 		else()
-			copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:rocblas_fortran_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+			copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
+				$<TARGET_OBJECTS:rocblas_fortran_obj> ${QUICK_GPU_FORTRAN_SOURCE})
 		endif()
 		target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE GPU ${QUICK_GPU_PLATFORM})
 		target_link_options(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE ${GPU_LD_FLAGS})
@@ -176,7 +193,8 @@ if(CUDA)
 		# change link libraries and mod dirs for CUDA
 		remove_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} xc octree)
 
-		target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu octree_gpu quick_${QUICK_GPU_TARGET_NAME}_kernels rocblas)
+		target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE
+			xc_gpu octree_gpu quick_${QUICK_GPU_TARGET_NAME}_kernels rocblas)
 
 		if(MAGMA)
 			target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE magma)
@@ -186,15 +204,14 @@ if(CUDA)
 			target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE lapack)
 		endif()
 
-		if(INSIDE_AMBER)
-			target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE libcew)
-		endif()
+		# INSIDE_AMBER: libcew link library copied from libquick target
 
 		config_module_dirs(libquick_${QUICK_GPU_TARGET_NAME} quick/${QUICK_GPU_TARGET_NAME} libxc/gpu)
 
 		install_libraries(libquick_${QUICK_GPU_TARGET_NAME} EXPORT QUICK)
 	else()
-		copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+		copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
+			$<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
 		target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE GPU ${QUICK_GPU_PLATFORM})
 		set_target_properties(libquick_${QUICK_GPU_TARGET_NAME} PROPERTIES OUTPUT_NAME quick_${QUICK_GPU_TARGET_NAME})
 
@@ -204,9 +221,7 @@ if(CUDA)
 		target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu octree_gpu
 			quick_${QUICK_GPU_TARGET_NAME}_kernels cublas cusolver)
 
-		if(INSIDE_AMBER)
-			target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE libcew)
-		endif()
+		# INSIDE_AMBER: libcew link library copied from libquick target
 
 		config_module_dirs(libquick_${QUICK_GPU_TARGET_NAME} quick/${QUICK_GPU_TARGET_NAME} libxc/gpu)
 
@@ -217,15 +232,18 @@ endif()
 if(MPI AND CUDA)
 	if(HIP)
 		if(MAGMA)
-			copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:rocblas_fortran_obj_mpi> ${QUICK_GPU_FORTRAN_SOURCE})
+			copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
+				$<TARGET_OBJECTS:rocblas_fortran_obj_mpi> ${QUICK_GPU_FORTRAN_SOURCE})
 			target_compile_definitions(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE WITH_MAGMA)
 		elseif(${HIP_VERSION} VERSION_GREATER_EQUAL 5.3.0)
-			copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:rocblas_fortran_obj_mpi> $<TARGET_OBJECTS:rocsolver_obj_mpi> ${QUICK_GPU_FORTRAN_SOURCE})
+			copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
+				$<TARGET_OBJECTS:rocblas_fortran_obj_mpi> $<TARGET_OBJECTS:rocsolver_obj_mpi> ${QUICK_GPU_FORTRAN_SOURCE})
 			target_compile_definitions(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE WITH_ROCSOLVER)
 		# avoid diagonalization on GPU with rocSOLVER on older ROCm versions due to poor performance,
 		# and instead fall back to CPU diagonalization
 		else()
-			copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:rocblas_fortran_obj_mpi> ${QUICK_GPU_FORTRAN_SOURCE})
+			copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
+				$<TARGET_OBJECTS:rocblas_fortran_obj_mpi> ${QUICK_GPU_FORTRAN_SOURCE})
 		endif()
 		target_compile_definitions(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE MPIV_GPU ${QUICK_GPU_PLATFORM}_MPIV)
 		target_link_options(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE ${GPU_LD_FLAGS})
@@ -233,7 +251,8 @@ if(MPI AND CUDA)
 		set_target_properties(libquick_mpi_${QUICK_GPU_TARGET_NAME} PROPERTIES OUTPUT_NAME quick_mpi_${QUICK_GPU_TARGET_NAME})
 
 		remove_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} octree_mpi xc)
-		target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu xc_${QUICK_GPU_TARGET_NAME} octree_gpu quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi rocblas)
+		target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE
+			xc_gpu xc_${QUICK_GPU_TARGET_NAME} octree_gpu quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi rocblas)
 		if(MAGMA)
 			target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE magma)
 		elseif(${HIP_VERSION} VERSION_GREATER_EQUAL 5.3.0)
@@ -241,15 +260,15 @@ if(MPI AND CUDA)
 		else()
 			target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE lapack)
 		endif()
-		if(INSIDE_AMBER)
-			target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE libcew_mpi)
-		endif()
+
+		# INSIDE_AMBER: libcew_mpi link library copied from libquick target
 
 		config_module_dirs(libquick_mpi_${QUICK_GPU_TARGET_NAME} quick/mpi_${QUICK_GPU_TARGET_NAME} libxc/gpu)
 
 		install_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} EXPORT QUICK)
 	else()
-		copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+		copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
+			$<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
 		target_compile_definitions(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE MPIV_GPU ${QUICK_GPU_PLATFORM}_MPIV)
 		set_target_properties(libquick_mpi_${QUICK_GPU_TARGET_NAME} PROPERTIES OUTPUT_NAME quick_mpi_${QUICK_GPU_TARGET_NAME})
 
@@ -258,9 +277,7 @@ if(MPI AND CUDA)
 		target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu xc_${QUICK_GPU_TARGET_NAME} octree_gpu
 			quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi cublas cusolver)
 
-		if(INSIDE_AMBER)
-			target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE libcew_mpi)
-		endif()
+		# INSIDE_AMBER: libcew_mpi link library copied from libquick target
 
 		config_module_dirs(libquick_mpi_${QUICK_GPU_TARGET_NAME} quick/mpi_${QUICK_GPU_TARGET_NAME} libxc/gpu)
 
@@ -285,12 +302,18 @@ endif()
 # --------------------------------------------------------------------
 
 add_executable(quick ${MAIN_SOURCES})
-target_compile_options(quick PRIVATE ${OPT_FFLAGS})
+target_compile_options(quick PRIVATE 
+	"$<$<COMPILE_LANGUAGE:FORTRAN>:${OPT_FFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:C>:${OPT_CFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:CXX>:${OPT_CXXFLAGS}>")
 config_module_dirs(quick quick/serial libxc/serial)
 target_link_libraries(quick libquick)
 
 add_executable(test-api ${TEST_API_SOURCES})
-target_compile_options(test-api PRIVATE ${OPT_FFLAGS})
+target_compile_options(test-api PRIVATE
+	"$<$<COMPILE_LANGUAGE:FORTRAN>:${OPT_FFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:C>:${OPT_CFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:CXX>:${OPT_CXXFLAGS}>")
 config_module_dirs(test-api quick/serial libxc/serial)
 target_link_libraries(test-api libquick)
 

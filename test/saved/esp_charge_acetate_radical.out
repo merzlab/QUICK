@@ -1,0 +1,244 @@
+| *********************************************************************************************************
+| **                                                                                                     **
+| **           888888888888                                                                              **
+| **         8888888888888888                                                                            **
+| **      888888888888888888                                                                             **
+| **     888888888888888888                                                                              **
+| **    888888888888888                                                                                  **
+| **   88888888888888888888                               88888                       8888:              **
+| **   8888888888888888888888Z                            88888                       8888:              **
+| **   888888888888888888888888?                          88888                       8888:              **
+| **   8888888888888      8888888                                        888888       8888:              **
+| **    88888888888         888888     8888:     88888    88888        888888888I     8888:    888888    **
+| **    8888888888           88888:    8888:     88888    88888      $888888888888    8888:   888888     **
+| **    I8Z 88888             88888    8888:     88888    88888    .888888     8888   8888: 888888       **
+| **    .8Z 88888             88888    8888:     88888    88888    $88888             8888:88888         **
+| **     8I 88888      .=88. .88888    8888:     88888    88888    88888              8888888888         **
+| **    :8  88888      888888$8888$    8888:     88888    88888    8888O              88888888888        **
+| **   ,7   +88888.     8888888888.    8888:     88888    88888    888888             88888O888888       **
+| **         $888888:.   .8888888      88888....888888    88888     888888     8888   8888:  888888      **
+| **          I8888888888888888888     888888888888888    88888     O888888888888O    8888:   888888     **
+| **            O888888888888888888     88888888888888    88888       88888888888$    8888:    888888    **
+| **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
+| **                                                                                                     **
+| **                                                                                                     **
+| **                                         Copyright (c) 2024                                          **
+| **                          Regents of the University of California San Diego                          **
+| **                                    & Michigan State University                                      **
+| **                                        All Rights Reserved.                                         **
+| **                                                                                                     **
+| **             This software is subject to the terms of the Mozilla Public License, v. 2.0.            **
+| **                                                                                                     **
+| *********************************************************************************************************
+|                                                                                                          
+| Cite this work as:                                                                                       
+| Manathunga, M.; Shajan, A.; Smith, J.; Miao, Y.; He, X.; Ayers, K.; Brothers, E.; Goetz, A.W.; Merz, K.M.
+| QUICK-24.03 University of California San Diego, CA and Michigan State University, East Lansing, MI, 2024 
+|                                                                                                          
+| If you have any comments or queries, please reach out to us on GitHub issues or discussion sections:     
+| https://github.com/merzlab/QUICK.                                                                        
+|                                                                                                          
+| TASK STARTS ON: Tue Mar  4 13:21:32 2025
+| INPUT FILE :    esp_charge_acetate_radical.in
+| OUTPUT FILE:    esp_charge_acetate_radical.out
+| BASIS SET PATH: /scratch/vtripathy/QUICK/install_cuda/basis
+
+ @ Read Job And Atom
+
+  KEYWORD=UDFT B3LYP BASIS=DEF2-SVP XCCUTOFF=1.0E-12 BASISCUTOFF=1.0E-12 CUTOFF=1.0E-12 DENSERMS=1.0E-8 ESP_CHARGE ESPGRID_SPACING=0.25 CHARGE=0
+ ============== JOB CARD =============
+ METHOD = DENSITY FUNCTIONAL THEORY
+ USING LIBXC VERSION: 4.3.4
+ FUNCTIONAL INFORMATION:
+ NAME = B3LYP FAMILY = HYBRID GGA KIND = EXCHANGE CORRELATION
+ DIRECT SCF 
+ SAD INITAL GUESS 
+ UNRESTRICTED SYSTEM
+ USE DIIS SCF
+ PRINT ENERGY EVERY CYCLE
+ READ SAD GUESS FROM FILE
+ STANDARD GRID = SG1
+ ESP CHARGE CALCULATION
+ ESP grids are created at 0.250 A spacing 
+ Van der waals radii for ESP charges are obtained from J. Phys. Chem. 1964, 68, 3, 441–451
+ MAX SCF CYCLES =    200
+ MAX DIIS CYCLES =   10
+ DELTA DENSITY START CYCLE =    3
+ COMPUTATIONAL CUTOFF: 
+      TWO-e INTEGRAL   =  0.100E-11
+      BASIS SET PRIME  =  0.100E-12
+      MATRIX ELEMENTS  =  0.100E-09
+      BASIS FUNCTION   =  0.100E-11
+ DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-07
+ BASIS SET = DEF2-SVP,  TYPE = CARTESIAN
+| BASIS FILE = /scratch/vtripathy/QUICK/install_cuda/basis/DEF2-SVP.BAS
+| DATA FILE  =    esp_charge_acetate_radical.dat
+
+ @ Finish reading job
+
+
+ @ Begin SAD initial guess
+
+ For Atom Kind =    1
+ ELEMENT = C 
+ BASIS FUNCTIONS =   15
+ For Atom Kind =    2
+ ELEMENT = H 
+ BASIS FUNCTIONS =    5
+ For Atom Kind =    3
+ ELEMENT = O 
+ BASIS FUNCTIONS =   15
+
+ @ Finish SAD initial guess
+
+
+ @ Begin Reading Molecular Information
+
+
+ =========== Molecule Input ==========
+ TOTAL MOLECULAR CHARGE  =    0    MULTIPLICITY                =    1
+ TOTAL ATOM NUMBER       =    7    NUMBER OF ATOM TYPES        =    3
+ NUMBER OF HYDROGEN ATOM =    3    NUMBER OF NON-HYDROGEN ATOM =    4
+ NUMBER OF ALPHA ELECTRONS =   16
+ NUMBER OF BETA ELECTRONS  =   15
+
+ -- INPUT GEOMETRY -- :
+    C          -1.3727      -0.2391      -0.0038
+    H          -1.6108      -0.8232       0.8853
+    C           0.1185       0.0655      -0.0005
+    O           0.5168       1.2592       0.0010
+    H          -1.5834      -0.8323      -0.8690
+    O           1.0669      -1.0047       0.0008
+    H          -1.9499       0.6618      -0.0044
+
+ -- DISTANCE MATRIX -- :
+              1           2           3           4           5
+      1     0.00000
+      2     2.05980     0.00000
+      3     2.87616     4.03749     0.00000
+      4     4.55708     5.86881     2.37803     0.00000
+      5     2.02201     3.31559     3.98941     5.83740     0.00000
+      6     4.83188     5.34009     2.70231     4.40269     5.28129
+      7     2.02201     3.33344     4.06793     4.79622     3.33478
+              6           7
+      6     0.00000
+      7     6.51302     0.00000
+
+============== BASIS INFOS ==============
+ BASIS FUNCTIONS =   75
+ NSHELL =   33 NPRIM  =  121
+ JSHELL =   33 JBASIS =   63
+
+
+ @ End Reading Molecular Information 
+
+
+ @ Begin XC Quadrature Formation
+
+ OCTAGO: OCTree Algorithm for Grid Operations 
+   PRUNING CUTOFF       = 0.100E-11
+   INITIAL GRID POINTS  =       26520
+|   FINAL GRID POINTS    =       18271
+|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =       22042
+|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =       25367
+
+ @ End XC Quadrature Formation
+
+
+ @ Begin Energy Calculation
+
+                                         USCF ENERGY
+| ------------------------------------------------------------------------------------------------------------------------
+| NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
+| ------------------------------------------------------------------------------------------------------------------------
+|  1   -228.479105508      ------         0.561     1        0.00      0.56      0.00    0.1956E+01  0.1965E-01  0.2430E+00
+|  2   -228.135985147  -.343120E+00       0.759     2        0.00      0.75      0.00    0.1765E+00  0.8061E-02  0.1568E+00
+|  3   -228.114202625  -.217825E-01       0.753     3        0.00      0.75      0.00    0.1655E+00  0.5059E-02  0.8695E-01
+|  4   -228.196403340  0.822007E-01       0.752     4        0.00      0.75      0.00    0.9323E-01  0.3527E-02  0.7485E-01
+|  5   -228.215856409  0.194531E-01       0.747     5        0.00      0.74      0.00    0.5903E-01  0.8801E-03  0.1674E-01
+|  6   -228.221889927  0.603352E-02       0.741     6        0.00      0.74      0.00    0.1515E-01  0.4516E-03  0.7278E-02
+|  7   -228.222504791  0.614864E-03       0.738     7        0.00      0.73      0.00    0.1067E-01  0.3826E-03  0.5912E-02
+|  8   -228.222864095  0.359304E-03       0.738     8        0.00      0.73      0.00    0.7529E-02  0.5136E-03  0.7618E-02
+|  9   -228.223188629  0.324534E-03       0.735     9        0.01      0.73      0.00    0.4544E-02  0.7551E-03  0.1121E-01
+| 10   -228.223475229  0.286601E-03       0.737    10        0.00      0.73      0.00    0.1168E-02  0.4518E-03  0.6807E-02
+| 11   -228.223565495  0.902652E-04       0.732     1        0.00      0.73      0.00    0.7213E-03  0.2173E-03  0.4258E-02
+| 12   -228.223598851  0.333562E-04       0.723     2        0.00      0.72      0.00    0.5984E-03  0.2924E-03  0.6021E-02
+| 13   -228.223632933  0.340824E-04       0.727     3        0.00      0.72      0.00    0.4194E-03  0.3297E-03  0.6775E-02
+| 14   -228.223658876  0.259425E-04       0.728     4        0.00      0.72      0.00    0.2111E-03  0.2714E-03  0.5681E-02
+| 15   -228.223667455  0.857904E-05       0.724     5        0.00      0.72      0.00    0.2334E-03  0.6168E-04  0.1114E-02
+| 16   -228.223668271  0.816429E-06       0.719     6        0.00      0.72      0.00    0.1369E-04  0.2035E-04  0.4199E-03
+| 17   -228.223668346  0.751124E-07       0.710     7        0.00      0.71      0.00    0.1123E-04  0.3314E-05  0.5706E-04
+| 18   -228.223668356  0.977593E-08       0.692     8        0.00      0.69      0.00    0.4672E-05  0.1019E-05  0.2119E-04
+| 19   -228.223668359  0.256284E-08       0.675     9        0.00      0.67      0.00    0.9843E-06  0.7034E-06  0.2015E-04
+| 20   -228.223668360  0.162515E-08       0.671    10        0.00      0.67      0.00    0.4857E-06  0.3055E-06  0.1045E-04
+| 21   -228.223668361  0.447358E-09       0.661     1        0.00      0.66      0.00    0.7155E-06  0.2253E-06  0.6468E-05
+| 22   -228.223668361  0.143189E-09       0.658     2        0.00      0.65      0.00    0.2523E-05  0.4801E-07  0.1273E-05
+| 23   -228.223668361  0.289901E-10       0.642     3        0.00      0.64      0.00    0.6602E-06  0.1140E-06  0.3401E-05
+| 24   -228.223668361  0.497380E-10       0.650     4        0.00      0.65      0.00    0.1181E-05  0.1002E-06  0.3059E-05
+| 25   -228.223668361  0.864020E-11       0.650     5        0.00      0.65      0.00    0.2684E-05  0.6763E-07  0.1226E-05
+| 26   -228.223668361  0.134719E-10       0.647     6        0.00      0.64      0.00    0.5783E-06  0.4191E-07  0.1128E-05
+| 27   -228.223668361  0.613909E-11       0.644     7        0.00      0.64      0.00    0.5898E-06  0.3986E-07  0.1081E-05
+| 28   -228.223668361  0.272848E-11       0.643     8        0.00      0.64      0.00    0.8361E-06  0.5744E-07  0.9419E-06
+| 29   -228.223668361  -.181899E-11       0.647     9        0.00      0.64      0.00    0.2036E-05  0.2810E-07  0.6296E-06
+| 30   -228.223668361  0.619593E-11       0.642    10        0.00      0.64      0.00    0.2053E-06  0.4221E-07  0.6592E-06
+| 31   -228.223668361  -.170530E-12       0.635     1        0.00      0.63      0.00    0.7798E-06  0.7186E-07  0.1187E-05
+| 32   -228.223668361  -.158025E-10       0.649     2        0.00      0.64      0.00    0.2604E-05  0.6556E-07  0.1170E-05
+| 33   -228.223668361  0.189857E-10       0.647     3        0.00      0.64      0.00    0.3066E-06  0.1830E-07  0.3227E-06
+| 34   -228.223668361  0.625278E-12       0.624     4        0.00      0.62      0.00    0.3067E-06  0.1908E-07  0.2975E-06
+| 35   -228.223668361  -.341061E-12       0.632     5        0.00      0.63      0.00    0.6034E-06  0.3953E-07  0.7433E-06
+| 36   -228.223668361  -.238742E-11       0.642     6        0.00      0.64      0.00    0.1416E-05  0.9583E-07  0.1711E-05
+| 37   -228.223668361  -.235332E-10       0.655     7        0.00      0.65      0.00    0.3553E-05  0.8215E-07  0.1387E-05
+| 38   -228.223668361  0.267164E-10       0.650     8        0.00      0.65      0.00    0.8984E-06  0.2891E-07  0.5471E-06
+| 39   -228.223668361  -.130740E-11       0.644     9        0.00      0.64      0.00    0.1297E-05  0.5828E-07  0.1021E-05
+| 40   -228.223668361  -.761702E-11       0.650    10        0.00      0.65      0.00    0.3087E-05  0.4741E-07  0.8612E-06
+| 41   -228.223668361  0.100613E-10       0.653     1        0.00      0.65      0.00    0.5564E-06  0.4032E-07  0.7219E-06
+| 42   -228.223668361  -.176215E-11       0.651     2        0.00      0.65      0.00    0.1367E-05  0.2581E-07  0.4716E-06
+| 43   -228.223668361  0.295586E-11       0.638     3        0.00      0.63      0.00    0.5125E-07  0.7479E-08  0.1564E-06
+| ------------------------------------------------------------------------------------------------------------------------
+| REACH CONVERGENCE AFTER  43 CYCLES
+| MAX ERROR = 0.512550E-07   RMS CHANGE = 0.747852E-08   MAX CHANGE = 0.156354E-06
+| -----------------------------------------------
+ ALPHA ELECTRON DENSITY    =   16.0000028895
+ BETA ELECTRON DENSITY     =   15.0000175934
+ ELECTRONIC ENERGY    =   -336.548192238
+ CORE_CORE REPULSION  =    108.324523877
+ TOTAL ENERGY         =   -228.223668361
+
+ @ End Energy calculation
+
+ *** Printing Electrostatic Potential (ESP) at points on vdw surface to esp_charge_acetate_radical.vdw with coordinates in angstroms***
+  ESP charges:
+  ----------------
+     1   C     -0.329587
+     2   H      0.122424
+     3   C      0.595573
+     4   O     -0.399292
+     5   H      0.124427
+     6   O     -0.236024
+     7   H      0.122479
+  ----------------
+  Net charge =  -0.000000
+  
+
+ @ Output Timing Information
+
+------------- TIMING ---------------
+| INITIAL GUESS TIME  =     0.136317000(  0.44%)
+| DFT GRID OPERATIONS =     0.055717000(  0.18%)
+| ESP COMPUTATION TIME =     1.283053000(  4.15%)
+| ESP Surface Creation TIME =     0.201089000(  0.65%)
+| ESP Charge COMPUTATION TIME =     0.006318000(  0.02%)
+| TOTAL SCF TIME      =    29.222729000( 94.50%)
+|       TOTAL OP TIME      =    29.043594000( 93.92%)
+|             TOTAL 1e TIME      =     0.004619000(  0.01%)
+|             TOTAL 2e TIME      =    16.813941000( 54.37%)
+|             TOTAL EXC TIME     =    12.218323000( 39.51%)
+|       TOTAL DII TIME      =     0.179128000(  0.58%)
+|             TOTAL DIAG TIME    =     0.001690000(  0.01%)
+| TOTAL TIME          =    30.925024000
+------------------------------------
+| Job cpu time:  0 days  0 hours  0 minutes 30.9 seconds.
+
+ @ Finish Output Timing Information
+
+| Normal Termination. Task Finished on: Tue Mar  4 13:22:03 2025

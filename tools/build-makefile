@@ -22,11 +22,11 @@ include $(MAKEIN)
 #  ! Variable declarations                                               !
 #  !---------------------------------------------------------------------!
 
-cudaobj    =   $(objfolder)/gpu_write_info.o $(objfolder)/gpu.o $(objfolder)/gpu_type.o \
+cudaobj = $(objfolder)/gpu_write_info.o $(objfolder)/gpu.o $(objfolder)/gpu_type.o \
 	$(objfolder)/gpu_get2e.o
 cudaxcobj = $(objfolder)/gpu_getxc.o
 
-cudalibxcobj=$(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcgp.o $(libxcdevobjfolder)/gga_c_bmk.o $(libxcdevobjfolder)/gga_c_cs1.o \
+cudalibxcobj = $(libxcdevobjfolder)/gga_c_am05.o $(libxcdevobjfolder)/gga_c_bcgp.o $(libxcdevobjfolder)/gga_c_bmk.o $(libxcdevobjfolder)/gga_c_cs1.o \
 	$(libxcdevobjfolder)/gga_c_ft97.o $(libxcdevobjfolder)/gga_c_gapc.o $(libxcdevobjfolder)/gga_c_gaploc.o $(libxcdevobjfolder)/gga_c_hcth_a.o \
 	$(libxcdevobjfolder)/gga_c_lm.o $(libxcdevobjfolder)/gga_c_lyp.o $(libxcdevobjfolder)/gga_c_op_b88.o $(libxcdevobjfolder)/gga_c_op_g96.o \
 	$(libxcdevobjfolder)/gga_c_op_pbe.o $(libxcdevobjfolder)/gga_c_op_pw91.o $(libxcdevobjfolder)/gga_c_optc.o $(libxcdevobjfolder)/gga_c_op_xalpha.o \
@@ -74,55 +74,66 @@ ifdef COMPILE_PK09
 cudalibxcobj += $(libxcdevobjfolder)/lda_c_pk09.o
 endif
 
-cublasobj       = $(objfolder)/fortran_thunking.o
+cublasobj = $(objfolder)/fortran_thunking.o
 
-rocblasobj      = $(objfolder)/rocblas_extra_module.o $(objfolder)/quick_rocblas_module.o
+rocblasobj = $(objfolder)/rocblas_extra_module.o $(objfolder)/quick_rocblas_module.o
 
-rocblasmod      = $(objfolder)/rocblas_module.o
+rocblasmod = $(objfolder)/rocblas_module.o
 
-cusolverobj     = $(objfolder)/quick_cusolver.o
+cusolverobj = $(objfolder)/quick_cusolver.o
 
-rocsolverobj    = $(objfolder)/rocsolver_extra_module.o $(objfolder)/quick_rocsolver_module.o
+rocsolverobj = $(objfolder)/rocsolver_extra_module.o $(objfolder)/quick_rocsolver_module.o
 
-octobj    = $(objfolder)/grid_packer.o $(objfolder)/octree.o
+octobj = $(objfolder)/grid_packer.o $(objfolder)/octree.o
 
-modobj= $(objfolder)/quick_mpi_module.o $(objfolder)/quick_constants_module.o $(objfolder)/quick_method_module.o \
-        $(objfolder)/quick_molspec_module.o $(objfolder)/quick_gaussian_class_module.o $(objfolder)/quick_size_module.o \
-        $(objfolder)/quick_basis_module.o $(objfolder)/quick_calculated_module.o \
-        $(objfolder)/quick_divcon_module.o $(objfolder)/quick_ecp_module.o $(objfolder)/quick_electrondensity_module.o \
-        $(objfolder)/quick_files_module.o $(objfolder)/quick_gridpoints_module.o $(objfolder)/quick_mfcc_module.o \
-        $(objfolder)/quick_params_module.o $(objfolder)/quick_pb_module.o $(objfolder)/quick_scratch_module.o \
-        $(objfolder)/quick_timer_module.o $(objfolder)/quick_scf_module.o $(objfolder)/quick_gradient_module.o \
-	$(objfolder)/quick_scf_operator_module.o $(objfolder)/quick_all_module.o
+modobj = $(objfolder)/quick_exception_module.o $(objfolder)/quick_input_parser_module.o $(objfolder)/quick_mpi_module.o \
+	$(objfolder)/quick_files_module.o $(objfolder)/quick_constants_module.o $(objfolder)/quick_method_module.o \
+	$(objfolder)/quick_molspec_module.o $(objfolder)/quick_gaussian_class_module.o $(objfolder)/quick_size_module.o \
+	$(objfolder)/quick_basis_module.o $(objfolder)/quick_calculated_module.o \
+	$(objfolder)/quick_divcon_module.o $(objfolder)/quick_ecp_module.o $(objfolder)/quick_electrondensity_module.o \
+	$(objfolder)/quick_timer_module.o $(objfolder)/quick_mfcc_module.o $(objfolder)/quick_params_module.o \
+	$(objfolder)/quick_pb_module.o $(objfolder)/quick_scratch_module.o $(objfolder)/quick_all_module.o \
+	$(objfolder)/quick_magma_module.o $(objfolder)/quick_overlap_module.o $(objfolder)/quick_gridpoints_module.o \
+	$(objfolder)/quick_cutoff_module.o $(objfolder)/quick_molsurface_module.o $(objfolder)/quick_molden_module.o \
+	$(objfolder)/quick_eri_cshell_module.o $(objfolder)/quick_eri_oshell_module.o $(objfolder)/quick_lri_module.o \
+	$(objfolder)/quick_eri_grad_cshell_module.o $(objfolder)/quick_eri_grad_oshell_module.o \
+	$(objfolder)/quick_lri_grad_module.o $(objfolder)/quick_cew_module.o \
+	$(objfolder)/quick_oei_module.o $(objfolder)/quick_oeproperties_module.o $(objfolder)/quick_dft_module.o \
+	$(objfolder)/quick_grad_cshell_module.o $(objfolder)/quick_grad_oshell_module.o \
+	$(objfolder)/quick_scf_operator_module.o $(objfolder)/quick_scf_module.o \
+	$(objfolder)/quick_uscf_operator_module.o $(objfolder)/quick_uscf_module.o \
+	$(objfolder)/quick_sad_guess_module.o $(objfolder)/quick_dftd3_module.o \
+	$(objfolder)/quick_optimizer_module.o 
 
-OBJ =   $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o  \
-        $(objfolder)/getMol.o $(objfolder)/quick_one_electron_integral.o $(objfolder)/getEnergy.o \
-        $(objfolder)/ecp.o $(objfolder)/nuclear.o \
+OBJ = $(objfolder)/initialize.o $(objfolder)/read_job_and_atom.o \
+	$(objfolder)/getMol.o $(objfolder)/quick_one_electron_integral.o $(objfolder)/getEnergy.o \
+	$(objfolder)/ecp.o $(objfolder)/nuclear.o \
 	$(objfolder)/finalize.o $(objfolder)/mpi_setup.o $(objfolder)/quick_debug.o \
-        $(objfolder)/calMP2.o $(objfolder)/hessian.o \
-        $(objfolder)/CPHF.o $(objfolder)/frequency.o $(objfolder)/basis.o 
+	$(objfolder)/calMP2.o $(objfolder)/hessian.o \
+	$(objfolder)/CPHF.o $(objfolder)/frequency.o $(objfolder)/basis.o 
 
 SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
-	$(objfolder)/degen.o $(objfolder)/denspt.o $(objfolder)/diag.o $(objfolder)/dipole.o \
-	$(objfolder)/EffChar.o $(objfolder)/eigvec.o \
-	$(objfolder)/ekinetic.o $(objfolder)/findBlock.o $(objfolder)/fmt.o $(objfolder)/getinum.o \
+	$(objfolder)/degen.o $(objfolder)/denspt.o $(objfolder)/oshell_denspt.o \
+	$(objfolder)/diag.o $(objfolder)/diagmkl.o \
+	$(objfolder)/dipole.o $(objfolder)/EffChar.o $(objfolder)/eigvec.o \
+	$(objfolder)/findBlock.o $(objfolder)/fmt.o $(objfolder)/getinum.o \
 	$(objfolder)/getNum.o $(objfolder)/greedy_distrubute.o $(objfolder)/hrr.o $(objfolder)/iatoi.o \
 	$(objfolder)/iatoimp.o $(objfolder)/io.o $(objfolder)/iwhole.o \
 	$(objfolder)/lbfgs.o $(objfolder)/Lsolve.o $(objfolder)/matComp.o $(objfolder)/matMul.o \
 	$(objfolder)/order.o $(objfolder)/orthog.o $(objfolder)/PriCol.o $(objfolder)/PriSym.o \
 	$(objfolder)/PrtAct.o $(objfolder)/PrtDat.o $(objfolder)/PrtErr.o $(objfolder)/PrtLab.o \
 	$(objfolder)/PrtMsg.o $(objfolder)/PrtTim.o $(objfolder)/PrtWrn.o $(objfolder)/pteval.o \
-	$(objfolder)/quick_open.o $(objfolder)/random.o $(objfolder)/rdinum.o $(objfolder)/rdnml.o \
-	$(objfolder)/rdnum.o $(objfolder)/rdword.o $(objfolder)/readPDB.o $(objfolder)/spdfgh.o \
-	$(objfolder)/ssw.o $(objfolder)/sum2Mat.o $(objfolder)/transpose.o $(objfolder)/tridi.o \
-	$(objfolder)/upcase.o $(objfolder)/vett.o $(objfolder)/whatis.o $(objfolder)/whole.o \
+	$(objfolder)/QuickErr.o $(objfolder)/quick_open.o $(objfolder)/random.o $(objfolder)/rdinum.o \
+	$(objfolder)/rdnml.o $(objfolder)/rdnum.o $(objfolder)/rdword.o $(objfolder)/readPDB.o $(objfolder)/spdfgh.o \
+	$(objfolder)/ssw.o $(objfolder)/sum2Mat.o $(objfolder)/symmetrize.o $(objfolder)/transpose.o \
+	$(objfolder)/tridi.o $(objfolder)/upcase.o $(objfolder)/vett.o $(objfolder)/whatis.o $(objfolder)/whole.o \
 	$(objfolder)/wrtRestart.o $(objfolder)/xnorm.o $(objfolder)/zeroMatrix.o $(objfolder)/zmake.o \
 	$(objfolder)/pt2der.o $(objfolder)/sswder.o $(objfolder)/denspt_new_imp.o \
-	$(objfolder)/pteval_new_imp.o $(objfolder)/pt3der.o $(objfolder)/scaMatMul.o
+	$(objfolder)/pteval_new_imp.o $(objfolder)/pt3der.o $(objfolder)/scaMatMul.o $(objfolder)/naive_distribute.o
 
 MAIN = $(mainobjfolder)/main.o
 
-TESTAPI=$(mainobjfolder)/quick_api_test.o
+TESTAPI = $(mainobjfolder)/quick_api_test.o
 
 #  !---------------------------------------------------------------------!
 #  ! Child build targets                                                 !
@@ -232,43 +243,77 @@ $(TESTAPI):$(mainobjfolder)/%.o:$(srcfolder)/%.f90
 #  ! Parent build targets                                                !
 #  !---------------------------------------------------------------------!
 
-.PHONY: serial cuda mpi cudampi
+.PHONY: serial mpi cuda cudampi hip hipmpi
 
 serial: cpmakein libxc_cpu dftd3 quick_modules dlfind octree quick_subs $(OBJ) $(MAIN) blas-quick lapack $(TESTAPI)
+	@echo "[QUICK]  AR $(libfolder)/libquick.$(LIBEXT)"
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick.$(LIBEXT) $(objfolder)/*.o
-	$(VB)$(FC) -o $(exefolder)/quick $(MAIN) -L$(libfolder) -lquick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS)
-	$(VB)$(FC) -o $(exefolder)/test-api $(TESTAPI) -L$(libfolder) -lquick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS)
-
-cuda: cpmakein libxc_gpu dftd3 quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) blas-quick lapack $(TESTAPI)
-	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cuda.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
-	$(VB)$(FC) -o $(exefolder)/quick.cuda $(MAIN) -L$(libfolder) -lquick-cuda -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
-	$(VB)$(FC) -o $(exefolder)/test-api.cuda $(TESTAPI) -L$(libfolder) -lquick-cuda -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
+	@echo "[QUICK]  LD $(exefolder)/quick"
+	$(VB)$(FC) $(MAIN) -L$(libfolder) -lquick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS) \
+	-o $(exefolder)/quick
+	@echo "[QUICK]  LD $(exefolder)/test-quick"
+	$(VB)$(FC) $(TESTAPI) -L$(libfolder) -lquick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS) \
+	-o $(exefolder)/test-api
 
 mpi: cpmakein libxc_cpu dftd3 quick_modules dlfind octree quick_subs $(OBJ) $(MAIN) blas-quick lapack $(TESTAPI)
+	@echo "[QUICK]  AR $(libfolder)/libquick-mpi.$(LIBEXT)"
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-mpi.$(LIBEXT) $(objfolder)/*.o
-	$(VB)$(FC) -o $(exefolder)/quick.MPI $(MAIN) -L$(libfolder) -lquick-mpi -lblas-quick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS)
-	$(VB)$(FC) -o $(exefolder)/test-api.MPI $(TESTAPI) -L$(libfolder) -lquick-mpi -lblas-quick -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS)
+	@echo "[QUICK]  LD $(exefolder)/quick.MPI"
+	$(VB)$(FC) $(MAIN) -L$(libfolder) -lquick-mpi -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS) \
+	-o $(exefolder)/quick.MPI
+	@echo "[QUICK]  LD $(exefolder)/test-api.MPI"
+	$(VB)$(FC) $(TESTAPI) -L$(libfolder) -lquick-mpi -lxc -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS) \
+	-o $(exefolder)/test-api.MPI
+
+cuda: cpmakein libxc_gpu dftd3 quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) blas-quick lapack $(TESTAPI)
+	@echo "[QUICK]  AR $(libfolder)/libquick-cuda.$(LIBEXT)"
+	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cuda.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
+	@echo "[QUICK]  LD $(exefolder)/quick.cuda"
+	$(VB)$(FC) $(MAIN) -L$(libfolder) -lquick-cuda -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS) $(CFLAGS) \
+	-o $(exefolder)/quick.cuda 
+	@echo "[QUICK]  LD $(exefolder)/test-api.MPI"
+	$(VB)$(FC) $(TESTAPI) -L$(libfolder) -lquick-cuda -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS) $(CFLAGS) \
+	-o $(exefolder)/test-api.cuda 
 
 cudampi: cpmakein libxc_gpu dftd3 quick_modules dlfind octree quick_cuda quick_subs $(OBJ) $(MAIN) $(cusolverobj) $(cublasobj) blas-quick lapack $(TESTAPI)
+	@echo "[QUICK]  AR $(libfolder)/libquick-cudampi.$(LIBEXT)"
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libquick-cudampi.$(LIBEXT) $(objfolder)/*.o $(libxcdevobjfolder)/*.o
-	$(VB)$(FC) -o $(exefolder)/quick.cuda.MPI $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
-	$(VB)$(FC) -o $(exefolder)/test-api.cuda.MPI $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(CFLAGS) $(LDFLAGS)
+	@echo "[QUICK]  LD $(exefolder)/quick.cuda.MPI"
+	$(VB)$(FC) $(MAIN) -L$(libfolder) -lquick-cudampi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS) $(CFLAGS) \
+	-o $(exefolder)/quick.cuda.MPI
+	@echo "[QUICK]  LD $(exefolder)/test-api.cuda.MPI"
+	$(VB)$(FC) $(TESTAPI) -L$(libfolder) -lquick-cudampi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick $(LDFLAGS) $(CFLAGS) \
+	-o $(exefolder)/test-api.cuda.MPI
 
 hip: cpmakein libxc_gpu dftd3 octree quick_hip rocblas rocsolver quick_modules dlfind quick_subs $(OBJ) $(MAIN) blas-quick lapack $(TESTAPI)
+	@echo "[QUICK]  AR $(libfolder)/libquick-dev-hip.$(LIBEXT)"
 	$(VB)$(ARCH) rcsD $(libfolder)/libquick-dev-hip.$(LIBEXT) $(libxcdevobjfolder)/*.o 
 	$(VB)$(ARCH) cr $(libfolder)/libquick-hip.$(LIBEXT) $(objfolder)/*.o
-	$(VB)$(HIPCC) $(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick \
-	$(cudaxcobj) $(TESTAPI) -fgpu-rdc -o $(exefolder)/test-api.hip -lgfortran $(HIP_LD_FLAGS)       
-	$(VB)$(HIPCC) $(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick \
-	$(cudaxcobj) $(MAIN) -fgpu-rdc -o $(exefolder)/quick.hip -lgfortran $(HIP_LD_FLAGS)
+	@echo "[QUICK]  LD $(exefolder)/quick.hip"
+	$(VB)$(HIPCC) -fgpu-rdc \
+	$(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick \
+	$(cudaxcobj) $(MAIN) -lgfortran $(HIP_LD_FLAGS) \
+	-o $(exefolder)/quick.hip 
+	@echo "[QUICK]  LD $(exefolder)/test-api.hip"
+	$(VB)$(HIPCC) -fgpu-rdc \
+	$(libfolder)/libquick-dev-hip.a -L$(libfolder) -lquick-hip -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick \
+	$(cudaxcobj) $(TESTAPI) -lgfortran $(HIP_LD_FLAGS) \
+	-o $(exefolder)/test-api.hip 
 
 hipmpi: cpmakein libxc_gpu dftd3 octree quick_hip rocblas rocsolver quick_modules dlfind quick_subs $(OBJ) $(MAIN) blas-quick lapack $(TESTAPI)
+	@echo "[QUICK]  AR $(libfolder)/libquick-dev-hipmpi.$(LIBEXT)"
 	$(VB)$(ARCH) rcsD $(libfolder)/libquick-dev-hipmpi.$(LIBEXT) $(libxcdevobjfolder)/*.o 
 	$(VB)$(ARCH) cr $(libfolder)/libquick-hipmpi.$(LIBEXT) $(objfolder)/*.o
-	$(VB)$(HIPCC) $(HIP_MPI_LD_FLAGS) $(libfolder)/libquick-dev-hipmpi.a -L$(libfolder) -lquick-hipmpi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick \
-	$(cudaxcobj) $(TESTAPI) -fgpu-rdc -o $(exefolder)/test-api.hip.MPI -lgfortran $(HIP_LD_FLAGS)       
-	$(VB)$(HIPCC) $(HIP_MPI_LD_FLAGS) $(libfolder)/libquick-dev-hipmpi.a -L$(libfolder) -lquick-hipmpi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick \
-	$(cudaxcobj) $(MAIN) -fgpu-rdc -o $(exefolder)/quick.hip.MPI -lgfortran $(HIP_LD_FLAGS)
+	@echo "[QUICK]  LD $(exefolder)/quick.hip.MPI"
+	$(VB)$(HIPCC) $(HIP_MPI_LD_FLAGS) -fgpu-rdc \
+	$(libfolder)/libquick-dev-hipmpi.a -L$(libfolder) -lquick-hipmpi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick \
+	$(cudaxcobj) $(MAIN) -lgfortran $(HIP_LD_FLAGS) \
+	-o $(exefolder)/quick.hip.MPI 
+	@echo "[QUICK]  LD $(exefolder)/test-api.hip.MPI"
+	$(VB)$(HIPCC) $(HIP_MPI_LD_FLAGS) -fgpu-rdc \
+	$(libfolder)/libquick-dev-hipmpi.a -L$(libfolder) -lquick-hipmpi -lxc-gpu -ldlfind -ldftd3 -llapack -lblas-quick \
+	$(cudaxcobj) $(TESTAPI) -lgfortran $(HIP_LD_FLAGS) \
+	-o $(exefolder)/test-api.hip.MPI 
 
 #  !---------------------------------------------------------------------!
 #  ! Cleaning targets                                                    !
@@ -277,9 +322,9 @@ hipmpi: cpmakein libxc_gpu dftd3 octree quick_hip rocblas rocsolver quick_module
 .PHONY: clean
 
 clean:
-	@-rm -f $(objfolder)/*.o $(mainobjfolder)/*.o $(inclfolder)/* $(exefolder)/* $(libfolder)/*
-	@-rm -f $(libxcobjfolder)/*.o $(lapackfolder)/*.o $(dlfindobjfolder)/*.o $(blasobjfolder)/*.o $(libxcdevobjfolder)/*.o \
-	$(dftd3objfolder)/*.o
+	@-rm -f $(objfolder)/*.o $(mainobjfolder)/*.o $(inclfolder)/* $(exefolder)/* $(libfolder)/* \
+	$(libxcobjfolder)/*.o $(lapackobjfolder)/*.o $(dlfindobjfolder)/*.o $(blasobjfolder)/*.o \
+	$(libxcdevobjfolder)/*.o $(dftd3objfolder)/*.o
 	@cd $(cudafolder) && make --no-print-directory clean
 	@cd $(hipfolder) && make --no-print-directory clean
 	@cd $(subfolder) && make --no-print-directory clean
@@ -290,3 +335,4 @@ clean:
 	@cd $(dlfindfolder) && make --no-print-directory clean
 	@cd $(lapackfolder) && make --no-print-directory clean
 	@cd $(dftd3folder) && make --no-print-directory clean
+	@-rm -f $(homefolder)/test/test-api*

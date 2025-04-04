@@ -1,4 +1,4 @@
-set(QUICK_HIP_SOURCE gpu_utils.cu gpu.cu gpu_type.cu gpu_get2e.cu ../gpu_oei.cu ../gpu_lri.cu ../xc_redistribute.cpp gpu_get2e_grad_ffff.cu)
+set(QUICK_HIP_SOURCE gpu_utils.cu gpu.cu gpu_type.cu gpu_get2e.cu ../gpu_oei.cu ../gpu_oeprop.cu ../gpu_lri.cu ../xc_redistribute.cpp gpu_get2e_grad_ffff.cu)
      
 #sadly FindCUDA doesn't support OBJECT libraries, so we have to use a static cuda_add_library
 cuda_add_library(quick_${QUICK_GPU_TARGET_NAME}_kernels STATIC ${QUICK_HIP_SOURCE} OPTIONS ${CUDA_DEVICE_CODE_FLAGS} -DGPU -D${QUICK_GPU_PLATFORM})
@@ -30,7 +30,7 @@ else()
 endif()
 
 add_library(rocblas_fortran_obj OBJECT ${ROCBLAS_FORTRAN_SOURCE})
-set_property(TARGET rocblas_fortran_obj PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS}) 
+set_property(TARGET rocblas_fortran_obj PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS})
 set_property(TARGET rocblas_fortran_obj PROPERTY COMPILE_DEFINITIONS CUBLAS_USE_THUNKING)
 set_property(TARGET rocblas_fortran_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
@@ -43,7 +43,7 @@ if(NOT MAGMA AND ${HIP_VERSION} VERSION_GREATER_EQUAL 5.3.0)
 	set(ROCSOLVER_SOURCE rocsolver/quick_rocsolver_module.f90  rocsolver/rocsolver_extra_module.f90)
 
 	add_library(rocsolver_obj OBJECT ${ROCSOLVER_SOURCE})
-	set_property(TARGET rocsolver_obj PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS}) 
+	set_property(TARGET rocsolver_obj PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS})
 	set_property(TARGET rocsolver_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 	add_dependencies(rocsolver_obj rocblas_fortran_obj)

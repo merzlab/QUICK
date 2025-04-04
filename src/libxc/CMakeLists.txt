@@ -111,13 +111,16 @@ set(LIBXC_FORTRAN_SOURCES
 	libxc_funcs.f90
 	libxc.f90)
 
-set(LIBXC_GPU_SOURCES
-	gpu.c)
+if(CUDA)
+	set(LIBXC_GPU_SOURCES gpu.c ../gpu/cuda/gpu_utils.cu)
+elseif(HIP)
+	set(LIBXC_GPU_SOURCES gpu.c ../gpu/hip/gpu_utils.cu)
+endif()
 
 # -------------------------------------------------------------
 # enable optimization
-set_property(SOURCE ${LIBXC_C_SOURCES} PROPERTY COMPILE_FLAGS ${OPT_CFLAGS_SPC})
-set_property(SOURCE ${LIBXC_FORTRAN_SOURCES} PROPERTY COMPILE_FLAGS ${OPT_FFLAGS_SPC})
+set_property(SOURCE ${LIBXC_C_SOURCES} PROPERTY COMPILE_OPTIONS ${OPT_CFLAGS})
+set_property(SOURCE ${LIBXC_FORTRAN_SOURCES} PROPERTY COMPILE_OPTIONS ${OPT_FFLAGS})
 
 # -------------------------------------------------------------
 # Generate fortran mangling header
