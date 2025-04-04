@@ -151,7 +151,7 @@ contains
 
   ! electdiis
   !-------------------------------------------------------
-  ! 11/02/2010 Yipu Miao: Add paralle option for HF calculation
+  ! 11/02/2010 Yipu Miao: Add parallel option for HF calculation
   subroutine electdiis(jscf,ierr)
      use allmod
      use quick_gridpoints_module
@@ -176,9 +176,11 @@ contains
      use mpi_f08
 #endif
      implicit none
-  
+ 
+     integer :: fail
+ 
      ! variable inputed to return
-     integer :: jscf                ! scf interation
+     integer :: jscf                ! scf iteration
      integer, intent(inout) :: ierr
   
      logical :: diisdone = .false.  ! flag to indicate if diis is done
@@ -191,7 +193,7 @@ contains
      double precision :: Sum2Mat,rms
      integer :: I,J,K,L,IERROR
   
-     double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
+     double precision :: oldEnergy=0.0d0,E1e ! energy for last iteration, and 1e-energy
      double precision :: PRMS,PCHANGE, tmp
 
      double precision :: c_coords(3),c_zeta,c_chg
@@ -261,7 +263,17 @@ contains
      if (bMPI) call MPI_setup_hfoperator
      !-------------- END MPI / ALL NODE -----------
 #endif
-  
+        if(quick_method%readden)then
+          nbasis = quick_molspec%nbasis
+          if(master)then
+            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
+            rewind(iDataFile)
+            call rchk_int(iDataFile, "nbasis", nbasis, fail)
+            call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+            close(iDataFile)
+          endif
+        endif
+ 
 #ifdef MPIV
      if (bMPI) then
   !      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -368,7 +380,7 @@ contains
            !-----------------------------------------------
            ! The matrix multiplier comes from Steve Dixon. It calculates
            ! C = Transpose(A) B.  Thus to utilize this we have to make sure that the
-           ! A matrix is symetric. First, calculate DENSE*S and store in the scratch
+           ! A matrix is symmetric. First, calculate DENSE*S and store in the scratch
            ! matrix hold.Then calculate O*(DENSE*S).  As the operator matrix is symmetric, the
            ! above code can be used. Store this (the ODS term) in the all error
            ! matrix.
@@ -706,7 +718,15 @@ contains
         !--------------- END MPI/ALL NODES -------------------------------------
   
         if (master) then
-  
+
+           if(quick_method%writeden)then 
+             ! open data file then write calculated info to dat file
+             call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
+             call wchk_int(iDataFile, "nbasis", nbasis, fail)
+             call wchk_darray(iDataFile, "dense",    nbasis, nbasis, 1, quick_qm_struct%dense,    fail)
+             close(iDataFile)
+           endif 
+
 #ifdef USEDAT
            ! open data file then write calculated info to dat file
            SAFE_CALL(quick_open(iDataFile, dataFileName, 'R', 'U', 'R',.true.,ierr)

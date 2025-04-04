@@ -24,116 +24,88 @@
 
     program quick
 
-    use allMod
     use divPB_Private, only: initialize_DivPBVars
     use quick_cutoff_module, only: schwarzoff
     use quick_exception_module
     use quick_eri_cshell_module, only: getEriPrecomputables
     use quick_grad_cshell_module, only: cshell_gradient
     use quick_grad_oshell_module, only: oshell_gradient
+    use quick_oeproperties_module, only: compute_oeprop
     use quick_optimizer_module
     use quick_sad_guess_module, only: getSadGuess
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
          exportMO, exportSCF, exportOPT
+    use quick_timer_module, only : timer_end, timer_cumer, timer_begin
+    use quick_method_module, only : quick_method
+    use quick_files_module, only: ioutfile, outFileName, iDataFile, dataFileName
+    use quick_mpi_module, only: master, bMPI, print_quick_mpi, mpirank
+    use quick_molspec_module, only: quick_molspec, natom, alloc
+    use quick_files_module, only: write_molden, set_quick_files, print_quick_io_file
+    use quick_molsurface_module, only: generate_MKS_surfaces
 #ifdef MPIV
     use mpi_f08
 #endif
-    implicit none
-
-#if defined(GPU)
-    integer :: gpu_device_id = -1
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+    use quick_basis_module, only: quick_basis, aexp, cutprim, dcoeff, itype
+    use quick_basis_module, only: jbasis, jshell, maxcontract, nbasis, ncontract
+    use quick_basis_module, only: nprim, nshell, Ycutoff
+    use quick_molspec_module, only : xyz
+    use quick_method_module, only: delete, upload
 #endif
 
-    integer*4 :: iarg
-    character(80) :: arg
+#if defined CUDA_MPIV || defined HIP_MPIV
+    use quick_mpi_module, only: mpisize, mgpu_id, mgpu_ids
+#endif
+
+    implicit none
+
+    integer :: fail
     logical :: failed = .false.         ! flag to indicates SCF fail or OPT fail
     integer :: ierr                     ! return error info
     integer :: i,j,k
-    double precision t1_t, t2_t
+    double precision :: t1_t, t2_t
     common /timer/ t1_t, t2_t
+
     !------------------------------------------------------------------
     ! 1. The first thing that must be done is to initialize and prepare files
     !------------------------------------------------------------------
-    ! Initial neccessary variables
-    ierr=0
+    ierr = 0
     SAFE_CALL(initialize1(ierr))
-    !-------------------MPI/MASTER---------------------------------------
+
     masterwork_readInput: if (master) then
-
-      ! read input argument
-      call set_quick_files(.false.,ierr)    ! from quick_file_module
+      call set_quick_files(.false., ierr)
       CHECK_ERROR(ierr)
 
-      ! open output file
-      call quick_open(iOutFile,outFileName,'U','F','R',.false.,ierr)
+      call quick_open(iOutFile, outFileName, 'U', 'F', 'R', .false., ierr)
       CHECK_ERROR(ierr)
 
-      ! At the beginning of output file, copyright information will be output first
       SAFE_CALL(outputCopyright(iOutFile,ierr))
 
-      ! Then output file information
-      SAFE_CALL(PrtDate(iOutFile,'TASK STARTS ON:',ierr))
-      call print_quick_io_file(iOutFile,ierr) ! from quick_file_module
+      SAFE_CALL(PrtDate(iOutFile, 'TASK STARTS ON:', ierr))
+      call print_quick_io_file(iOutFile, ierr)
 
-      ! check MPI setup and output info
-      !call check_quick_mpi(iOutFile,ierr)   ! from quick_mpi_module
+      !call check_quick_mpi(iOutFile, ierr)
 
 #ifdef MPIV
-      if (bMPI) call print_quick_mpi(iOutFile,ierr)   ! from quick_mpi_module
+      if (bMPI) call print_quick_mpi(iOutFile, ierr)
 #endif
-
     endif masterwork_readInput
-    !--------------------End MPI/MASTER----------------------------------
 
 #if defined(GPU)
-
-    ! startup GPU device
-    SAFE_CALL(gpu_startup(ierr))
-#ifdef __PGI
-    iarg = COMMAND_ARGUMENT_COUNT()
-#else
-    iarg = iargc()
-#endif
-
-    SAFE_CALL(gpu_set_device(-1, ierr))
-
-    ! Handles an old mechanism where the user can specify GPU id from CLI
-    if (iarg .ne. 0) then
-        do i = 1, iarg
-            call getarg(int(i,4), arg)
-            if (arg.eq."-gpu") then
-                call getarg (int(i+1,4), arg)
-                read(arg, '(I2)') gpu_device_id
-                SAFE_CALL(gpu_set_device(gpu_device_id, ierr))
-                write(*,*) "read -gpu from argument=",gpu_device_id
-                exit
-            endif
-        enddo
-    endif
-
-    SAFE_CALL(gpu_init(ierr))
-
-    ! write GPU information
+    SAFE_CALL(gpu_new(ierr))
+    SAFE_CALL(gpu_init_device(ierr))
     SAFE_CALL(gpu_write_info(iOutFile, ierr))
-#endif
-
-#if defined(MPIV_GPU)
-
-    SAFE_CALL(mgpu_query(mpisize ,mpirank, mgpu_id, ierr))
-
+#elif defined(MPIV_GPU)
+    SAFE_CALL(gpu_new(mpirank, ierr))
+    SAFE_CALL(mgpu_query(mpisize, mpirank, mgpu_id, ierr))
     SAFE_CALL(mgpu_setup(ierr))
-
-    if(master) SAFE_CALL(mgpu_write_info(iOutFile, mpisize, mgpu_ids, ierr))
-    
-    SAFE_CALL(mgpu_init(mpirank, mpisize, mgpu_id, ierr))
-
+    if (master) SAFE_CALL(mgpu_write_info(iOutFile, mpisize, mgpu_ids, ierr))
+    SAFE_CALL(mgpu_init_device(mpirank, mpisize, mgpu_id, ierr))
 #endif
-
 
     !------------------------------------------------------------------
     ! 2. Next step is to read job and initial guess
     !------------------------------------------------------------------
-
     !read job spec and mol spec
     call read_Job_and_Atom(ierr)
     !allocate essential variables
@@ -164,9 +136,7 @@
     SAFE_CALL(getMol(ierr))
 
 #if defined(GPU) || defined(MPIV_GPU)
-
     call gpu_allocate_scratch(quick_method%grad .or. quick_method%opt)
-
     call upload(quick_method, ierr)
 
     if(.not.quick_method%opt)then
@@ -182,7 +152,6 @@
     if(write_molden .and. master) then
        call initializeExport(quick_molden, ierr)
     endif
-
     
     !------------------------------------------------------------------
     ! 4. SCF single point calculation. DFT if wanted. If it is OPT job
@@ -190,7 +159,7 @@
     !-----------------------------------------------------------------
 
     ! if it is div&con method, begin fragmetation step, initial and setup
-    ! div&con varibles
+    ! div&con variables
     !if (quick_method%DIVCON) call inidivcon(quick_molspec%natom)
 
     ! if it is not opt job, begin single point calculation
@@ -208,20 +177,17 @@
     endif
 
 #if defined(GPU) || defined(MPIV_GPU)
-    if(.not.quick_method%opt)then
+    if (.not.quick_method%opt) then
       call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
-      ncontract, itype, aexp, dcoeff, &
-      quick_basis%first_basis_function, quick_basis%last_basis_function, &
-      quick_basis%first_shell_basis_function, quick_basis%last_shell_basis_function, &
-      quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &
-      quick_basis%ktype, quick_basis%kprim, quick_basis%kshell,quick_basis%Ksumtype, &
-      quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal, quick_basis%Qsbasis, quick_basis%Qfbasis, &
-      quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
- 
+        ncontract, itype, aexp, dcoeff, &
+        quick_basis%first_basis_function, quick_basis%last_basis_function, &
+        quick_basis%first_shell_basis_function, quick_basis%last_shell_basis_function, &
+        quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &
+        quick_basis%ktype, quick_basis%kprim, quick_basis%kshell,quick_basis%Ksumtype, &
+        quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal, quick_basis%Qsbasis, quick_basis%Qfbasis, &
+        quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
       call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
-
       call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
-
     endif
 #endif
 
@@ -237,27 +203,50 @@
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         SAFE_CALL(getEnergy(.false.,ierr))
-        
+        ! One electron properties (ESP, EField)
+
+        !call generate_MKS_surfaces()
+
+        call compute_oeprop()
+
+        if(master) then
+          if(quick_method%writexyz)then
+            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
+            call wchk_int(iDataFile, "natom", natom, fail)
+            call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+            call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
+            close(iDataFile)
+          endif 
+        endif
+
     endif
 
     !------------------------------------------------------------------
     ! 5. OPT Geometry if wanted
     !-----------------------------------------------------------------
-
     ! Geometry optimization. Currently, only cartesian version is
     ! available. A improvement is in optimzenew, which is based on
     ! internal coordinates, but is under coding.
     if (quick_method%opt) then
         if (quick_method%usedlfind) then
-
 #ifdef MPIV
             SAFE_CALL(dl_find(ierr, master))   ! DLC
 #else
             SAFE_CALL(dl_find(ierr, .true.)) 
 #endif
-
         else
             SAFE_CALL(lopt(ierr))         ! Cartesian
+        endif
+
+        if(master) then
+          if(quick_method%writexyz)then
+            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
+            call wchk_int(iDataFile, "natom", natom, fail)
+            call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+            call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
+            close(iDataFile)
+            close(iDataFile)
+          endif 
         endif
     endif
     
@@ -267,6 +256,10 @@
         else
             SAFE_CALL(cshell_gradient(ierr))
         endif
+
+        ! One electron properties (ESP, EField) 
+        call compute_oeprop()
+
     endif
 
     ! Now at this point we have an energy and a geometry.  If this is
@@ -283,12 +276,9 @@
        end if
     endif
 
-
-
     !------------------------------------------------------------------
     ! 6. Other job options
     !-----------------------------------------------------------------
-
     ! 6.a PB Solvent Model
     ! 11/03/2010 Blocked by Yiao Miao
 !   if (PBSOL) then
@@ -324,7 +314,6 @@
     ! 6.d clean spin for unrestricted calculation
     ! If this is an unrestricted calculation, check out the S^2 value to
     ! see if this is a reasonable wave function.  If not, modify it.
-
 !    if (quick_method%unrst) then
 !        if (quick_method%debug) call debugCleanSpin
 !        if (quick_method%unrst) call spinclean
@@ -332,15 +321,12 @@
 !    endif
 
     if (master) then
-
         ! Convert Cartesian coordinator to internal coordinator
         if (quick_method%zmat) call zmake
 
         ! Calculate Dipole Moment
         if (quick_method%dipole) call dipole
-
     endif
-
     ! Now at this point we have an energy and a geometry.  If this is
     ! an optimization job, we now have the optimized geometry.
 
@@ -348,23 +334,12 @@
     ! 7.The final job is to output energy and many other infos
     !-----------------------------------------------------------------
 #if defined(GPU) || defined(MPIV_GPU)
-    call delete(quick_method,ierr)
-#endif
-
-#if defined(GPU) || defined(MPIV_GPU)
-  call gpu_deallocate_scratch(quick_method%grad .or. quick_method%opt)
-#endif
-
-
-#if defined(GPU)
-    if (master) then
-       SAFE_CALL(gpu_shutdown(ierr))
-    endif
-#endif
-
+    call delete(quick_method, ierr)
+    call gpu_deallocate_scratch(quick_method%grad .or. quick_method%opt)
 #if defined(MPIV_GPU)
     SAFE_CALL(delete_mgpu_setup(ierr))
-    SAFE_CALL(mgpu_shutdown(ierr))
+#endif
+    SAFE_CALL(gpu_delete(ierr))
 #endif
 
     call finalize(iOutFile,ierr,0)

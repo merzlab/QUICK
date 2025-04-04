@@ -44,10 +44,9 @@ contains
   
   subroutine compute_lri_numgrad( c_coords, c_zeta, c_chg, c_idx )
     use quick_lri_module, only : computeLRI
-    
     use quick_basis_module
     use quick_method_module
-    use quick_molspec_module
+    use quick_molspec_module, only: xyz, natom
     use quick_params_module
     use quick_scratch_module
     use quick_calculated_module
@@ -212,7 +211,7 @@ contains
 
     use quick_basis_module
     use quick_method_module
-    use quick_molspec_module
+    use quick_molspec_module, only: xyz
     use quick_params_module
     use quick_scratch_module
 
@@ -452,19 +451,17 @@ contains
 
   end subroutine compute_long_range_integral_grad
 
+  !----------------------------------------------------------------------!
+  ! This subroutine computes contracted 3 center integrals by calling    !
+  ! the appropriate subroutine and adds the integral contributions into  !
+  ! gradient vector.                                                     !
+  !______________________________________________________________________!
   subroutine iclass_lri_grad(I,J,K,L,II,JJ,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
-
-    !----------------------------------------------------------------------!
-    ! This subroutine computes contracted 3 center integrals by calling    !
-    ! the appropriate subroutine and adds the integral contributions into  !
-    ! gradient vector.                                                     !
-    !______________________________________________________________________!
-
     use quick_basis_module
     use quick_constants_module
     use quick_method_module
-    use quick_molspec_module
     use quick_calculated_module
+    use quick_molspec_module, only: natom
     use quick_scratch_module
 !    use quick_lri_module, only : angrenorm
 

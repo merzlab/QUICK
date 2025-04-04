@@ -45,6 +45,7 @@ static __constant__ int Sumindex[10] = {0, 0, 1, 4, 10, 20, 35, 56, 84, 120};
 #include "gpu_oei_grad_assembler.h"
 #include "gpu_oei_grad.h"
 
+
 /*
    upload trans array to constant memory
  */

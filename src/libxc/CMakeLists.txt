@@ -111,8 +111,11 @@ set(LIBXC_FORTRAN_SOURCES
 	libxc_funcs.f90
 	libxc.f90)
 
-set(LIBXC_GPU_SOURCES
-	gpu.c)
+if(CUDA)
+	set(LIBXC_GPU_SOURCES gpu.c ../gpu/cuda/gpu_utils.cu)
+elseif(HIP)
+	set(LIBXC_GPU_SOURCES gpu.c ../gpu/hip/gpu_utils.cu)
+endif()
 
 # -------------------------------------------------------------
 # enable optimization

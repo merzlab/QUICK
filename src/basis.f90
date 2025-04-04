@@ -873,8 +873,12 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
 
    if(.not. allocated(aexp)) allocate(aexp(maxcontract,nbasis))
 
+   aexp = 0.0d0
+
    if(.not. allocated(dcoeff)) allocate(dcoeff(maxcontract,nbasis))
    if(.not. allocated(gauss)) allocate(gauss(nbasis))
+
+   dcoeff = 0.0d0
 
    !======== MPI/MASTER ====================
    masterwork_setup: if(master) then

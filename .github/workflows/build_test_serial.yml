@@ -98,14 +98,17 @@ jobs:
           parallel --version
       - name: 'Setup Environment Variables for Building and Running Tests'
         run: |
-          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
+          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib/serial:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib/serial:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
           echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
       - name: 'Configure Serial Version'
         run: |
-          ./configure --serial --enablef --prefix $PWD/install \
+          ./configure --serial --enablef --shared --verbose --prefix $PWD/install \
             ${{ matrix.compiler-type }}
       - name: 'Build and Install Serial Version Using 2 Jobs'
         run: |
@@ -255,7 +258,10 @@ jobs:
       - name: 'Linux: Setup Environment Variables for Building and Running Tests'
         if: runner.os == 'Linux'
         run: |
-          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
+          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
           echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
@@ -272,7 +278,10 @@ jobs:
       - name: 'MacOS: Setup Environment Variables for Building and Running Tests'
         if: runner.os == 'macOS'
         run: |
-          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
+          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
           echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
@@ -383,7 +392,7 @@ jobs:
             source /opt/intel/oneapi/setvars.sh
             cmake .. -DCOMPILER=${{ matrix.compiler-type }} \
               -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install \
-              -DMKL_HOME=$MKLROOT -DMKL_MULTI_THREADED=FALSE
+              -DMKL_HOME=$MKLROOT -DMKL_MULTI_THREADED=FALSE -DTRUST_SYSTEM_LIBS=TRUE
           else
             cmake .. -DCOMPILER=${{ matrix.compiler-type }} \
               -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install
@@ -394,7 +403,7 @@ jobs:
             source /opt/intel/oneapi/setvars.sh
           fi
           cd build
-          cmake --build . --parallel 2
+          cmake --build . --parallel 2 --verbose
           cmake --install .
       - name: 'Run Tests for Serial Version'
         run: |
