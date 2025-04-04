@@ -79,7 +79,7 @@ module quick_molsurface_module
 
     implicit none
 
-    double precision :: surface_points(3,int(natom*500/quick_method%espgrid_spacing))
+    double precision,allocatable :: surface_points(:,:)
     double precision :: scaling_factors(4)
     data scaling_factors/1.4d0,1.6d0,1.8d0,2.0d0/
     integer :: npoints, total_points
@@ -89,9 +89,12 @@ module quick_molsurface_module
 
     RECORD_TIME(timer_begin%TESPsurface)
 
+    allocate(surface_points(3,int(natom*500/quick_method%espgrid_spacing)))
+
     max_points = int(natom*200/(quick_method%espgrid_spacing)**2)
 
     allocate(xyz_points(3,max_points))
+
     ! temporary array to facilitate reallocation
     allocate(temp(1,1))
 
@@ -129,6 +132,8 @@ module quick_molsurface_module
 
       deallocate(xyz_points)
       deallocate(temp)
+      deallocate(surface_points)
+
 
       RECORD_TIME(timer_end%TESPsurface)
       timer_cumer%TESPsurface=timer_cumer%TESPsurface+timer_end%TESPsurface-timer_begin%TESPsurface
@@ -151,9 +156,11 @@ module quick_molsurface_module
     double precision :: scale_factor,espgrid_spacing
     double precision :: start_theta,delta_theta,rcircle,radius,theta,delta_phi
     double precision :: Bondi_vdw_radii(118), Tkatchenko_vdw_radii(118)
-    integer :: Bondi_atom_list(38), neighbor_list(natom), start_index(natom), end_index(natom)
-    double precision :: atomic_vdw_radii(natom),xyz_sphere(3,4000)
-    double precision, intent(out) :: surface_points(3,natom*2000)
+    integer :: Bondi_atom_list(38)
+    integer, allocatable :: neighbor_list(:), start_index(:), end_index(:)
+    double precision :: xyz_sphere(3,4000)
+    double precision,allocatable :: atomic_vdw_radii(:)
+    double precision, intent(out) :: surface_points(:,:)
     double precision :: thresh
     logical :: proximal
     data Bondi_vdw_radii/ &
@@ -177,6 +184,12 @@ module quick_molsurface_module
     2.77d0,2.70d0,2.77d0,2.71d0,2.71d0,2.75d0,2.69d0,2.68d0,2.67d0,2.66d0,2.64d0,2.64d0,3.08d0,2.65d0,2.30d0,2.29d0,2.27d0,2.25d0, &
     2.24d0,2.22d0,2.22d0,2.17d0,2.19d0,2.21d0,2.48d0,0.0d0,2.51d0,2.41d0/
     data Bondi_atom_list/1,2,3,6,7,8,9,10,11,12,14,15,16,17,18,19,28,29,30,31,33,34,35,36,46,47,48,49,50,52,53,54,78,79,80,81,82,92/
+
+    allocate(neighbor_list(natom))
+    allocate(start_index(natom))
+    allocate(end_index(natom))
+    allocate(atomic_vdw_radii(natom))
+!    allocate(surface_points(3,natom*2000))
 
     ! grid size must be converted to atomic unit
     espgrid_spacing = quick_method%espgrid_spacing/BOHRS_TO_A
@@ -288,6 +301,12 @@ module quick_molsurface_module
         end_index(i) = npoints
       end if
     end do
+
+    deallocate(neighbor_list)
+    deallocate(start_index)
+    deallocate(end_index)
+    deallocate(atomic_vdw_radii)
+!    deallocate(surface_points)
 
   end subroutine generate_vdW_surface
 

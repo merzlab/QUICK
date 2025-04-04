@@ -75,10 +75,11 @@ module quick_oeproperties_module
 
    implicit none
    integer :: ierr, npoints
-   double precision :: xyz_points(3,npoints)
    double precision, allocatable :: esp_on_points(:)
+   double precision, intent(in) :: xyz_points(:,:)
 
    allocate(esp_on_points(npoints))
+!   allocate(xyz_points(3,npoints))
 
    ierr = 0
 
@@ -119,6 +120,7 @@ module quick_oeproperties_module
    end if
 
    deallocate(esp_on_points)
+!   deallocate(xyz_points)
 
  end Subroutine
 
@@ -168,10 +170,9 @@ module quick_oeproperties_module
    integer :: IIsh, JJsh
    integer :: igridpoint, npoints
 
-   double precision :: xyz_points(3,npoints), esp(npoints)
-
-   double precision, allocatable :: esp_electronic(:)
-   double precision, allocatable :: esp_nuclear(:)
+   double precision, allocatable :: esp_electronic(:),esp_nuclear(:)
+   double precision, intent(in)  :: xyz_points(:,:)
+   double precision, intent(out) :: esp(:)
 #ifdef MPIV
    double precision, allocatable :: esp_electronic_aggregate(:)
 #endif
@@ -182,6 +183,8 @@ module quick_oeproperties_module
    ! Allocates ESP_NUC and ESP_ELEC arrays
    allocate(esp_nuclear(npoints))
    allocate(esp_electronic(npoints))
+!   allocate(xyz_points(3,npoints))
+!   allocate(esp(npoints))
 #ifdef MPIV
    allocate(esp_electronic_aggregate(npoints))
 #endif
@@ -243,6 +246,10 @@ module quick_oeproperties_module
 #ifdef MPIV
    deallocate(esp_electronic_aggregate)
 #endif
+
+!   deallocate(xyz_points)
+!   deallocate(esp)
+
  end subroutine compute_esp
 
 !----------------------------------------------------------!
@@ -269,29 +276,44 @@ module quick_oeproperties_module
 
    integer, allocatable :: IPIV(:)
    integer :: iatom, jatom, igridpoint, npoints, ierr, NB, LWORK, LDA
-   double precision, intent(in) :: esp(npoints), xyz_points(3,npoints)
+   double precision, intent(in) :: esp(:), xyz_points(:,:)
    double precision, allocatable :: WORK(:)
-   double precision :: A(natom+1,natom+1), B(natom+1), q(natom+1)
+   double precision, allocatable :: A(:,:), B(:), q(:)
    double precision :: distance, distanceb, invdistance, Net_charge
 
-   double precision :: One = 1.0d0, Zero = 0.0d0
+   double precision :: One, Zero
+
+   data One/1.0d0/, Zero/0.0d0/
+
+!   allocate(esp(npoints))
+!   allocate(xyz_points(3,npoints))
+
+   allocate(A(natom+1,natom+1))
+   allocate(B(natom+1))
+   allocate(q(natom+1))
 
 !  A and B are initialized. A(natom+1,natom+1) is set to a small number
 !  instead of zero to facilitate diagonalization of A.
 
-   do iatom = 1, natom
-     B(iatom) = 0
-     do jatom = 1, natom
-       A(jatom,iatom) = 0
-     end do
-   end do
+   B = Zero
+!   q = Zero
+   A = Zero
+
+!   do iatom = 1, natom
+!     B(iatom) = Zero
+!     q(iatom) = Zero
+!     do jatom = 1, natom
+!       A(jatom,iatom) = Zero
+!     end do
+!   end do
 
    B(natom+1) = quick_molspec%molchg
+!   q(natom+1) = Zero
 
-   do jatom = 1, natom
-     A(jatom,natom+1) = 1
-   end do
-   A(natom+1,natom+1) = 0
+!   do jatom = 1, natom
+     A(:,natom+1) = One
+!   end do
+   A(natom+1,natom+1) = Zero
 
 ! The matrix A and vector B is formed.
 
@@ -329,6 +351,9 @@ module quick_oeproperties_module
 
 !  q = A-1*B
 
+   deallocate(IPIV)
+   deallocate(WORK)
+
 #if defined CUDA
    call CUBLAS_DGEMV('N',natom+1,natom+1,One,A,LDA,B,1,Zero,q,1)
 #else
@@ -337,7 +362,7 @@ module quick_oeproperties_module
 
 !  B is copied to charge array.
 
-   Net_charge = 0.d0
+   Net_charge = Zero
 
    write (ioutfile,'("  ESP charges:")')
    write (ioutfile,'("  ----------------")')
@@ -348,6 +373,13 @@ module quick_oeproperties_module
    write (ioutfile,'("  ----------------")')
    write (ioutfile,'("  Net charge = ",F10.6)')Net_charge
    write (ioutfile,'("  ")')
+
+!   deallocate(esp)
+!   deallocate(xyz_points)
+
+   deallocate(A)
+   deallocate(B)
+   deallocate(q)
 
  end subroutine compute_ESP_charge
 
@@ -366,11 +398,13 @@ module quick_oeproperties_module
    integer, intent(in) :: iESPFile
    character :: espFileName*(*)
 
-   double precision :: xyz_points(3,npoints)
-   double precision :: esp(npoints)
+   double precision, intent(in) :: xyz_points(:,:), esp(:)
 
    integer :: igridpoint
    double precision :: Cx, Cy, Cz
+
+!   allocate(xyz_points(3,npoints))
+!   allocate(esp(npoints))
 
    if (iESPFile.eq.iVdwSurfFile)then
      quick_method%extgrid_angstrom = .True.
@@ -419,6 +453,10 @@ module quick_oeproperties_module
      endif
      write(iESPFile, '(2x,3(F14.10, 1x), 3F14.10)') Cx, Cy, Cz, esp(igridpoint)
    end do
+
+!   deallocate(xyz_points)
+!   deallocate(esp)
+
  end subroutine print_esp
 
  !-----------------------------------------------------------------------!
@@ -429,12 +467,15 @@ module quick_oeproperties_module
 
    implicit none
    integer, intent(in) :: npoints
-   double precision, intent(in) :: xyz_points(3,npoints)
-   double precision, intent(out) :: esp_nuclear(npoints)
+   double precision, intent(in)  :: xyz_points(:,:)
+   double precision, intent(out) :: esp_nuclear(:)
 
    double precision :: distance
    double precision, external :: rootSquare
    integer :: inucleus, igridpoint
+
+!   allocate(xyz_points(3,npoints))
+!   allocate(esp_nuclear(npoints))
 
    do igridpoint = 1, npoints
      esp_nuclear(igridpoint) = 0.d0
@@ -448,6 +489,10 @@ module quick_oeproperties_module
        endif
      enddo
    enddo
+
+!   deallocate(xyz_points)
+!   deallocate(esp_nuclear)
+
  end subroutine esp_nuc
 
 
@@ -603,10 +648,13 @@ subroutine print_efield(efield_nuclear, efield_electronic, nextpoint)
   implicit none
   integer, intent(in) :: nextpoint
 
-  double precision :: efield_nuclear(3,nextpoint), efield_electronic(3,nextpoint)
+  double precision, intent(in) :: efield_nuclear(:,:), efield_electronic(:,:)
 
   integer :: igridpoint
   double precision :: Cx, Cy, Cz
+
+!  allocate(efield_nuclear(3,nextpoint))
+!  allocate(efield_electronic(3,nextpoint))
 
   ! If ESP_GRID is true, print to table X, Y, Z, V(r)
   write (ioutfile,'(" *** Printing Electric Field (EFIELD) &
@@ -637,6 +685,9 @@ subroutine print_efield(efield_nuclear, efield_electronic, nextpoint)
       (efield_nuclear(2,igridpoint)+efield_electronic(2,igridpoint)), &
       (efield_nuclear(3,igridpoint)+efield_electronic(3,igridpoint))
     endif
+
+!    deallocate(efield_nuclear)
+!    deallocate(efield_electronic)
 
   end do
 end subroutine print_efield
