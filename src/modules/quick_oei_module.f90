@@ -74,10 +74,10 @@ subroutine get1e(deltaO)
 #endif
 
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-   
    implicit double precision(a-h,o-z)
+
    double precision :: temp2d(nbasis,nbasis)
    logical, intent(in) :: deltaO
 

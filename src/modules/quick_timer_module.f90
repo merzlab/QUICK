@@ -10,13 +10,18 @@
 #include "util.fh"
 
 module quick_timer_module
+#ifdef MPIV
+    use mpi_f08
+#endif
     implicit none
 
-    integer TIMER_SIZE,TIMER_CUMER_SIZE
+#ifdef MPIV
+    integer, parameter :: TIMER_SIZE = 33 
+    integer, parameter :: TIMER_CUMER_SIZE = 36
 
     ! MPI timer data type
-    integer MPI_timer_cumer_type,MPI_timer_type
-    parameter(TIMER_SIZE=33,TIMER_CUMER_SIZE=36)
+    type(MPI_Datatype) :: MPI_timer_cumer_type, MPI_timer_type
+#endif
 
     !timer type
     type quick_timer
@@ -129,9 +134,10 @@ module quick_timer_module
         use quick_mpi_module
         use quick_method_module
 #ifdef MPIV
-        use mpi
+        use mpi_f08
 #endif
         implicit none
+
         integer i,IERROR,io
         double precision :: t_tot_dftop, t_tot_lb
         
@@ -473,16 +479,16 @@ module quick_timer_module
     subroutine mpi_setup_timer
 
         use quick_mpi_module
-        use mpi
+        use mpi_f08
         implicit none
 
         ! declaim mpi timer
         if (bMPI) then
-            call MPI_TYPE_CONTIGUOUS(TIMER_SIZE, mpi_double_precision,MPI_timer_type,mpierror)
-            call MPI_TYPE_COMMIT(MPI_timer_type,mpierror)
+            call MPI_TYPE_CONTIGUOUS(TIMER_SIZE, mpi_double_precision, MPI_timer_type, mpierror)
+            call MPI_TYPE_COMMIT(MPI_timer_type, mpierror)
 
-            call MPI_TYPE_CONTIGUOUS(TIMER_CUMER_SIZE, mpi_double_precision,MPI_timer_cumer_type,mpierror)
-            call MPI_TYPE_COMMIT(MPI_timer_cumer_type,mpierror)
+            call MPI_TYPE_CONTIGUOUS(TIMER_CUMER_SIZE, mpi_double_precision, MPI_timer_cumer_type, mpierror)
+            call MPI_TYPE_COMMIT(MPI_timer_cumer_type, mpierror)
         endif
 
     end subroutine mpi_setup_timer
@@ -491,8 +497,9 @@ module quick_timer_module
 #if defined(MPIV_GPU)
     subroutine get_mgpu_time
         use quick_mpi_module
-        use mpi
+        use mpi_f08
         implicit none
+
         integer :: IERROR
         double precision :: tsum_2elb, tsum_xclb, tsum_xcrb, tsum_xcpg
 
