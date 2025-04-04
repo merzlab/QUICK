@@ -515,11 +515,11 @@ extern "C" void gpu_delete_(int* ierr)
     status = cudaDeviceReset( );
     PRINTERROR(status, "cudaDeviceReset gpu_delete failed!");
 
+    PRINTDEBUGNS("END GPU DELETE");
+
 #if defined(DEBUG) || defined(DEBUGTIME)
     fclose(debugFile);
 #endif
-
-    PRINTDEBUGNS("END GPU DELETE");
 }
 
 

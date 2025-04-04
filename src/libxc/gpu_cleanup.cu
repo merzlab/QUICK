@@ -16,7 +16,9 @@ void gpu_libxc_cleanup(gpu_libxc_info* d_glinfo)
     h_glinfo = (gpu_libxc_info *) malloc(sizeof(gpu_libxc_info));
     gpuMemcpy(h_glinfo, d_glinfo, sizeof(gpu_libxc_info), gpuMemcpyDeviceToHost);
 
-    gpuFree(h_glinfo->d_maple2c_params);
+    if (h_glinfo->d_maple2c_params != NULL) {
+        gpuFree(h_glinfo->d_maple2c_params);
+    }
     gpuFree(h_glinfo->d_gdm);
     gpuFree(h_glinfo->d_ds);
     gpuFree(h_glinfo->d_rhoLDA);

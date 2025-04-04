@@ -874,8 +874,8 @@ fi
 #  ! Create essential build directories                                  !
 #  !---------------------------------------------------------------------!
 
-if [ ! -d "$QUICK_HOME/bin" ]; then
-  mkdir -p "$QUICK_HOME/bin"
+if [ ! -d "$QUICK_HOME/build/bin" ]; then
+  mkdir -p "$QUICK_HOME/build/bin"
 fi
 
 for buildtype in $buildtypes; do
@@ -1256,7 +1256,7 @@ if [ "$shared" = 'yes' ]; then
   lib_flags='-fPIC'
   cuda_lib_flags="--compiler-options '-fPIC'"
   arch="$fort"
-  arch_flags='-shared -o'
+  arch_flags='-fPIC -shared -o'
   ranlib='echo'
   libext='so'
 
@@ -1559,17 +1559,17 @@ lapackfolder=$QUICK_HOME/src/lapack
 libxcfolder=$QUICK_HOME/src/libxc
 dlfindfolder=$QUICK_HOME/src/dlfind
 dftd3folder=$QUICK_HOME/src/dftd3
-cudafolder=$QUICK_HOME/src/cuda
-cublasfolder=$QUICK_HOME/src/cuda/cublas
-cusolverfolder=$QUICK_HOME/src/cuda/cusolver
-hipfolder=$QUICK_HOME/src/hip
-rocblasfolder=$QUICK_HOME/src/hip/rocblas
-rocsolverfolder=$QUICK_HOME/src/hip/rocsolver
+cudafolder=$QUICK_HOME/src/gpu/cuda
+cublasfolder=$QUICK_HOME/src/gpu/cuda/cublas
+cusolverfolder=$QUICK_HOME/src/gpu/cuda/cusolver
+hipfolder=$QUICK_HOME/src/gpu/hip
+rocblasfolder=$QUICK_HOME/src/gpu/hip/rocblas
+rocsolverfolder=$QUICK_HOME/src/gpu/hip/rocsolver
 octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules
 
 # build directories
-exefolder=$QUICK_HOME/bin
+exefolder=$QUICK_HOME/build/bin
 objfolder=$QUICK_HOME/build/obj/$buildtype
 libxcobjfolder=$libxcobjfolder
 libxcdevobjfolder=$libxcdevobjfolder
@@ -1679,7 +1679,7 @@ TESTTYPE=$testtype
 #!---------------------------------------------------------------------!
 
 homefolder=$QUICK_HOME
-exefolder=$QUICK_HOME/bin
+exefolder=$QUICK_HOME/build/bin
 buildfolder=$QUICK_HOME/build
 toolsfolder=$QUICK_HOME/tools
 installfolder=$quick_prefix
@@ -1691,8 +1691,8 @@ lapackfolder=$QUICK_HOME/src/lapack
 libxcfolder=$QUICK_HOME/src/libxc
 dlfindfolder=$QUICK_HOME/src/dlfind
 dftd3folder=$QUICK_HOME/src/dftd3
-cudafolder=$QUICK_HOME/src/cuda
-hipfolder=$QUICK_HOME/src/hip
+cudafolder=$QUICK_HOME/src/gpu/cuda
+hipfolder=$QUICK_HOME/src/gpu/hip
 octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules
 
@@ -1732,6 +1732,7 @@ if [ "$buildtype" = 'serial' -o "$buildtype" = 'mpi' ]; then
 fi
 
 cat >> "$quick_prefix/quick.rc" << EOF
+export LIBRARY_PATH=$libpaths\$LIBRARY_PATH
 export LD_LIBRARY_PATH=$libpaths\$LD_LIBRARY_PATH
 EOF
 fi

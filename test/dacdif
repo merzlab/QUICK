@@ -14,8 +14,8 @@ dif_ext=dif
 usage()
 {
 cat << EOF
-Usage: $0 [-k] [-s] [-r relerr] [-a abserr] [-t {0,1,2,3,4,5,6,7,8}]  \
-          [-v] [-w] original_file new_files
+Usage: $0 [-a abserr] [-f] [-k] [-p {6,12}] [-r relerr] [-s]
+          [-t {0,1,2,3,4,5,6,7,8}] [-v] [-w] original_file new_files
 
 Description
        Strip irrelevant differences from all files and then diff
@@ -23,37 +23,40 @@ Description
        Note that the options should precede the arguments.
 
 Options
-       -k
-              keep the new_files and the temporary files; the default is
+       -a abserr 
+              ignore errors with absolute diffs less than abserr, e.g., 1.1e-4;
+              uses Nelson Beebe's ndiff program.  Ignored if "-r" is set.
+
+       -f     ignore failure (print "(ignored)" after "possible FAILURE:")
+
+       -k     keep the new_files and the temporary files; the default is
               to remove the new_files if the diff passes and to remove
               the temporary files.
 
-       -s
-              ignore the sign of floating point numbers.
+       -p n={6,12}
+              truncate floating point numbers to a precision of n digits, i.e.,
+              floating point numbers will have n digits after the decimal point.
+
+       -r relerr
+              ignore errors with relative diffs less than relerr, e.g., 1e-6;
+              uses Nelson Beebe's ndiff program.
+
+       -s     ignore the sign of floating point numbers.
 
        -t n={0,1,2,3,4,5,6,7,8}
               truncate the last n digits of floating point numbers.
 
-       -v
-              do not emit verbose messages that indicate the processing status.
+       -v     do not emit verbose messages that indicate the processing status.
 
-       -w
-              ignore whitespace.  Note that trailing whitespace and
+       -w     ignore whitespace.  Note that trailing whitespace and
               blank lines are removed regardless of this option.
-
-       -r <relerr>  Ignore errors with relative diffs less than <relerr>;
-              uses Nelson Beebe's ndiff program.
-
-       -a <abserr>  Ignore errors with absolute diffs less than <abserr>;
-              uses Nelson Beebe's ndiff program.  Ignored if "-r" is set.
-       -f     test is allowed to fail (print "(ignored)" after "possible FAILURE:")
 EOF
 
 exit 1;
 }
 
 # standardize command line options
-optionlist='kst:vwr:a:f'
+optionlist='a:fkp:r:st:vw'
 set -- `getopt "$optionlist" "$@"`
 
 # parse options
@@ -62,23 +65,25 @@ tmpdir="ddtmp."
 # To wit dacdif's usage in dhfr/Run.dhfr will create these temporary files:
 #ddtmp.mdout.dhfr
 #ddtmp.mdout.dhfr.save
+failmsg='possible FAILURE:'
 keep_files=''
 ignore_sign=''
 ignore_whitespace=''
+precision=''
 truncate=''
-failmsg='possible FAILURE:'
 verbose=$on
 while [ $# -gt 0 ]
 do
     case "$1" in
+        -a)    ndiffa=$on; shift; abserr=$1 ;;
+        -f)    failmsg="possible FAILURE: (ignored)";;
         -k)    keep_files=$on; ;;
+        -p)    precision=$on; shift; precision=$1 ;;
+        -r)    ndiff=$on; shift; relerr=$1 ;;
         -s)    ignore_sign=$on ;;
         -t)    truncate=$on; shift; digits=$1 ;;
         -v)    verbose='' ;;
         -w)    ignore_whitespace=$on ;;
-        -r)    ndiff=$on; shift; relerr=$1 ;;
-        -a)    ndiffa=$on; shift; abserr=$1 ;;
-        -f)    failmsg="possible FAILURE: (ignored)";;
         --)    shift; break ;;
         -*)    usage ;;
         *)     break ;;
@@ -109,8 +114,9 @@ done
 ##|  MDIN: gbin
 ##| Total time                 1.54 (100.0% of ALL  )
 #
-# Delete lines that contain VERSION
+# Delete these lines that contain version info:
 ##%VERSION  VERSION_STAMP = V0001.000  DATE = 08/06/01  11:44:33
+##    :programVersion = "20.0" ;
 #
 # Delete version lines for these programs:
 ##          Amber 16 PMEMD                              2016
@@ -164,6 +170,7 @@ do
     # see UNIX Power Tools, 2nd ed., p617.
     sed -e '\@^|@d' \
         -e '\@VERSION@d' \
+        -e '\@:programVersion@d' \
         -e '\@^          Amber .. SANDER@d' \
         -e '\@^          Amber .. PMEMD@d' \
         -e '\@^Welcome to acdoctor[. 0-9]*: @d' \
@@ -194,6 +201,21 @@ do
         mv $tmpdir$file $tmpdir$file.t
         sed -e 's@[-+]\([0-9][0-9]*\.[0-9]*\)@ \1@g' \
             $tmpdir$file.t > $tmpdir$file
+        if [ "$keep_files" != "$on" ]
+        then
+            /bin/rm $tmpdir$file.t
+        fi
+    fi
+    if [ -n "$precision" ]
+    then
+        mv $tmpdir$file $tmpdir$file.t
+        case "$precision" in
+            6)    sed -e 's@\([-+]\{0,1\}[0-9][0-9]*\.[0-9]\{6\}\)[0-9]*@\1@g' \
+                      $tmpdir$file.t > $tmpdir$file ;;
+           12)    sed -e 's@\([-+]\{0,1\}[0-9][0-9]*\.[0-9]\{12\}\)[0-9]*@\1@g' \
+                      $tmpdir$file.t > $tmpdir$file ;;
+            *)    usage ;;
+        esac
         if [ "$keep_files" != "$on" ]
         then
             /bin/rm $tmpdir$file.t
@@ -278,7 +300,7 @@ do
     else
         if [ "$ndiff" = "$on" ]
         then
-            #  $AMBERHOME/bin/ndiff -r $relerr $old $new > $path.$dif_ext
+            #  "$QUICK_HOME/bin/ndiff" -r $relerr $old $new > $path.$dif_ext
             awk -f "$QUICK_HOME/test/ndiff.awk" -v RELERR=$relerr \
                  $old $new > $path.$dif_ext
         elif [ "$ndiffa" = "$on" ]

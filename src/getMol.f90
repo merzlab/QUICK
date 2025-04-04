@@ -93,9 +93,9 @@ subroutine getMol(ierr)
 
    call alloc(quick_basis)
    call alloc(quick_qm_struct)
+   cutprim = 0.0d0
+   quick_basis%Xcoeff = 0.0d0
    call init(quick_qm_struct)
-
-
 
    !-----------MPI/MASTER------------------------
    if (master) then

@@ -20,48 +20,78 @@ jobs:
         include:
           - os: 'ubuntu-22.04'
             compiler-type: 'gnu'
+            mpi-type: 'OpenMPI'
             compiler-version: '10'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-10 g++-10 gfortran-10'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-22.04'
             compiler-type: 'gnu'
+            mpi-type: 'OpenMPI'
             compiler-version: '11'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-11 g++-11 gfortran-11'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'gnu'
+            mpi-type: 'OpenMPI'
             compiler-version: '12'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-12 g++-12 gfortran-12'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'gnu'
+            mpi-type: 'OpenMPI'
             compiler-version: '13'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-13 g++-13 gfortran-13'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'gnu'
+            mpi-type: 'OpenMPI'
             compiler-version: '14'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
+          - os: 'ubuntu-24.04'
+            compiler-type: 'gnu'
+            mpi-type: 'MPICH'
+            compiler-version: '14'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-14 g++-14 gfortran-14'
+            mpi-install: 'mpich libmpich-dev'
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'gnu'
+            mpi-type: 'OpenMPI'
             compiler-version: '14'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
+            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
+          - os: 'ubuntu-24.04-arm'
+            compiler-type: 'gnu'
+            mpi-type: 'MPICH'
+            compiler-version: '14'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-14 g++-14 gfortran-14'
+            mpi-install: 'mpich libmpich-dev'
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }} - MPI - Legacy - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
+    name: ${{ matrix.os }} - ${{ matrix.mpi-type }} - Legacy - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v4
@@ -69,8 +99,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get -y install ${{ matrix.compiler-install }} \
-            openmpi-bin openmpi-common libopenmpi-dev
+          sudo apt-get -y install ${{ matrix.compiler-install }} ${{ matrix.mpi-install }}
           which ${{ matrix.c-compiler }}-${{ matrix.compiler-version }}
           if [[ ${{ matrix.compiler-type }} == 'gnu' || ${{ matrix.compiler-type }} == 'clang' ]]; then
             sudo rm /usr/bin/${{ matrix.c-compiler }}
@@ -101,17 +130,26 @@ jobs:
           mpirun --version
       - name: 'Setup Environment Variables for Running Tests'
         run: |
-          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
+          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib/mpi:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib/mpi:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
           echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          if [[ ${{ matrix.mpi-type }} == 'OpenMPI' ]]; then
+            echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+            echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+            echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          elif [[ ${{ matrix.mpi-type }} == 'MPICH' ]]; then
+            echo "MPICH_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+            echo "MPICH_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+            echo "MPICH_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          fi
       - name: 'Configure MPI Version'
         run: |
-          ./configure --mpi --enablef --prefix $PWD/install \
+          ./configure --mpi --enablef --shared --verbose --prefix $PWD/install \
             ${{ matrix.compiler-type }}
       - name: 'Build and Install MPI Version Using 2 Jobs'
         run: |
@@ -123,14 +161,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mpi-legacy-configure-make-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: mpi-legacy-configure-make-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}-${{ matrix.mpi-type }}
           path: ${{ github.workspace }}/install/test/runs/mpi
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for MPI Version'
         uses: actions/download-artifact@v4
         with:
-          name: mpi-legacy-configure-make-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: mpi-legacy-configure-make-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}-${{ matrix.mpi-type }}
       - name: 'Display Artifacts'
         run: |
           ls -R
@@ -141,6 +179,7 @@ jobs:
         include:
           - os: 'ubuntu-22.04'
             compiler-type: 'GNU'
+            mpi-type: 'OpenMPI'
             compiler-version: '10'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
@@ -149,6 +188,7 @@ jobs:
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-22.04'
             compiler-type: 'GNU'
+            mpi-type: 'OpenMPI'
             compiler-version: '11'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
@@ -157,6 +197,7 @@ jobs:
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'GNU'
+            mpi-type: 'OpenMPI'
             compiler-version: '12'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
@@ -165,6 +206,7 @@ jobs:
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'GNU'
+            mpi-type: 'OpenMPI'
             compiler-version: '13'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
@@ -173,6 +215,7 @@ jobs:
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'GNU'
+            mpi-type: 'OpenMPI'
             compiler-version: '14'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
@@ -180,7 +223,17 @@ jobs:
             compiler-install: 'gcc-14 g++-14 gfortran-14'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04'
+            compiler-type: 'GNU'
+            mpi-type: 'MPICH'
+            compiler-version: '14'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-14 g++-14 gfortran-14'
+            mpi-install: 'mpich libmpich-dev'
+          - os: 'ubuntu-24.04'
             compiler-type: 'CLANG'
+            mpi-type: 'OpenMPI'
             compiler-version: '17'
             c-compiler: 'clang'
             cxx-compiler: 'clang++'
@@ -189,6 +242,7 @@ jobs:
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'CLANG'
+            mpi-type: 'OpenMPI'
             compiler-version: '18'
             c-compiler: 'clang'
             cxx-compiler: 'clang++'
@@ -197,6 +251,7 @@ jobs:
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'INTELLLVM'
+            mpi-type: 'Intel-MPI'
             compiler-version: '2024.2.1'
             c-compiler: 'mpiicx'
             cxx-compiler: 'mpiicpx'
@@ -205,6 +260,7 @@ jobs:
             mpi-install: ''
           - os: 'ubuntu-24.04'
             compiler-type: 'INTELLLVM'
+            mpi-type: 'Intel-MPI'
             compiler-version: '2025.0.1'
             c-compiler: 'mpiicx'
             cxx-compiler: 'mpiicpx'
@@ -213,6 +269,7 @@ jobs:
             mpi-install: ''
           - os: 'ubuntu-24.04'
             compiler-type: 'PGI'
+            mpi-type: 'OpenMPI'
             compiler-version: '25.1'
             c-compiler: 'pgcc'
             cxx-compiler: 'pgcc++'
@@ -221,6 +278,7 @@ jobs:
             mpi-install: ''
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'GNU'
+            mpi-type: 'OpenMPI'
             compiler-version: '14'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
@@ -228,7 +286,17 @@ jobs:
             compiler-install: 'gcc-14 g++-14 gfortran-14'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'ubuntu-24.04-arm'
+            compiler-type: 'GNU'
+            mpi-type: 'MPICH'
+            compiler-version: '14'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc-14 g++-14 gfortran-14'
+            mpi-install: 'mpich libmpich-dev'
+          - os: 'ubuntu-24.04-arm'
             compiler-type: 'CLANG'
+            mpi-type: 'OpenMPI'
             compiler-version: '18'
             c-compiler: 'clang'
             cxx-compiler: 'clang++'
@@ -237,6 +305,7 @@ jobs:
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'macos-13'
             compiler-type: 'GNU'
+            mpi-type: 'OpenMPI'
             compiler-version: '14'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
@@ -245,6 +314,7 @@ jobs:
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'macos-13'
             compiler-type: 'CLANG'
+            mpi-type: 'OpenMPI'
             compiler-version: '15'
             fortran-compiler-version: '14'
             c-compiler: 'clang'
@@ -254,6 +324,7 @@ jobs:
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'macos-14'
             compiler-type: 'GNU'
+            mpi-type: 'OpenMPI'
             compiler-version: '14'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
@@ -262,6 +333,7 @@ jobs:
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'macos-14'
             compiler-type: 'CLANG'
+            mpi-type: 'OpenMPI'
             compiler-version: '15'
             fortran-compiler-version: '14'
             c-compiler: 'clang'
@@ -270,21 +342,30 @@ jobs:
             compiler-install: 'llvm@15 gcc@14'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }} - MPI - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
+    name: ${{ matrix.os }} - ${{ matrix.mpi-type }} - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v4
       - name: 'Linux: Setup Environment Variables for Building and Running Tests'
         if: runner.os == 'Linux'
         run: |
-          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
+          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
           echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          if [[ ${{ matrix.mpi-type }} == 'OpenMPI' ]]; then
+            echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+            echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+            echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          elif [[ ${{ matrix.mpi-type }} == 'MPICH' ]]; then
+            echo "MPICH_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+            echo "MPICH_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+            echo "MPICH_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          fi
           if [ ${{ matrix.compiler-type }} == 'PGI' ]; then
             echo PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/comm_libs/mpi/bin:$PATH >> "$GITHUB_ENV"
             echo INCLUDE_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH >> "$GITHUB_ENV"
@@ -297,14 +378,23 @@ jobs:
       - name: 'MacOS: Setup Environment Variables for Building and Running Tests'
         if: runner.os == 'macOS'
         run: |
-          echo "QUICK_HOME=$PWD/install" >> "$GITHUB_ENV"
+          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
+          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
           echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-          echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          if [[ ${{ matrix.mpi-type }} == 'OpenMPI' ]]; then
+            echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+            echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+            echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          elif [[ ${{ matrix.mpi-type }} == 'MPICH' ]]; then
+            echo "MPICH_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+            echo "MPICH_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+            echo "MPICH_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          fi
           if [[ ${{ matrix.os }} == 'macos-13' ]]; then
             echo "BREW_COMPILER_PREFIX=/usr/local/bin" >> "$GITHUB_ENV"
             echo "PATH=/usr/local/bin:$PATH" >> "$GITHUB_ENV"
@@ -423,7 +513,7 @@ jobs:
             source /opt/intel/oneapi/setvars.sh
           fi
           cd build
-          cmake --build . --parallel 2
+          cmake --build . --parallel 2 --verbose
           cmake --install .
       - name: 'Run Tests for MPI Version Using 2 MPI Processes'
         run: |
@@ -436,14 +526,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mpi-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: mpi-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}-${{ matrix.mpi-type }}
           path: ${{ github.workspace }}/install/test/runs/mpi
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for MPI Version'
         uses: actions/download-artifact@v4
         with:
-          name: mpi-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
+          name: mpi-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}-${{ matrix.mpi-type }}
       - name: 'Display Artifacts'
         run: |
           ls -R
