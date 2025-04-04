@@ -286,7 +286,7 @@ set_job_gpus()
   gpus_per_job=$(($total_gpus/$PARALLEL_TEST_COUNT))
 
   if [ "$total_gpus" -lt "$PARALLEL_TEST_COUNT" ]; then
-    echo "Error: invalid # GPUs detected in HIP_VISIBLE_DEVICES/CUDA_VISIBLE_DEVICES (# GPUs >= PARALLEL_TEST_COUNT)."
+    echo "Error: invalid # GPUs detected in HIP_VISIBLE_DEVICES/CUDA_VISIBLE_DEVICES (# GPUs <= PARALLEL_TEST_COUNT)."
     exit 1;
   fi
 
@@ -384,14 +384,18 @@ get_total_tests()
 set_test()
 {
   if [ $has_parallel = 'yes' ]; then
-    if [ -n "$HIP_VISIBLE_DEVICES" ]; then
-      set_job_gpus "$HIP_VISIBLE_DEVICES"
-      export HIP_VISIBLE_DEVICES="${job_gpus[$(($3-1))]}"
-      export CUDA_VISIBLE_DEVICES=""
-    elif [ -n "$CUDA_VISIBLE_DEVICES" ]; then
-      set_job_gpus "$CUDA_VISIBLE_DEVICES"
-      export HIP_VISIBLE_DEVICES=""
-      export CUDA_VISIBLE_DEVICES="${job_gpus[$(($3-1))]}"
+    if [ "$hip" = 'yes' -o "$hipmpi" = 'yes' ]; then
+      if [ -n "$HIP_VISIBLE_DEVICES" ]; then
+        set_job_gpus "$HIP_VISIBLE_DEVICES"
+        export HIP_VISIBLE_DEVICES="${job_gpus[$(($3-1))]}"
+        export CUDA_VISIBLE_DEVICES=""
+      fi
+    elif [ "$cuda" = 'yes' -o "$cudampi" = 'yes' ]; then
+      if [ -n "$CUDA_VISIBLE_DEVICES" ]; then
+        set_job_gpus "$CUDA_VISIBLE_DEVICES"
+        export HIP_VISIBLE_DEVICES=""
+        export CUDA_VISIBLE_DEVICES="${job_gpus[$(($3-1))]}"
+      fi
     fi
   fi
 
@@ -995,6 +999,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+
 #  !---------------------------------------------------------------------!
 #  ! Check directories & executables                                     !
 #  !---------------------------------------------------------------------!
@@ -1211,7 +1216,7 @@ if [ -n "$PARALLEL_TEST_COUNT" ]; then
   # note: function exporting for invocation with GNU parallel is bash-specific;
   #       an alternative would be to install and use env_parallel (which for non-bash shells
   #       utilizes a export and eval approach for string representation of shell functions)
-  export buildtype qbindir qexe apipath apiexe ismpirun has_parallel
+  export buildtype qbindir qexe apipath apiexe ismpirun has_parallel cuda cudampi hip hipmpi
   export -f set_job_gpus set_test run_test run_test_api run_energy_test run_grad_test run_opt_test run_api_test \
 	  run_esp_test check_energy check_gradient check_opt check_esp_charge check_esp_grid check_vdw_surface check_dipole \
           clean_up check_f_error check_mpi_gpu_mismatch lock_file unlock_file
