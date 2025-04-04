@@ -492,7 +492,10 @@ run_test_api()
   echo >> "$6"
   unlock_file "$6"
 
-  if [ "$apiexe_ret" -ne 0 ]; then
+  check_mpi_gpu_mismatch $1
+  check_mpi_gpu_mismatch_ret="$?"
+
+  if [ "$apiexe_ret" -ne 0 ] && [ "$check_mpi_gpu_mismatch_ret" -eq 0 ]; then
     echo "Error: $apiexe execution failed."
     echo ""
 
@@ -653,12 +656,22 @@ run_api_test()
   set_test "$1" "$5" "$8"
   run_test_api "$1" "$2" "$3" "$4" "$6" "$7"
 
+  check_mpi_gpu_mismatch $1
+  check_mpi_gpu_mismatch_ret="$?"
+
   lock_file "$6"
   echo "Running test $3 of $4" | tee -a "$6"
   echo "$2" | tee -a "$6"
-  check_energy "$1" "$5" "$6"
-  check_gradient "$1" "$5" "$6"
-  echo "" | tee -a "$6"
+
+  if [ "$check_mpi_gpu_mismatch_ret" -eq 0 ]; then
+    check_energy "$1" "$5" "$6"
+    check_gradient "$1" "$5" "$6"
+    echo "" | tee -a "$6"
+  else
+    echo "SKIPPED (DO_PARALLEL: # MPI procs > # GPUs)." | tee -a "$6"
+    echo "==============================================================" | tee -a "$6"
+    echo "" | tee -a "$6"
+  fi
   unlock_file "$6"
   clean_up "$1"
 }
