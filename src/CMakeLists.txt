@@ -126,7 +126,7 @@ add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${DFTD3_SOURCES_FU
 	${QUICK_SUBS_FORTRAN_SOURCES_FULLPATH} ${QUICK_SUBS_CXX_SOURCES_FULLPATH}
 	${DLFIND_MODULES_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
 target_compile_options(libquick PRIVATE
-	"$<$<COMPILE_LANGUAGE:FORTRAN>:${OPT_FFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>"
 	"$<$<COMPILE_LANGUAGE:C>:${OPT_CFLAGS}>"
 	"$<$<COMPILE_LANGUAGE:CXX>:${OPT_CXXFLAGS}>")
 config_module_dirs(libquick quick/serial libxc/serial)
@@ -298,7 +298,7 @@ endif()
 
 add_executable(quick ${MAIN_SOURCES})
 target_compile_options(quick PRIVATE 
-	"$<$<COMPILE_LANGUAGE:FORTRAN>:${OPT_FFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>"
 	"$<$<COMPILE_LANGUAGE:C>:${OPT_CFLAGS}>"
 	"$<$<COMPILE_LANGUAGE:CXX>:${OPT_CXXFLAGS}>")
 config_module_dirs(quick quick/serial libxc/serial)
@@ -306,7 +306,7 @@ target_link_libraries(quick libquick)
 
 add_executable(test-api ${TEST_API_SOURCES})
 target_compile_options(test-api PRIVATE
-	"$<$<COMPILE_LANGUAGE:FORTRAN>:${OPT_FFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>"
 	"$<$<COMPILE_LANGUAGE:C>:${OPT_CFLAGS}>"
 	"$<$<COMPILE_LANGUAGE:CXX>:${OPT_CXXFLAGS}>")
 config_module_dirs(test-api quick/serial libxc/serial)
