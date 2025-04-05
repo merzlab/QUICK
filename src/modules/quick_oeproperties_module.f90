@@ -75,8 +75,8 @@ module quick_oeproperties_module
 
    implicit none
    integer :: ierr, npoints
-   double precision :: xyz_points(3,npoints)
    double precision, allocatable :: esp_on_points(:)
+   double precision, intent(in) :: xyz_points(:,:)
 
    allocate(esp_on_points(npoints))
 
@@ -168,10 +168,9 @@ module quick_oeproperties_module
    integer :: IIsh, JJsh
    integer :: igridpoint, npoints
 
-   double precision :: xyz_points(3,npoints), esp(npoints)
-
-   double precision, allocatable :: esp_electronic(:)
-   double precision, allocatable :: esp_nuclear(:)
+   double precision, allocatable :: esp_electronic(:),esp_nuclear(:)
+   double precision, intent(in)  :: xyz_points(:,:)
+   double precision, intent(out) :: esp(:)
 #ifdef MPIV
    double precision, allocatable :: esp_electronic_aggregate(:)
 #endif
@@ -243,6 +242,7 @@ module quick_oeproperties_module
 #ifdef MPIV
    deallocate(esp_electronic_aggregate)
 #endif
+
  end subroutine compute_esp
 
 !----------------------------------------------------------!
@@ -269,15 +269,14 @@ module quick_oeproperties_module
 
    integer, allocatable :: IPIV(:)
    integer :: iatom, jatom, igridpoint, npoints, ierr, NB, LWORK, LDA
-   double precision, intent(in) :: esp(npoints), xyz_points(3,npoints)
+   double precision, intent(in) :: esp(:), xyz_points(:,:)
    double precision, allocatable :: WORK(:)
    double precision :: A(natom+1,natom+1), B(natom+1), q(natom+1)
    double precision :: distance, distanceb, invdistance, Net_charge
 
    double precision, parameter :: One = 1.0d0, Zero = 0.0d0
 
-!  A, B and q are initialized. A(natom+1,natom+1) is set to a small number
-!  instead of zero to facilitate diagonalization of A.
+!  A, B and q are initialized.
 
    q = Zero
 
@@ -321,8 +320,11 @@ module quick_oeproperties_module
      call RaiseException(ierr)
    end if
 
+   deallocate(IPIV)
+   deallocate(WORK)
+
 !  q = A-1*B
-   
+
 #if defined CUDA
    call CUBLAS_DGEMV('N',natom+1,natom+1,One,A,LDA,B,1,Zero,q,1)
 #else
@@ -360,8 +362,7 @@ module quick_oeproperties_module
    integer, intent(in) :: iESPFile
    character :: espFileName*(*)
 
-   double precision :: xyz_points(3,npoints)
-   double precision :: esp(npoints)
+   double precision, intent(in) :: xyz_points(:,:), esp(:)
 
    integer :: igridpoint
    double precision :: Cx, Cy, Cz
@@ -413,6 +414,7 @@ module quick_oeproperties_module
      endif
      write(iESPFile, '(2x,3(F14.10, 1x), 3F14.10)') Cx, Cy, Cz, esp(igridpoint)
    end do
+
  end subroutine print_esp
 
  !-----------------------------------------------------------------------!
@@ -423,8 +425,8 @@ module quick_oeproperties_module
 
    implicit none
    integer, intent(in) :: npoints
-   double precision, intent(in) :: xyz_points(3,npoints)
-   double precision, intent(out) :: esp_nuclear(npoints)
+   double precision, intent(in)  :: xyz_points(:,:)
+   double precision, intent(out) :: esp_nuclear(:)
 
    double precision :: distance
    double precision, external :: rootSquare
@@ -442,6 +444,7 @@ module quick_oeproperties_module
        endif
      enddo
    enddo
+
  end subroutine esp_nuc
 
 
@@ -597,7 +600,7 @@ subroutine print_efield(efield_nuclear, efield_electronic, nextpoint)
   implicit none
   integer, intent(in) :: nextpoint
 
-  double precision :: efield_nuclear(3,nextpoint), efield_electronic(3,nextpoint)
+  double precision, intent(in) :: efield_nuclear(:,:), efield_electronic(:,:)
 
   integer :: igridpoint
   double precision :: Cx, Cy, Cz
