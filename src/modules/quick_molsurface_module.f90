@@ -152,17 +152,16 @@ module quick_molsurface_module
     double precision, external :: rootSquare
 
     integer, intent(out) :: npoints
-    integer :: i,j,k,l,ii,ncircles,circle,npts,nphi,nneighbor
-    double precision :: scale_factor,espgrid_spacing
+    integer :: i,j,k,ii,ncircles,circle,nphi,nneighbor
+    double precision, intent(in) :: scale_factor
+    double precision :: espgrid_spacing
     double precision :: start_theta,delta_theta,rcircle,radius,theta,delta_phi
     double precision :: Bondi_vdw_radii(118), Tkatchenko_vdw_radii(118)
     integer :: Bondi_atom_list(38)
-    integer :: neighbor_list(natom), start_index(natom), end_index(natom)
-    double precision :: xyz_sphere(3,4000)
+    integer :: neighbor_list(natom)
     double precision :: atomic_vdw_radii(natom)
     double precision, intent(out) :: surface_points(:,:)
     double precision :: thresh
-    logical :: proximal
     data Bondi_vdw_radii/ &
     1.20d0,                                                                                                                1.40d0, &
     1.82d0, 0.0d0,                                                                       0.0d0,1.70d0,1.55d0,1.52d0,1.47d0,1.54d0, &
@@ -236,7 +235,6 @@ module quick_molsurface_module
           endif
         endif
       enddo
-      npts = 0
       radius = atomic_vdw_radii(i)
       ! We will make circles on the surface. Find the number of circles to make.
       ncircles = int(PI*radius/espgrid_spacing)+1
@@ -248,52 +246,18 @@ module quick_molsurface_module
         nphi = int(2*PI*rcircle/espgrid_spacing)
         delta_phi = espgrid_spacing/rcircle
         do j = 1, nphi
-          npts = npts + 1
-          xyz_sphere(1,npts) = xyz(1,i) + radius*cos(theta)
-          xyz_sphere(2,npts) = xyz(2,i) + radius*sin(theta)*cos((j-1)*delta_phi)
-          xyz_sphere(3,npts) = xyz(3,i) + radius*sin(theta)*sin((j-1)*delta_phi)
+          npoints = npoints + 1
+          surface_points(1,npoints) = xyz(1,i) + radius*cos(theta)
+          surface_points(2,npoints) = xyz(2,i) + radius*sin(theta)*cos((j-1)*delta_phi)
+          surface_points(3,npoints) = xyz(3,i) + radius*sin(theta)*sin((j-1)*delta_phi)
           do k = 1, nneighbor
-            if(rootSquare(xyz_sphere(1:3,npts),xyz(1:3,neighbor_list(k)),3).lt.atomic_vdw_radii(neighbor_list(k)))then
-              npts = npts - 1
+            if(rootSquare(surface_points(1:3,npoints),xyz(1:3,neighbor_list(k)),3) .lt. atomic_vdw_radii(neighbor_list(k)))then
+              npoints = npoints - 1
               exit
             end if
           end do
         end do
       end do
-
-      if (npoints.eq.0)then
-        do j = 1, npts
-          do k = 1, 3
-            surface_points(k,j) = xyz_sphere(k,j)
-          end do
-        end do
-        npoints = npts
-        start_index(i) = 1
-        end_index(i) = npoints
-      else
-        start_index(i) = npoints + 1
-        do j = 1, npts
-          proximal = .False.
-          do k = 1, nneighbor
-            if(neighbor_list(k) .lt. i)then
-              do l = start_index(neighbor_list(k)), end_index(neighbor_list(k))
-                if (rootSquare(surface_points(1:3,l), xyz_sphere(1:3,j), 3).lt.thresh)then
-                  proximal = .True.
-                  exit
-                end if
-              end do
-              if (proximal)exit
-            end if
-          end do
-          if (.not. proximal) then
-            npoints = npoints + 1
-            do k = 1,3
-              surface_points(k,npoints) = xyz_sphere(k,j)
-            end do
-          end if
-        end do
-        end_index(i) = npoints
-      end if
     end do
 
   end subroutine generate_vdW_surface
