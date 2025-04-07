@@ -130,7 +130,7 @@ add_library(libquick SHARED ${QUICK_MODULES_SOURCES_FULLPATH} ${DFTD3_SOURCES_FU
 	${QUICK_SUBS_FORTRAN_SOURCES_FULLPATH} ${QUICK_SUBS_CXX_SOURCES_FULLPATH}
 	${DLFIND_MODULES_SOURCES_FULLPATH} ${QUICK_GENERAL_SOURCES})
 target_compile_options(libquick PRIVATE
-	"$<$<COMPILE_LANGUAGE:FORTRAN>:${OPT_FFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>"
 	"$<$<COMPILE_LANGUAGE:C>:${OPT_CFLAGS}>"
 	"$<$<COMPILE_LANGUAGE:CXX>:${OPT_CXXFLAGS}>")
 config_module_dirs(libquick quick/serial libxc/serial)
@@ -159,6 +159,7 @@ if(MPI)
 	remove_link_libraries(libquick_mpi octree)
 	target_link_libraries(libquick_mpi PRIVATE octree_mpi)
 	if(INSIDE_AMBER)
+		remove_link_libraries(libquick_mpi libcew)
 		target_link_libraries(libquick_mpi PRIVATE libcew_mpi)
 	endif()
 	config_module_dirs(libquick_mpi quick/mpi libxc/serial)
@@ -202,9 +203,7 @@ if(CUDA)
 			target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE lapack)
 		endif()
 
-		if(INSIDE_AMBER)
-			target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE libcew)
-		endif()
+		# INSIDE_AMBER: libcew link library copied from libquick target
 
 		config_module_dirs(libquick_${QUICK_GPU_TARGET_NAME} quick/${QUICK_GPU_TARGET_NAME} libxc/gpu)
 
@@ -221,9 +220,7 @@ if(CUDA)
 		target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu octree_gpu
 			quick_${QUICK_GPU_TARGET_NAME}_kernels cublas cusolver)
 
-		if(INSIDE_AMBER)
-			target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE libcew)
-		endif()
+		# INSIDE_AMBER: libcew link library copied from libquick target
 
 		config_module_dirs(libquick_${QUICK_GPU_TARGET_NAME} quick/${QUICK_GPU_TARGET_NAME} libxc/gpu)
 
@@ -262,9 +259,8 @@ if(MPI AND CUDA)
 		else()
 			target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE lapack)
 		endif()
-		if(INSIDE_AMBER)
-			target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE libcew_mpi)
-		endif()
+
+		# INSIDE_AMBER: libcew_mpi link library copied from libquick target
 
 		config_module_dirs(libquick_mpi_${QUICK_GPU_TARGET_NAME} quick/mpi_${QUICK_GPU_TARGET_NAME} libxc/gpu)
 
@@ -280,9 +276,7 @@ if(MPI AND CUDA)
 		target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu xc_${QUICK_GPU_TARGET_NAME} octree_gpu
 			quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi cublas cusolver)
 
-		if(INSIDE_AMBER)
-			target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE libcew_mpi)
-		endif()
+		# INSIDE_AMBER: libcew_mpi link library copied from libquick target
 
 		config_module_dirs(libquick_mpi_${QUICK_GPU_TARGET_NAME} quick/mpi_${QUICK_GPU_TARGET_NAME} libxc/gpu)
 
@@ -308,7 +302,7 @@ endif()
 
 add_executable(quick ${MAIN_SOURCES})
 target_compile_options(quick PRIVATE 
-	"$<$<COMPILE_LANGUAGE:FORTRAN>:${OPT_FFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>"
 	"$<$<COMPILE_LANGUAGE:C>:${OPT_CFLAGS}>"
 	"$<$<COMPILE_LANGUAGE:CXX>:${OPT_CXXFLAGS}>")
 config_module_dirs(quick quick/serial libxc/serial)
@@ -316,7 +310,7 @@ target_link_libraries(quick libquick)
 
 add_executable(test-api ${TEST_API_SOURCES})
 target_compile_options(test-api PRIVATE
-	"$<$<COMPILE_LANGUAGE:FORTRAN>:${OPT_FFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>"
 	"$<$<COMPILE_LANGUAGE:C>:${OPT_CFLAGS}>"
 	"$<$<COMPILE_LANGUAGE:CXX>:${OPT_CXXFLAGS}>")
 config_module_dirs(test-api quick/serial libxc/serial)

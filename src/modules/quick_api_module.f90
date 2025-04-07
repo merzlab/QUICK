@@ -186,7 +186,6 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
   use quick_molspec_module, only : quick_molspec, alloc
   use quick_exception_module
   use quick_method_module
-
 #ifdef MPIV
   use quick_mpi_module
 #endif
@@ -335,7 +334,7 @@ end subroutine get_atom_types
 subroutine allocate_point_charge(isgrad,ierr)
 
   use quick_molspec_module, only: quick_molspec, realloc
-  use quick_calculated_module
+  use quick_calculated_module, only: quick_qm_struct, realloc
   implicit none
   logical, intent(in) :: isgrad
   integer, intent(inout) :: ierr
@@ -771,7 +770,7 @@ subroutine gpu_upload_molspecs(ierr)
 
   call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
 
-  call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
+  call gpu_upload_oei(quick_molspec%nextatom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
 
 end subroutine gpu_upload_molspecs
 
