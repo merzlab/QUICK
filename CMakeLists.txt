@@ -70,7 +70,7 @@ list(APPEND NO_OPT_CXXFLAGS "-O0")
 # GNU
 # --------------------------------------------------------------------
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND TARGET_ARCH STREQUAL "arm64")
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
 	    execute_process(COMMAND sysctl machdep.cpu.brand_string OUTPUT_VARIABLE CPU_INFO)
 
 	    string(REGEX MATCH "(M[0-9]*)" _ "${CPU_INFO}")
@@ -100,7 +100,7 @@ if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND TARGET_ARCH STREQUAL "arm64")
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
 	    if("${CPU_VERSION}" STREQUAL "M1" OR "${CPU_VERSION}" STREQUAL "M2")
 		    list(APPEND OPT_CXXFLAGS "-O2" "-mtune=native")
 	    else()
@@ -132,7 +132,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 endif()
 
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND TARGET_ARCH STREQUAL "arm64")
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
 	    if("${CPU_VERSION}" STREQUAL "M1" OR "${CPU_VERSION}" STREQUAL "M2")
 		    list(APPEND OPT_FFLAGS "-O2" "-mtune=native")
 	    else()
