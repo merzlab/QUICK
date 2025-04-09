@@ -165,6 +165,41 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
 endif()
 
 
+# Clang
+# --------------------------------------------------------------------
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "AppleClang")
+    list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
+
+    if (WARNINGS)
+	add_flags(C -Wall -Wno-unused-function)
+
+	if(NOT UNUSED_WARNINGS)
+	    add_flags(C -Wno-unused-variable -Wno-unused-but-set-variable)
+	endif()
+
+	if(NOT UNINITIALIZED_WARNINGS)
+	    add_flags(C -Wno-uninitialized -Wno-maybe-uninitialized)
+	endif()
+    endif()
+endif()
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+    list(APPEND OPT_CXXFLAGS "-O2" "-mtune=native")
+
+    if (WARNINGS)
+	add_flags(CXX -Wall -Wno-unused-function)
+
+	if(NOT UNUSED_WARNINGS)
+	    add_flags(CXX -Wno-unused-variable -Wno-unused-but-set-variable)
+	endif()
+
+	if(NOT UNINITIALIZED_WARNINGS)
+	    add_flags(CXX -Wno-uninitialized -Wno-maybe-uninitialized)
+	endif()
+    endif()
+endif()
+
+
 # Intel
 # --------------------------------------------------------------------
 
