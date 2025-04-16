@@ -298,8 +298,8 @@ subroutine mpi_hfoperatordc(oneElecO)
    use quick_gaussian_class_module
    use quick_cutoff_module, only: cshell_density_cutoff
    use quick_eri_cshell_module, only: getCshellEriEnergy
-   use mpi
-   implicit double precision(a-h,o-z)
+   use mpi_f08
+   implicit none
 
    double precision testtmp,cutoffTest,oneElecO(nbasis,nbasis)
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2

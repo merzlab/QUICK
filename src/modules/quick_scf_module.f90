@@ -173,9 +173,8 @@ contains
 #endif
 #endif
 #if defined(MPIV)
-     use mpi
+     use mpi_f08
 #endif
-
      implicit none
  
      integer :: fail
