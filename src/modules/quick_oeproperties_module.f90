@@ -268,11 +268,13 @@ module quick_oeproperties_module
    double precision, external :: rootSquare
 
    integer, allocatable :: IPIV(:)
-   integer :: iatom, jatom, igridpoint, npoints, ierr, NB, LWORK, LDA
+   integer :: iatom, jatom, igridpoint, npoints, ierr, NB, LWORK, LDA, alloc_status
    double precision, intent(in) :: esp(:), xyz_points(:,:)
    double precision, allocatable :: WORK(:)
    double precision :: A(natom+1,natom+1), B(natom+1), q(natom+1)
    double precision :: distance, distanceb, invdistance, Net_charge
+
+   double precision, allocatable :: invdist_arr(:,:)
 
    double precision, parameter :: One = 1.0d0, Zero = 0.0d0
 
@@ -286,19 +288,41 @@ module quick_oeproperties_module
    A = Zero
    A(1:natom,natom+1) = One
 
-! The matrix A and vector B is formed.
+   allocate(invdist_arr(natom,npoints), stat=alloc_status)
 
-   do iatom = 1, natom  
-     do igridpoint = 1, npoints
-       distance = rootSquare(xyz(1:3,iatom), xyz_points(1:3,igridpoint), 3)
-       invdistance = 1/distance
-       B(iatom) = B(iatom) + esp(igridpoint) * invdistance
-       do jatom = 1, iatom
-         distanceb = rootSquare(xyz(1:3,jatom), xyz_points(1:3,igridpoint), 3)
-         A(jatom,iatom) = A(jatom,iatom) + invdistance/distanceb
+   if (alloc_status /= 0) then
+     ! The matrix A and vector B is formed.
+     do iatom = 1, natom  
+       do igridpoint = 1, npoints
+         distance = rootSquare(xyz(1:3,iatom), xyz_points(1:3,igridpoint), 3)
+         invdistance = 1/distance
+         B(iatom) = B(iatom) + esp(igridpoint) * invdistance
+         do jatom = 1, iatom
+           distanceb = rootSquare(xyz(1:3,jatom), xyz_points(1:3,igridpoint), 3)
+           A(jatom,iatom) = A(jatom,iatom) + invdistance/distanceb
+         end do
        end do
      end do
-   end do
+   else
+     ! First the inverse distance matrix is formed
+     do iatom = 1, natom
+       do igridpoint = 1, npoints
+         invdist_arr(iatom,igridpoint) = 1/rootSquare(xyz(1:3,iatom), xyz_points(1:3,igridpoint), 3)
+       end do
+     end do
+
+     ! Using the inverse distance matrix to form the matrix A and vector B.
+#if defined CUDA
+     call CUBLAS_DGEMV('N',natom,npoints,One,invdist_arr,natom,esp,1,Zero,B,1)
+     call CUBLAS_DGEMM('N', 'T', natom, natom, npoints, One, invdist_arr, natom, invdist_arr, natom, Zero, A(1:natom,1:natom), natom)
+#else
+     call DGEMV('N',natom,npoints,One,invdist_arr,natom,esp,1,Zero,B,1)
+     call DGEMM('N', 'T', natom, natom, npoints, One, invdist_arr, natom, invdist_arr, natom, Zero, A(1:natom,1:natom), natom)
+#endif
+
+     deallocate(invdist_arr)
+
+   end if
 
    call symmetrize('U',A,natom+1)
 
