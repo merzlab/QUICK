@@ -83,6 +83,11 @@ extern "C" void mgpu_init_device_(int *mpirank, int *mpisize, int *device, int* 
     status = cudaGetDeviceProperties(&deviceProp, gpu->gpu_dev_id);
     PRINTERROR(status, "cudaGetDeviceProperties gpu_init failed!");
 
+#if defined(HIP) || defined(HIP_MPIV)
+    cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
+    cudaDeviceSetLimit(cudaLimitStackSize, 8192);
+#endif
+
     size_t val;
     cudaDeviceGetLimit(&val, cudaLimitStackSize);
 #ifdef DEBUG

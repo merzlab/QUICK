@@ -345,6 +345,11 @@ extern "C" void gpu_init_device_(int* ierr)
     status = hipGetDeviceProperties(&deviceProp, device);
     PRINTERROR(status, "hipGetDeviceProperties gpu_init failed!");
 
+#if defined(HIP) || defined(HIP_MPIV)
+    hipDeviceSetCacheConfig(hipFuncCachePreferL1);
+    hipDeviceSetLimit(hipLimitStackSize, 8192);
+#endif
+
 #if defined(DEBUG)
     size_t val;
 

@@ -83,6 +83,11 @@ extern "C" void mgpu_init_device_(int *mpirank, int *mpisize, int *device, int* 
     status = hipGetDeviceProperties(&deviceProp, gpu->gpu_dev_id);
     PRINTERROR(status, "hipGetDeviceProperties gpu_init failed!");
 
+#if defined(HIP) || defined(HIP_MPIV)
+    hipDeviceSetCacheConfig(hipFuncCachePreferL1);
+    hipDeviceSetLimit(hipLimitStackSize, 8192);
+#endif
+
     size_t val;
     hipDeviceGetLimit(&val, hipLimitStackSize);
 #ifdef DEBUG

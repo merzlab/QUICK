@@ -345,6 +345,11 @@ extern "C" void gpu_init_device_(int* ierr)
     status = cudaGetDeviceProperties(&deviceProp, device);
     PRINTERROR(status, "cudaGetDeviceProperties gpu_init failed!");
 
+#if defined(HIP) || defined(HIP_MPIV)
+    cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
+    cudaDeviceSetLimit(cudaLimitStackSize, 8192);
+#endif
+
 #if defined(DEBUG)
     size_t val;
 
