@@ -83,60 +83,60 @@ module quick_molsurface_module
     double precision :: scaling_factors(4)
     data scaling_factors/1.4d0,1.6d0,1.8d0,2.0d0/
     integer :: npoints, total_points
-    integer :: i, j, k, ierr
+    integer :: i, j, ierr
     integer :: max_points
     double precision, allocatable :: xyz_points(:,:), temp(:,:)
 
     RECORD_TIME(timer_begin%TESPsurface)
 
-    allocate(surface_points(3,int(natom*500/quick_method%espgrid_spacing)))
+    allocate(surface_points(3,int(natom*1000/quick_method%espgrid_spacing)))
 
     max_points = int(natom*200/(quick_method%espgrid_spacing)**2)
 
     allocate(xyz_points(3,max_points))
 
-    ! temporary array to facilitate reallocation
-    allocate(temp(1,1))
+    ierr = 0
 
-      ierr = 0
+    total_points = 0
 
-      total_points = 0
+    do j = 1, 4
+      ! Generate the vdW surface using different scaling factors for vdw radii
+      call generate_vdW_surface(scaling_factors(j),npoints,surface_points)
 
-      do j = 1, 4
-        ! Generate the vdW surface using different scaling factors for vdw radii
-        call generate_vdW_surface(scaling_factors(j),npoints,surface_points)
+      total_points = total_points + npoints
 
-        total_points = total_points + npoints
+      if(total_points .gt. max_points) then
+        ! temporary array to facilitate reallocation
+        allocate(temp(3,total_points-npoints))
+        temp = xyz_points(1:3,1:total_points-npoints)
 
-        if(total_points .gt. max_points) then
-          deallocate(temp)
-          allocate(temp(3,total_points-npoints))
-          temp = xyz_points(1:3,1:total_points-npoints)
+        deallocate(xyz_points)
 
-          deallocate(xyz_points)
+        if((j.eq.4).or.(total_points .gt. 2*max_points))then
+          allocate(xyz_points(3,total_points))
+        else
           max_points = 2*max_points
           allocate(xyz_points(3,max_points))
+        endif
 
-          xyz_points(1:3,1:total_points-npoints) = temp
-        end if
+        xyz_points(1:3,1:total_points-npoints) = temp
+        deallocate(temp)
+      end if
 
-          do k = 1,3
-             xyz_points(1:3,total_points-npoints+1:total_points) = surface_points(1:3,1:npoints)
-        end do
+      xyz_points(1:3,total_points-npoints+1:total_points) = surface_points(1:3,1:npoints)
 
-      end do
+    end do
 
-      quick_molspec%nvdwpoint = total_points
-      allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint))
-      quick_molspec%vdwpointxyz(1:3,1:total_points) = xyz_points(1:3,1:total_points)
+    quick_molspec%nvdwpoint = total_points
+    allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint))
+    quick_molspec%vdwpointxyz(1:3,1:total_points) = xyz_points(1:3,1:total_points)
 
-      deallocate(xyz_points)
-      deallocate(temp)
-      deallocate(surface_points)
+    deallocate(xyz_points)
+    deallocate(surface_points)
 
 
-      RECORD_TIME(timer_end%TESPsurface)
-      timer_cumer%TESPsurface=timer_cumer%TESPsurface+timer_end%TESPsurface-timer_begin%TESPsurface
+    RECORD_TIME(timer_end%TESPsurface)
+    timer_cumer%TESPsurface=timer_cumer%TESPsurface+timer_end%TESPsurface-timer_begin%TESPsurface
 
    end subroutine generate_MKS_surfaces
 
