@@ -43,7 +43,7 @@
     use quick_files_module, only: write_molden, set_quick_files, print_quick_io_file
     use quick_molsurface_module, only: generate_MKS_surfaces
 #ifdef MPIV
-    use mpi
+    use mpi_f08
 #endif
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
     use quick_basis_module, only: quick_basis, aexp, cutprim, dcoeff, itype
