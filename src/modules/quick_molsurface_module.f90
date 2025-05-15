@@ -83,7 +83,7 @@ module quick_molsurface_module
     double precision :: scaling_factors(4)
     data scaling_factors/1.4d0,1.6d0,1.8d0,2.0d0/
     integer :: npoints, total_points
-    integer :: i, j, ierr
+    integer :: i, j
     integer :: max_points
     double precision, allocatable :: xyz_points(:,:), temp(:,:)
 
@@ -101,7 +101,6 @@ module quick_molsurface_module
     max_points = int(natom*200/(quick_method%espgrid_spacing)**2)
     allocate(xyz_points(3,max_points))
     ! Initialize total_points to keep track of how many points are in the van der waals surfaces.
-    ierr = 0
     total_points = 0
     ! Loop to generate 4 van der waals surfaces.
     do j = 1, 4
