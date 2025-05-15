@@ -87,59 +87,70 @@ module quick_molsurface_module
     integer :: max_points
     double precision, allocatable :: xyz_points(:,:), temp(:,:)
 
+    ! Record time needed to create the grid.
     RECORD_TIME(timer_begin%TESPsurface)
-
+    ! This is the maximum no of points on the individual van der waals surfaces.
+    ! This is the biggest bottleneck in going to extremely fine grids as I do not
+    ! know how to reallocate this in the generate_vdW_surface subroutine.
+    ! Something to think about if in some application you are getting segmentation
+    ! fault when generating van der waals surface.
     allocate(surface_points(3,int(natom*1000/quick_method%espgrid_spacing)))
-
+    ! Maximum no of points including all the four surfaces.
+    ! This is being reallocated when later when required.
+    ! Segmentation fault will not arise from xyz_points array overflow.
     max_points = int(natom*200/(quick_method%espgrid_spacing)**2)
-
     allocate(xyz_points(3,max_points))
-
+    ! Initialize total_points to keep track of how many points are in the van der waals surfaces.
     ierr = 0
-
     total_points = 0
-
+    ! Loop to generate 4 van der waals surfaces.
     do j = 1, 4
       ! Generate the vdW surface using different scaling factors for vdw radii
       call generate_vdW_surface(scaling_factors(j),npoints,surface_points)
-
+      ! After individual van der waals surface is generated the total no of points
+      ! is updated.
       total_points = total_points + npoints
-
+      ! If the no of points is exceeding the allocated xyz_points array size reallocation is required.
       if(total_points .gt. max_points) then
         ! temporary array to facilitate reallocation
         allocate(temp(3,total_points-npoints))
+        ! Move the contents of xyz_points to a temporary array
         temp = xyz_points(1:3,1:total_points-npoints)
-
+        ! Now we can deallocate the xyz_points array
         deallocate(xyz_points)
-
+        ! Reallocation size depends on when and by how much the no of points exceeded the size of
+        ! previous allocation.
         if((j.eq.4).or.(total_points .gt. 2*max_points))then
           allocate(xyz_points(3,total_points))
         else
           max_points = 2*max_points
           allocate(xyz_points(3,max_points))
         endif
-
+        ! We are ready to move the data from temporary array back to xyz_points
         xyz_points(1:3,1:total_points-npoints) = temp
+        ! The temporary array is deallocated
         deallocate(temp)
       end if
-
+      ! Copy the data from array containing individual van der waals surafce to the xyz_points array
+      ! containing all the points.
       xyz_points(1:3,total_points-npoints+1:total_points) = surface_points(1:3,1:npoints)
-
     end do
-
+    ! We need the quick_molspec%nvdwpoint elsewhere to compute ESP on those points. So, we should
+    ! assign correct value to it.
     quick_molspec%nvdwpoint = total_points
+    ! We also need quick_molspec%vdwpointxyz elsewhere to compute ESP on those points. So, we are
+    ! allocating it and copying the all the points to it.
     allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint))
     quick_molspec%vdwpointxyz(1:3,1:total_points) = xyz_points(1:3,1:total_points)
-
+    ! deallocated the array required to create the grid.
     deallocate(xyz_points)
     deallocate(surface_points)
-
-
+    ! Record time needed to create the grid.
     RECORD_TIME(timer_end%TESPsurface)
     timer_cumer%TESPsurface=timer_cumer%TESPsurface+timer_end%TESPsurface-timer_begin%TESPsurface
-
    end subroutine generate_MKS_surfaces
 
+  ! This subroutine generates the individual scaled van der waals surfaces  
   subroutine generate_vdW_surface(scale_factor,npoints,surface_points)
     use quick_method_module, only: quick_method
     use quick_molspec_module, only: quick_molspec, natom, xyz
@@ -187,17 +198,16 @@ module quick_molsurface_module
 
     ! grid size must be converted to atomic unit
     espgrid_spacing = quick_method%espgrid_spacing/BOHRS_TO_A
-
     ! this threshold is necessary to avoid points on surface coming too close
     ! points being too close leads has the artifact of those points having
     ! larger weight during fitting. We try to avoid this.
     thresh = espgrid_spacing/2.5
-
     !  create an array of vanderwaals radii for atom. The radii are in atomic units.
     if (quick_method%vdw_radii == "BONDI")then
       do i = 1, natom
         ! checking if every atom has a corresponding Van der waals radius defined
         if (any(int(quick_molspec%chg(i)) == Bondi_atom_list)) then 
+          ! Here we scale the van der waals radius of the atom using the scale_factor
           atomic_vdw_radii(i) = Bondi_vdw_radii(int(quick_molspec%chg(i)))*scale_factor/BOHRS_TO_A
         else
           do j = 1, natom
@@ -213,6 +223,7 @@ module quick_molsurface_module
       do i = 1, natom
         ! Tkatchenko_vdw_radii does not have the data for Lv
         if (int(quick_molspec%chg(i)) /= 116) then
+          ! Here we scale the van der waals radius of the atom using the scale_factor
           atomic_vdw_radii(i) = Tkatchenko_vdw_radii(int(quick_molspec%chg(i)))*scale_factor/BOHRS_TO_A
         else
           call PrtErr(OUTFILEHANDLE, 'The Van Der Waals radius of the element Lv is not available')
@@ -220,73 +231,113 @@ module quick_molsurface_module
         endif
       end do
     endif
-
+    ! Initialize the counter for points on this scaled van der waals surface
     npoints = 0
-
     ! Go over each atom and get points on their vanderwaals surface using 
     ! the correspnding atomic_vdw_radii
     do i = 1, natom
       ! Create a list of neighbors for efficiency
+      ! Initialize the no of neighbors
       nneighbor=0
+      ! loop over all the atoms
       do ii = 1, natom
+        ! do not consider the same atom as its own neighbor
         if (ii .ne. i) then
+          ! Using sum of van der waals radii as the criterium for neighbors. A threshold is added to check
+          ! overlapping points(vide infra).
           if(rootSquare(xyz(1:3,ii),xyz(1:3,i),3) .le. (atomic_vdw_radii(ii)+atomic_vdw_radii(i)+thresh)) then
             nneighbor=nneighbor+1
             neighbor_list(nneighbor)=ii
           endif
         endif
       enddo
+      ! Initialize the no points for individual atoms.
       npts = 0
+      ! Just a variable name which is appropriate here
       radius = atomic_vdw_radii(i)
-      ! We will make circles on the surface. Find the number of circles to make.
+      ! We will make circles on the surface similar to latitudes.
+      ! First, compute the number of circles to make.
       ncircles = int(PI*radius/espgrid_spacing)+1
+      ! Theta is like the azimuthal angle
       start_theta = (PI*radius-(ncircles-1)*espgrid_spacing)/(2*radius)
+      ! differnce between the azimuthal angle of consecutive latitudes.
       delta_theta = espgrid_spacing/radius
+      ! Loop over all the latitudes.
       do circle = 1, ncircles
+        ! Azimuthal angle of this latitude.
         theta = start_theta+delta_theta*(circle-1)
+        ! radius of this latitude.
         rcircle = radius*sin(theta)
+        ! No of points on this latitude.
         nphi = int(2*PI*rcircle/espgrid_spacing)
+        ! angular distance between the points.
         delta_phi = espgrid_spacing/rcircle
+        ! Go over all the points
         do j = 1, nphi
+          ! Add a new point
           npts = npts + 1
+          ! x, y and z coordinates of the point using spherical coordinates.
           xyz_sphere(1,npts) = xyz(1,i) + radius*cos(theta)
           xyz_sphere(2,npts) = xyz(2,i) + radius*sin(theta)*cos((j-1)*delta_phi)
           xyz_sphere(3,npts) = xyz(3,i) + radius*sin(theta)*sin((j-1)*delta_phi)
+          ! Go over all the neighbors to check if the newly added point lies inside the scaled
+          ! van der waals surface of any of them.
           do k = 1, nneighbor
             if(rootSquare(xyz_sphere(1:3,npts),xyz(1:3,neighbor_list(k)),3) .lt. atomic_vdw_radii(neighbor_list(k)))then
+              ! Discarding the point if it is inside the van der waals surface of any of the neighbors
               npts = npts - 1
+              ! once the point is discarded we do not need to continue checking rest of the neighbors.
               exit
             end if
           end do
         end do
       end do
 
+      ! Now we are looking for overlapping points.
+      ! Special case for the first atom.
       if (npoints.eq.0)then
+        ! For the first atom we do not need to check for overlapping points.
         surface_points(1:3,1:npts)=xyz_sphere(1:3,1:npts)
         npoints = npts
+        ! Start and end indexes define the range of points belonging to each atom.
+        ! This significantly accelerates the checking of overlapping points.
         start_index(i) = 1
         end_index(i) = npoints
+      ! Lets consider the atom if it is not the first atom.
       else
+        ! Go over all the newly obtained points.
         do j = 1, npts
+          ! By default the point is overlapping with no other point.
           proximal = .False.
+          ! Go over all the neighbors to check if there is any overlap with any of their points.
           do k = 1, nneighbor
+            ! Only consider the previous atoms for which points on the surface are already generated.
+            ! This is perfectly fine as we need to keep only one of the overlapping points.
             if(neighbor_list(k) .lt. i)then
+              ! A check to see if we need to consider this point. This check is base on how close this point is to the neighbor.
               if(rootSquare(xyz_sphere(1:3,j), xyz(1:3,neighbor_list(k)),3) .lt. (atomic_vdw_radii(neighbor_list(k))+thresh))then
+                ! Consider the distance from all the points of the neighbor to check for proximity
+                ! to determine if the points are overlapping.
                 do l = start_index(neighbor_list(k)), end_index(neighbor_list(k))
                   if (rootSquare(surface_points(1:3,l), xyz_sphere(1:3,j), 3).lt.thresh)then
+                    ! set proximal to true if points are overlapping.
                     proximal = .True.
+                    ! once the point is considered overlapping we do not need to continue checking rest of the points.
                     exit
                   end if
                 end do
+                ! once the point is considered overlapping we do not need to continue checking rest of the neighbors.
                 if (proximal)exit
               end if
             end if
           end do
+          ! If the point is not overlapping then add it to the list of surface_points.
           if (.not. proximal) then
             npoints = npoints + 1
             surface_points(1:3,npoints) = xyz_sphere(1:3,j)
           end if
         end do
+        ! We need to add the range of points for this atom. But, first we need to check if it has any points.
         if(npoints .gt. end_index(i-1))then
           start_index(i) = end_index(i-1) + 1
           end_index(i) = npoints
