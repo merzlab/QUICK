@@ -232,6 +232,8 @@ module quick_molsurface_module
     endif
     ! Initialize the counter for points on this scaled van der waals surface
     npoints = 0
+    ! Initialize the variable to be used for detection of overlapping points later
+    proximal = .False.
     ! Go over each atom and get points on their vanderwaals surface using 
     ! the correspnding atomic_vdw_radii
     do i = 1, natom
@@ -306,8 +308,6 @@ module quick_molsurface_module
       else
         ! Go over all the newly obtained points.
         do j = 1, npts
-          ! By default the point is overlapping with no other point.
-          proximal = .False.
           ! Go over all the neighbors to check if there is any overlap with any of their points.
           do k = 1, nneighbor
             ! Only consider the previous atoms for which points on the surface are already generated.
@@ -334,6 +334,8 @@ module quick_molsurface_module
           if (.not. proximal) then
             npoints = npoints + 1
             surface_points(1:3,npoints) = xyz_sphere(1:3,j)
+          else
+            proximal = .False.
           end if
         end do
         ! We need to add the range of points for this atom. But, first we need to check if it has any points.
