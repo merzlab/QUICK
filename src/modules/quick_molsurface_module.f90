@@ -83,7 +83,7 @@ module quick_molsurface_module
     double precision :: scaling_factors(4)
     data scaling_factors/1.4d0,1.6d0,1.8d0,2.0d0/
     integer :: npoints, total_points
-    integer :: i, j
+    integer :: i, j, alloc_status
     integer :: max_points
     double precision, allocatable :: xyz_points(:,:), temp(:,:)
 
@@ -93,11 +93,23 @@ module quick_molsurface_module
     ! This is being reallocated when later when required.
     ! Segmentation fault will not arise from xyz_points array overflow.
     max_points = int(natom*200/(quick_method%espgrid_spacing)**2)
-    allocate(xyz_points(3,max_points))
+    allocate(xyz_points(3,max_points), stat=alloc_status)
+
+    if(alloc_status /= 0) then
+      call PrtErr(OUTFILEHANDLE, '!!xyz_points array allocation failed in generate_MKS_surfaces!!')
+      call quick_exit(OUTFILEHANDLE,1)
+    endif
+      
     ! This is the maximum no of points on the individual van der waals surfaces.
     ! This is the biggest bottleneck in going to extremely fine grids as I do not
     ! know how to reallocate this in the generate_vdW_surface subroutine.
-    allocate(surface_points(3,int(natom*1000/quick_method%espgrid_spacing)))
+    allocate(surface_points(3,int(natom*1000/quick_method%espgrid_spacing)), stat=alloc_status)
+
+    if(alloc_status /= 0) then
+      call PrtErr(OUTFILEHANDLE, '!!surface_points array allocation failed in generate_MKS_surfaces!!')
+      call quick_exit(OUTFILEHANDLE,1)
+    endif
+      
     ! Initialize total_points to keep track of how many points are in the van der waals surfaces.
     total_points = 0
     ! Loop to generate 4 van der waals surfaces.
@@ -110,7 +122,13 @@ module quick_molsurface_module
       ! If the no of points is exceeding the allocated xyz_points array size reallocation is required.
       if(total_points .gt. max_points) then
         ! temporary array to facilitate reallocation
-        allocate(temp(3,total_points-npoints))
+        allocate(temp(3,total_points-npoints), stat=alloc_status)
+
+        if(alloc_status /= 0) then
+          call PrtErr(OUTFILEHANDLE, '!!temp array allocation failed in generate_MKS_surfaces!!')
+          call quick_exit(OUTFILEHANDLE,1)
+        endif
+      
         ! Move the contents of xyz_points to a temporary array
         temp = xyz_points(1:3,1:total_points-npoints)
         ! Now we can deallocate the xyz_points array
@@ -118,10 +136,22 @@ module quick_molsurface_module
         ! Reallocation size depends on when and by how much the no of points exceeded the size of
         ! previous allocation.
         if((j.eq.4).or.(total_points .gt. 2*max_points))then
-          allocate(xyz_points(3,total_points))
+          allocate(xyz_points(3,total_points), stat=alloc_status)
+
+          if(alloc_status /= 0) then
+            call PrtErr(OUTFILEHANDLE, '!!xyz_points array reallocation failed in generate_MKS_surfaces!!')
+            call quick_exit(OUTFILEHANDLE,1)
+          endif
+      
         else
           max_points = 2*max_points
-          allocate(xyz_points(3,max_points))
+          allocate(xyz_points(3,max_points), stat=alloc_status)
+
+          if(alloc_status /= 0) then
+            call PrtErr(OUTFILEHANDLE, '!!xyz_points array reallocation failed in generate_MKS_surfaces!!')
+            call quick_exit(OUTFILEHANDLE,1)
+          endif
+      
         endif
         ! We are ready to move the data from temporary array back to xyz_points
         xyz_points(1:3,1:total_points-npoints) = temp
@@ -139,7 +169,13 @@ module quick_molsurface_module
     quick_molspec%nvdwpoint = total_points
     ! We also need quick_molspec%vdwpointxyz elsewhere to compute ESP on those points. So, we are
     ! allocating it and copying the all the points to it.
-    allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint))
+    allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint), stat=alloc_status)
+
+    if(alloc_status /= 0) then
+      call PrtErr(OUTFILEHANDLE, '!!quick_molspec%vdwpointxyz array reallocation failed in generate_MKS_surfaces!!')
+      call quick_exit(OUTFILEHANDLE,1)
+    endif
+      
     quick_molspec%vdwpointxyz(1:3,1:total_points) = xyz_points(1:3,1:total_points)
     ! deallocated the array required to create the grid.
     deallocate(xyz_points)
@@ -305,6 +341,7 @@ module quick_molsurface_module
         end_index(i) = npoints
       ! Lets consider the atom if it is not the first atom.
       else
+        ! Checking if the array index is exceeding size of surface_points
         if(int(npoints+npts).gt.int(size(surface_points)/3)) then
           call PrtErr(OUTFILEHANDLE, 'If you are getting segmentation fault, it is due to the no of points on the &
             &van der waals surface exceeds the allocate size of the array.')
