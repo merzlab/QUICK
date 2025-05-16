@@ -89,17 +89,15 @@ module quick_molsurface_module
 
     ! Record time needed to create the grid.
     RECORD_TIME(timer_begin%TESPsurface)
-    ! This is the maximum no of points on the individual van der waals surfaces.
-    ! This is the biggest bottleneck in going to extremely fine grids as I do not
-    ! know how to reallocate this in the generate_vdW_surface subroutine.
-    ! Something to think about if in some application you are getting segmentation
-    ! fault when generating van der waals surface.
-    allocate(surface_points(3,int(natom*1000/quick_method%espgrid_spacing)))
     ! Maximum no of points including all the four surfaces.
     ! This is being reallocated when later when required.
     ! Segmentation fault will not arise from xyz_points array overflow.
     max_points = int(natom*200/(quick_method%espgrid_spacing)**2)
     allocate(xyz_points(3,max_points))
+    ! This is the maximum no of points on the individual van der waals surfaces.
+    ! This is the biggest bottleneck in going to extremely fine grids as I do not
+    ! know how to reallocate this in the generate_vdW_surface subroutine.
+    allocate(surface_points(3,int(natom*1000/quick_method%espgrid_spacing)))
     ! Initialize total_points to keep track of how many points are in the van der waals surfaces.
     total_points = 0
     ! Loop to generate 4 van der waals surfaces.
@@ -134,6 +132,8 @@ module quick_molsurface_module
       ! containing all the points.
       xyz_points(1:3,total_points-npoints+1:total_points) = surface_points(1:3,1:npoints)
     end do
+    ! Deallocate surface_points as you do not need this array anymore
+    deallocate(surface_points)
     ! We need the quick_molspec%nvdwpoint elsewhere to compute ESP on those points. So, we should
     ! assign correct value to it.
     quick_molspec%nvdwpoint = total_points
@@ -143,7 +143,6 @@ module quick_molsurface_module
     quick_molspec%vdwpointxyz(1:3,1:total_points) = xyz_points(1:3,1:total_points)
     ! deallocated the array required to create the grid.
     deallocate(xyz_points)
-    deallocate(surface_points)
     ! Record time needed to create the grid.
     RECORD_TIME(timer_end%TESPsurface)
     timer_cumer%TESPsurface=timer_cumer%TESPsurface+timer_end%TESPsurface-timer_begin%TESPsurface
@@ -306,6 +305,13 @@ module quick_molsurface_module
         end_index(i) = npoints
       ! Lets consider the atom if it is not the first atom.
       else
+        if(int(npoints+npts).gt.int(size(surface_points)/3)) then
+          call PrtErr(OUTFILEHANDLE, 'If you are getting segmentation fault, it is due to the no of points on the &
+            &van der waals surface exceeds the allocate size of the array.')
+          call PrtErr(OUTFILEHANDLE, 'Please adjust the default limit on the size of van der waals surface points &
+            &array while computing ESP charges.')
+          call quick_exit(OUTFILEHANDLE,1)
+        end if
         ! Go over all the newly obtained points.
         do j = 1, npts
           ! Go over all the neighbors to check if there is any overlap with any of their points.
