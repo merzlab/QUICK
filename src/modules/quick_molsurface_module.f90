@@ -101,7 +101,7 @@ module quick_molsurface_module
     ! Initialize total_points to keep track of how many points are in the van der waals surfaces.
     total_points = 0
     ! Loop to generate 4 van der waals surfaces.
-    do j = 1, 4
+    do j = 1, size(scaling_factors)
       ! Generate the vdW surface using different scaling factors for vdw radii
       call generate_vdW_surface(scaling_factors(j),npoints,surface_points)
       ! After individual van der waals surface is generated the total no of points
