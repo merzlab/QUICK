@@ -269,6 +269,9 @@ module quick_molsurface_module
     npoints = 0
     ! Initialize the variable to be used for detection of overlapping points later
     proximal = .False.
+    ! Initialize the variable to determine the range of points corresponding to each atom
+    start_index = 0
+    end_index   = 0
     ! Go over each atom and get points on their vanderwaals surface using 
     ! the correspnding atomic_vdw_radii
     do i = 1, natom
@@ -335,10 +338,13 @@ module quick_molsurface_module
         ! For the first atom we do not need to check for overlapping points.
         surface_points(1:3,1:npts)=xyz_sphere(1:3,1:npts)
         npoints = npts
-        ! Start and end indexes define the range of points belonging to each atom.
-        ! This significantly accelerates the checking of overlapping points.
-        start_index(i) = 1
-        end_index(i) = npoints
+        ! If there are no points corresponding to the atom we do not need to assign any range
+        if(npts.ne.0)then
+          ! Start and end indexes define the range of points belonging to each atom.
+          ! This significantly accelerates the checking of overlapping points.
+          start_index(i) = 1
+          end_index(i) = npoints
+        end if
       ! Lets consider the atom if it is not the first atom.
       else
         ! Checking if the array index is exceeding size of surface_points
@@ -360,14 +366,16 @@ module quick_molsurface_module
               if(rootSquare(xyz_sphere(1:3,j), xyz(1:3,neighbor_list(k)),3) .lt. (atomic_vdw_radii(neighbor_list(k))+thresh))then
                 ! Consider the distance from all the points of the neighbor to check for proximity
                 ! to determine if the points are overlapping.
-                do l = start_index(neighbor_list(k)), end_index(neighbor_list(k))
-                  if (rootSquare(surface_points(1:3,l), xyz_sphere(1:3,j), 3).lt.thresh)then
-                    ! set proximal to true if points are overlapping.
-                    proximal = .True.
-                    ! once the point is considered overlapping we do not need to continue checking rest of the points.
-                    exit
-                  end if
-                end do
+                if (start_index(neighbor_list(k)).ne.0) then
+                  do l = start_index(neighbor_list(k)), end_index(neighbor_list(k))
+                    if (rootSquare(surface_points(1:3,l), xyz_sphere(1:3,j), 3).lt.thresh)then
+                      ! set proximal to true if points are overlapping.
+                      proximal = .True.
+                      ! once the point is considered overlapping we do not need to continue checking rest of the points.
+                      exit
+                    end if
+                  end do
+                end if
                 ! once the point is considered overlapping we do not need to continue checking rest of the neighbors.
                 if (proximal)exit
               end if
