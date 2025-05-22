@@ -204,9 +204,6 @@
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         SAFE_CALL(getEnergy(.false.,ierr))
         ! One electron properties (ESP, EField)
-
-        !call generate_MKS_surfaces()
-
         call compute_oeprop()
 
         if(master) then
