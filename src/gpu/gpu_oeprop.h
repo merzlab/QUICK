@@ -33,14 +33,14 @@ __device__ static inline void addint_oeprop(unsigned int I, unsigned int J, unsi
     int JJJ2 = LOC2(devSim.Qfbasis, JJ, J, devSim.nshell, 4);
 
     for (int III = III1; III <= III2; III++) {
-        for (int JJJ = MAX(III,JJJ1); JJJ <= JJJ2; JJJ++) {
-            // devTrans maps a basis function with certain angular momentum to store2 array. Get the correct indices now.
-            int i = (int) LOC3(devTrans,
-                    LOC2(devSim.KLMN, 0, III - 1, 3, devSim.nbasis),
-                    LOC2(devSim.KLMN, 1, III - 1, 3, devSim.nbasis),
-                    LOC2(devSim.KLMN, 2, III - 1, 3, devSim.nbasis),
-                    TRANSDIM, TRANSDIM, TRANSDIM);
+        // devTrans maps a basis function with certain angular momentum to store2 array. Get the correct indices now.
+        int i = (int) LOC3(devTrans,
+                LOC2(devSim.KLMN, 0, III - 1, 3, devSim.nbasis),
+                LOC2(devSim.KLMN, 1, III - 1, 3, devSim.nbasis),
+                LOC2(devSim.KLMN, 2, III - 1, 3, devSim.nbasis),
+                TRANSDIM, TRANSDIM, TRANSDIM);
 
+        for (int JJJ = MAX(III,JJJ1); JJJ <= JJJ2; JJJ++) {
             int j = (int) LOC3(devTrans, 
                     LOC2(devSim.KLMN, 0, JJJ - 1, 3, devSim.nbasis),
                     LOC2(devSim.KLMN, 1, JJJ - 1, 3, devSim.nbasis),
@@ -189,23 +189,20 @@ __global__ void getOEPROP_kernel()
     unsigned int offset = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int totalThreads = blockDim.x * gridDim.x;
     unsigned int jshell = devSim.Qshell;
+    unsigned int jshell2 = jshell * jshell;
     unsigned int totalatom = devSim.natom + devSim.nextatom;
-    QUICKULL totalpoint = devSim.nextpoint;
-    QUICKULL ncalcs = (QUICKULL) (jshell * jshell * totalpoint);
+    unsigned int totalpoint = devSim.nextpoint;
 
-    for (QUICKULL i = offset; i < ncalcs; i += totalThreads) {
+    for (unsigned int ipoint = offset; ipoint < totalpoint; ipoint += totalThreads) {
+      for (unsigned int idx = 0; idx < jshell2; idx++){
         // use the global index to obtain shell pair. Note that here we obtain
         // a couple of indices that helps us to obtain
         // shell number (ii and jj) and quantum numbers (iii, jjj).
-        // For each shell pair, we are going over all the external points before
-        // moving to the next shell pair.
-        unsigned int idx = (unsigned int) (i / totalpoint);
+        // Each point is assigned to a thread.
 
 #if defined(MPIV_GPU)
         if (devSim.mpi_boeicompute[idx] > 0) {
 #endif
-            unsigned int ipoint = (unsigned int) (i - idx * totalpoint);
-
             int II = devSim.sorted_OEICutoffIJ[idx].x;
             int JJ = devSim.sorted_OEICutoffIJ[idx].y;
 
@@ -226,6 +223,7 @@ __global__ void getOEPROP_kernel()
 #if defined(MPIV_GPU)
         }
 #endif
+      }
     }
 }
 
