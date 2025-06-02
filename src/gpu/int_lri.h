@@ -5,7 +5,7 @@
 #include "include/h_all_subroutines.h"
 
 
-__device__ static inline void vertical2_spdf(int I, int J, int K, int L,
+__device__ static inline void vertical_spdf2(int I, int J, int K, int L,
         QUICKDouble * const YVerticalTemp, QUICKDouble * const store,
         QUICKDouble Ptempx, QUICKDouble Ptempy, QUICKDouble Ptempz,
         QUICKDouble WPtempx, QUICKDouble WPtempy, QUICKDouble WPtempz,
@@ -14,63 +14,63 @@ __device__ static inline void vertical2_spdf(int I, int J, int K, int L,
         QUICKDouble ABCDtemp, QUICKDouble ABtemp,
         QUICKDouble CDtemp, QUICKDouble ABcom, QUICKDouble CDcom)
 {
-    if ((I+J) >=  0 && (K+L) >= 5) {
-        h2_0_5(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
+    if (I + J >= 5) {
+        if (K + L >= 0) {
+            h_5_0(YVerticalTemp, store,
+                    Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,
+                    WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
+
+            if (K + L >= 1) {
+                h_5_1(YVerticalTemp, store,
+                        Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,
+                        WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
+
+                if (K + L >= 2) {
+                    h_5_2(YVerticalTemp, store,
+                            Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,
+                            WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
+
+                    if (K + L >= 3) {
+                        h_5_3(YVerticalTemp, store,
+                                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,
+                                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
+
+                        if (K + L >= 4) {
+                            h_5_4(YVerticalTemp, store,
+                                    Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,
+                                    WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (I + J >= 6) {
+            if (K + L >= 0) {
+                h_6_0(YVerticalTemp, store,
+                        Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,
+                        WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
+
+                if (K + L >= 1) {
+                    h_6_1(YVerticalTemp, store,
+                            Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,
+                            WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
+
+                    if (K + L >= 2) {
+                        h_6_2(YVerticalTemp, store,
+                                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,
+                                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
+
+                        if (K + L >= 3) {
+                            h_6_3(YVerticalTemp, store,
+                                    Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,
+                                    WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
+                        }
+                    }
+                }
+            }
+        }
     }
-
-    if ((I+J) >=  1 && (K+L) >= 5) {
-        h2_1_5(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-
-    if ((I+J) >=  2 && (K+L) >= 5) {
-        h2_2_5(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-
-    if ((I+J) >=  3 && (K+L) >= 5) {
-        h2_3_5(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-
-    if ((I+J) >=  4 && (K+L) >= 5) {
-        h2_4_5(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-
-
-#ifdef GPU_SPDF
-    if ((I+J) >=  0 && (K+L) >= 6) {
-        h2_0_6(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-
-    if ((I+J) >=  1 && (K+L) >= 6) {
-        h2_1_6(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-
-    if ((I+J) >=  2 && (K+L) >= 6) {
-        h2_2_6(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-    if ((I+J) >=  3 && (K+L) >= 6) {
-        h2_3_6(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-#endif
-
-
 }
 
 
@@ -130,150 +130,6 @@ __device__ static inline void vertical2_spdf2(int I, int J, int K, int L,
                 WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
     }
 #endif
-}
-
-
-__device__ static inline void vertical2_spdf3(int I, int J, int K, int L,
-        QUICKDouble * const YVerticalTemp, QUICKDouble * const store,
-        QUICKDouble Ptempx, QUICKDouble Ptempy, QUICKDouble Ptempz,
-        QUICKDouble WPtempx, QUICKDouble WPtempy, QUICKDouble WPtempz,
-        QUICKDouble Qtempx, QUICKDouble Qtempy, QUICKDouble Qtempz,
-        QUICKDouble WQtempx, QUICKDouble WQtempy, QUICKDouble WQtempz,
-        QUICKDouble ABCDtemp, QUICKDouble ABtemp,
-        QUICKDouble CDtemp, QUICKDouble ABcom, QUICKDouble CDcom)
-{
-    if ((I+J) >=  5 && (K+L) >= 5) {
-        h2_5_5(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-}
-
-
-__device__ static inline void vertical2_spdf4(int I, int J, int K, int L,
-        QUICKDouble * const YVerticalTemp, QUICKDouble * const store,
-        QUICKDouble Ptempx, QUICKDouble Ptempy, QUICKDouble Ptempz,
-        QUICKDouble WPtempx, QUICKDouble WPtempy, QUICKDouble WPtempz,
-        QUICKDouble Qtempx, QUICKDouble Qtempy, QUICKDouble Qtempz,
-        QUICKDouble WQtempx, QUICKDouble WQtempy, QUICKDouble WQtempz,
-        QUICKDouble ABCDtemp, QUICKDouble ABtemp,
-        QUICKDouble CDtemp, QUICKDouble ABcom, QUICKDouble CDcom)
-{
-    if ((I+J) >=  6 && (K+L) >= 5) {
-        h2_6_5(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-}
-
-
-__device__ static inline void vertical2_spdf5(int I, int J, int K, int L,
-        QUICKDouble * const YVerticalTemp, QUICKDouble * const store,
-        QUICKDouble Ptempx, QUICKDouble Ptempy, QUICKDouble Ptempz,
-        QUICKDouble WPtempx, QUICKDouble WPtempy, QUICKDouble WPtempz,
-        QUICKDouble Qtempx, QUICKDouble Qtempy, QUICKDouble Qtempz,
-        QUICKDouble WQtempx, QUICKDouble WQtempy, QUICKDouble WQtempz,
-        QUICKDouble ABCDtemp, QUICKDouble ABtemp,
-        QUICKDouble CDtemp, QUICKDouble ABcom, QUICKDouble CDcom)
-{
-
-    if ((I+J) >=  4 && (K+L) >= 6) {
-        h2_4_6(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-}
-
-
-__device__ static inline void vertical2_spdf6(int I, int J, int K, int L,
-        QUICKDouble * const YVerticalTemp, QUICKDouble * const store,
-        QUICKDouble Ptempx, QUICKDouble Ptempy, QUICKDouble Ptempz,
-        QUICKDouble WPtempx, QUICKDouble WPtempy, QUICKDouble WPtempz,
-        QUICKDouble Qtempx, QUICKDouble Qtempy, QUICKDouble Qtempz,
-        QUICKDouble WQtempx, QUICKDouble WQtempy, QUICKDouble WQtempz,
-        QUICKDouble ABCDtemp, QUICKDouble ABtemp,
-        QUICKDouble CDtemp, QUICKDouble ABcom, QUICKDouble CDcom)
-{
-    if ((I+J) >=  6 && (K+L) >= 4) {
-        h2_6_4(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-}
-
-
-__device__ static inline void vertical2_spdf7(int I, int J, int K, int L,
-        QUICKDouble * const YVerticalTemp, QUICKDouble * const store,
-        QUICKDouble Ptempx, QUICKDouble Ptempy, QUICKDouble Ptempz,
-        QUICKDouble WPtempx, QUICKDouble WPtempy, QUICKDouble WPtempz,
-        QUICKDouble Qtempx, QUICKDouble Qtempy, QUICKDouble Qtempz,
-        QUICKDouble WQtempx, QUICKDouble WQtempy, QUICKDouble WQtempz,
-        QUICKDouble ABCDtemp, QUICKDouble ABtemp,
-        QUICKDouble CDtemp, QUICKDouble ABcom, QUICKDouble CDcom)
-{
-    if ((I+J) >=  5 && (K+L) >= 6) {
-        h2_5_6(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-}
-
-
-__device__ static inline void vertical2_spdf8(int I, int J, int K, int L,
-        QUICKDouble * const YVerticalTemp, QUICKDouble * const store,
-        QUICKDouble Ptempx, QUICKDouble Ptempy, QUICKDouble Ptempz,
-        QUICKDouble WPtempx, QUICKDouble WPtempy, QUICKDouble WPtempz,
-        QUICKDouble Qtempx, QUICKDouble Qtempy, QUICKDouble Qtempz,
-        QUICKDouble WQtempx, QUICKDouble WQtempy, QUICKDouble WQtempz,
-        QUICKDouble ABCDtemp, QUICKDouble ABtemp,
-        QUICKDouble CDtemp, QUICKDouble ABcom, QUICKDouble CDcom)
-{
-    if ((I+J) >=  6 && (K+L) >= 6) {
-        h2_6_6(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-}
-
-
-__device__ static inline void vertical2_spdf9(int I, int J, int K, int L,
-        QUICKDouble * const YVerticalTemp, QUICKDouble * const store,
-        QUICKDouble Ptempx, QUICKDouble Ptempy, QUICKDouble Ptempz,
-        QUICKDouble WPtempx, QUICKDouble WPtempy, QUICKDouble WPtempz,
-        QUICKDouble Qtempx, QUICKDouble Qtempy, QUICKDouble Qtempz,
-        QUICKDouble WQtempx, QUICKDouble WQtempy, QUICKDouble WQtempz,
-        QUICKDouble ABCDtemp, QUICKDouble ABtemp,
-        QUICKDouble CDtemp, QUICKDouble ABcom, QUICKDouble CDcom)
-{
-    if ((I+J) >=  7 && (K+L) >= 0) {
-        h2_7_0(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-
-    if ((I+J) >=  7 && (K+L) >= 1) {
-        h2_7_1(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-
-    if ((I+J) >=  7 && (K+L) >= 2) {
-        h2_7_2(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-
-    if ((I+J) >=  7 && (K+L) >= 3) {
-        h2_7_3(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
-
-    if ((I+J) >=  7 && (K+L) >= 4) {
-        h2_7_4(YVerticalTemp, store, \
-                Ptempx, Ptempy, Ptempz, WPtempx, WPtempy, WPtempz, Qtempx, Qtempy, Qtempz,  \
-                WQtempx, WQtempy, WQtempz, ABCDtemp, ABtemp, CDtemp,  ABcom, CDcom);
-    }
 }
 
 
