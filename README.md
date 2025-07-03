@@ -1,6 +1,6 @@
 <p align="right">
- <img src="https://github.com/merzlab/QUICK/workflows/Build%20and%20Test%20QUICK%20Serial%20Version/badge.svg?branch=master">
- <img src="https://github.com/merzlab/QUICK/workflows/Build%20and%20Test%20QUICK%20MPI%20Version/badge.svg?branch=master">
+ <img src="https://github.com/ohearnk/QUICK/actions/workflows/build_test_serial.yml/badge.svg?branch=master">
+ <img src="https://github.com/ohearnk/QUICK/actions/workflows/build_test_mpi.yml/badge.svg?branch=master">
  <img src='https://readthedocs.org/projects/quick-docs/badge/?version=latest' alt='Documentation Status' />
 </p>
 <p align="left">
