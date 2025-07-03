@@ -1,7 +1,7 @@
 <p align="right">
  <img src="https://github.com/merzlab/QUICK/actions/workflows/build_test_serial.yml/badge.svg?branch=master">
  <img src="https://github.com/merzlab/QUICK/actions/workflows/build_test_mpi.yml/badge.svg?branch=master">
- <img src='https://readthedocs.org/projects/quick-docs/badge/?version=latest' alt='Documentation Status' />
+ <img src='https://readthedocs.org/projects/quick-docs/badge/?version=25.3.0' alt='Documentation Status' />
 </p>
 <p align="left">
 <img width="299" height="169" src="./tools/logo.png">
@@ -41,20 +41,20 @@ Installation
 ------------
 Supported platforms: Linux (x86 and ARM), macOS (x86 and ARM)
 
-* [Installation Guide](https://quick-docs.readthedocs.io/en/latest/installation-guide.html#installation-guide)
-   1. [Compatible Compilers and Hardware](https://quick-docs.readthedocs.io/en/latest/installation-guide.html#compatible-compilers-and-hardware)
-   2. [Installation](https://quick-docs.readthedocs.io/en/latest/installation-guide.html#installation)
-   3. [Testing](https://quick-docs.readthedocs.io/en/latest/installation-guide.html#environment-variables-and-testing)
-   4. [Uninstallation](https://quick-docs.readthedocs.io/en/latest/installation-guide.html#uninstallation-and-cleaning)
+* [Installation Guide](https://quick-docs.readthedocs.io/en/25.3.0/installation-guide.html#installation-guide)
+   1. [Compatible Compilers and Hardware](https://quick-docs.readthedocs.io/en/25.3.0/installation-guide.html#compatible-compilers-and-hardware)
+   2. [Installation](https://quick-docs.readthedocs.io/en/25.3.0/installation-guide.html#installation)
+   3. [Testing](https://quick-docs.readthedocs.io/en/25.3.0/installation-guide.html#environment-variables-and-testing)
+   4. [Uninstallation](https://quick-docs.readthedocs.io/en/25.3.0/installation-guide.html#uninstallation-and-cleaning)
 
 Getting Started
 ---------------
-* [Hands-on Tutorials](https://quick-docs.readthedocs.io/en/latest/hands-on-tutorials.html)
-* [User Manual](https://quick-docs.readthedocs.io/en/latest/user-manual.html)
+* [Hands-on Tutorials](https://quick-docs.readthedocs.io/en/25.3.0/hands-on-tutorials.html)
+* [User Manual](https://quick-docs.readthedocs.io/en/25.3.0/user-manual.html)
 
 Known Issues
 ------------
-A list of installation and runtime issues can be found [here](https://quick-docs.readthedocs.io/en/latest/known-issues.html#known-issues-of-current-version).
+A list of installation and runtime issues can be found [here](https://quick-docs.readthedocs.io/en/25.3.0/known-issues.html#known-issues-of-current-version).
 
 Citation
 --------
@@ -117,7 +117,7 @@ DL-FIND: An Open-Source Geometry Optimizer for Atomistic Simulations.
 
 License
 -------
-QUICK is licensed under Mozilla Public License 2.0. More information can be found [here](https://quick-docs.readthedocs.io/en/latest/license.html#mozilla-public-license-version-2-0).
+QUICK is licensed under Mozilla Public License 2.0. More information can be found [here](https://quick-docs.readthedocs.io/en/25.3.0/license.html#mozilla-public-license-version-2-0).
 
 Special Note to Users
 ---------------------
