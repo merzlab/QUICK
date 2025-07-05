@@ -40,26 +40,19 @@
 | If you have any comments or queries, please reach out to us on GitHub issues or discussion sections:     
 | https://github.com/merzlab/QUICK.                                                                        
 |                                                                                                          
-| TASK STARTS ON: Thu Apr 17 15:34:15 2025
-| INPUT FILE :    esp_charge_acetate_radical.in
-| OUTPUT FILE:    esp_charge_acetate_radical.out
-| BASIS SET PATH: /home/vtripathy/QUICK_dev/QUICK/install_cuda/basis
-
-| - MPI Enabled -
-| TOTAL RANKS     =     4
-| MASTER NAME     = login01                       
+| TASK STARTS ON: Thu May  1 21:41:10 2025
+| INPUT FILE :    esp_charge_acetate_anion.in
+| OUTPUT FILE:    esp_charge_acetate_anion.out
+| BASIS SET PATH: /scratch/vtripathy/QUICK/install/basis
 
  @ Read Job And Atom
 
-  KEYWORD=UDFT B3LYP BASIS=DEF2-SVP XCCUTOFF=1.0E-12 BASISCUTOFF=1.0E-12 CUTOFF=1.0E-12 DENSERMS=1.0E-8 ESP_CHARGE ESPGRID_SPACING=0.25 CHARGE=0 MULT=2
+  KEYWORD=DFT B3LYP BASIS=DEF2-SVP XCCUTOFF=1.0E-12 BASISCUTOFF=1.0E-12 CUTOFF=1.0E-12 DENSERMS=1.0E-8 ESP_CHARGE ESPGRID_SPACING=0.25 CHARGE=-1
  ============== JOB CARD =============
  METHOD = DENSITY FUNCTIONAL THEORY
- USING LIBXC VERSION: 4.3.4
- FUNCTIONAL INFORMATION:
- NAME = B3LYP FAMILY = HYBRID GGA KIND = EXCHANGE CORRELATION
+ DENSITY FUNCTIONAL = B3LYP
  DIRECT SCF 
  SAD INITAL GUESS 
- UNRESTRICTED SYSTEM
  USE DIIS SCF
  PRINT ENERGY EVERY CYCLE
  READ SAD GUESS FROM FILE
@@ -77,8 +70,8 @@
       BASIS FUNCTION   =  0.100E-11
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-07
  BASIS SET = DEF2-SVP,  TYPE = CARTESIAN
-| BASIS FILE = /home/vtripathy/QUICK_dev/QUICK/install_cuda/basis/DEF2-SVP.BAS
-| DATA FILE  =    esp_charge_acetate_radical.dat
+| BASIS FILE = /scratch/vtripathy/QUICK/install/basis/DEF2-SVP.BAS
+| DATA FILE  =    esp_charge_acetate_anion.dat
 
  @ Finish reading job
 
@@ -102,11 +95,10 @@
 
 
  =========== Molecule Input ==========
- TOTAL MOLECULAR CHARGE  =    0    MULTIPLICITY                =    2
+ TOTAL MOLECULAR CHARGE  =   -1    MULTIPLICITY                =    1
  TOTAL ATOM NUMBER       =    7    NUMBER OF ATOM TYPES        =    3
  NUMBER OF HYDROGEN ATOM =    3    NUMBER OF NON-HYDROGEN ATOM =    4
- NUMBER OF ALPHA ELECTRONS =   16
- NUMBER OF BETA ELECTRONS  =   15
+ NUMBER OF ELECTRONS     =   32
 
  -- INPUT GEOMETRY -- :
     C          -1.3727      -0.2391      -0.0038
@@ -153,98 +145,69 @@
 
  @ Begin Energy Calculation
 
-                                         USCF ENERGY
+                                         SCF ENERGY
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -228.479105508      ------         0.523     1        0.01      0.52      0.00    0.1956E+01  0.1965E-01  0.2430E+00
-|  2   -228.135985147  -.343120E+00       0.776     2        0.05      0.72      0.00    0.1765E+00  0.8061E-02  0.1568E+00
-|  3   -228.114202625  -.217825E-01       0.726     3        0.01      0.72      0.00    0.1655E+00  0.5059E-02  0.8695E-01
-|  4   -228.196403340  0.822007E-01       0.777     4        0.06      0.72      0.00    0.9323E-01  0.3527E-02  0.7485E-01
-|  5   -228.215856409  0.194531E-01       0.717     5        0.01      0.71      0.00    0.5903E-01  0.8801E-03  0.1674E-01
-|  6   -228.221889927  0.603352E-02       0.715     6        0.01      0.71      0.00    0.1515E-01  0.4516E-03  0.7278E-02
-|  7   -228.222504791  0.614864E-03       0.774     7        0.01      0.77      0.00    0.1067E-01  0.3826E-03  0.5912E-02
-|  8   -228.222864095  0.359304E-03       0.708     8        0.01      0.70      0.00    0.7529E-02  0.5136E-03  0.7618E-02
-|  9   -228.223188629  0.324534E-03       0.706     9        0.01      0.70      0.00    0.4544E-02  0.7551E-03  0.1121E-01
-| 10   -228.223475229  0.286601E-03       0.714    10        0.01      0.71      0.00    0.1168E-02  0.4518E-03  0.6807E-02
-| 11   -228.223565495  0.902652E-04       0.707     1        0.01      0.70      0.00    0.7213E-03  0.2173E-03  0.4258E-02
-| 12   -228.223598851  0.333562E-04       0.756     2        0.06      0.70      0.00    0.5984E-03  0.2924E-03  0.6021E-02
-| 13   -228.223632933  0.340824E-04       1.207     3        0.01      1.20      0.00    0.4194E-03  0.3297E-03  0.6775E-02
-| 14   -228.223658876  0.259425E-04       0.703     4        0.01      0.70      0.00    0.2111E-03  0.2714E-03  0.5681E-02
-| 15   -228.223667455  0.857904E-05       0.706     5        0.01      0.70      0.00    0.2334E-03  0.6168E-04  0.1114E-02
-| 16   -228.223668271  0.816429E-06       1.083     6        0.06      1.02      0.00    0.1369E-04  0.2035E-04  0.4199E-03
-| 17   -228.223668346  0.751130E-07       0.707     7        0.01      0.70      0.00    0.1123E-04  0.3314E-05  0.5706E-04
-| 18   -228.223668356  0.977553E-08       0.690     8        0.06      0.63      0.00    0.4672E-05  0.1019E-05  0.2119E-04
-| 19   -228.223668359  0.256262E-08       0.638     9        0.01      0.63      0.00    0.9843E-06  0.7034E-06  0.2015E-04
-| 20   -228.223668360  0.162549E-08       0.684    10        0.01      0.68      0.00    0.4857E-06  0.3055E-06  0.1045E-04
-| 21   -228.223668361  0.447358E-09       0.675     1        0.06      0.62      0.00    0.7155E-06  0.2253E-06  0.6468E-05
-| 22   -228.223668361  0.142563E-09       0.637     2        0.01      0.63      0.00    0.2523E-05  0.4801E-07  0.1273E-05
-| 23   -228.223668361  0.289901E-10       0.681     3        0.01      0.67      0.00    0.6602E-06  0.1140E-06  0.3401E-05
-| 24   -228.223668361  0.499085E-10       0.684     4        0.06      0.62      0.00    0.1181E-05  0.1002E-06  0.3059E-05
-| 25   -228.223668361  0.864020E-11       0.626     5        0.01      0.62      0.00    0.2684E-05  0.6763E-07  0.1226E-05
-| 26   -228.223668361  0.135287E-10       0.672     6        0.06      0.61      0.05    0.5783E-06  0.4191E-07  0.1128E-05
-| 27   -228.223668361  0.630962E-11       0.630     7        0.01      0.62      0.00    0.5898E-06  0.3986E-07  0.1081E-05
-| 28   -228.223668361  0.267164E-11       0.677     8        0.01      0.67      0.00    0.8361E-06  0.5744E-07  0.9419E-06
-| 29   -228.223668361  -.187583E-11       0.627     9        0.01      0.62      0.00    0.2036E-05  0.2810E-07  0.6296E-06
-| 30   -228.223668361  0.619593E-11       0.682    10        0.01      0.67      0.00    0.2053E-06  0.4221E-07  0.6592E-06
-| 31   -228.223668361  -.625278E-12       0.628     1        0.01      0.62      0.00    0.7798E-06  0.7186E-07  0.1187E-05
-| 32   -228.223668361  -.150635E-10       0.677     2        0.01      0.67      0.00    0.2604E-05  0.6556E-07  0.1170E-05
-| 33   -228.223668361  0.183604E-10       0.622     3        0.01      0.61      0.00    0.3066E-06  0.1830E-07  0.3227E-06
-| 34   -228.223668361  0.795808E-12       0.664     4        0.01      0.66      0.00    0.3067E-06  0.1908E-07  0.2975E-06
-| 35   -228.223668361  -.682121E-12       0.631     5        0.01      0.62      0.00    0.6034E-06  0.3953E-07  0.7433E-06
-| 36   -228.223668361  -.216005E-11       0.671     6        0.01      0.66      0.00    0.1416E-05  0.9583E-07  0.1711E-05
-| 37   -228.223668361  -.237605E-10       0.625     7        0.01      0.62      0.00    0.3553E-05  0.8215E-07  0.1387E-05
-| 38   -228.223668361  0.268301E-10       0.679     8        0.01      0.67      0.00    0.8984E-06  0.2891E-07  0.5471E-06
-| 39   -228.223668361  -.136424E-11       0.686     9        0.06      0.62      0.00    0.1297E-05  0.5828E-07  0.1021E-05
-| 40   -228.223668361  -.750333E-11       0.634    10        0.01      0.63      0.00    0.3087E-05  0.4741E-07  0.8612E-06
-| 41   -228.223668361  0.977707E-11       0.676     1        0.01      0.67      0.00    0.5564E-06  0.4032E-07  0.7219E-06
-| 42   -228.223668361  -.233058E-11       0.615     2        0.01      0.61      0.00    0.1367E-05  0.2581E-07  0.4716E-06
-| 43   -228.223668361  0.312639E-11       0.675     3        0.06      0.62      0.00    0.5126E-07  0.7479E-08  0.1564E-06
+|  1   -228.479105508      ------         0.487     1        0.00      0.48      0.00    0.1956E+01  0.3912E-01  0.4859E+00
+|  2   -228.093110676  -.385995E+00       0.669     2        0.00      0.67      0.00    0.3038E+00  0.1176E+00  0.5291E+01
+|  3   -227.640947616  -.452163E+00       0.635     3        0.00      0.63      0.00    0.5641E+00  0.1054E+00  0.4754E+01
+|  4   -228.227623509  0.586676E+00       0.667     4        0.00      0.66      0.00    0.1433E+00  0.9884E-02  0.1282E+00
+|  5   -228.302234154  0.746106E-01       0.651     5        0.00      0.65      0.00    0.4865E-01  0.2707E-02  0.4739E-01
+|  6   -228.304097209  0.186306E-02       0.625     6        0.00      0.62      0.00    0.3178E-01  0.1102E-02  0.1746E-01
+|  7   -228.306012622  0.191541E-02       0.618     7        0.00      0.62      0.00    0.3367E-02  0.3002E-03  0.4944E-02
+|  8   -228.306048800  0.361774E-04       0.608     8        0.00      0.61      0.00    0.7470E-03  0.7531E-04  0.1981E-02
+|  9   -228.306050545  0.174502E-05       0.598     9        0.00      0.60      0.00    0.1422E-03  0.1482E-04  0.2291E-03
+| 10   -228.306050622  0.771777E-07       0.589    10        0.00      0.59      0.00    0.3038E-04  0.2798E-05  0.4803E-04
+| 11   -228.306050626  0.422625E-08       0.570     1        0.00      0.57      0.00    0.7549E-05  0.6418E-06  0.6064E-05
+| 12   -228.306050626  0.203613E-09       0.556     2        0.00      0.55      0.00    0.6436E-06  0.1203E-06  0.1883E-05
+| 13   -228.306050626  0.443379E-11       0.534     3        0.00      0.53      0.00    0.1737E-06  0.2091E-07  0.2688E-06
+| 14   -228.306050626  0.397904E-12       0.507     4        0.00      0.50      0.00    0.3304E-07  0.7421E-08  0.9211E-07
 | ------------------------------------------------------------------------------------------------------------------------
-| REACH CONVERGENCE AFTER  43 CYCLES
-| MAX ERROR = 0.512550E-07   RMS CHANGE = 0.747852E-08   MAX CHANGE = 0.156354E-06
+| REACH CONVERGENCE AFTER  14 CYCLES
+| MAX ERROR = 0.330447E-07   RMS CHANGE = 0.742115E-08   MAX CHANGE = 0.921065E-07
 | -----------------------------------------------
- ALPHA ELECTRON DENSITY    =   16.0000028895
- BETA ELECTRON DENSITY     =   15.0000175934
- ELECTRONIC ENERGY    =   -336.548192238
+ ALPHA ELECTRON DENSITY    =    15.9999784814
+ BETA ELECTRON DENSITY     =    15.9999784814
+ ELECTRONIC ENERGY    =   -336.630574504
  CORE_CORE REPULSION  =    108.324523877
- TOTAL ENERGY         =   -228.223668361
+ TOTAL ENERGY         =   -228.306050626
 
  @ End Energy calculation
 
- *** Printing Electrostatic Potential (ESP) at points on vdw surface to esp_charge_acetate_radical.vdw with coordinates in angstroms***
+ *** Printing Electrostatic Potential (ESP) at points on vdw surface to esp_charge_acetate_anion.vdw with coordinates in angstroms***
   ESP charges:
   ----------------
-     1   C     -0.329587
-     2   H      0.122424
-     3   C      0.595573
-     4   O     -0.399292
-     5   H      0.124427
-     6   O     -0.236024
-     7   H      0.122479
+     1   C     -0.347408
+     2   H      0.048759
+     3   C      0.688615
+     4   O     -0.693598
+     5   H      0.052272
+     6   O     -0.791282
+     7   H      0.042642
   ----------------
-  Net charge =  -0.000000
+  Net charge =  -1.000000
   
 
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.696168000(  2.17%)
-| DFT GRID OPERATIONS =     0.043575000(  0.14%)
-| ESP COMPUTATION TIME =     0.930992000(  2.90%)
-| ESP Surface Creation TIME =     0.038768000(  0.12%)
-| ESP Charge COMPUTATION TIME =     0.004204000(  0.01%)
-| TOTAL SCF TIME      =    30.089493000( 93.89%)
-|       TOTAL OP TIME      =    29.246912000( 91.26%)
-|             TOTAL 1e TIME      =     0.001966000(  0.01%)
-|             TOTAL 2e TIME      =    17.633760000( 55.02%)
-|             TOTAL EXC TIME     =    11.487588000( 35.84%)
-|       TOTAL DII TIME      =     0.842563000(  2.63%)
-|             TOTAL DIAG TIME    =     0.002210000(  0.01%)
-| TOTAL TIME          =    32.048766000
+| INITIAL GUESS TIME  =     0.138753000(  1.42%)
+| DFT GRID OPERATIONS =     0.055036000(  0.56%)
+| ESP COMPUTATION TIME =     1.255739000( 12.81%)
+| ESP Surface Creation TIME =     0.014504000(  0.15%)
+| ESP Charge COMPUTATION TIME =     0.001621000(  0.02%)
+| TOTAL SCF TIME      =     8.318618000( 84.84%)
+|       TOTAL OP TIME      =     8.286482000( 84.51%)
+|             TOTAL 1e TIME      =     0.004672000(  0.05%)
+|             TOTAL 2e TIME      =     5.494284000( 56.03%)
+|             TOTAL EXC TIME     =     2.782376000( 28.38%)
+|       TOTAL DII TIME      =     0.032044000(  0.33%)
+|             TOTAL DIAG TIME    =     0.012012000(  0.12%)
+| TOTAL TIME          =     9.805475000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes 32.0 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  9.8 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Thu Apr 17 15:34:47 2025
+| Normal Termination. Task Finished on: Thu May  1 21:41:20 2025

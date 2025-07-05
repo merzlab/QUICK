@@ -1,0 +1,4 @@
+$DATA=rw_xyz_and_density_checkpoint.dat
+B3LYP CHARGE=-1 cutoff=1.0e-9 BASIS=6-31g* denserms=1.0e-6
+read_coord readden ESP_CHARGE
+
