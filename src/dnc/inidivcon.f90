@@ -36,9 +36,9 @@
 subroutine inidivcon(natomsaved)
   use allmod
 #ifdef MPIV
-  use mpi
+  use mpi_f08
 #endif
-  implicit double precision (a-h,o-z)
+  implicit none
 
   double precision rbuffer1,rbuffer2
 

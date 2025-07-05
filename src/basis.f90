@@ -15,17 +15,14 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    use allmod
    use quick_gridpoints_module
    use quick_exception_module
-
 #ifdef CEW
    use quick_cew_module, only: quick_cew
 #endif
-
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-
-   !
    implicit double precision(a-h,o-z)
+
    character(len=120) :: line
    character(len=2) :: atom,shell
    logical :: isatom
