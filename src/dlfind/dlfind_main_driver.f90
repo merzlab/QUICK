@@ -582,7 +582,7 @@ subroutine dlf_update()
 end subroutine dlf_update
 
 
-subroutine dlf_get_multistate_gradients(nvar,coords,energy,gradient,iimage,status)
+subroutine dlf_get_multistate_gradients(nvar,coords,energy,gradient,needscoupling,iimage,status)
   ! only a dummy routine up to now
   ! for conical intersection search
   use dlf_parameter_module
@@ -591,6 +591,7 @@ subroutine dlf_get_multistate_gradients(nvar,coords,energy,gradient,iimage,statu
   integer   ,intent(in)    :: coords(nvar)
   real(rk)  ,intent(in)    :: energy(2)
   real(rk)  ,intent(in)    :: gradient(nvar,2)
+  integer   ,intent(in)    :: needscoupling
   integer   ,intent(in)    :: iimage
   integer   ,intent(in)    :: status
 end subroutine dlf_get_multistate_gradients

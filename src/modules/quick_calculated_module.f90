@@ -318,13 +318,19 @@ contains
      integer, intent(inout) :: ierr
      integer :: current_size     
 
-     if(quick_molspec%nextatom .gt. 0) then
-       if(allocated(self%ptchg_gradient)) current_size= size(self%ptchg_gradient)
-       if(current_size /= quick_molspec%nextatom*3) then
+     if (quick_molspec%nextatom > 0) then
+       if (allocated(self%ptchg_gradient)) then
+         current_size = size(self%ptchg_gradient)
+       else
+         current_size = 0
+       endif
+       ! if size changes at all, be safe and reallocate to avoid mismatches in array operations with external codes;
+       ! this can be potentially revisited in the future during optimization efforts
+       if (current_size /= 3*quick_molspec%nextatom) then
          deallocate(self%ptchg_gradient, stat=ierr)
          allocate(self%ptchg_gradient(3*quick_molspec%nextatom), stat=ierr)
-         self%ptchg_gradient=0.0d0
        endif
+       self%ptchg_gradient=0.0d0
      endif
 
    end subroutine reallocate_quick_qm_struct

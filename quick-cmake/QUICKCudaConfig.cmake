@@ -210,12 +210,12 @@ if(CUDA)
     #  https://stackoverflow.com/questions/6622454/cuda-incompatible-with-my-gcc-version
     #  VERSION_EQUAL 10 means 10.0, so use ranges to compare major versions.
     if ( "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" AND (
-	    ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 14.2
-              AND CUDA_VERSION VERSION_GREATER_EQUAL 12.6
-              AND CUDA_VERSION VERSION_LESS_EQUAL 12.6 )
-        OR  ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.3
+	    ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 14.3
+              AND CUDA_VERSION VERSION_GREATER_EQUAL 12.8
+              AND CUDA_VERSION VERSION_LESS_EQUAL 12.8 )
+        OR  ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.4
               AND CUDA_VERSION VERSION_GREATER_EQUAL 12.4
-              AND CUDA_VERSION VERSION_LESS_EQUAL 12.4 )
+              AND CUDA_VERSION VERSION_LESS_EQUAL 12.6 )
         OR ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 12.3
               AND CUDA_VERSION VERSION_GREATER_EQUAL 12.1
               AND CUDA_VERSION VERSION_LESS_EQUAL 12.3 )
@@ -406,13 +406,13 @@ if(HIP)
     #  check ROCm version (as reported by hipcc),
     #  as the QUICK HIP codes trigger a known scalar register fill/spill bug
     #  in several ROCm versions
-    if (${HIP_VERSION} VERSION_GREATER_EQUAL 5.4.3)
+    if ((${HIP_VERSION} VERSION_GREATER_EQUAL 5.4.3) AND (${HIP_VERSION} VERSION_LESS 6.2.1))
         message(STATUS "")
         message("************************************************************")
 	message("Error: Incompatible ROCm/HIP version: ${HIP_VERSION}")
         message("  The QUICK HIP codes trigger a known compiler scalar register ")
-        message("  fill/spill bug in ROCm >= v5.4.3.")
-        message("  Please build QUICK with a known working ROCm version.")
+	message("  fill/spill bug in ROCm (>= v5.4.3, < v6.2.1).")
+        message("  Please build QUICK with a tested working ROCm version.")
         message("************************************************************")
         message(STATUS "")
         message(FATAL_ERROR)

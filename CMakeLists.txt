@@ -67,10 +67,26 @@ list(APPEND NO_OPT_FFLAGS "-O0")
 list(APPEND NO_OPT_CFLAGS "-O0")
 list(APPEND NO_OPT_CXXFLAGS "-O0")
 
+
+# cache Apple ARM CPU model for subsequent compiler checks
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
+    execute_process(COMMAND sysctl machdep.cpu.brand_string OUTPUT_VARIABLE APPLE_CPU_INFO)
+
+    string(REGEX MATCH "(M[0-9]*)" _ "${APPLE_CPU_INFO}")
+    set(APPLE_CPU_MODEL ${CMAKE_MATCH_1})
+endif()
+
+
 # GNU
 # --------------------------------------------------------------------
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
-    list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
+        # switch off mtune - it must be supported by the underlying clang compiler
+        # we have no way of checking for compatible gnu/clang versions here
+        list(APPEND OPT_CFLAGS "-O2")
+    else()
+        list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
+    endif()
 
     if (WARNINGS)
 	add_flags(C -Wall -Wno-unused-function -Wno-unknown-pragmas)
@@ -86,7 +102,13 @@ if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    list(APPEND OPT_CXXFLAGS "-O2" "-mtune=native")
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
+        # switch off mtune - it must be supported by the underlying clang compiler
+        # we have no way of checking for compatible gnu/clang versions here
+        list(APPEND OPT_CXXFLAGS "-O2")
+    else()
+        list(APPEND OPT_CXXFLAGS "-O2" "-mtune=native")
+    endif()
 
     if (WARNINGS)
 	add_flags(CXX -Wall -Wno-unused-function -Wno-unknown-pragmas)
@@ -109,7 +131,28 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 endif()
 
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
-    list(APPEND OPT_FFLAGS "-O2" "-mtune=native")
+
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
+
+        if("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "AppleClang")
+            if( ( "${APPLE_CPU_MODEL}" MATCHES "M1" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 15.0.0 )
+                OR  ( "${APPLE_CPU_MODEL}" MATCHES "M2" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0.0 )
+                OR  ( "${APPLE_CPU_MODEL}" MATCHES "M3" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 17.0.0 )
+                OR  ( "${APPLE_CPU_MODEL}" MATCHES "M4" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 20.1.0 ) )
+                list(APPEND OPT_FFLAGS "-O2" "-mtune=native")
+            else()
+                list(APPEND OPT_FFLAGS "-O2")
+            endif()
+        else()
+            # switch off mtune - it must be supported by the underlying clang compiler
+            # we are using GNU C/C++ compiler and have no way of checking for compatible gnu/clang versions here
+            list(APPEND OPT_FFLAGS "-O2")
+        endif()
+
+    else()
+        list(APPEND OPT_FFLAGS "-O2" "-mtune=native")
+    endif()
+
     add_flags(Fortran -ffree-line-length-none)
 
     if (WARNINGS)
@@ -129,6 +172,63 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
     endif()
 
     add_definitions(-DGNU)
+endif()
+
+
+# Clang
+# --------------------------------------------------------------------
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "AppleClang")
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
+	    if( ( "${APPLE_CPU_MODEL}" STREQUAL "M1" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 15.0.0 )
+		    OR ( "${APPLE_CPU_MODEL}" STREQUAL "M2" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0.0 )
+		    OR ( "${APPLE_CPU_MODEL}" STREQUAL "M3" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 17.0.0)
+		    OR ( "${APPLE_CPU_MODEL}" STREQUAL "M4" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 20.1.0 ) )
+		    list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
+	    else()
+		    list(APPEND OPT_CFLAGS "-O2")
+	    endif()
+    else()
+        list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
+    endif()
+
+    if (WARNINGS)
+	add_flags(C -Wall -Wno-unused-function)
+
+	if(NOT UNUSED_WARNINGS)
+	    add_flags(C -Wno-unused-variable -Wno-unused-but-set-variable)
+	endif()
+
+	if(NOT UNINITIALIZED_WARNINGS)
+	    add_flags(C -Wno-uninitialized -Wno-maybe-uninitialized)
+	endif()
+    endif()
+endif()
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
+	    if( ( "${APPLE_CPU_MODEL}" STREQUAL "M1" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 15.0.0 )
+		    OR ( "${APPLE_CPU_MODEL}" STREQUAL "M2" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0.0 )
+		    OR ( "${APPLE_CPU_MODEL}" STREQUAL "M3" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 17.0.0)
+		    OR ( "${APPLE_CPU_MODEL}" STREQUAL "M4" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 20.1.0 ) )
+		    list(APPEND OPT_CXXFLAGS "-O2" "-mtune=native")
+	    else()
+		    list(APPEND OPT_CXXFLAGS "-O2")
+	    endif()
+    else()
+        list(APPEND OPT_CXXFLAGS "-O2" "-mtune=native")
+    endif()
+
+    if (WARNINGS)
+	add_flags(CXX -Wall -Wno-unused-function)
+
+	if(NOT UNUSED_WARNINGS)
+	    add_flags(CXX -Wno-unused-variable -Wno-unused-but-set-variable)
+	endif()
+
+	if(NOT UNINITIALIZED_WARNINGS)
+	    add_flags(CXX -Wno-uninitialized -Wno-maybe-uninitialized)
+	endif()
+    endif()
 endif()
 
 
@@ -317,7 +417,7 @@ if(INSIDE_AMBER)
 	install(DIRECTORY test USE_SOURCE_PERMISSIONS DESTINATION AmberTools/src/quick COMPONENT Tests ${TESTS_EXCLUDE_OPTION})
 
         # install runtest script
-        install(PROGRAMS tools/runtest DESTINATION AmberTools/src/quick COMPONENT Tests)
+        install(PROGRAMS tools/runtest DESTINATION AmberTools/src/quick COMPONENT Tests ${TESTS_EXCLUDE_OPTION})
 
 else()
 	# Standalone install

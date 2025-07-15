@@ -22,14 +22,14 @@ module quick_molspec_module
    type quick_molspec_type
 
       ! number of atoms
-      integer,pointer :: natom
+      integer, pointer :: natom
 
       ! number of electron and beta electron
-      integer :: nElec = 0
-      integer :: nElecb = 0
+      integer :: nelec = 0
+      integer :: nelecb = 0
 
       ! number of external atoms
-      integer :: nExtAtom = 0
+      integer :: nextatom = 0
 
       ! number of external grid points 
       integer :: nextpoint = 0
@@ -82,13 +82,13 @@ module quick_molspec_module
       integer, dimension(:,:), allocatable :: dlfind_constr
 
       ! basis set number
-      integer,pointer:: nbasis
+      integer, pointer:: nbasis
 
    end type quick_molspec_type
 
-   type (quick_molspec_type),save:: quick_molspec
+   type (quick_molspec_type), save :: quick_molspec
    double precision, dimension(:,:), allocatable,target :: xyz
-   integer,target :: natom
+   integer, target :: natom
 
    ! interface lists
 
@@ -145,7 +145,7 @@ contains
       integer i,j
       integer, intent(inout) :: ierr
 
-      type (quick_molspec_type) self
+      type (quick_molspec_type), intent(inout) :: self
 
       if (.not. allocated(xyz)) allocate(xyz(3,natom))
 !      allocate(self%xyz(3,natom))
@@ -212,26 +212,39 @@ contains
      integer, intent(inout) :: ierr
      integer :: current_size
 
-     if(self%nextatom .gt. 0) then
-       if(allocated(self%extchg)) current_size= size(self%extchg)
+     if(self%nextatom > 0) then
+       if(allocated(self%extchg)) then
+         current_size = size(self%extchg)
+       else
+         current_size = 0
+       endif
+       ! if size changes at all, be safe and reallocate to avoid mismatches in array operations with external codes;
+       ! this can be potentially revisited in the future during optimization efforts
        if(current_size /= self%nextatom) then
          deallocate(self%extchg, stat=ierr)
          deallocate(self%extxyz, stat=ierr)
          allocate(self%extchg(self%nextatom), stat=ierr)
          allocate(self%extxyz(3,self%nextatom), stat=ierr)
-         self%extchg=0.0d0
-         self%extxyz=0.0d0
        endif
+       self%extchg=0.0d0
+       self%extxyz=0.0d0
      endif
 
-     if(self%nextpoint .gt. 0) then
-      if(current_size /= self%nextpoint) then
-        deallocate(self%extpointxyz, stat=ierr)
-        allocate(self%extpointxyz(3,self%nextpoint), stat=ierr)
-        self%extchg=0.0d0
-        self%extpointxyz=0.0d0
-      endif
-    endif
+     if(self%nextpoint > 0) then
+       if(allocated(self%extpointxyz)) then
+         current_size = size(self%extpointxyz)
+       else
+         current_size = 0
+       endif
+       ! if size changes at all, be safe and reallocate to avoid mismatches in array operations with external codes;
+       ! this can be potentially revisited in the future during optimization efforts
+       if(current_size /= 3*self%nextpoint) then
+         deallocate(self%extpointxyz, stat=ierr)
+         allocate(self%extpointxyz(3,self%nextpoint), stat=ierr)
+       endif
+       self%extchg=0.0d0
+       self%extpointxyz=0.0d0
+     endif
 
    end subroutine reallocate_quick_molspec
 
@@ -242,13 +255,13 @@ contains
       use quick_exception_module
       implicit none
 
-      type (quick_molspec_type) self
+      type (quick_molspec_type), intent(inout) :: self
       integer, intent(inout) :: ierr
 
       self%natom => natom
-      self%nElec = 0
-      self%nElecb = 0
-      self%nExtAtom = 0
+      self%nelec = 0
+      self%nelecb = 0
+      self%nextatom = 0
       self%nextpoint = 0
       self%imult = 1
       self%molchg = 0
@@ -267,7 +280,7 @@ contains
       use quick_exception_module
       implicit none
 
-      type (quick_molspec_type) self
+      type (quick_molspec_type), intent(inout) :: self
       integer, intent(inout) :: ierr
 
       if (allocated(xyz)) deallocate(xyz)
@@ -304,7 +317,7 @@ contains
       use mpi
 
       implicit none
-      type (quick_molspec_type) self
+      type (quick_molspec_type), intent(inout) :: self
       integer natom2
       integer, intent(inout) :: ierr
 
@@ -312,8 +325,8 @@ contains
       call MPI_BCAST(self%natom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
 
       natom2=natom**2
-      call MPI_BCAST(self%nElec,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nElecb,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%nelec,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%nelecb,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%nextatom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%imult,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%molchg,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
@@ -357,7 +370,7 @@ contains
 
     integer :: fail
 
-    type (quick_molspec_type) :: self
+    type (quick_molspec_type), intent(inout) :: self
     integer, intent(inout) :: ierr
     integer :: input,rdinml,i,j,k
     integer :: ierror
@@ -422,35 +435,35 @@ contains
     ! get the atom number, type and number of external charges
 
     if( .not. isTemplate) then
-   
+
       ! If reading from data file
       if(quick_method%read_coord)then
-   
+
         open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
         call rchk_int(iDataFile, "natom", natom, fail)
         if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
         call rchk_iarray(iDataFile, "iattype", natom, 1, 1, self%iattype, fail)
         close(iDataFile)
-   
+
         ! Reading external charges from data file is not yet implemented
         nextatom = 0
         self%nextatom = nextatom
-   
+
         iAtomType = 0
-   
+
         do i = 1, natom
           if (.not.(any(self%atom_type_sym(1:iAtomType).eq.symbol(self%iattype(i))))) then
             iAtomType=iAtomType+1
             self%atom_type_sym(iAtomType) = symbol(self%iattype(i))
           endif
         enddo
-   
+
         self%iAtomType = iAtomType
-   
+
       ! Reading from input file
       else
         call findBlock(input,1)
-   
+
         ! first is to read atom and atom kind
         iAtomType = 1
         natom = 0
@@ -477,7 +490,7 @@ contains
           enddo
         enddo
         111     continue
-   
+
         ! read external charge part
         if (is_extcharge)  then
           rewind(input)
@@ -488,7 +501,7 @@ contains
             nextatom=nextatom+1
           enddo
         endif
-   
+
         ! read external grid part
         if (is_extgrid) then
            rewind(input)
@@ -499,9 +512,9 @@ contains
               nextpoint = nextpoint + 1
            enddo
         endif
-   
+
         112     continue
-      
+
         !read contrained part
         if (is_constrain) then
            rewind(input)
@@ -521,12 +534,11 @@ contains
         endif
       
         113       continue
-      
+
         iAtomType=iAtomType-1
         self%iAtomType = iAtomType
         self%nextatom = nextatom
-        self%nfreezeatom = nfreezeatom
-        self%nconsatom = nconsatom 
+        self%nextpoint = nextpoint
       endif
     endif
 
@@ -541,7 +553,7 @@ contains
 
       implicit none
       ! parameter
-      type (quick_molspec_type) self
+      type (quick_molspec_type), intent(inout) :: self
       integer input
       integer, intent(inout) :: ierr
       ! inner varibles
@@ -596,208 +608,208 @@ contains
 
 
 
-    subroutine read_quick_molespec_extcharges(self,input,ierr)
-        use quick_constants_module
-        use quick_exception_module
+   subroutine read_quick_molespec_extcharges(self,input,ierr)
+       use quick_constants_module
+       use quick_exception_module
 
-        implicit none
+       implicit none
 
-        ! parameter
-        type (quick_molspec_type) self
-        integer input
-        integer, intent(inout) :: ierr
-        ! inner varibles
-        integer i,j,k,istart,ifinal
-        integer nextatom,ierror
-        double precision temp
-        character(len=300) keywd
+       ! parameter
+       type (quick_molspec_type), intent(inout) :: self
+       integer input
+       integer, intent(inout) :: ierr
+       ! inner varibles
+       integer i,j,k,istart,ifinal
+       integer nextatom,ierror
+       double precision temp
+       character(len=300) keywd
 
-        rewind(input)
-        call findBlock(input,2)
-        nextatom=self%nextatom
+       rewind(input)
+       call findBlock(input,2)
+       nextatom=self%nextatom
 
-        do i=1,nextatom
-            istart = 1
-            ifinal = 80
+       do i=1,nextatom
+           istart = 1
+           ifinal = 80
 
-            read(input,'(A80)') keywd
+           read(input,'(A80)') keywd
 
-            do j=1,3
-                ifinal=80
-                call rdword(keywd,istart,ifinal)
-                call rdnum(keywd,istart,temp,ierror)
-                self%extxyz(j,i) = temp*A_TO_BOHRS
-                istart=ifinal+1
-            enddo
-
-            call rdword(keywd,istart,ifinal)
-            call rdnum(keywd,istart,self%extchg(i),ierror)
-
-        enddo
-
-    end subroutine read_quick_molespec_extcharges
-
-    subroutine read_quick_molespec_constrain(self,input,ierr)
-        use quick_constants_module
-        use quick_exception_module
-
-        implicit none
-
-        ! parameter
-        type (quick_molspec_type) self
-        integer input
-        integer, intent(inout) :: ierr
-        ! inner varibles
-        integer i,j,k,istart,ifinal,itemp,incons
-        integer nconsatom,nfreezeatom,ierror
-        double precision temp
-        character(len=200) keywd
-
-        incons=0
-
-        rewind(input)
-
-        if (self%nextatom.gt.0) then
-           call findBlock(input,3)
-        else
-           call findBlock(input,2)
-        endif
-        nconsatom=self%nconsatom
-        nfreezeatom=self%nfreezeatom
-
-        do i=1,nfreezeatom+nconsatom
-            istart = 1
-            ifinal = 80
-
-            read(input,'(A80)') keywd
-            call upcase(keywd,80)
-            call rdword(keywd,istart,ifinal)
-            
-            if (index(keywd,'FREEZEXY') /=0) then
-               istart=ifinal+1
+           do j=1,3
                ifinal=80
                call rdword(keywd,istart,ifinal)
-               call rdinum(keywd,istart,itemp,ierror)
-               self%dlfind_freezeatm(itemp)=-23 
-
-            elseif (index(keywd,'FREEZEXZ') /=0) then
+               call rdnum(keywd,istart,temp,ierror)
+               self%extxyz(j,i) = temp*A_TO_BOHRS
                istart=ifinal+1
-               ifinal=80
-               call rdword(keywd,istart,ifinal)
-               call rdinum(keywd,istart,itemp,ierror)
-               self%dlfind_freezeatm(itemp)=-24
+           enddo
 
-            elseif (index(keywd,'FREEZEYZ') /=0) then
-               istart=ifinal+1
-               ifinal=80
-               call rdword(keywd,istart,ifinal)
-               call rdinum(keywd,istart,itemp,ierror)
-               self%dlfind_freezeatm(itemp)=-34
+           call rdword(keywd,istart,ifinal)
+           call rdnum(keywd,istart,self%extchg(i),ierror)
 
-            elseif (index(keywd,'FREEZEX') /=0) then
-               istart=ifinal+1
-               ifinal=80
-               call rdword(keywd,istart,ifinal)
-               call rdinum(keywd,istart,itemp,ierror)
-               self%dlfind_freezeatm(itemp)=-2
+       enddo
 
-            elseif (index(keywd,'FREEZEY') /=0) then
-               istart=ifinal+1
-               ifinal=80
-               call rdword(keywd,istart,ifinal)
-               call rdinum(keywd,istart,itemp,ierror)
-               self%dlfind_freezeatm(itemp)=-3
+   end subroutine read_quick_molespec_extcharges
 
-            elseif (index(keywd,'FREEZEZ') /=0) then
-               istart=ifinal+1
-               ifinal=80
-               call rdword(keywd,istart,ifinal)
-               call rdinum(keywd,istart,itemp,ierror)
-               self%dlfind_freezeatm(itemp)=-4
+   subroutine read_quick_molespec_constrain(self,input,ierr)
+       use quick_constants_module
+       use quick_exception_module
 
-            elseif (index(keywd,'FREEZE') /=0) then
-               istart=ifinal+1
-               ifinal=80
-               call rdword(keywd,istart,ifinal)
-               call rdinum(keywd,istart,itemp,ierror)
-               self%dlfind_freezeatm(itemp)=-1
+       implicit none
 
-            elseif (index(keywd,'DISTANCE') /=0) then
-               incons=incons+1
-               self%dlfind_constr(1,incons)=1
-               do j=2,self%dlfind_constr(1,incons)+2
-                   istart=ifinal+1
-                   ifinal=80
-                   call rdword(keywd,istart,ifinal)
-                   call rdinum(keywd,istart,itemp,ierror)               
-                   self%dlfind_constr(j,incons)= itemp
-               enddo
+       ! parameter
+       type (quick_molspec_type) self
+       integer input
+       integer, intent(inout) :: ierr
+       ! inner varibles
+       integer i,j,k,istart,ifinal,itemp,incons
+       integer nconsatom,nfreezeatom,ierror
+       double precision temp
+       character(len=200) keywd
 
-            elseif (index(keywd,'ANGLE') /=0) then
-               incons=incons+1
-               self%dlfind_constr(1,incons)=2
-               do j=2,self%dlfind_constr(1,incons)+2
-                   istart=ifinal+1
-                   ifinal=80
-                   call rdword(keywd,istart,ifinal)
-                   call rdinum(keywd,istart,itemp,ierror)
-                   self%dlfind_constr(j,incons)= itemp
-               enddo
+       incons=0
 
-            elseif (index(keywd,'DIHEDRAL') /=0) then
-               incons=incons+1
-               self%dlfind_constr(1,incons)=3
-               do j=2,self%dlfind_constr(1,incons)+2
-                   istart=ifinal+1
-                   ifinal=80
-                   call rdword(keywd,istart,ifinal)
-                   call rdinum(keywd,istart,itemp,ierror)
-                   self%dlfind_constr(j,incons)= itemp
-               enddo
+       rewind(input)
 
-            endif
-        enddo
+       if (self%nextatom.gt.0) then
+          call findBlock(input,3)
+       else
+          call findBlock(input,2)
+       endif
+       nconsatom=self%nconsatom
+       nfreezeatom=self%nfreezeatom
 
-    end subroutine read_quick_molespec_constrain
+       do i=1,nfreezeatom+nconsatom
+           istart = 1
+           ifinal = 80
 
-    subroutine read_quick_molespec_extgridpoints(self,input,ierr)
-      use quick_constants_module
-      use quick_exception_module
-
-      implicit none
-
-      ! parameter
-      type (quick_molspec_type) self
-      integer input
-      integer, intent(inout) :: ierr
-      ! inner varibles
-      integer i,j,k,istart,ifinal
-      integer nextpoint,ierror
-      double precision temp
-      character(len=200) keywd
-
-      rewind(input)
-      call findBlock(input,2)
-      nextpoint=self%nextpoint
-
-      do i=1,nextpoint
-          istart = 1
-          ifinal = 80
-
-          read(input,'(A80)') keywd
-
-          do j=1,3
+           read(input,'(A80)') keywd
+           call upcase(keywd,80)
+           call rdword(keywd,istart,ifinal)
+           
+           if (index(keywd,'FREEZEXY') /=0) then
+              istart=ifinal+1
               ifinal=80
               call rdword(keywd,istart,ifinal)
-              call rdnum(keywd,istart,temp,ierror)
-              self%extpointxyz(j,i) = temp*A_TO_BOHRS
+              call rdinum(keywd,istart,itemp,ierror)
+              self%dlfind_freezeatm(itemp)=-23 
+
+           elseif (index(keywd,'FREEZEXZ') /=0) then
               istart=ifinal+1
-          enddo
+              ifinal=80
+              call rdword(keywd,istart,ifinal)
+              call rdinum(keywd,istart,itemp,ierror)
+              self%dlfind_freezeatm(itemp)=-24
 
-          call rdword(keywd,istart,ifinal)
-      enddo
+           elseif (index(keywd,'FREEZEYZ') /=0) then
+              istart=ifinal+1
+              ifinal=80
+              call rdword(keywd,istart,ifinal)
+              call rdinum(keywd,istart,itemp,ierror)
+              self%dlfind_freezeatm(itemp)=-34
 
-  end subroutine read_quick_molespec_extgridpoints
+           elseif (index(keywd,'FREEZEX') /=0) then
+              istart=ifinal+1
+              ifinal=80
+              call rdword(keywd,istart,ifinal)
+              call rdinum(keywd,istart,itemp,ierror)
+              self%dlfind_freezeatm(itemp)=-2
+
+           elseif (index(keywd,'FREEZEY') /=0) then
+              istart=ifinal+1
+              ifinal=80
+              call rdword(keywd,istart,ifinal)
+              call rdinum(keywd,istart,itemp,ierror)
+              self%dlfind_freezeatm(itemp)=-3
+
+           elseif (index(keywd,'FREEZEZ') /=0) then
+              istart=ifinal+1
+              ifinal=80
+              call rdword(keywd,istart,ifinal)
+              call rdinum(keywd,istart,itemp,ierror)
+              self%dlfind_freezeatm(itemp)=-4
+
+           elseif (index(keywd,'FREEZE') /=0) then
+              istart=ifinal+1
+              ifinal=80
+              call rdword(keywd,istart,ifinal)
+              call rdinum(keywd,istart,itemp,ierror)
+              self%dlfind_freezeatm(itemp)=-1
+
+           elseif (index(keywd,'DISTANCE') /=0) then
+              incons=incons+1
+              self%dlfind_constr(1,incons)=1
+              do j=2,self%dlfind_constr(1,incons)+2
+                  istart=ifinal+1
+                  ifinal=80
+                  call rdword(keywd,istart,ifinal)
+                  call rdinum(keywd,istart,itemp,ierror)               
+                  self%dlfind_constr(j,incons)= itemp
+              enddo
+
+           elseif (index(keywd,'ANGLE') /=0) then
+              incons=incons+1
+              self%dlfind_constr(1,incons)=2
+              do j=2,self%dlfind_constr(1,incons)+2
+                  istart=ifinal+1
+                  ifinal=80
+                  call rdword(keywd,istart,ifinal)
+                  call rdinum(keywd,istart,itemp,ierror)
+                  self%dlfind_constr(j,incons)= itemp
+              enddo
+
+           elseif (index(keywd,'DIHEDRAL') /=0) then
+              incons=incons+1
+              self%dlfind_constr(1,incons)=3
+              do j=2,self%dlfind_constr(1,incons)+2
+                  istart=ifinal+1
+                  ifinal=80
+                  call rdword(keywd,istart,ifinal)
+                  call rdinum(keywd,istart,itemp,ierror)
+                  self%dlfind_constr(j,incons)= itemp
+              enddo
+
+           endif
+       enddo
+
+   end subroutine read_quick_molespec_constrain
+
+   subroutine read_quick_molespec_extgridpoints(self,input,ierr)
+     use quick_constants_module
+     use quick_exception_module
+
+     implicit none
+
+     ! parameter
+     type (quick_molspec_type), intent(inout) :: self
+     integer input
+     integer, intent(inout) :: ierr
+     ! inner varibles
+     integer i,j,k,istart,ifinal
+     integer nextpoint,ierror
+     double precision temp
+     character(len=200) keywd
+
+     rewind(input)
+     call findBlock(input,2)
+     nextpoint=self%nextpoint
+
+     do i=1,nextpoint
+         istart = 1
+         ifinal = 80
+
+         read(input,'(A80)') keywd
+
+         do j=1,3
+             ifinal=80
+             call rdword(keywd,istart,ifinal)
+             call rdnum(keywd,istart,temp,ierror)
+             self%extpointxyz(j,i) = temp*A_TO_BOHRS
+             istart=ifinal+1
+         enddo
+
+         call rdword(keywd,istart,ifinal)
+     enddo
+
+   end subroutine read_quick_molespec_extgridpoints
 
    ! check if molecular specifications are correct
    subroutine check_quick_molspec(self, ierr)
@@ -823,7 +835,7 @@ contains
        
       integer, intent(inout) :: ierr
       integer io,i,j
-      type(quick_molspec_type) self
+      type(quick_molspec_type), intent(in) :: self
       if (io.ne.0) then
          write(io,'(/," =========== Molecule Input ==========")')
          write(io,'(" TOTAL MOLECULAR CHARGE  = ",I4,4x,"MULTIPLICITY                = ",I4)') self%molchg,self%imult
@@ -883,7 +895,7 @@ contains
 
       integer, intent(inout) :: ierr
       integer i,j,k
-      type (quick_molspec_type) self
+      type (quick_molspec_type), intent(inout) :: self
 
       self%nelec=-self%molchg
       ! get atom charge and molecule charge before everything

@@ -97,8 +97,6 @@ subroutine getMol(ierr)
    quick_basis%Xcoeff = 0.0d0
    call init(quick_qm_struct)
 
-
-
    !-----------MPI/MASTER------------------------
    if (master) then
       ! now print molecule specification to output file
