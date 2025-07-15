@@ -715,20 +715,32 @@ run_api_test()
 #   $3: test number for this test
 #   $4: total number of tests
 #   $5: directory containing test files and scripts
-#   $6: log file
-#   $7: job slot (GNU parallel) (1-based indexing)
+#   $6: test summary log file
+#   $7: test verbose log file (captures stdout/stderr from running QUICK executables)
+#   $8: job slot (GNU parallel) (1-based indexing)
 run_rw_test()
 {
-  set_test "$1" "$5" "$7"
-  run_test "$1" "$2" "$3" "$4" "$6"
+  set_test "$1" "$5" "$8"
+  run_test "$1" "$2" "$3" "$4" "$6" "$7"
+
+  check_f_error $1
+  check_f_error_ret="$?"
+  check_mpi_gpu_mismatch $1
+  check_mpi_gpu_mismatch_ret="$?"
+
   lock_file "$6"
   echo "Running test $3 of $4" | tee -a "$6"
   echo "$2" | tee -a "$6"
-  if [ `check_f_error $1` -eq 0 ]; then
+
+  if [ "$check_f_error_ret" -eq 0 ] && [ "$check_mpi_gpu_mismatch_ret" -eq 0 ]; then
     check_rw "$1" "$5" "$6"
     echo "" | tee -a "$6"
-  else
-    echo "SKIPPED." | tee -a "$6"
+  elif [ "$check_f_error_ret" -eq 1 ]; then
+    echo "SKIPPED (code not compiled with f function support)." | tee -a "$6"
+    echo "==============================================================" | tee -a "$6"
+    echo "" | tee -a "$6"
+  elif [ "$check_mpi_gpu_mismatch_ret" -eq 1 ]; then
+    echo "SKIPPED (DO_PARALLEL: # MPI procs > # GPUs)." | tee -a "$6"
     echo "==============================================================" | tee -a "$6"
     echo "" | tee -a "$6"
   fi
@@ -1452,11 +1464,13 @@ for buildtype in $buildtypes; do
     if [ $has_parallel = 'no' ]; then
       for tc in `seq $tc_start $tc_end`; do
         run_rw_test "${tests[$(($tc-1))]}" "${test_names[$(($tc-1))]}" "$tc" "$total_tests" \
-		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log"
+		"$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" \
+                "$QUICK_HOME/.quick.${buildtype}.runtest-verbose.log"
       done
     elif [ $has_parallel = 'yes' ]; then
       parallel --keep-order --group --jobs "$PARALLEL_TEST_COUNT" --xapply --will-cite run_rw_test {1} {2} {3} \
-	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" {%} \
+	      "$total_tests" "$testdir" "$QUICK_HOME/.quick.${buildtype}.runtest.log" \
+              "$QUICK_HOME/.quick.${buildtype}.runtest-verbose.log" {%} \
 	      ::: "${tests[@]:$(($tc_start-1)):$tot_rw_tests}" ::: "${test_names[@]:$(($tc_start-1)):$tot_rw_tests}" \
 	      ::: `seq $tc_start $tc_end`
     fi

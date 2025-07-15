@@ -345,6 +345,15 @@ extern "C" void gpu_init_device_(int* ierr)
     status = cudaGetDeviceProperties(&deviceProp, device);
     PRINTERROR(status, "cudaGetDeviceProperties gpu_init failed!");
 
+#if defined(HIP) || defined(HIP_MPIV)
+    cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
+    /* NOTE: setting the stack size limit to 8K is required for correctness
+     * in HIP/MPI+HIP codes to workaround GPU kernel issues for recent ROCm versions (>= v6.2.1);
+     * ideally, this could be dropped in the future if ROCm properly addresses
+     * this issues internally */
+    cudaDeviceSetLimit(cudaLimitStackSize, 8192);
+#endif
+
 #if defined(DEBUG)
     size_t val;
 

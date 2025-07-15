@@ -79,49 +79,64 @@ module quick_molsurface_module
 
     implicit none
 
-    double precision :: surface_points(3,int(natom*500/quick_method%espgrid_spacing))
+    double precision,allocatable :: surface_points(:,:)
     double precision :: scaling_factors(4)
     data scaling_factors/1.4d0,1.6d0,1.8d0,2.0d0/
     integer :: npoints, total_points
-    integer :: i, j, k, ierr
+    integer :: i, j, ierr
     integer :: max_points
-    double precision, allocatable :: xyz_points(:,:)
+    double precision, allocatable :: xyz_points(:,:), temp(:,:)
 
     RECORD_TIME(timer_begin%TESPsurface)
+
+    allocate(surface_points(3,int(natom*1000/quick_method%espgrid_spacing)))
 
     max_points = int(natom*200/(quick_method%espgrid_spacing)**2)
 
     allocate(xyz_points(3,max_points))
 
-      ierr = 0
+    ierr = 0
 
-      total_points = 0
+    total_points = 0
 
-      do j = 1, 4
-        ! Generate the vdW surface using different scaling factors for vdw radii
-        call generate_vdW_surface(scaling_factors(j),npoints,surface_points)
+    do j = 1, 4
+      ! Generate the vdW surface using different scaling factors for vdw radii
+      call generate_vdW_surface(scaling_factors(j),npoints,surface_points)
 
-        total_points = total_points + npoints
+      total_points = total_points + npoints
 
-        if(total_points .gt. max_points) then
-          ierr = 41
-          call RaiseException(ierr)
-        end if
+      if(total_points .gt. max_points) then
+        ! temporary array to facilitate reallocation
+        allocate(temp(3,total_points-npoints))
+        temp = xyz_points(1:3,1:total_points-npoints)
 
-          do k = 1,3
-             xyz_points(1:3,total_points-npoints+1:total_points) = surface_points(1:3,1:npoints)
-        end do
+        deallocate(xyz_points)
 
-      end do
+        if((j.eq.4).or.(total_points .gt. 2*max_points))then
+          allocate(xyz_points(3,total_points))
+        else
+          max_points = 2*max_points
+          allocate(xyz_points(3,max_points))
+        endif
 
-      quick_molspec%nvdwpoint = total_points
-      allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint))
-      quick_molspec%vdwpointxyz(1:3,1:total_points) = xyz_points(1:3,1:total_points)
+        xyz_points(1:3,1:total_points-npoints) = temp
+        deallocate(temp)
+      end if
 
-      deallocate(xyz_points)
+      xyz_points(1:3,total_points-npoints+1:total_points) = surface_points(1:3,1:npoints)
 
-      RECORD_TIME(timer_end%TESPsurface)
-      timer_cumer%TESPsurface=timer_cumer%TESPsurface+timer_end%TESPsurface-timer_begin%TESPsurface
+    end do
+
+    quick_molspec%nvdwpoint = total_points
+    allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint))
+    quick_molspec%vdwpointxyz(1:3,1:total_points) = xyz_points(1:3,1:total_points)
+
+    deallocate(xyz_points)
+    deallocate(surface_points)
+
+
+    RECORD_TIME(timer_end%TESPsurface)
+    timer_cumer%TESPsurface=timer_cumer%TESPsurface+timer_end%TESPsurface-timer_begin%TESPsurface
 
    end subroutine generate_MKS_surfaces
 
@@ -137,13 +152,15 @@ module quick_molsurface_module
     double precision, external :: rootSquare
 
     integer, intent(out) :: npoints
-    integer :: i,j,k,ncircles,circle,npts,nphi
-    double precision :: scale_factor,espgrid_spacing
+    integer :: i,j,k,l,ii,ncircles,circle,npts,nphi,nneighbor
+    double precision, intent(in) :: scale_factor
+    double precision :: espgrid_spacing
     double precision :: start_theta,delta_theta,rcircle,radius,theta,delta_phi
     double precision :: Bondi_vdw_radii(118), Tkatchenko_vdw_radii(118)
     integer :: Bondi_atom_list(38)
-    double precision :: atomic_vdw_radii(natom),xyz_sphere(3,4000)
-    double precision, intent(out) :: surface_points(3,natom*2000)
+    integer :: neighbor_list(natom), start_index(natom), end_index(natom)
+    double precision :: atomic_vdw_radii(natom), xyz_sphere(3,4000)
+    double precision, intent(out) :: surface_points(:,:)
     double precision :: thresh
     logical :: proximal
     data Bondi_vdw_radii/ &
@@ -209,6 +226,16 @@ module quick_molsurface_module
     ! Go over each atom and get points on their vanderwaals surface using 
     ! the correspnding atomic_vdw_radii
     do i = 1, natom
+      ! Create a list of neighbors for efficiency
+      nneighbor=0
+      do ii = 1, natom
+        if (ii .ne. i) then
+          if(rootSquare(xyz(1:3,ii),xyz(1:3,i),3) .le. (atomic_vdw_radii(ii)+atomic_vdw_radii(i)+thresh)) then
+            nneighbor=nneighbor+1
+            neighbor_list(nneighbor)=ii
+          endif
+        endif
+      enddo
       npts = 0
       radius = atomic_vdw_radii(i)
       ! We will make circles on the surface. Find the number of circles to make.
@@ -225,40 +252,45 @@ module quick_molsurface_module
           xyz_sphere(1,npts) = xyz(1,i) + radius*cos(theta)
           xyz_sphere(2,npts) = xyz(2,i) + radius*sin(theta)*cos((j-1)*delta_phi)
           xyz_sphere(3,npts) = xyz(3,i) + radius*sin(theta)*sin((j-1)*delta_phi)
-          do k = 1, natom
-            if (k .ne. i)then
-              if(rootSquare(xyz_sphere(1:3,npts),xyz(1:3,k),3).lt.atomic_vdw_radii(k))then
-                npts = npts - 1
-                exit
-              end if
+          do k = 1, nneighbor
+            if(rootSquare(xyz_sphere(1:3,npts),xyz(1:3,neighbor_list(k)),3) .lt. atomic_vdw_radii(neighbor_list(k)))then
+              npts = npts - 1
+              exit
             end if
           end do
         end do
       end do
 
       if (npoints.eq.0)then
-        do j = 1, npts
-          do k = 1, 3
-            surface_points(k,j) = xyz_sphere(k,j)
-          end do
-        end do
+        surface_points(1:3,1:npts)=xyz_sphere(1:3,1:npts)
         npoints = npts
+        start_index(i) = 1
+        end_index(i) = npoints
       else
         do j = 1, npts
           proximal = .False.
-          do k = 1, npoints
-            if (rootSquare(surface_points(1:3,k), xyz_sphere(1:3,j), 3).lt.thresh)then
-              proximal = .True.
-              exit
+          do k = 1, nneighbor
+            if(neighbor_list(k) .lt. i)then
+              if(rootSquare(xyz_sphere(1:3,j), xyz(1:3,neighbor_list(k)),3) .lt. (atomic_vdw_radii(neighbor_list(k))+thresh))then
+                do l = start_index(neighbor_list(k)), end_index(neighbor_list(k))
+                  if (rootSquare(surface_points(1:3,l), xyz_sphere(1:3,j), 3).lt.thresh)then
+                    proximal = .True.
+                    exit
+                  end if
+                end do
+                if (proximal)exit
+              end if
             end if
           end do
           if (.not. proximal) then
             npoints = npoints + 1
-            do k = 1,3
-              surface_points(k,npoints) = xyz_sphere(k,j)
-            end do
+            surface_points(1:3,npoints) = xyz_sphere(1:3,j)
           end if
         end do
+        if(npoints .gt. end_index(i-1))then
+          start_index(i) = end_index(i-1) + 1
+          end_index(i) = npoints
+        end if
       end if
     end do
 
