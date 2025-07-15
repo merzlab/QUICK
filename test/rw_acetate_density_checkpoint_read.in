@@ -1,5 +1,5 @@
-UDFT B3LYP BASIS=def2-svp xccutoff=1.0e-12 basiscutoff=1.0e-12 cutoff=1.0e-12 denserms=1.0e-8 ESP_CHARGE ESPGRID_SPACING=0.25
-charge=0 mult=2
+$DATA=rw_acetate_density_checkpoint.dat
+B3LYP CHARGE=-1 cutoff=1.0e-9 BASIS=def2-svp denserms=1.0e-6 readden
 
 C -1.372717 -0.239147 -0.003757
 H -1.610834 -0.823154  0.885252
