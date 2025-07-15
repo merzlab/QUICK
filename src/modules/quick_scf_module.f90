@@ -159,6 +159,9 @@ contains
      use quick_oei_module, only: bCalc1e 
      use quick_lri_module, only: computeLRI
      use quick_molden_module, only: quick_molden
+#if defined(RESTART_HDF5)
+     use quick_restart_module, only: write_double_array, iread, aread
+#endif
 
 #ifdef CEW 
      use quick_cew_module, only : quick_cew
@@ -264,17 +267,17 @@ contains
      if (bMPI) call MPI_setup_hfoperator
      !-------------- END MPI / ALL NODE -----------
 #endif
+
+#if defined(RESTART_HDF5)
         if(quick_method%readden)then
           nbasis = quick_molspec%nbasis
           if(master)then
-            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
-            rewind(iDataFile)
-            call rchk_int(iDataFile, "nbasis", nbasis, fail)
-            call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
-            close(iDataFile)
+            call iread('molinfo',2,nbasis)
+            call aread('dense', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%dense)
           endif
         endif
- 
+#endif
+
 #ifdef MPIV
      if (bMPI) then
   !      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -719,14 +722,9 @@ contains
         !--------------- END MPI/ALL NODES -------------------------------------
   
         if (master) then
-
-           if(quick_method%writeden)then 
-             ! open data file then write calculated info to dat file
-             call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
-             call wchk_int(iDataFile, "nbasis", nbasis, fail)
-             call wchk_darray(iDataFile, "dense",    nbasis, nbasis, 1, quick_qm_struct%dense,    fail)
-             close(iDataFile)
-           endif 
+#if defined(RESTART_HDF5)
+          if(quick_method%writeden) call write_double_array(quick_qm_struct%dense, nbasis, nbasis, 'dense')
+#endif
 
 #ifdef USEDAT
            ! open data file then write calculated info to dat file

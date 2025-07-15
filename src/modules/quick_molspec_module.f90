@@ -340,6 +340,9 @@ contains
     use quick_exception_module
     use quick_method_module, only: quick_method
     use quick_files_module, only : iDataFile, dataFileName
+#if defined(RESTART_HDF5)
+    use quick_restart_module, only: iread
+#endif
 
     implicit none
 
@@ -408,11 +411,17 @@ contains
       ! If reading from data file
       if(quick_method%read_coord)then
 
+#if defined(RESTART_HDF5)
+        call iread('molinfo', 1, natom)
+        if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
+        call iread('iattype', 1, natom, self%iattype)
+#else
         open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
         call rchk_int(iDataFile, "natom", natom, fail)
         if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
         call rchk_iarray(iDataFile, "iattype", natom, 1, 1, self%iattype, fail)
         close(iDataFile)
+#endif
 
         ! Reading external charges from data file is not yet implemented
         nextatom = 0
