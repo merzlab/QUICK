@@ -539,6 +539,8 @@ contains
         self%iAtomType = iAtomType
         self%nextatom = nextatom
         self%nextpoint = nextpoint
+        self%nfreezeatom = nfreezeatom
+        self%nconsatom = nconsatom
       endif
     endif
 
