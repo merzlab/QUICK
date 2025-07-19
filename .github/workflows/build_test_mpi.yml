@@ -435,7 +435,7 @@ jobs:
       - name: 'MacOS: Install Dependencies for Serial Version'
         if: runner.os == 'macOS'
         run: |
-          brew install --formula --quiet ${{ matrix.compiler-install }} cmake open-mpi
+          brew install --formula --quiet ${{ matrix.compiler-install }} cmake
           if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
             sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
               $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
@@ -449,6 +449,7 @@ jobs:
                 $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
             fi
           fi
+          brew install --formula --quiet --build-from-source --cc=${{ matrix.c-compiler }} open-mpi
       - name: 'Linux: Log Softare Environment Configuration'
         if: runner.os == 'Linux'
         run: |
