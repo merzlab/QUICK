@@ -306,40 +306,40 @@ jobs:
           - os: 'macos-13'
             compiler-type: 'GNU'
             mpi-type: 'OpenMPI'
-            compiler-version: '14'
+            compiler-version: '15'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'gcc@14'
+            compiler-install: 'gcc@15'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'macos-13'
             compiler-type: 'CLANG'
             mpi-type: 'OpenMPI'
-            compiler-version: '15'
-            fortran-compiler-version: '14'
+            compiler-version: '20'
+            fortran-compiler-version: '15'
             c-compiler: 'clang'
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'llvm@15 gcc@14'
+            compiler-install: 'llvm@20 gcc@15'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'macos-14'
             compiler-type: 'GNU'
             mpi-type: 'OpenMPI'
-            compiler-version: '14'
+            compiler-version: '15'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'gcc@14'
+            compiler-install: 'gcc@15'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'macos-14'
             compiler-type: 'CLANG'
             mpi-type: 'OpenMPI'
-            compiler-version: '15'
-            fortran-compiler-version: '14'
+            compiler-version: '20'
+            fortran-compiler-version: '15'
             c-compiler: 'clang'
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'llvm@15 gcc@14'
+            compiler-install: 'llvm@20 gcc@15'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - ${{ matrix.mpi-type }} - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
@@ -435,7 +435,7 @@ jobs:
       - name: 'MacOS: Install Dependencies for MPI Version'
         if: runner.os == 'macOS'
         run: |
-          brew install --formula --quiet ${{ matrix.compiler-install }} cmake
+          brew install --formula --quiet ${{ matrix.compiler-install }} cmake open-mpi
           if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
             sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
               $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
@@ -449,10 +449,6 @@ jobs:
                 $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
             fi
           fi
-          brew install --formula --quiet hwloc pmix
-          brew link hwloc
-          brew link pmix
-          brew install --formula --quiet --build-from-source --cc=${{ matrix.c-compiler }} --ignore-dependencies open-mpi
       - name: 'Linux: Log Softare Environment Configuration'
         if: runner.os == 'Linux'
         run: |
