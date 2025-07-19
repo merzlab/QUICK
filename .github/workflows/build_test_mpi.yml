@@ -432,7 +432,7 @@ jobs:
               sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
             fi
           fi
-      - name: 'MacOS: Install Dependencies for Serial Version'
+      - name: 'MacOS: Install Dependencies for MPI Version'
         if: runner.os == 'macOS'
         run: |
           brew install --formula --quiet ${{ matrix.compiler-install }} cmake
@@ -450,6 +450,8 @@ jobs:
             fi
           fi
           brew install --formula --quiet hwloc pmix
+          brew link hwloc
+          brew link pmix
           brew install --formula --quiet --build-from-source --cc=${{ matrix.c-compiler }} --ignore-dependencies open-mpi
       - name: 'Linux: Log Softare Environment Configuration'
         if: runner.os == 'Linux'
