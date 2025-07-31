@@ -897,12 +897,10 @@ subroutine dlf_run(ierr2 &
             ! Standard convergence test
 #ifdef MPIV
     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-    call flush()
 #endif
             call convergence_test(stat%ccycle,.true.,tconv)
 #ifdef MPIV
     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-    call flush()
     if (bMPI)call MPI_BCAST(tconv,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
 #endif
             if (tconv) then
