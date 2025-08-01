@@ -311,7 +311,8 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   use quick_method_module,only: quick_method
   use quick_exception_module, only: RaiseException 
 #ifdef MPIV
-  use quick_mpi_module, only: master
+  use mpi
+  use quick_mpi_module, only: master, bMPI, mpierror
 #endif
   !use vib_pot
   implicit none
