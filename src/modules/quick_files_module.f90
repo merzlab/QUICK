@@ -17,7 +17,7 @@
 !  File module.
 module quick_files_module
 !------------------------------------------------------------------------
-!  ATTRIBUTES  : inFileName,outFileName,dmxFileName,CPHFFileName
+!  ATTRIBUTES  : inFileName,outFileName,dmxFileName,rstFileName,CPHFFileName
 !                basisDir,BasisFileName,ECPDir,ECPFileName,BasisCustName,PDBFileName
 !  SUBROUTINES : set_quick_files
 !                print_quick_io_files
@@ -32,6 +32,7 @@ module quick_files_module
     character(len=80) :: baseinFileName   = ''
     character(len=80) :: outFileName      = ''
     character(len=80) :: dmxFileName      = ''
+    character(len=80) :: rstFileName      = ''
     character(len=80) :: CPHFFileName     = ''
     character(len=80) :: dataFileName     = ''
     character(len=80) :: intFileName      = ''
@@ -128,6 +129,7 @@ module quick_files_module
         outFileName=inFileName(1:i-1)//'.out'
 
         dmxFileName=inFileName(1:i-1)//'.dmx'
+        rstFileName=inFileName(1:i-1)//'.rst'
         CPHFFileName=inFileName(1:i-1)//'.cphf'
         pdbFileName=inFileName(1:i-1)//'.pdb'
         dataFileName=inFileName(1:i-1)//'.dat'
