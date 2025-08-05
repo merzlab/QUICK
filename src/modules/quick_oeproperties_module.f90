@@ -481,7 +481,7 @@ module quick_oeproperties_module
  subroutine compute_efield()
   use quick_timer_module, only : timer_begin, timer_end, timer_cumer
   use quick_molspec_module, only : quick_molspec
-  use quick_files_module, only : ioutfile, iPropFile, propFileName, iEFIELDFile, efieldFileName
+  use quick_files_module, only : ioutfile, iEFIELDFile, efieldFileName
   use quick_basis_module, only: jshell
   use quick_mpi_module, only: master
 
@@ -618,7 +618,7 @@ end subroutine efield_nuc
 subroutine print_efield(efield_nuclear, efield_electronic, nextpoint)
   use quick_molspec_module, only: quick_molspec
   use quick_method_module, only: quick_method
-  use quick_files_module, only: ioutfile, iPropFile, propFileName, iEFIELDFile, efieldFileName
+  use quick_files_module, only: ioutfile, iEFIELDFile, efieldFileName
   use quick_constants_module, only: BOHRS_TO_A
 
   implicit none

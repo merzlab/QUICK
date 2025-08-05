@@ -19,6 +19,8 @@ module quick_molspec_module
 
    implicit none
 
+   integer, parameter :: STR_LEN = 300
+
    type quick_molspec_type
 
       ! number of atoms
@@ -380,15 +382,15 @@ contains
     integer :: nconsatom
     integer :: nfreezeatom
     double precision :: temp,rdnml
-    character(len=300) :: keywd
-    character(len=300) :: tempstring
+    character(len=STR_LEN) :: keywd
+    character(len=STR_LEN) :: tempstring
     logical :: is_extcharge = .false.
     logical :: is_constrain = .false.
     logical :: is_extgrid = .false.
     logical :: is_blank
     logical, intent(in)   :: isTemplate
     logical, intent(in)   :: hasKeywd
-    character(len=300), intent(in) :: apikeywd
+    character(len=STR_LEN), intent(in) :: apikeywd
 
     !---------------------
     ! PART I
@@ -409,7 +411,7 @@ contains
       keywd = apikeywd
     endif
 
-    call upcase(keywd,300)
+    call upcase(keywd,STR_LEN)
 
     ! Read Charge
     if (index(keywd,'CHARGE=') /= 0) self%molchg = rdinml(keywd,'CHARGE')
@@ -562,7 +564,7 @@ contains
       integer i,j,k,istart,ifinal
       integer ierror
       double precision temp
-      character(len=300) keywd
+      character(len=STR_LEN) keywd
 
 
       rewind(input)
@@ -624,7 +626,7 @@ contains
        integer i,j,k,istart,ifinal
        integer nextatom,ierror
        double precision temp
-       character(len=300) keywd
+       character(len=STR_LEN) keywd
 
        rewind(input)
        call findBlock(input,2)
