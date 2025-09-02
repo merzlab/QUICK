@@ -329,8 +329,11 @@ jobs:
             sudo port -v selfupdate
             sudo port install ${{ matrix.compiler-install }} cmake parallel
             if [ ${{ matrix.compiler-type }} == 'GNU' ]; then
+              sudo port select --list gcc
               sudo port select --set gcc gcc${{ matrix.compiler-version }}
             elif [ ${{ matrix.compiler-type }} == 'CLANG' ]; then
+              sudo port select --list gcc
+              sudo port select --list clang
               sudo port select --set gcc gcc${{ matrix.fortran-compiler-version }}
               sudo port select --set clang clang-${{ matrix.compiler-version }}
             fi
