@@ -436,7 +436,10 @@ jobs:
               sudo installer -pkg MacPorts-2.11.5-14-Sonoma.pkg -target /
             fi
             sudo port -v selfupdate
-            sudo port install ${{ matrix.compiler-install }} cmake parallel ${{ matrix.mpi-install }}
+            sudo port install ${{ matrix.compiler-install }}
+            sudo port install ${{ matrix.mpi-install }}
+            sudo port install cmake
+            sudo port install parallel
             if [ ${{ matrix.compiler-type }} == 'GNU' ]; then
               sudo port select --set gcc mp-gcc${{ matrix.compiler-version }}
               sudo port select --set openmpi mp-${{ matrix.mpi-install }}
