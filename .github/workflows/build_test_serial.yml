@@ -287,7 +287,6 @@ jobs:
             echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
             echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
             echo "PATH=/opt/local/bin:$PATH" >> "$GITHUB_ENV"
-            fi
           fi
       - name: 'Install Dependencies for Serial Version'
         run: |
