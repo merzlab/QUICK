@@ -328,64 +328,54 @@ get_total_tests()
   total_tests=0 
 
   if [ "$1" = 'yes' ]; then
-    tot_ene_tests="${#tests[@]}"
     tests+=(`grep "^ene_" "$test_list" | awk '{print $1}'`)
     while IFS= read -r line; do
         test_names+=("$line")
-    done < <(grep "^ene_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')
-    total_tests="${#tests[@]}"
-    tot_ene_tests=$(($total_tests-$tot_ene_tests))
+    done < <(grep "^ene_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
+    tot_ene_tests="${#tests[@]}"
   fi
 
   if [ "$2" = 'yes' ]; then
-    tot_grad_tests="${#tests[@]}"
     tests+=(`grep "^grad_" "$test_list" | awk '{print $1}'`)
     while IFS= read -r line; do
         test_names+=("$line")
-    done < <(grep "^grad_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')
-    total_tests="${#tests[@]}"
-    tot_grad_tests=$(($total_tests-$tot_grad_tests))
+    done < <(grep "^grad_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
+    tot_grad_tests="${#tests[@]}"
   fi
 
   if [ "$3" = 'yes' ]; then
-    tot_opt_tests="${#tests[@]}"
     tests+=(`grep "^opt_" "$test_list" | awk '{print $1}'`)
     while IFS= read -r line; do
         test_names+=("$line")
-    done < <(grep "^opt_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')
-    total_tests="${#tests[@]}"
-    tot_opt_tests=$(($total_tests-$tot_opt_tests))
+    done < <(grep "^opt_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
+    tot_opt_tests="${#tests[@]}"
   fi
 
   if [ "$4" = 'yes' ]; then
-    tot_api_tests="${#tests[@]}"
     tests+=(`grep "^api_" "$test_list" | awk '{print $1}'`)
     while IFS= read -r line; do
         test_names+=("$line")
-    done < <(grep "^api_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')
-    total_tests="${#tests[@]}"
-    tot_api_tests=$(($total_tests-$tot_api_tests))
+    done < <(grep "^api_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
+    tot_api_tests="${#tests[@]}"
   fi
 
   if [ "$5" = 'yes' ]; then
-    tot_rw_tests="${#tests[@]}"
     tests+=(`grep "^rw_" "$test_list" | awk '{print $1}'`)
     while IFS= read -r line; do
         test_names+=("$line")
-    done < <(grep "^rw_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')
-    total_tests="${#tests[@]}"
-    tot_rw_tests=$(($total_tests-$tot_rw_tests))
+    done < <(grep "^rw_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
+    tot_rw_tests="${#tests[@]}"
   fi
 
   if [ "$6" = 'yes' ]; then
-    tot_esp_tests="${#tests[@]}"
     tests+=(`grep "^esp_" "$test_list" | awk '{print $1}'`)
     while IFS= read -r line; do
         test_names+=("$line")
-    done < <(grep "^esp_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')
-    total_tests="${#tests[@]}"
-    tot_esp_tests=$(($total_tests-$tot_esp_tests))
+    done < <(grep "^esp_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
+    tot_esp_tests="${#tests[@]}"
   fi
+
+  total_tests="${#tests[@]}"
 }
 
 
@@ -806,15 +796,15 @@ run_esp_test()
 check_rw()
 {
   if [ `echo "$1" | grep '_density_' | wc -l` -eq 1 ]; then
-    grep " TOTAL ENERGY         =" "$1.out"|tail -1|awk '{print $NF}' > "$1.ene"
-    grep " TOTAL ENERGY         =" "$1_read.out"|head -1|awk '{print $NF}' > "$1_read.ene"
+    grep " TOTAL ENERGY         =" "$1.out" | tail -n 1 | awk '{print $NF}' > "$1.ene"
+    grep " TOTAL ENERGY         =" "$1_read.out" | head -n 1 | awk '{print $NF}' > "$1_read.ene"
 
     "$2/dacdif" -k -a '1.0e-8' "$1_read.ene" "$1.ene" | tee -a "$3"
   fi
 
   if [ `echo "$1" | grep '_xyz_' | wc -l` -eq 1 ]; then
-    awk '/OPTIMIZED GEOMETRY IN CARTESIAN/,/FORCE/ {print}' "$1.out"| sed -n '3,$p' | head -n -2 > "$1.xyz"
-    awk '/INPUT GEOMETRY/,/DISTANCE MATRIX/ {print}' "$1_read.out" | sed -n '2,$p' | head -n -1 > "$1_read.xyz"
+    awk '/OPTIMIZED GEOMETRY IN CARTESIAN/,/FORCE/ {print}' "$1.out" | sed -n '3,$p' | sed -e '$ d' | sed -e '$ d' > "$1.xyz"
+    awk '/INPUT GEOMETRY/,/DISTANCE MATRIX/ {print}' "$1_read.out" | sed -n '2,$p' | sed -e '$ d' > "$1_read.xyz"
 
     "$2/dacdif" -k -a '2.0e-4' "$1_read.xyz" "$1.xyz" | tee -a "$3"
   fi
@@ -1073,7 +1063,7 @@ check_mpi_gpu_mismatch()
 }
 
 
-check_for_req_deps "cat" "date" "echo" "rm" "seq" "tee" "touch" "wc" "awk" "sed"
+check_for_req_deps "awk" "cat" "date" "echo" "grep" "head" "rm" "sed" "seq" "tail" "tee" "touch" "wc"
 
 #  !---------------------------------------------------------------------!
 #  ! Read input                                                          !
