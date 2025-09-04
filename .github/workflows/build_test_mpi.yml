@@ -420,7 +420,7 @@ jobs:
               fi
             fi
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            brew install --formula --quiet ${{ matrix.compiler-install }} ${{ matrix.mpi-install }} cmake
+            brew install --formula --quiet ${{ matrix.compiler-install }} ${{ matrix.mpi-install }}
             if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
               sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
                 $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
