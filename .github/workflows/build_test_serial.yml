@@ -123,7 +123,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: serial-legacy-configure-make-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
-          path: ${{ github.workspace }}/install/test/runs/serial
+          path: |
+            ${{ github.workspace }}/install/runtest.log
+            ${{ github.workspace }}/install/runtest-verbose.log
+            ${{ github.workspace }}/install/test/runs/serial
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for Serial Version'
@@ -228,30 +231,30 @@ jobs:
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'gcc14'
+            compiler-install: 'gcc@15'
           - os: 'macos-13'
             compiler-type: 'CLANG'
             compiler-version: '20'
-            fortran-compiler-version: '14'
+            fortran-compiler-version: '15'
             c-compiler: 'clang'
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'clang-20 gcc14'
+            compiler-install: 'llvm@20 gcc@15'
           - os: 'macos-14'
             compiler-type: 'GNU'
-            compiler-version: '14'
+            compiler-version: '15'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'gcc14'
+            compiler-install: 'gcc@15'
           - os: 'macos-14'
             compiler-type: 'CLANG'
             compiler-version: '20'
-            fortran-compiler-version: '14'
+            fortran-compiler-version: '15'
             c-compiler: 'clang'
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'clang-20 gcc14'
+            compiler-install: 'llvm@20 gcc@15'
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - Serial - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
@@ -259,15 +262,15 @@ jobs:
         uses: actions/checkout@v4
       - name: 'Setup Environment Variables for Building and Running Tests'
         run: |
+          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
+          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
+          echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+          echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+          echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
           if [ "$RUNNER_OS" == "Linux" ]; then
-            echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
-            echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
-            echo "LIBRARY_PATH=$PWD/install/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
-            echo "LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
-            echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
-            echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-            echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-            echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
             if [ ${{ matrix.compiler-type }} == 'PGI' ]; then
               echo PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/bin:$PATH >> "$GITHUB_ENV"
               echo INCLUDE_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH >> "$GITHUB_ENV"
@@ -278,15 +281,13 @@ jobs:
               echo NVHPC_ROOT=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }} >> "$GITHUB_ENV"
             fi
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
-            echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
-            echo "LIBRARY_PATH=$PWD/install/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
-            echo "LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
-            echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
-            echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-            echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-            echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-            echo "PATH=/opt/local/bin:$PATH" >> "$GITHUB_ENV"
+            if [[ ${{ matrix.os }} == 'macos-13' ]]; then
+              echo "BREW_COMPILER_PREFIX=/usr/local/bin" >> "$GITHUB_ENV"
+              echo "PATH=/usr/local/bin:$PATH" >> "$GITHUB_ENV"
+            elif [[ ${{ matrix.os }} == 'macos-14' ]]; then
+              echo "BREW_COMPILER_PREFIX=/opt/homebrew/bin" >> "$GITHUB_ENV"
+              echo "PATH=/opt/homebrew/bin:$PATH" >> "$GITHUB_ENV"
+            fi
           fi
       - name: 'Install Dependencies for Serial Version'
         run: |
@@ -319,22 +320,19 @@ jobs:
               fi
             fi
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            if [[ ${{ matrix.os }} == 'macos-13' ]]; then
-              curl -LO https://github.com/macports/macports-base/releases/download/v2.11.5/MacPorts-2.11.5-13-Ventura.pkg
-              sudo installer -pkg MacPorts-2.11.5-13-Ventura.pkg -target /
-            elif [[ ${{ matrix.os }} == 'macos-14' ]]; then
-              curl -LO https://github.com/macports/macports-base/releases/download/v2.11.5/MacPorts-2.11.5-14-Sonoma.pkg
-              sudo installer -pkg MacPorts-2.11.5-14-Sonoma.pkg -target /
-            fi
-            sudo port -v selfupdate
-            sudo port install ${{ matrix.compiler-install }}
-            sudo port install cmake
-            sudo port install parallel
-            if [ ${{ matrix.compiler-type }} == 'GNU' ]; then
-              sudo port select --set gcc mp-gcc${{ matrix.compiler-version }}
-            elif [ ${{ matrix.compiler-type }} == 'CLANG' ]; then
-              sudo port select --set gcc mp-gcc${{ matrix.fortran-compiler-version }}
-              sudo port select --set clang mp-clang-${{ matrix.compiler-version }}
+            brew install --formula --quiet ${{ matrix.compiler-install }} cmake parallel
+            if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+              sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
+                $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
+              sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} \
+                $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}
+              if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
+                sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} \
+                  $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
+              elif [[ ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+                sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.fortran-compiler-version }} \
+                  $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
+              fi
             fi
           fi
       - name: 'Log Softare Environment Configuration'
@@ -413,7 +411,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: serial-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
-          path: ${{ github.workspace }}/install/test/runs/serial
+          path: |
+            ${{ github.workspace }}/install/runtest.log
+            ${{ github.workspace }}/install/runtest-verbose.log
+            ${{ github.workspace }}/install/test/runs/serial
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for Serial Version'
@@ -421,4 +422,5 @@ jobs:
         with:
           name: serial-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
       - name: 'Display Artifacts'
-        run: ls -R
+        run: |
+          ls -R

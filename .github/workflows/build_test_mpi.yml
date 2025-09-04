@@ -164,7 +164,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mpi-legacy-configure-make-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}-${{ matrix.mpi-type }}
-          path: ${{ github.workspace }}/install/test/runs/mpi
+          path: |
+            ${{ github.workspace }}/install/runtest.log
+            ${{ github.workspace }}/install/runtest-verbose.log
+            ${{ github.workspace }}/install/test/runs/mpi
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for MPI Version'
@@ -308,41 +311,41 @@ jobs:
           - os: 'macos-13'
             compiler-type: 'GNU'
             mpi-type: 'OpenMPI'
-            compiler-version: '14'
+            compiler-version: '15'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'gcc14'
-            mpi-install: 'openmpi-gcc14'
+            compiler-install: 'gcc@15'
+            mpi-install: 'open-mpi'
           - os: 'macos-13'
             compiler-type: 'CLANG'
             mpi-type: 'OpenMPI'
             compiler-version: '20'
-            fortran-compiler-version: '14'
+            fortran-compiler-version: '15'
             c-compiler: 'clang'
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'clang-20 gcc14'
-            mpi-install: 'openmpi-gcc14'
+            compiler-install: 'llvm@20 gcc@15'
+            mpi-install: 'open-mpi'
           - os: 'macos-14'
             compiler-type: 'GNU'
             mpi-type: 'OpenMPI'
-            compiler-version: '14'
+            compiler-version: '15'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'gcc14'
-            mpi-install: 'openmpi-gcc14'
+            compiler-install: 'gcc@15'
+            mpi-install: 'open-mpi'
           - os: 'macos-14'
             compiler-type: 'CLANG'
             mpi-type: 'OpenMPI'
             compiler-version: '20'
-            fortran-compiler-version: '14'
+            fortran-compiler-version: '15'
             c-compiler: 'clang'
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'clang-20 gcc14'
-            mpi-install: 'openmpi-gcc14'
+            compiler-install: 'llvm@20 gcc@15'
+            mpi-install: 'open-mpi'
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - ${{ matrix.mpi-type }} - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
@@ -350,24 +353,24 @@ jobs:
         uses: actions/checkout@v4
       - name: 'Setup Environment Variables for Building and Running Tests'
         run: |
+          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
+          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
+          echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+          echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+          echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          if [[ ${{ matrix.mpi-type }} == 'OpenMPI' ]]; then
+            echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+            echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+            echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          elif [[ ${{ matrix.mpi-type }} == 'MPICH' ]]; then
+            echo "MPICH_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+            echo "MPICH_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+            echo "MPICH_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          fi
           if [ "$RUNNER_OS" == "Linux" ]; then
-            echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
-            echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
-            echo "LIBRARY_PATH=$PWD/install/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
-            echo "LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
-            echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
-            echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-            echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-            echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-            if [[ ${{ matrix.mpi-type }} == 'OpenMPI' ]]; then
-              echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-              echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-              echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-            elif [[ ${{ matrix.mpi-type }} == 'MPICH' ]]; then
-              echo "MPICH_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-              echo "MPICH_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-              echo "MPICH_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-            fi
             if [ ${{ matrix.compiler-type }} == 'PGI' ]; then
               echo PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/comm_libs/mpi/bin:$PATH >> "$GITHUB_ENV"
               echo INCLUDE_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH >> "$GITHUB_ENV"
@@ -378,24 +381,13 @@ jobs:
               echo NVHPC_ROOT=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }} >> "$GITHUB_ENV"
             fi
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
-            echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
-            echo "LIBRARY_PATH=$PWD/install/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
-            echo "LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
-            echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
-            echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-            echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-            echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-            if [[ ${{ matrix.mpi-type }} == 'OpenMPI' ]]; then
-              echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-              echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-              echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-            elif [[ ${{ matrix.mpi-type }} == 'MPICH' ]]; then
-              echo "MPICH_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-              echo "MPICH_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-              echo "MPICH_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+            if [[ ${{ matrix.os }} == 'macos-13' ]]; then
+              echo "BREW_COMPILER_PREFIX=/usr/local/bin" >> "$GITHUB_ENV"
+              echo "PATH=/usr/local/bin:$PATH" >> "$GITHUB_ENV"
+            elif [[ ${{ matrix.os }} == 'macos-14' ]]; then
+              echo "BREW_COMPILER_PREFIX=/opt/homebrew/bin" >> "$GITHUB_ENV"
+              echo "PATH=/opt/homebrew/bin:$PATH" >> "$GITHUB_ENV"
             fi
-            echo "PATH=/opt/local/bin:$PATH" >> "$GITHUB_ENV"
           fi
       - name: 'Install Dependencies for MPI Version'
         run: |
@@ -428,25 +420,19 @@ jobs:
               fi
             fi
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            if [[ ${{ matrix.os }} == 'macos-13' ]]; then
-              curl -LO https://github.com/macports/macports-base/releases/download/v2.11.5/MacPorts-2.11.5-13-Ventura.pkg
-              sudo installer -pkg MacPorts-2.11.5-13-Ventura.pkg -target /
-            elif [[ ${{ matrix.os }} == 'macos-14' ]]; then
-              curl -LO https://github.com/macports/macports-base/releases/download/v2.11.5/MacPorts-2.11.5-14-Sonoma.pkg
-              sudo installer -pkg MacPorts-2.11.5-14-Sonoma.pkg -target /
-            fi
-            sudo port -v selfupdate
-            sudo port install ${{ matrix.compiler-install }}
-            sudo port install ${{ matrix.mpi-install }}
-            sudo port install cmake
-            sudo port install parallel
-            if [ ${{ matrix.compiler-type }} == 'GNU' ]; then
-              sudo port select --set gcc mp-gcc${{ matrix.compiler-version }}
-              sudo port select --set openmpi mp-${{ matrix.mpi-install }}
-            elif [ ${{ matrix.compiler-type }} == 'CLANG' ]; then
-              sudo port select --set gcc mp-gcc${{ matrix.fortran-compiler-version }}
-              sudo port select --set clang mp-clang-${{ matrix.compiler-version }}
-              sudo port select --set openmpi mp-${{ matrix.mpi-install }}
+            brew install --formula --quiet ${{ matrix.compiler-install }} ${{ matrix.mpi-install }} cmake
+            if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+              sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
+                $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
+              sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} \
+                $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}
+              if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
+                sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} \
+                  $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
+              elif [[ ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+                sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.fortran-compiler-version }} \
+                  $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
+              fi
             fi
           fi
       - name: 'Log Softare Environment Configuration'
@@ -526,7 +512,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mpi-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}-${{ matrix.mpi-type }}
-          path: ${{ github.workspace }}/install/test/runs/mpi
+          path: |
+            ${{ github.workspace }}/install/runtest.log
+            ${{ github.workspace }}/install/runtest-verbose.log
+            ${{ github.workspace }}/install/test/runs/mpi
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for MPI Version'
