@@ -319,60 +319,71 @@ get_total_tests()
 {
   tests=()
   test_names=()
-  tot_ene_tests=0 
-  tot_grad_tests=0 
-  tot_opt_tests=0 
-  tot_api_tests=0 
-  tot_rw_tests=0 
-  tot_esp_tests=0 
-  total_tests=0 
 
   if [ "$1" = 'yes' ]; then
-    tests+=(`grep "^ene_" "$test_list" | awk '{print $1}'`)
+    ene_tests=(`grep "^ene_" "$test_list" | awk '{print $1}'`)
+    tot_ene_tests="${#ene_tests[@]}"
+    tests+=(${ene_tests[@]})
     while IFS= read -r line; do
         test_names+=("$line")
     done < <(grep "^ene_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
-    tot_ene_tests="${#tests[@]}"
+  else
+    tot_ene_tests=0 
   fi
 
   if [ "$2" = 'yes' ]; then
-    tests+=(`grep "^grad_" "$test_list" | awk '{print $1}'`)
+    grad_tests=(`grep "^grad_" "$test_list" | awk '{print $1}'`)
+    tot_grad_tests="${#grad_tests[@]}"
+    tests+=(${grad_tests[@]})
     while IFS= read -r line; do
         test_names+=("$line")
     done < <(grep "^grad_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
-    tot_grad_tests="${#tests[@]}"
+  else
+    tot_grad_tests=0 
   fi
 
   if [ "$3" = 'yes' ]; then
-    tests+=(`grep "^opt_" "$test_list" | awk '{print $1}'`)
+    opt_tests=(`grep "^opt_" "$test_list" | awk '{print $1}'`)
+    tot_opt_tests="${#opt_tests[@]}"
+    tests+=(${opt_tests[@]})
     while IFS= read -r line; do
         test_names+=("$line")
     done < <(grep "^opt_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
-    tot_opt_tests="${#tests[@]}"
+  else
+    tot_opt_tests=0 
   fi
 
   if [ "$4" = 'yes' ]; then
-    tests+=(`grep "^api_" "$test_list" | awk '{print $1}'`)
+    api_tests=(`grep "^api_" "$test_list" | awk '{print $1}'`)
+    tot_api_tests="${#api_tests[@]}"
+    tests+=(${api_tests[@]})
     while IFS= read -r line; do
         test_names+=("$line")
     done < <(grep "^api_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
-    tot_api_tests="${#tests[@]}"
+  else
+    tot_api_tests=0 
   fi
 
   if [ "$5" = 'yes' ]; then
-    tests+=(`grep "^rw_" "$test_list" | awk '{print $1}'`)
+    rw_tests=(`grep "^rw_" "$test_list" | awk '{print $1}'`)
+    tot_rw_tests="${#rw_tests[@]}"
+    tests+=(${rw_tests[@]})
     while IFS= read -r line; do
         test_names+=("$line")
     done < <(grep "^rw_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
-    tot_rw_tests="${#tests[@]}"
+  else
+    tot_rw_tests=0 
   fi
 
   if [ "$6" = 'yes' ]; then
-    tests+=(`grep "^esp_" "$test_list" | awk '{print $1}'`)
+    esp_tests=(`grep "^esp_" "$test_list" | awk '{print $1}'`)
+    tot_esp_tests="${#esp_tests[@]}"
+    tests+=(${esp_tests[@]})
     while IFS= read -r line; do
         test_names+=("$line")
     done < <(grep "^esp_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
-    tot_esp_tests="${#tests[@]}"
+  else
+    tot_esp_tests=0 
   fi
 
   total_tests="${#tests[@]}"
