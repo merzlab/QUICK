@@ -947,12 +947,6 @@ print_summary()
   fi
 
   for buildtype in $buildtypes; do
-    total_ene=0
-    total_grad=0
-    total_opt=0
-    total_api=0
-    total_rw=0
-    total_esp=0
     failed_ene=0
     failed_grad=0
     failed_opt=0
@@ -978,33 +972,27 @@ print_summary()
       fi
   
       if [ `sed -n '/energy test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_ene=$(($total_ene+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_ene=$(($failed_ene+1))
         fi
         
       elif [ `sed -n '/gradient test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_grad=$(($total_grad+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_grad=$(($failed_grad+1))
         fi
       elif [ `sed -n '/geometry optimization test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_opt=$(($total_opt+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_opt=$(($failed_opt+1))
         fi
       elif [ `sed -n '/API test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_api=$(($total_api+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_api=$(($failed_api+1))
         fi
       elif [ `sed -n '/RW test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_rw=$(($total_rw+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_rw=$(($failed_rw+1))
         fi
       elif [ `sed -n '/ESP test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_esp=$(($total_esp+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_esp=$(($failed_esp+1))
         fi
@@ -1019,12 +1007,12 @@ print_summary()
     ncum_failed_tests=$(($ncum_failed_tests+$failed_total))
 
     echo "$buildtype version:" > .quick.runtest.${buildtype}.summary.tmp0
-    echo "    Energy tests: $failed_ene/$total_ene (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
-    echo "    Gradient tests: $failed_grad/$total_grad (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    Energy tests: $failed_ene/$tot_ene_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    Gradient tests: $failed_grad/$tot_grad_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Optimization tests: $failed_opt/$total_opt (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
-    echo "    API tests: $failed_api/$total_api (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
-    echo "    RW tests: $failed_rw/$total_rw (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
-    echo "    ESP tests: $failed_esp/$total_esp (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    API tests: $failed_api/$tot_api_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    RW tests: $failed_rw/$tot_rw_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    ESP tests: $failed_esp/$tot_esp_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Total tests: $failed_total/$total_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "" >> .quick.runtest.${buildtype}.summary.tmp0
  
