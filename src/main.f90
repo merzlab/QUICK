@@ -207,7 +207,9 @@
 
         !call generate_MKS_surfaces()
 
-        call compute_oeprop()
+        if (quick_method%esp_charge .or. quick_method%ext_grid) then
+          call compute_oeprop()
+        endif
 
         if(master) then
           if(quick_method%writexyz)then
@@ -258,7 +260,9 @@
         endif
 
         ! One electron properties (ESP, EField) 
-        call compute_oeprop()
+        if (quick_method%esp_charge .or. quick_method%ext_grid) then
+            call compute_oeprop()
+        endif
 
     endif
 

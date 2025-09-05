@@ -30,6 +30,7 @@ opt_c3h4_rhf_631g                   #Allene: RHF DL-FIND geometry optimization t
 opt_caffeine_b3lyp_3-21g            #Caffeine: DFT B3LYP DL-FIND geometry optimization test: s and p basis functions (Baker test set)
 opt_c2h5rad_uhf_631gss              #Ethyl radical: UHF DL-FIND geometry optimization test: s, p and d basis functions
 opt_c2hrad_ub3lyp_ccpvdz            #Ethynyl radical: UDFT B3LYP DL-FIND geometry optimization test: s, p and d basis functions
+opt_dh_const_c9h11no_pbe0_3-21g     #C9H11NO: PBE0 DL-FIND dihedral constrained optimization test: s and p basis functions
 api_water_rhf_631g                  #Water: API test
 rw_xyz_and_density_checkpoint       #RW test: reading of both density and coordinate from checkpoint file
 esp_charge_acetone_b3lyp_def2svp    #ESP test: Tests both ESP charges and ESP on van der Waals surface.

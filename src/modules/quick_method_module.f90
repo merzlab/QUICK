@@ -1156,7 +1156,7 @@ module quick_method_module
             .and. (index(functional_name,'mgga') .eq. 0))  then
                 functional_name=trim(functional_name)
 
-                call upcase(functional_name,300)
+                call upcase(functional_name,256)
 
                 if((trim(functional_name) == trim(func1)) .or. (trim(functional_name) == trim(func2))) then 
                         nof_f=nof_f+1

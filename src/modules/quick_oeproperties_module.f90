@@ -29,13 +29,13 @@ module quick_oeproperties_module
 
  Subroutine compute_oeprop()
    use quick_method_module, only: quick_method
-   use quick_files_module, only : ioutfile, iDataFile, dataFileName
+   use quick_files_module, only : ioutfile
    use quick_molsurface_module, only: generate_MKS_surfaces
    use quick_molspec_module, only: quick_molspec
-   use quick_mpi_module, only: master, mpierror
    use quick_calculated_module, only: quick_qm_struct
 #ifdef MPIV
    use mpi
+   use quick_mpi_module, only: master, mpierror
 #endif
    implicit none
 
@@ -46,10 +46,12 @@ module quick_oeproperties_module
       call compute_oeprop_grid(quick_molspec%nextpoint,quick_molspec%extpointxyz)
    else if (quick_method%esp_charge) then
 
-      if(master)then
-        call generate_MKS_surfaces()
-      endif
 #ifdef MPIV
+      if(master)then
+#endif
+        call generate_MKS_surfaces()
+#ifdef MPIV
+      endif
       call MPI_BCAST(quick_molspec%nvdwpoint,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       if(.not.master)then
         allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint))
@@ -62,16 +64,25 @@ module quick_oeproperties_module
       deallocate(quick_molspec%vdwpointxyz)
 
    else
+#ifdef MPIV
+      if(master) then
+#endif
       write (ioutfile,'("  Skipping one-electron property calculation.")')
+#ifdef MPIV
+      endif
+#endif
    end if
 
  end Subroutine
 
  Subroutine compute_oeprop_grid(npoints,xyz_points)
-   use quick_method_module, only: quick_method
-   use quick_mpi_module, only: master
+   use quick_exception_module
    use quick_files_module, only: iESPFile, espFileName, iVdwSurfFile, VdwSurfFileName
+   use quick_method_module, only: quick_method
    use quick_timer_module, only : timer_begin, timer_end, timer_cumer
+#ifdef MPIV
+   use quick_mpi_module, only: master
+#endif
 
    implicit none
    integer :: ierr, npoints
@@ -86,27 +97,39 @@ module quick_oeproperties_module
    if (quick_method%esp_grid) then
      call compute_esp(npoints,xyz_points,esp_on_points)
      ! Print ESP at external points
+#ifdef MPIV
      if (master) then
-       call quick_open(iESPFile,espFileName,'U','F','R',.false.,ierr)
+#endif
+       SAFE_CALL(quick_open(iESPFile,espFileName,'U','F','R',.false.,ierr))
        call print_esp(esp_on_points,npoints,xyz_points,iESPFile,espFileName)
        close(iESPFile)
+#ifdef MPIV
      endif
+#endif
    end if
 
    ! Compute ESP charge using the MKS grid
    if (quick_method%esp_charge) then
      call compute_esp(npoints,xyz_points,esp_on_points)
+#ifdef MPIV
      if (master) then
-       call quick_open(iVdwSurfFile,VdwSurfFileName,'U','F','R',.false.,ierr)
+#endif
+       SAFE_CALL(quick_open(iVdwSurfFile,VdwSurfFileName,'U','F','R',.false.,ierr))
        call print_esp(esp_on_points,npoints,xyz_points,iVdwSurfFile,VdwSurfFileName)
        close(iVdwSurfFile)
+#ifdef MPIV
      endif
+#endif
 
      RECORD_TIME(timer_begin%TESPCharge)
 
+#ifdef MPIV
      if (master) then
+#endif
        call compute_ESP_charge(npoints,xyz_points,esp_on_points)
+#ifdef MPIV
      end if
+#endif
 
      RECORD_TIME(timer_end%TESPCharge)
      timer_cumer%TESPCharge=timer_cumer%TESPCharge+timer_end%TESPCharge-timer_begin%TESPCharge
@@ -146,18 +169,13 @@ module quick_oeproperties_module
  !----------------------------------------------------------------------------!
  subroutine compute_esp(npoints,xyz_points,esp)
    use quick_timer_module, only : timer_begin, timer_end, timer_cumer
-   use quick_molspec_module, only : quick_molspec
    use quick_basis_module, only: jshell
-   use quick_mpi_module, only: master
- 
    use quick_calculated_module, only: quick_qm_struct
-
 #ifdef MPIV
     use mpi
     use quick_basis_module, only: mpi_jshelln, mpi_jshell
     use quick_mpi_module, only: mpirank, mpierror 
 #endif
-
 #if defined CUDA || defined CUDA_MPIV
     use quick_method_module, only: quick_method
 #endif
@@ -258,9 +276,11 @@ module quick_oeproperties_module
  subroutine compute_ESP_charge(npoints,xyz_points,esp)
    use quick_molspec_module, only: quick_molspec, natom, xyz
    use quick_files_module, only: ioutfile
-   use quick_mpi_module, only: master
    use quick_exception_module, only: RaiseException
    use quick_constants_module, only : symbol
+#ifdef MPIV
+   use quick_mpi_module, only: master
+#endif
 
    implicit none
 
@@ -359,15 +379,21 @@ module quick_oeproperties_module
 
    Net_charge = Zero
 
-   write (ioutfile,'("  ESP charges:")')
-   write (ioutfile,'("  ----------------")')
-   do iatom = 1, natom
-     Net_charge = Net_charge + q(iatom)
-     write (ioutfile,'(3x,I3,3x,A2,3x,F10.6)') iatom, symbol(quick_molspec%iattype(iatom)), q(iatom)
-   end do
-   write (ioutfile,'("  ----------------")')
-   write (ioutfile,'("  Net charge = ",F10.6)')Net_charge
-   write (ioutfile,'("  ")')
+#ifdef MPIV
+   if(master) then
+#endif
+     write (ioutfile,'("  ESP charges:")')
+     write (ioutfile,'("  ----------------")')
+     do iatom = 1, natom
+       Net_charge = Net_charge + q(iatom)
+       write (ioutfile,'(3x,I3,3x,A2,3x,F10.6)') iatom, symbol(quick_molspec%iattype(iatom)), q(iatom)
+     end do
+     write (ioutfile,'("  ----------------")')
+     write (ioutfile,'("  Net charge = ",F10.6)')Net_charge
+     write (ioutfile,'("  ")')
+#ifdef MPIV
+   endif
+#endif
 
  end subroutine compute_ESP_charge
 
@@ -375,7 +401,6 @@ module quick_oeproperties_module
  ! This subroutine formats and prints the ESP data to "file.esp"                               !
  !---------------------------------------------------------------------------------------------!
  subroutine print_esp(esp, npoints, xyz_points, iESPFile, espFileName)
-   use quick_molspec_module, only: quick_molspec
    use quick_method_module, only: quick_method
    use quick_files_module, only: ioutfile, iVdwSurfFile
    use quick_constants_module, only: BOHRS_TO_A
@@ -479,16 +504,15 @@ module quick_oeproperties_module
  !                                                                                  !
  !----------------------------------------------------------------------------------!
  subroutine compute_efield()
-  use quick_timer_module, only : timer_begin, timer_end, timer_cumer
-  use quick_molspec_module, only : quick_molspec
-  use quick_files_module, only : ioutfile, iPropFile, propFileName, iEFIELDFile, efieldFileName
   use quick_basis_module, only: jshell
-  use quick_mpi_module, only: master
-
+  use quick_exception_module
+  use quick_files_module, only: iEFIELDFile, efieldFileName
+  use quick_molspec_module, only: quick_molspec
+  use quick_timer_module, only: timer_begin, timer_end, timer_cumer
 #ifdef MPIV
    use mpi
    use quick_basis_module, only: mpi_jshelln, mpi_jshell
-   use quick_mpi_module, only: mpirank, mpierror
+   use quick_mpi_module, only: master, mpirank, mpierror
 #endif
 
    implicit none
@@ -547,16 +571,20 @@ module quick_oeproperties_module
    timer_cumer%TEFIELDGrid=timer_cumer%TEFIELDGrid+timer_end%TEFIELDGrid-timer_begin%TEFIELDGrid
 
    ! Sum the nuclear and electronic part of EField and print
+#ifdef MPIV
    if (master) then
+#endif
     ! for now, back to 'R' mode
-     call quick_open(iEFIELDFile,efieldFileName,'U','F','R',.false.,ierr)
+     SAFE_CALL(quick_open(iEFIELDFile,efieldFileName,'U','F','R',.false.,ierr))
 #ifdef MPIV
      call print_efield(efield_nuclear, efield_electronic_aggregate, quick_molspec%nextpoint)
 #else
      call print_efield(efield_nuclear, efield_electronic, quick_molspec%nextpoint)
 #endif
      close(iEFIELDFile)
+#ifdef MPIV
    endif
+#endif
 
    deallocate(efield_electronic)
    deallocate(efield_nuclear)
@@ -618,7 +646,7 @@ end subroutine efield_nuc
 subroutine print_efield(efield_nuclear, efield_electronic, nextpoint)
   use quick_molspec_module, only: quick_molspec
   use quick_method_module, only: quick_method
-  use quick_files_module, only: ioutfile, iPropFile, propFileName, iEFIELDFile, efieldFileName
+  use quick_files_module, only: ioutfile, iEFIELDFile, efieldFileName
   use quick_constants_module, only: BOHRS_TO_A
 
   implicit none
@@ -658,8 +686,8 @@ subroutine print_efield(efield_nuclear, efield_electronic, nextpoint)
       (efield_nuclear(2,igridpoint)+efield_electronic(2,igridpoint)), &
       (efield_nuclear(3,igridpoint)+efield_electronic(3,igridpoint))
     endif
-
   end do
+
 end subroutine print_efield
 
 end module quick_oeproperties_module

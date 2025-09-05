@@ -837,7 +837,7 @@ subroutine write_xyz_active(unit,nat,znuc,spec,coords)
   integer,intent(in) :: nat
   integer,intent(in) :: znuc(nat)
   integer,intent(in) :: spec(nat)
-  real(rk),intent(in):: coords(3*nat)
+  real(rk),intent(in):: coords(3,nat)
   integer            :: iat,jat
   character(2)       :: str2
   character(1), dimension(3) :: cartsym
@@ -856,7 +856,7 @@ subroutine write_xyz_active(unit,nat,znuc,spec,coords)
                    
   do iat=1,nat
     do jat=1,3
-      write(unit,'(I5,A1,3x,F14.10)')iat,cartsym(jat),coords((iat-1)*3+jat)
+      write(unit,'(I5,A1,3x,F14.10)')iat,cartsym(jat),coords(jat,iat)
     enddo
   end do
   write (unit,'("------------------------")')
