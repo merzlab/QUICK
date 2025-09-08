@@ -21,6 +21,7 @@ These options allow you do adjust this behavior.
 - `-DFORCE_DISABLE_LIBS=mkl`: Disable use of system MKL to replace BLAS and LAPACK 
 - `-DCMAKE_PREFIX_PATH=<path>`: Use the given path as a prefix where dependencies are installed. Libraries and headers will be searched for in `<path>/lib` and `<path>/include`.
 - `-DMKL_HOME=...`: Look for Intel MKL in the given directory.  The environment variable MKL_HOME is also searched.
+- `-DHDF5=TRUE`: Sets up quick restart capabilities using HDF5 data file. Without this option, QUICK will not be able to restart calculations.
 
 #### Parallel versions
 By default QUICK will only build the serial version.  This can be changed with these options:
