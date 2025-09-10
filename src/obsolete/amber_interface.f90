@@ -26,7 +26,7 @@ subroutine qm2_quick_energy(escf,scf_mchg)
    
 ! quick mod
    use allmod
-   use mpi
+   use mpi_f08
    implicit none
 
    double precision, intent(out)   :: escf
