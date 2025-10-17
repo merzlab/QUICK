@@ -111,6 +111,7 @@ jobs:
                 sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
               fi
             fi
+            sudo apt-get clean all
           fi
       - name: 'Log Softare Environment Configuration'
         run: |
@@ -419,6 +420,7 @@ jobs:
                 sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
               fi
             fi
+            sudo apt-get clean all
           elif [ "$RUNNER_OS" == "macOS" ]; then
             brew install --formula --quiet ${{ matrix.compiler-install }} ${{ matrix.mpi-install }}
             if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
