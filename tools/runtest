@@ -1009,7 +1009,7 @@ print_summary()
     echo "$buildtype version:" > .quick.runtest.${buildtype}.summary.tmp0
     echo "    Energy tests: $failed_ene/$tot_ene_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Gradient tests: $failed_grad/$tot_grad_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
-    echo "    Optimization tests: $failed_opt/$total_opt (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    Optimization tests: $failed_opt/$tot_opt_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    API tests: $failed_api/$tot_api_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    RW tests: $failed_rw/$tot_rw_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    ESP tests: $failed_esp/$tot_esp_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
