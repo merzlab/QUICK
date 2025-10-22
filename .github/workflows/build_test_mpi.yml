@@ -383,13 +383,8 @@ jobs:
               echo NVHPC_ROOT=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }} >> "$GITHUB_ENV"
             fi
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            if [[ ${{ matrix.os }} == 'macos-13' ]]; then
-              echo "BREW_COMPILER_PREFIX=/usr/local/bin" >> "$GITHUB_ENV"
-              echo "PATH=/usr/local/bin:$PATH" >> "$GITHUB_ENV"
-            elif [[ ${{ matrix.os }} == 'macos-14' ]]; then
-              echo "BREW_COMPILER_PREFIX=/opt/homebrew/bin" >> "$GITHUB_ENV"
-              echo "PATH=/opt/homebrew/bin:$PATH" >> "$GITHUB_ENV"
-            fi
+              echo "BREW_COMPILER_PREFIX=$(brew --prefix)/bin" >> "$GITHUB_ENV"
+              echo "PATH=$(brew --prefix)/bin:$PATH" >> "$GITHUB_ENV"
           fi
       - name: 'Install Dependencies for MPI Version'
         run: |
