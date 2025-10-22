@@ -384,7 +384,11 @@ jobs:
             fi
           elif [ "$RUNNER_OS" == "macOS" ]; then
               echo "BREW_COMPILER_PREFIX=$(brew --prefix)/bin" >> "$GITHUB_ENV"
-              echo "PATH=$(brew --prefix)/bin:$PATH" >> "$GITHUB_ENV"
+              if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
+                echo "PATH=$(brew --prefix)/bin:$PATH" >> "$GITHUB_ENV"
+              elif [[ ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+                echo "PATH=$(brew --prefix)/bin:$(brew --prefix)/opt/llvm@${{ matrix.compiler-version }}/bin:$PATH" >> "$GITHUB_ENV"
+              fi
           fi
       - name: 'Install Dependencies for MPI Version'
         run: |
@@ -421,11 +425,11 @@ jobs:
           elif [ "$RUNNER_OS" == "macOS" ]; then
             brew install --formula --quiet ${{ matrix.compiler-install }} ${{ matrix.mpi-install }}
             if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
-              sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
-                $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
-              sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} \
-                $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}
               if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
+                sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
+                  $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
+                sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} \
+                  $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}
                 sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} \
                   $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
               elif [[ ${{ matrix.compiler-type }} == 'CLANG' ]]; then
