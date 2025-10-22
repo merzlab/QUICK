@@ -99,7 +99,8 @@ jobs:
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
             sudo apt-get update
-            sudo apt-get -y install ${{ matrix.compiler-install }} ${{ matrix.mpi-install }}
+            sudo apt-get upgrade
+            sudo apt-get install -y ${{ matrix.compiler-install }} ${{ matrix.mpi-install }}
             which ${{ matrix.c-compiler }}-${{ matrix.compiler-version }}
             if [[ ${{ matrix.compiler-type }} == 'gnu' || ${{ matrix.compiler-type }} == 'clang' ]]; then
               sudo rm /usr/bin/${{ matrix.c-compiler }}
@@ -111,7 +112,7 @@ jobs:
                 sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
               fi
             fi
-            sudo apt-get clean all
+            sudo apt-get clean
           fi
       - name: 'Log Softare Environment Configuration'
         run: |
@@ -309,7 +310,7 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'clang-18 gfortran'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
-          - os: 'macos-13'
+          - os: 'macos-14'
             compiler-type: 'GNU'
             mpi-type: 'OpenMPI'
             compiler-version: '15'
@@ -318,7 +319,7 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc@15'
             mpi-install: 'open-mpi'
-          - os: 'macos-13'
+          - os: 'macos-14'
             compiler-type: 'CLANG'
             mpi-type: 'OpenMPI'
             compiler-version: '20'
@@ -328,7 +329,7 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'llvm@20 gcc@15'
             mpi-install: 'open-mpi'
-          - os: 'macos-14'
+          - os: 'macos-15'
             compiler-type: 'GNU'
             mpi-type: 'OpenMPI'
             compiler-version: '15'
@@ -337,7 +338,7 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc@15'
             mpi-install: 'open-mpi'
-          - os: 'macos-14'
+          - os: 'macos-15'
             compiler-type: 'CLANG'
             mpi-type: 'OpenMPI'
             compiler-version: '20'
@@ -394,22 +395,23 @@ jobs:
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
             sudo apt-get update
+            sudo apt-get upgrade
             if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
-              sudo apt install -y gpg-agent wget
+              sudo apt-get install -y gpg-agent wget
               wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
                 | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
               echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
                 | sudo tee /etc/apt/sources.list.d/oneAPI.list
-              sudo apt update
+              sudo apt-get update
             elif [ ${{ matrix.compiler-type }} == 'PGI' ]; then
-              sudo apt install -y gpg-agent wget
+              sudo apt-get install -y gpg-agent wget
               wget -O- https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK \
                 | gpg --dearmor | sudo tee /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg > /dev/null
               echo "deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /" \
                 | sudo tee /etc/apt/sources.list.d/nvhpc.list
-              sudo apt update
+              sudo apt-get update
             fi
-            sudo apt-get -y install ${{ matrix.compiler-install }} ${{ matrix.mpi-install }} cmake
+            sudo apt-get install -y ${{ matrix.compiler-install }} ${{ matrix.mpi-install }} cmake
             if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
               sudo rm /usr/bin/${{ matrix.c-compiler }}
               sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
@@ -420,7 +422,7 @@ jobs:
                 sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
               fi
             fi
-            sudo apt-get clean all
+            sudo apt-get clean
           elif [ "$RUNNER_OS" == "macOS" ]; then
             brew install --formula --quiet ${{ matrix.compiler-install }} ${{ matrix.mpi-install }}
             if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
