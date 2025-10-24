@@ -315,6 +315,10 @@ target_compile_options(quick PRIVATE
 	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>"
 	"$<$<COMPILE_LANGUAGE:C>:${OPT_CFLAGS}>"
 	"$<$<COMPILE_LANGUAGE:CXX>:${OPT_CXXFLAGS}>")
+if(HDF5)
+	target_compile_definitions(quick PRIVATE
+		"$<$<COMPILE_LANGUAGE:Fortran>:${HDF5_Fortran_DEFINITIONS}>" "RESTART_HDF5")
+endif()
 config_module_dirs(quick quick/serial libxc/serial)
 target_link_libraries(quick libquick)
 
