@@ -143,16 +143,16 @@ jobs:
             echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
             echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
             echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-            echo LIBRARY_PATH=/usr/lib/`uname -m`-linux-gnu/hdf5/openmpi:$LIBRARY_PATH >> "$GITHUB_ENV"
-            echo LD_LIBRARY_PATH=/usr/lib/`uname -m`-linux-gnu/hdf5/openmpi:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
-            echo "HDF5_FORTRAN_MOD_DIR=/usr/include/hdf5/openmpi" >> "$GITHUB_ENV"
+            echo LIBRARY_PATH=/usr/lib/`uname -m`-linux-gnu/hdf5/serial:$LIBRARY_PATH >> "$GITHUB_ENV"
+            echo LD_LIBRARY_PATH=/usr/lib/`uname -m`-linux-gnu/hdf5/serial:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
+            echo "HDF5_FORTRAN_MOD_DIR=/usr/include/hdf5/serial" >> "$GITHUB_ENV"
           elif [[ ${{ matrix.mpi-type }} == 'MPICH' ]]; then
             echo "MPICH_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
             echo "MPICH_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
             echo "MPICH_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-            echo LIBRARY_PATH=/usr/lib/`uname -m`-linux-gnu/hdf5/mpich:$LIBRARY_PATH >> "$GITHUB_ENV"
-            echo LD_LIBRARY_PATH=/usr/lib/`uname -m`-linux-gnu/hdf5/mpich:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
-            echo "HDF5_FORTRAN_MOD_DIR=/usr/include/hdf5/mpich" >> "$GITHUB_ENV"
+            echo LIBRARY_PATH=/usr/lib/`uname -m`-linux-gnu/hdf5/serial:$LIBRARY_PATH >> "$GITHUB_ENV"
+            echo LD_LIBRARY_PATH=/usr/lib/`uname -m`-linux-gnu/hdf5/serial:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
+            echo "HDF5_FORTRAN_MOD_DIR=/usr/include/hdf5/serial" >> "$GITHUB_ENV"
           fi
       - name: 'Configure MPI Version'
         run: |
