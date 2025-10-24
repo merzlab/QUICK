@@ -442,7 +442,8 @@ jobs:
       - name: 'MacOS: Install Dependencies for Serial Version'
         if: runner.os == 'macOS'
         run: |
-          brew install --formula --quiet ${{ matrix.compiler-install }} cmake open-mpi hdf5
+          brew install --formula --quiet ${{ matrix.compiler-install }} cmake open-mpi
+          brew install --formula --quiet hdf5
           if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
             sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
               $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
