@@ -22,6 +22,7 @@ opt_hsoh_pbe0_def2svp               #Oxadisulfane: DFT PBE0 DL-FIND geometry opt
 opt_c3h4_rhf_631g                   #Allene: RHF DL-FIND geometry optimization test: s and p basis functions
 opt_c2h5rad_uhf_631gss              #Ethyl radical: UHF DL-FIND geometry optimization test: s, p and d basis functions
 opt_c2hrad_ub3lyp_ccpvdz            #Ethynyl radical: UDFT B3LYP DL-FIND geometry optimization test: s, p and d basis functions
+opt_const_dist_h2o_hf_3-21g         #Water: RHF DL-FIND constraint distance optimizaton test: s and p basis functions
 opt_dh_const_c2h6_hf_3-21g          #Ethane: RHF DL-FIND dihedral constrained optimization test: s and p basis functions
 
 api_water_rhf_631g                  #Water: API test
