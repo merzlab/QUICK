@@ -313,7 +313,7 @@ endif()
 add_executable(quick ${MAIN_SOURCES})
 set_target_properties(quick PROPERTIES LINKER_LANGUAGE Fortran)
 target_compile_options(quick PRIVATE 
-	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>")
 if(HDF5)
 	target_compile_definitions(quick PRIVATE
 		"$<$<COMPILE_LANGUAGE:Fortran>:${HDF5_Fortran_DEFINITIONS}>" "RESTART_HDF5")
