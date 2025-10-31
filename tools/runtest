@@ -319,73 +319,74 @@ get_total_tests()
 {
   tests=()
   test_names=()
-  tot_ene_tests=0 
-  tot_grad_tests=0 
-  tot_opt_tests=0 
-  tot_api_tests=0 
-  tot_rw_tests=0 
-  tot_esp_tests=0 
-  total_tests=0 
 
   if [ "$1" = 'yes' ]; then
-    tot_ene_tests="${#tests[@]}"
-    tests+=(`grep "^ene_" "$test_list" | awk '{print $1}'`)
+    ene_tests=(`grep "^ene_" "$test_list" | awk '{print $1}'`)
+    tot_ene_tests="${#ene_tests[@]}"
+    tests+=(${ene_tests[@]})
     while IFS= read -r line; do
         test_names+=("$line")
-    done < <(grep "^ene_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')
-    total_tests="${#tests[@]}"
-    tot_ene_tests=$(($total_tests-$tot_ene_tests))
+    done < <(grep "^ene_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
+  else
+    tot_ene_tests=0 
   fi
 
   if [ "$2" = 'yes' ]; then
-    tot_grad_tests="${#tests[@]}"
-    tests+=(`grep "^grad_" "$test_list" | awk '{print $1}'`)
+    grad_tests=(`grep "^grad_" "$test_list" | awk '{print $1}'`)
+    tot_grad_tests="${#grad_tests[@]}"
+    tests+=(${grad_tests[@]})
     while IFS= read -r line; do
         test_names+=("$line")
-    done < <(grep "^grad_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')
-    total_tests="${#tests[@]}"
-    tot_grad_tests=$(($total_tests-$tot_grad_tests))
+    done < <(grep "^grad_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
+  else
+    tot_grad_tests=0 
   fi
 
   if [ "$3" = 'yes' ]; then
-    tot_opt_tests="${#tests[@]}"
-    tests+=(`grep "^opt_" "$test_list" | awk '{print $1}'`)
+    opt_tests=(`grep "^opt_" "$test_list" | awk '{print $1}'`)
+    tot_opt_tests="${#opt_tests[@]}"
+    tests+=(${opt_tests[@]})
     while IFS= read -r line; do
         test_names+=("$line")
-    done < <(grep "^opt_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')
-    total_tests="${#tests[@]}"
-    tot_opt_tests=$(($total_tests-$tot_opt_tests))
+    done < <(grep "^opt_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
+  else
+    tot_opt_tests=0 
   fi
 
   if [ "$4" = 'yes' ]; then
-    tot_api_tests="${#tests[@]}"
-    tests+=(`grep "^api_" "$test_list" | awk '{print $1}'`)
+    api_tests=(`grep "^api_" "$test_list" | awk '{print $1}'`)
+    tot_api_tests="${#api_tests[@]}"
+    tests+=(${api_tests[@]})
     while IFS= read -r line; do
         test_names+=("$line")
-    done < <(grep "^api_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')
-    total_tests="${#tests[@]}"
-    tot_api_tests=$(($total_tests-$tot_api_tests))
+    done < <(grep "^api_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
+  else
+    tot_api_tests=0 
   fi
 
   if [ "$5" = 'yes' ]; then
-    tot_rw_tests="${#tests[@]}"
-    tests+=(`grep "^rw_" "$test_list" | awk '{print $1}'`)
+    rw_tests=(`grep "^rw_" "$test_list" | awk '{print $1}'`)
+    tot_rw_tests="${#rw_tests[@]}"
+    tests+=(${rw_tests[@]})
     while IFS= read -r line; do
         test_names+=("$line")
-    done < <(grep "^rw_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')
-    total_tests="${#tests[@]}"
-    tot_rw_tests=$(($total_tests-$tot_rw_tests))
+    done < <(grep "^rw_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
+  else
+    tot_rw_tests=0 
   fi
 
   if [ "$6" = 'yes' ]; then
-    tot_esp_tests="${#tests[@]}"
-    tests+=(`grep "^esp_" "$test_list" | awk '{print $1}'`)
+    esp_tests=(`grep "^esp_" "$test_list" | awk '{print $1}'`)
+    tot_esp_tests="${#esp_tests[@]}"
+    tests+=(${esp_tests[@]})
     while IFS= read -r line; do
         test_names+=("$line")
-    done < <(grep "^esp_" "$test_list" | awk 'BEGIN { FPAT="([^#]+)"; OFS="\n"; } {print $2}')
-    total_tests="${#tests[@]}"
-    tot_esp_tests=$(($total_tests-$tot_esp_tests))
+    done < <(grep "^esp_" "$test_list" | awk 'BEGIN { FS=" #"; OFS="\n"; } {print $2}')
+  else
+    tot_esp_tests=0 
   fi
+
+  total_tests="${#tests[@]}"
 }
 
 
@@ -806,15 +807,15 @@ run_esp_test()
 check_rw()
 {
   if [ `echo "$1" | grep '_density_' | wc -l` -eq 1 ]; then
-    grep " TOTAL ENERGY         =" "$1.out"|tail -1|awk '{print $NF}' > "$1.ene"
-    grep " TOTAL ENERGY         =" "$1_read.out"|head -1|awk '{print $NF}' > "$1_read.ene"
+    grep " TOTAL ENERGY         =" "$1.out" | tail -n 1 | awk '{print $NF}' > "$1.ene"
+    grep " TOTAL ENERGY         =" "$1_read.out" | head -n 1 | awk '{print $NF}' > "$1_read.ene"
 
     "$2/dacdif" -k -a '1.0e-8' "$1_read.ene" "$1.ene" | tee -a "$3"
   fi
 
   if [ `echo "$1" | grep '_xyz_' | wc -l` -eq 1 ]; then
-    awk '/OPTIMIZED GEOMETRY IN CARTESIAN/,/FORCE/ {print}' "$1.out"| sed -n '3,$p' | head -n -2 > "$1.xyz"
-    awk '/INPUT GEOMETRY/,/DISTANCE MATRIX/ {print}' "$1_read.out" | sed -n '2,$p' | head -n -1 > "$1_read.xyz"
+    awk '/OPTIMIZED GEOMETRY IN CARTESIAN/,/FORCE/ {print}' "$1.out" | sed -n '3,$p' | sed -e '$ d' | sed -e '$ d' > "$1.xyz"
+    awk '/INPUT GEOMETRY/,/DISTANCE MATRIX/ {print}' "$1_read.out" | sed -n '2,$p' | sed -e '$ d' > "$1_read.xyz"
 
     "$2/dacdif" -k -a '2.0e-4' "$1_read.xyz" "$1.xyz" | tee -a "$3"
   fi
@@ -946,12 +947,6 @@ print_summary()
   fi
 
   for buildtype in $buildtypes; do
-    total_ene=0
-    total_grad=0
-    total_opt=0
-    total_api=0
-    total_rw=0
-    total_esp=0
     failed_ene=0
     failed_grad=0
     failed_opt=0
@@ -977,33 +972,27 @@ print_summary()
       fi
   
       if [ `sed -n '/energy test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_ene=$(($total_ene+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_ene=$(($failed_ene+1))
         fi
         
       elif [ `sed -n '/gradient test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_grad=$(($total_grad+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_grad=$(($failed_grad+1))
         fi
       elif [ `sed -n '/geometry optimization test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_opt=$(($total_opt+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_opt=$(($failed_opt+1))
         fi
       elif [ `sed -n '/API test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_api=$(($total_api+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_api=$(($failed_api+1))
         fi
       elif [ `sed -n '/RW test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_rw=$(($total_rw+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_rw=$(($failed_rw+1))
         fi
       elif [ `sed -n '/ESP test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
-        total_esp=$(($total_esp+1))
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_esp=$(($failed_esp+1))
         fi
@@ -1018,12 +1007,12 @@ print_summary()
     ncum_failed_tests=$(($ncum_failed_tests+$failed_total))
 
     echo "$buildtype version:" > .quick.runtest.${buildtype}.summary.tmp0
-    echo "    Energy tests: $failed_ene/$total_ene (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
-    echo "    Gradient tests: $failed_grad/$total_grad (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
-    echo "    Optimization tests: $failed_opt/$total_opt (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
-    echo "    API tests: $failed_api/$total_api (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
-    echo "    RW tests: $failed_rw/$total_rw (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
-    echo "    ESP tests: $failed_esp/$total_esp (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    Energy tests: $failed_ene/$tot_ene_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    Gradient tests: $failed_grad/$tot_grad_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    Optimization tests: $failed_opt/$tot_opt_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    API tests: $failed_api/$tot_api_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    RW tests: $failed_rw/$tot_rw_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    ESP tests: $failed_esp/$tot_esp_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Total tests: $failed_total/$total_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "" >> .quick.runtest.${buildtype}.summary.tmp0
  
@@ -1073,7 +1062,7 @@ check_mpi_gpu_mismatch()
 }
 
 
-check_for_req_deps "cat" "date" "echo" "rm" "seq" "tee" "touch" "wc" "awk" "sed"
+check_for_req_deps "awk" "cat" "date" "echo" "grep" "head" "rm" "sed" "seq" "tail" "tee" "touch" "wc"
 
 #  !---------------------------------------------------------------------!
 #  ! Read input                                                          !

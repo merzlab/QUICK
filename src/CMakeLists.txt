@@ -302,18 +302,16 @@ endif()
 # --------------------------------------------------------------------
 
 add_executable(quick ${MAIN_SOURCES})
+set_target_properties(quick PROPERTIES LINKER_LANGUAGE Fortran)
 target_compile_options(quick PRIVATE 
-	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>"
-	"$<$<COMPILE_LANGUAGE:C>:${OPT_CFLAGS}>"
-	"$<$<COMPILE_LANGUAGE:CXX>:${OPT_CXXFLAGS}>")
+	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>")
 config_module_dirs(quick quick/serial libxc/serial)
 target_link_libraries(quick libquick)
 
 add_executable(test-api ${TEST_API_SOURCES})
+set_target_properties(test-api PROPERTIES LINKER_LANGUAGE Fortran)
 target_compile_options(test-api PRIVATE
-	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>"
-	"$<$<COMPILE_LANGUAGE:C>:${OPT_CFLAGS}>"
-	"$<$<COMPILE_LANGUAGE:CXX>:${OPT_CXXFLAGS}>")
+	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>")
 config_module_dirs(test-api quick/serial libxc/serial)
 target_link_libraries(test-api libquick)
 

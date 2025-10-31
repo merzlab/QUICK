@@ -487,12 +487,12 @@ module quick_method_module
             ! computing esp, efield and efg
             if (self%esp_charge)then
               write(io,'(" ESP CHARGE CALCULATION")')
-              write(io,'(" ESP grids are created at " F5.3 " A spacing ")') self%espgrid_spacing
+              write(io,'(" ESP grids are created at ", F5.3, " A spacing ")') self%espgrid_spacing
               if (self%vdw_radii == "BONDI")then
-                write(io,'(" Van der waals radii for ESP charges are obtained from " A)') &
+                write(io,'(" Van der waals radii for ESP charges are obtained from ", A)') &
                   "J. Phys. Chem. 1964, 68, 3, 441–451"
               else if (self%vdw_radii == "TC")then
-                write(io,'(" Van der waals radii for ESP charges are obtained from " A)') &
+                write(io,'(" Van der waals radii for ESP charges are obtained from ", A)') &
                   "J. Chem. Theory Comput. 2024, 20, 17, 7469–7478"
               else
                 call PrtErr(OUTFILEHANDLE, 'The keyword vdw_radii has unknown value. Please use either BONDI or TC.')
@@ -1157,7 +1157,7 @@ module quick_method_module
             .and. (index(functional_name,'mgga') .eq. 0))  then
                 functional_name=trim(functional_name)
 
-                call upcase(functional_name,300)
+                call upcase(functional_name,256)
 
                 if((trim(functional_name) == trim(func1)) .or. (trim(functional_name) == trim(func2))) then 
                         nof_f=nof_f+1

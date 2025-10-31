@@ -37,8 +37,6 @@ module quick_basis_module
 
    type quick_basis_type
 
-        type (gaussian), dimension(:), pointer :: gauss_fnc => null()
-
         ! total shell number
         integer, pointer :: nshell
 
@@ -229,7 +227,6 @@ contains
         integer natom_arg,nshell_arg,nbasis_arg,i,j
         type(quick_basis_type) self
 
-        if(.not. associated (self%gauss_fnc)) allocate(self%gauss_fnc(nbasis_arg))
         if(.not. allocated (self%ncenter)) allocate(self%ncenter(nbasis_arg))
         if(.not. allocated(self%first_basis_function)) allocate(self%first_basis_function(natom_arg))
         if(.not. allocated(self%last_basis_function)) allocate(self%last_basis_function(natom_arg))
@@ -287,8 +284,6 @@ contains
         use quick_gaussian_class_module
         implicit none
         type (quick_basis_type) self
-
-        nullify(self%gauss_fnc)
 
         if (allocated(self%ncenter)) deallocate(self%ncenter)
         if (allocated(self%first_basis_function)) deallocate(self%first_basis_function)
