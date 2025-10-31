@@ -301,6 +301,7 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   use driver_parameter_module
   use dlf_parameter_module, only: rk
   use dlf_stat, only: stat
+  use quick_calculated_module, only: quick_qm_struct
   use quick_gridpoints_module
   use quick_molspec_module, only: natom, xyz, quick_molspec
   use quick_cutoff_module, only: schwarzoff
