@@ -25,9 +25,9 @@ subroutine gradient(ierr)
 
    use allmod
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-   implicit double precision(a-h,o-z)
+   implicit none
 
    integer, intent(inout) :: ierr
    character(len=1) cartsym(3)
@@ -115,9 +115,9 @@ subroutine scf_gradient
    use allmod
    use quick_grad_cshell_module
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-   implicit double precision(a-h,o-z)
+   implicit none
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -381,9 +381,10 @@ subroutine get_oneen_grad
 
   use allmod
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
   implicit none
+
   integer :: Iatm, Imomentum, IIsh, JJsh, i, j, nshell_mpi
 
 !---------------------------------------------------------------------
@@ -486,9 +487,9 @@ subroutine get_kinetic_grad
 
    use allmod
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-   implicit double precision(a-h,o-z)
+   implicit none
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -604,9 +605,9 @@ subroutine get_electron_replusion_grad
    use quick_grad_cshell_module
    use quick_cutoff_module, only: cshell_dnscreen
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-   implicit double precision(a-h,o-z)
+   implicit none
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -742,9 +743,9 @@ subroutine get_xc_grad
    use xc_f90_types_m
    use xc_f90_lib_m
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-   implicit double precision(a-h,o-z)
+   implicit none
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2

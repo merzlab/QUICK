@@ -11,9 +11,9 @@ subroutine optimize(ierr)
    use quick_eri_cshell_module, only: getEriPrecomputables
    use quick_grad_cshell_module, only: scf_gradient
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-   implicit double precision(a-h,o-z)
+   implicit none
 
    logical :: done,diagco
    character(len=1) cartsym(3)

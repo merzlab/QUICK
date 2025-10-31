@@ -355,7 +355,7 @@ subroutine dlf_run(ierr2 &
   use quick_files_module, only: write_molden
   use quick_molden_module, only: quick_molden
 #ifdef MPIV
-  use mpi
+  use mpi_f08
   use quick_mpi_module, only: bMPI, mpierror
 #endif
   implicit none
