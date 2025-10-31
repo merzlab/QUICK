@@ -301,7 +301,6 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   use driver_parameter_module
   use dlf_parameter_module, only: rk
   use dlf_stat, only: stat
-  use allmod
   use quick_gridpoints_module
   use quick_molspec_module, only: natom, xyz, quick_molspec
   use quick_cutoff_module, only: schwarzoff
@@ -419,7 +418,6 @@ subroutine dlf_get_hessian(nvar,coords,hessian,status)
   !  get the hessian at a given geometry
   use driver_parameter_module
   use dlf_parameter_module
-!  use allmod
 !  use quick_grad_cshell_module, only: cshell_gradient
   !use vib_pot
   implicit none
