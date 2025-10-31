@@ -65,37 +65,41 @@ jobs:
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v4
-      - name: 'Linux: Install Dependencies for Serial Version'
-        if: runner.os == 'Linux'
+      - name: 'Install Dependencies for Serial Version'
         run: |
-          sudo apt-get update
-          sudo apt-get -y install ${{ matrix.compiler-install }} parallel libhdf5-dev
-          if [[ ${{ matrix.compiler-type }} == 'gnu' || ${{ matrix.compiler-type }} == 'clang' ]]; then
-            sudo rm /usr/bin/${{ matrix.c-compiler }}
-            sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
-            sudo rm /usr/bin/${{ matrix.cxx-compiler }}
-            sudo ln -s -T ${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.cxx-compiler }}
-            if [[ ${{ matrix.compiler-type }} == 'gnu' ]]; then
-              sudo rm /usr/bin/${{ matrix.fortran-compiler }}
-              sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt-get update
+            sudo apt-get upgrade
+            sudo apt-get install -y ${{ matrix.compiler-install }} parallel libhdf5-dev
+            if [[ ${{ matrix.compiler-type }} == 'gnu' || ${{ matrix.compiler-type }} == 'clang' ]]; then
+              sudo rm /usr/bin/${{ matrix.c-compiler }}
+              sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
+              sudo rm /usr/bin/${{ matrix.cxx-compiler }}
+              sudo ln -s -T ${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.cxx-compiler }}
+              if [[ ${{ matrix.compiler-type }} == 'gnu' ]]; then
+                sudo rm /usr/bin/${{ matrix.fortran-compiler }}
+                sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
+              fi
             fi
+            sudo apt-get clean
           fi
-      - name: 'Linux: Log Softare Environment Configuration'
-        if: runner.os == 'Linux'
+      - name: 'Log Softare Environment Configuration'
         run: |
-          echo "OS version:"
-          cat /etc/os-release
-          echo
-          echo "Kernel version:"
-          uname -a
-          echo
-          ldd --version
-          echo
-          echo "Fortran compiler version:"
-          ${{ matrix.fortran-compiler }} --version
-          echo
-          echo "GNU Parallel version:"
-          parallel --version
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            echo "OS version:"
+            cat /etc/os-release
+            echo
+            echo "Kernel version:"
+            uname -a
+            echo
+            ldd --version
+            echo
+            echo "Fortran compiler version:"
+            ${{ matrix.fortran-compiler }} --version
+            echo
+            echo "GNU Parallel version:"
+            parallel --version
+          fi
       - name: 'Setup Environment Variables for Building and Running Tests'
         run: |
           echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
@@ -108,7 +112,7 @@ jobs:
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
           echo LIBRARY_PATH=/usr/lib/`uname -m`-linux-gnu/hdf5/serial:$LIBRARY_PATH >> "$GITHUB_ENV"
           echo LD_LIBRARY_PATH=/usr/lib/`uname -m`-linux-gnu/hdf5/serial:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
-          echo "HDF5_FORTRAN_MOD_DIR=/usr/include/hdf5/serial/" >> "$GITHUB_ENV"
+          echo "HDF5_FORTRAN_MOD_DIR=/usr/include/hdf5/serial" >> "$GITHUB_ENV"
       - name: 'Configure Serial Version'
         run: |
           ./configure --serial --hdf5 --enablef --shared --verbose --prefix $PWD/install \
@@ -124,7 +128,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: serial-legacy-configure-make-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
-          path: ${{ github.workspace }}/install/test/runs/serial
+          path: |
+            ${{ github.workspace }}/install/runtest.log
+            ${{ github.workspace }}/install/runtest-verbose.log
+            ${{ github.workspace }}/install/test/runs/serial
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for Serial Version'
@@ -223,43 +230,42 @@ jobs:
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
             compiler-install: 'clang-18 gfortran'
-          - os: 'macos-13'
+          - os: 'macos-14'
             compiler-type: 'GNU'
-            compiler-version: '14'
+            compiler-version: '15'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'gcc@14'
-          - os: 'macos-13'
+            compiler-install: 'gcc@15'
+          - os: 'macos-14'
             compiler-type: 'CLANG'
-            compiler-version: '15'
-            fortran-compiler-version: '14'
+            compiler-version: '20'
+            fortran-compiler-version: '15'
             c-compiler: 'clang'
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'llvm@15 gcc@14'
-          - os: 'macos-14'
+            compiler-install: 'llvm@20 gcc@15'
+          - os: 'macos-15'
             compiler-type: 'GNU'
-            compiler-version: '14'
+            compiler-version: '15'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'gcc@14'
-          - os: 'macos-14'
+            compiler-install: 'gcc@15'
+          - os: 'macos-15'
             compiler-type: 'CLANG'
-            compiler-version: '15'
-            fortran-compiler-version: '14'
+            compiler-version: '20'
+            fortran-compiler-version: '15'
             c-compiler: 'clang'
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'llvm@15 gcc@14'
+            compiler-install: 'llvm@20 gcc@15'
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - Serial - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v4
-      - name: 'Linux: Setup Environment Variables for Building and Running Tests'
-        if: runner.os == 'Linux'
+      - name: 'Setup Environment Variables for Building and Running Tests'
         run: |
           echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
           echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
@@ -269,124 +275,115 @@ jobs:
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-          if [ ${{ matrix.compiler-type }} == 'PGI' ]; then
-            echo PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/bin:/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/comm_libs/mpi/bin:$PATH >> "$GITHUB_ENV"
-            echo INCLUDE_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH >> "$GITHUB_ENV"
-            echo LIBRARY_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/lib:$LIBRARY_PATH >> "$GITHUB_ENV"
-            echo LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/lib:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
-            echo CMAKE_PREFIX_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/:$CMAKE_PREFIX_PATH >> "$GITHUB_ENV"
-            echo "NVHPC=/opt/nvidia/hpc_sdk" >> "$GITHUB_ENV"
-            echo NVHPC_ROOT=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }} >> "$GITHUB_ENV"
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            if [ ${{ matrix.compiler-type }} == 'PGI' ]; then
+              echo PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/bin:$PATH >> "$GITHUB_ENV"
+              echo INCLUDE_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH >> "$GITHUB_ENV"
+              echo LIBRARY_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/lib:$LIBRARY_PATH >> "$GITHUB_ENV"
+              echo LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/lib:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
+              echo CMAKE_PREFIX_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/:$CMAKE_PREFIX_PATH >> "$GITHUB_ENV"
+              echo "NVHPC=/opt/nvidia/hpc_sdk" >> "$GITHUB_ENV"
+              echo NVHPC_ROOT=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }} >> "$GITHUB_ENV"
+            fi
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+              echo "BREW_COMPILER_PREFIX=$(brew --prefix)/bin" >> "$GITHUB_ENV"
+              if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
+                echo "PATH=$(brew --prefix)/bin:$PATH" >> "$GITHUB_ENV"
+              elif [[ ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+                echo "PATH=$(brew --prefix)/bin:$(brew --prefix)/opt/llvm@${{ matrix.compiler-version }}/bin:$PATH" >> "$GITHUB_ENV"
+              fi
           fi
-      - name: 'MacOS: Setup Environment Variables for Building and Running Tests'
-        if: runner.os == 'macOS'
+      - name: 'Install Dependencies for Serial Version'
         run: |
-          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
-          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
-          echo "LIBRARY_PATH=$PWD/install/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
-          echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
-          echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-          echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-          echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-          if [[ ${{ matrix.os }} == 'macos-13' ]]; then
-            echo "BREW_COMPILER_PREFIX=/usr/local/bin" >> "$GITHUB_ENV"
-            echo "PATH=/usr/local/bin:$PATH" >> "$GITHUB_ENV"
-          elif [[ ${{ matrix.os }} == 'macos-14' ]]; then
-            echo "BREW_COMPILER_PREFIX=/opt/homebrew/bin" >> "$GITHUB_ENV"
-            echo "PATH=/opt/homebrew/bin:$PATH" >> "$GITHUB_ENV"
-          fi
-      - name: 'Linux: Install Dependencies for Serial Version'
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
-            sudo apt install -y gpg-agent wget
-            wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
-              | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
-            echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
-              | sudo tee /etc/apt/sources.list.d/oneAPI.list
-            sudo apt update
-          elif [ ${{ matrix.compiler-type }} == 'PGI' ]; then
-            sudo apt install -y gpg-agent wget
-            wget -O- https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK \
-              | gpg --dearmor | sudo tee /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg > /dev/null
-            echo "deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /" \
-              | sudo tee /etc/apt/sources.list.d/nvhpc.list
-            sudo apt update
-          fi
-          sudo apt-get -y install ${{ matrix.compiler-install }} cmake parallel libhdf5-dev
-          if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
-            sudo rm /usr/bin/${{ matrix.c-compiler }}
-            sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
-            sudo rm /usr/bin/${{ matrix.cxx-compiler }}
-            sudo ln -s -T ${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.cxx-compiler }}
-            if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
-              sudo rm /usr/bin/${{ matrix.fortran-compiler }}
-              sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt-get update
+            sudo apt-get upgrade
+            if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+              sudo apt-get install -y gpg-agent wget
+              wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
+                | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
+              echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
+                | sudo tee /etc/apt/sources.list.d/oneAPI.list
+              sudo apt-get update
+            elif [ ${{ matrix.compiler-type }} == 'PGI' ]; then
+              sudo apt-get install -y gpg-agent wget
+              wget -O- https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK \
+                | gpg --dearmor | sudo tee /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg > /dev/null
+              echo "deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /" \
+                | sudo tee /etc/apt/sources.list.d/nvhpc.list
+              sudo apt-get update
+            fi
+            sudo apt-get install -y ${{ matrix.compiler-install }} cmake parallel libhdf5-dev
+            if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+              sudo rm /usr/bin/${{ matrix.c-compiler }}
+              sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
+              sudo rm /usr/bin/${{ matrix.cxx-compiler }}
+              sudo ln -s -T ${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.cxx-compiler }}
+              if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
+                sudo rm /usr/bin/${{ matrix.fortran-compiler }}
+                sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
+              fi
+            fi
+            sudo apt-get clean
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            brew install --formula --quiet ${{ matrix.compiler-install }} parallel hdf5
+            if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+              if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
+                sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
+                  $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
+                sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} \
+                  $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}
+                sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} \
+                  $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
+              elif [[ ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+                sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.fortran-compiler-version }} \
+                  $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
+              fi
             fi
           fi
-      - name: 'MacOS: Install Dependencies for Serial Version'
-        if: runner.os == 'macOS'
+      - name: 'Log Softare Environment Configuration'
         run: |
-          brew install --formula --quiet ${{ matrix.compiler-install }} cmake parallel hdf5
-          if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
-            sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
-              $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
-            sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} \
-              $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}
-            if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
-              sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} \
-                $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
-            elif [[ ${{ matrix.compiler-type }} == 'CLANG' ]]; then
-              sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.fortran-compiler-version }} \
-                $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+              source /opt/intel/oneapi/setvars.sh
             fi
-          fi
-      - name: 'Linux: Log Softare Environment Configuration'
-        if: runner.os == 'Linux'
-        run: |
-          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
-            source /opt/intel/oneapi/setvars.sh
-          fi
-          echo "OS version:"
-          cat /etc/os-release
-          echo
-          echo "Kernel version:"
-          uname -a
-          echo
-          ldd --version
-          echo
-          echo "Fortran compiler version:"
-          ${{ matrix.fortran-compiler }} --version
-          echo
-          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
-            echo "MKL install directory:"
-            echo "${MKLROOT}"
+            echo "OS version:"
+            cat /etc/os-release
             echo
+            echo "Kernel version:"
+            uname -a
+            echo
+            ldd --version
+            echo
+            echo "Fortran compiler version:"
+            ${{ matrix.fortran-compiler }} --version
+            echo
+            if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+              echo "MKL install directory:"
+              echo "${MKLROOT}"
+              echo
+            fi
+            echo "CMake version:"
+            cmake --version
+            echo
+            echo "GNU Parallel version:"
+            parallel --version
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            echo "OS version:"
+            cat /System/Library/CoreServices/SystemVersion.plist
+            echo
+            echo "Kernel version:"
+            uname -a
+            echo
+            echo "Fortran compiler version:"
+            ${{ matrix.fortran-compiler }} --version
+            echo
+            echo "CMake version:"
+            cmake --version
+            echo
+            echo "GNU Parallel version:"
+            parallel --version
           fi
-          echo "CMake version:"
-          cmake --version
-          echo
-          echo "GNU Parallel version:"
-          parallel --version
-      - name: 'MacOS: Log Softare Environment Configuration'
-        if: runner.os == 'macOS'
-        run: |
-          echo "OS version:"
-          cat /System/Library/CoreServices/SystemVersion.plist
-          echo
-          echo "Kernel version:"
-          uname -a
-          echo
-          echo "Fortran compiler version:"
-          ${{ matrix.fortran-compiler }} --version
-          echo
-          echo "CMake version:"
-          cmake --version
-          echo
-          echo "GNU Parallel version:"
-          parallel --version
       - name: 'Configure Serial Version'
         run: |
           mkdir build
@@ -420,7 +417,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: serial-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
-          path: ${{ github.workspace }}/install/test/runs/serial
+          path: |
+            ${{ github.workspace }}/install/runtest.log
+            ${{ github.workspace }}/install/runtest-verbose.log
+            ${{ github.workspace }}/install/test/runs/serial
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for Serial Version'
@@ -428,4 +428,5 @@ jobs:
         with:
           name: serial-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}
       - name: 'Display Artifacts'
-        run: ls -R
+        run: |
+          ls -R

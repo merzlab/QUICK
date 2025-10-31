@@ -62,6 +62,7 @@
 
     implicit none
 
+    integer :: fail
     logical :: failed = .false.         ! flag to indicates SCF fail or OPT fail
     integer :: ierr                     ! return error info
     integer :: i,j,k
@@ -211,18 +212,27 @@
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         SAFE_CALL(getEnergy(.false.,ierr))
-        
-        ! One electron properties (ESP, EField)
-        call compute_oeprop()
 
-#if defined(RESTART_HDF5)
+        ! One electron properties (ESP, EField)
+        if (quick_method%esp_charge .or. quick_method%ext_grid) then
+          call compute_oeprop()
+        endif
+
         if(master) then
           if(quick_method%writexyz)then
-             call write_integer_array(quick_molspec%iattype, natom, 'iattype')
-             call write_double_array(quick_molspec%xyz, 3, natom, 'xyz')
+#if defined(RESTART_HDF5)
+            call write_integer_array(quick_molspec%iattype, natom, 'iattype')
+            call write_double_array(quick_molspec%xyz, 3, natom, 'xyz')
+#else
+            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
+            call wchk_int(iDataFile, "natom", natom, fail)
+            call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+            call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
+            close(iDataFile)
+#endif
           endif 
         endif
-#endif
+
     endif
 
     !------------------------------------------------------------------
@@ -241,14 +251,22 @@
         else
             SAFE_CALL(lopt(ierr))         ! Cartesian
         endif
-#if defined(RESTART_HDF5)
+
         if(master) then
           if(quick_method%writexyz)then
-             call write_integer_array(quick_molspec%iattype, natom, 'iattype')
-             call write_double_array(quick_molspec%xyz, 3, natom, 'xyz')
+#if defined(RESTART_HDF5)
+            call write_integer_array(quick_molspec%iattype, natom, 'iattype')
+            call write_double_array(quick_molspec%xyz, 3, natom, 'xyz')
+#else
+            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
+            call wchk_int(iDataFile, "natom", natom, fail)
+            call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+            call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
+            close(iDataFile)
+            close(iDataFile)
+#endif
           endif 
         endif
-#endif
     endif
     
     if (.not.quick_method%opt .and. quick_method%grad) then
@@ -259,7 +277,9 @@
         endif
 
         ! One electron properties (ESP, EField) 
-        call compute_oeprop()
+        if (quick_method%esp_charge .or. quick_method%ext_grid) then
+            call compute_oeprop()
+        endif
 
     endif
 
