@@ -19,6 +19,8 @@ module quick_molspec_module
 
    implicit none
 
+   integer, parameter :: STR_LEN = 300
+
    type quick_molspec_type
 
       ! number of atoms
@@ -53,6 +55,10 @@ module quick_molspec_module
       ! number of atom types
       integer :: iAtomType = 0
 
+      ! number of constraints
+      integer :: nConsAtom = 0
+      integer :: nFreezeAtom = 0
+
       ! symbol for respective atom type
       character(len=2), dimension(1:10) :: atom_type_sym
 
@@ -72,6 +78,10 @@ module quick_molspec_module
 
       ! atom charge and external atom charge
       double precision, dimension(:), allocatable ::chg,extchg
+
+      ! constrain degrees of freedom
+      integer, dimension(:), allocatable ::dlfind_freezeatm
+      integer, dimension(:,:), allocatable :: dlfind_constr
 
       ! basis set number
       integer, pointer:: nbasis
@@ -145,10 +155,12 @@ contains
       if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
       if (.not. allocated(self%chg)) allocate(self%chg(natom))
       if (.not. allocated(self%AtomDistance)) allocate(self%AtomDistance(natom,natom))
+      if (.not. allocated(self%dlfind_freezeatm)) allocate(self%dlfind_freezeatm(natom))
       do i=1,natom
          self%distnbor(i)=0
          self%iattype(i)=0
          self%chg(i)=0d0
+         self%dlfind_freezeatm(i) = 0
          do j=1,3
             xyz(j,i)=0d0
          enddo
@@ -165,6 +177,15 @@ contains
                self%extxyz(j,i)=0d0
             enddo
             self%extchg(i)=0d0
+         enddo
+      endif
+
+      if (self%nconsatom .gt. 0) then
+         if (.not. allocated(self%dlfind_constr)) allocate(self%dlfind_constr(5,self%nconsatom)) 
+         do i=1,self%nconsatom
+            do j=1,5
+               self%dlfind_constr(j,i)=0
+            enddo
          enddo
       endif
 
@@ -249,7 +270,8 @@ contains
       self%nNonHAtom = 0
       self%nHAtom = 0
       self%iAtomType = 0
-
+      self%nConsAtom = 0
+      self%nFreezeAtom = 0
 
    end subroutine init_quick_molspec
 
@@ -268,11 +290,16 @@ contains
 !      deallocate(self%xyz)
       if (allocated(self%iattype)) deallocate(self%iattype)
       if (allocated(self%chg)) deallocate(self%chg)
+      if (allocated(self%dlfind_freezeatm)) deallocate(self%dlfind_freezeatm)
 
       ! if exist external charge
       if (self%nextatom.gt.0) then
         if (allocated(self%extxyz)) deallocate(self%extxyz)
         if (allocated(self%extchg)) deallocate(self%extchg)
+      endif
+
+      if (self%nconsatom.gt.0) then
+         if (allocated(self%dlfind_constr)) deallocate(self%dlfind_constr)
       endif
 
       ! if exist external grid
@@ -352,15 +379,18 @@ contains
     integer :: iAtomType
     integer :: nextatom
     integer :: nextpoint
+    integer :: nconsatom
+    integer :: nfreezeatom
     double precision :: temp,rdnml
-    character(len=300) :: keywd
-    character(len=300) :: tempstring
+    character(len=STR_LEN) :: keywd
+    character(len=STR_LEN) :: tempstring
     logical :: is_extcharge = .false.
+    logical :: is_constrain = .false.
     logical :: is_extgrid = .false.
     logical :: is_blank
     logical, intent(in)   :: isTemplate
     logical, intent(in)   :: hasKeywd
-    character(len=300), intent(in) :: apikeywd
+    character(len=STR_LEN), intent(in) :: apikeywd
 
     !---------------------
     ! PART I
@@ -381,7 +411,7 @@ contains
       keywd = apikeywd
     endif
 
-    call upcase(keywd,300)
+    call upcase(keywd,STR_LEN)
 
     ! Read Charge
     if (index(keywd,'CHARGE=') /= 0) self%molchg = rdinml(keywd,'CHARGE')
@@ -400,6 +430,9 @@ contains
    
     ! determine if external grid points exist
     if (index(keywd,'EFG_GRID') /= 0) is_extgrid=.true.
+
+    ! determine if constraints exists
+    if (index(keywd,'CONSTRAIN') /= 0) is_constrain=.true.
 
     ! get the atom number, type and number of external charges
 
@@ -438,6 +471,8 @@ contains
         natom = 0
         nextatom = 0
         nextpoint = 0
+        nconsatom = 0
+        nfreezeatom = 0
         do
           read(input,'(A80)',end=111,err=111) keywd
           i=1;j=80
@@ -482,10 +517,32 @@ contains
 
         112     continue
 
+        !read contrained part
+        if (is_constrain) then
+           rewind(input)
+           if (is_extcharge) then
+              call findBlock(input,3)
+           else
+              call findBlock(input,2)
+           endif
+           do
+              read(input,'(A80)',end=113,err=113) keywd
+              if (is_blank(keywd,1,80)) exit
+              call upcase(keywd,80)
+              if ((index(keywd,'DISTANCE') /=0) .or. (index(keywd,'ANGLE') /=0) &
+                 .or. (index(keywd,'DIHEDRAL') /=0)) nconsatom = nconsatom+1
+              if (index(keywd,'FREEZE')/=0) nfreezeatom =nfreezeatom+1
+           enddo
+        endif
+      
+        113       continue
+
         iAtomType=iAtomType-1
         self%iAtomType = iAtomType
         self%nextatom = nextatom
         self%nextpoint = nextpoint
+        self%nfreezeatom = nfreezeatom
+        self%nconsatom = nconsatom
       endif
     endif
 
@@ -507,7 +564,7 @@ contains
       integer i,j,k,istart,ifinal
       integer ierror
       double precision temp
-      character(len=300) keywd
+      character(len=STR_LEN) keywd
 
 
       rewind(input)
@@ -546,8 +603,10 @@ contains
 
       if (self%nextatom.gt.0) call read_quick_molespec_extcharges(self,input,ierr)
 
-      if (self%nextpoint.gt.0) call read_quick_molespec_extgridpoints(self,input,ierr)
+      if ((self%nconsatom.gt.0) .or. (self%nfreezeatom.gt.0)) &
+         call read_quick_molespec_constrain(self,input,ierr)
 
+      if (self%nextpoint.gt.0) call read_quick_molespec_extgridpoints(self,input,ierr)
 
    end subroutine read_quick_molspec_2
 
@@ -567,7 +626,7 @@ contains
        integer i,j,k,istart,ifinal
        integer nextatom,ierror
        double precision temp
-       character(len=300) keywd
+       character(len=STR_LEN) keywd
 
        rewind(input)
        call findBlock(input,2)
@@ -593,6 +652,129 @@ contains
        enddo
 
    end subroutine read_quick_molespec_extcharges
+
+   subroutine read_quick_molespec_constrain(self,input,ierr)
+       use quick_constants_module
+       use quick_exception_module
+
+       implicit none
+
+       ! parameter
+       type (quick_molspec_type) self
+       integer input
+       integer, intent(inout) :: ierr
+       ! inner varibles
+       integer i,j,k,istart,ifinal,itemp,incons
+       integer nconsatom,nfreezeatom,ierror
+       double precision temp
+       character(len=200) keywd
+
+       incons=0
+
+       rewind(input)
+
+       if (self%nextatom.gt.0) then
+          call findBlock(input,3)
+       else
+          call findBlock(input,2)
+       endif
+       nconsatom=self%nconsatom
+       nfreezeatom=self%nfreezeatom
+
+       do i=1,nfreezeatom+nconsatom
+           istart = 1
+           ifinal = 80
+
+           read(input,'(A80)') keywd
+           call upcase(keywd,80)
+           call rdword(keywd,istart,ifinal)
+           
+           if (index(keywd,'FREEZEXY') /=0) then
+              istart=ifinal+1
+              ifinal=80
+              call rdword(keywd,istart,ifinal)
+              call rdinum(keywd,istart,itemp,ierror)
+              self%dlfind_freezeatm(itemp)=-23 
+
+           elseif (index(keywd,'FREEZEXZ') /=0) then
+              istart=ifinal+1
+              ifinal=80
+              call rdword(keywd,istart,ifinal)
+              call rdinum(keywd,istart,itemp,ierror)
+              self%dlfind_freezeatm(itemp)=-24
+
+           elseif (index(keywd,'FREEZEYZ') /=0) then
+              istart=ifinal+1
+              ifinal=80
+              call rdword(keywd,istart,ifinal)
+              call rdinum(keywd,istart,itemp,ierror)
+              self%dlfind_freezeatm(itemp)=-34
+
+           elseif (index(keywd,'FREEZEX') /=0) then
+              istart=ifinal+1
+              ifinal=80
+              call rdword(keywd,istart,ifinal)
+              call rdinum(keywd,istart,itemp,ierror)
+              self%dlfind_freezeatm(itemp)=-2
+
+           elseif (index(keywd,'FREEZEY') /=0) then
+              istart=ifinal+1
+              ifinal=80
+              call rdword(keywd,istart,ifinal)
+              call rdinum(keywd,istart,itemp,ierror)
+              self%dlfind_freezeatm(itemp)=-3
+
+           elseif (index(keywd,'FREEZEZ') /=0) then
+              istart=ifinal+1
+              ifinal=80
+              call rdword(keywd,istart,ifinal)
+              call rdinum(keywd,istart,itemp,ierror)
+              self%dlfind_freezeatm(itemp)=-4
+
+           elseif (index(keywd,'FREEZE') /=0) then
+              istart=ifinal+1
+              ifinal=80
+              call rdword(keywd,istart,ifinal)
+              call rdinum(keywd,istart,itemp,ierror)
+              self%dlfind_freezeatm(itemp)=-1
+
+           elseif (index(keywd,'DISTANCE') /=0) then
+              incons=incons+1
+              self%dlfind_constr(1,incons)=1
+              do j=2,self%dlfind_constr(1,incons)+2
+                  istart=ifinal+1
+                  ifinal=80
+                  call rdword(keywd,istart,ifinal)
+                  call rdinum(keywd,istart,itemp,ierror)               
+                  self%dlfind_constr(j,incons)= itemp
+              enddo
+
+           elseif (index(keywd,'ANGLE') /=0) then
+              incons=incons+1
+              self%dlfind_constr(1,incons)=2
+              do j=2,self%dlfind_constr(1,incons)+2
+                  istart=ifinal+1
+                  ifinal=80
+                  call rdword(keywd,istart,ifinal)
+                  call rdinum(keywd,istart,itemp,ierror)
+                  self%dlfind_constr(j,incons)= itemp
+              enddo
+
+           elseif (index(keywd,'DIHEDRAL') /=0) then
+              incons=incons+1
+              self%dlfind_constr(1,incons)=3
+              do j=2,self%dlfind_constr(1,incons)+2
+                  istart=ifinal+1
+                  ifinal=80
+                  call rdword(keywd,istart,ifinal)
+                  call rdinum(keywd,istart,itemp,ierror)
+                  self%dlfind_constr(j,incons)= itemp
+              enddo
+
+           endif
+       enddo
+
+   end subroutine read_quick_molespec_constrain
 
    subroutine read_quick_molespec_extgridpoints(self,input,ierr)
      use quick_constants_module

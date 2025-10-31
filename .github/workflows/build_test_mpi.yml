@@ -95,39 +95,43 @@ jobs:
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v4
-      - name: 'Linux: Install Dependencies for MPI Version'
-        if: runner.os == 'Linux'
+      - name: 'Install Dependencies for MPI Version'
         run: |
-          sudo apt-get update
-          sudo apt-get -y install ${{ matrix.compiler-install }} ${{ matrix.mpi-install }}
-          which ${{ matrix.c-compiler }}-${{ matrix.compiler-version }}
-          if [[ ${{ matrix.compiler-type }} == 'gnu' || ${{ matrix.compiler-type }} == 'clang' ]]; then
-            sudo rm /usr/bin/${{ matrix.c-compiler }}
-            sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
-            sudo rm /usr/bin/${{ matrix.cxx-compiler }}
-            sudo ln -s -T ${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.cxx-compiler }}
-            if [[ ${{ matrix.compiler-type }} == 'gnu' ]]; then
-              sudo rm /usr/bin/${{ matrix.fortran-compiler }}
-              sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt-get update
+            sudo apt-get upgrade
+            sudo apt-get install -y ${{ matrix.compiler-install }} ${{ matrix.mpi-install }}
+            which ${{ matrix.c-compiler }}-${{ matrix.compiler-version }}
+            if [[ ${{ matrix.compiler-type }} == 'gnu' || ${{ matrix.compiler-type }} == 'clang' ]]; then
+              sudo rm /usr/bin/${{ matrix.c-compiler }}
+              sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
+              sudo rm /usr/bin/${{ matrix.cxx-compiler }}
+              sudo ln -s -T ${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.cxx-compiler }}
+              if [[ ${{ matrix.compiler-type }} == 'gnu' ]]; then
+                sudo rm /usr/bin/${{ matrix.fortran-compiler }}
+                sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
+              fi
             fi
+            sudo apt-get clean
           fi
-      - name: 'Linux: Log Softare Environment Configuration'
-        if: runner.os == 'Linux'
+      - name: 'Log Softare Environment Configuration'
         run: |
-          echo "OS version:"
-          cat /etc/os-release
-          echo
-          echo "Kernel version:"
-          uname -a
-          echo
-          echo "Glibc version:"
-          ldd --version
-          echo
-          echo "Fortran compiler version:"
-          ${{ matrix.fortran-compiler }} --version
-          echo
-          echo "MPI version:"
-          mpirun --version
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            echo "OS version:"
+            cat /etc/os-release
+            echo
+            echo "Kernel version:"
+            uname -a
+            echo
+            echo "Glibc version:"
+            ldd --version
+            echo
+            echo "Fortran compiler version:"
+            ${{ matrix.fortran-compiler }} --version
+            echo
+            echo "MPI version:"
+            mpirun --version
+          fi
       - name: 'Setup Environment Variables for Running Tests'
         run: |
           echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
@@ -162,7 +166,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mpi-legacy-configure-make-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}-${{ matrix.mpi-type }}
-          path: ${{ github.workspace }}/install/test/runs/mpi
+          path: |
+            ${{ github.workspace }}/install/runtest.log
+            ${{ github.workspace }}/install/runtest-verbose.log
+            ${{ github.workspace }}/install/test/runs/mpi
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for MPI Version'
@@ -256,7 +263,7 @@ jobs:
             c-compiler: 'mpiicx'
             cxx-compiler: 'mpiicpx'
             fortran-compiler: 'mpiifx'
-            compiler-install: 'intel-oneapi-compiler-dpcpp-cpp-2024.2 intel-oneapi-compiler-fortran-2024.2 intel-oneapi-mkl-2024.2 intel-oneapi-mkl-devel-2024.2 intel-oneapi-ccl-devel-2021.14'
+            compiler-install: 'intel-oneapi-compiler-dpcpp-cpp-2024.2 intel-oneapi-compiler-fortran-2024.2 intel-oneapi-mkl-2024.2 intel-oneapi-mkl-devel-2024.2 intel-oneapi-mpi-devel-2021.16'
             mpi-install: ''
           - os: 'ubuntu-24.04'
             compiler-type: 'INTELLLVM'
@@ -265,7 +272,7 @@ jobs:
             c-compiler: 'mpiicx'
             cxx-compiler: 'mpiicpx'
             fortran-compiler: 'mpiifx'
-            compiler-install: 'intel-oneapi-compiler-dpcpp-cpp-2025.0 intel-oneapi-compiler-fortran-2025.0 intel-oneapi-mkl-2025.0 intel-oneapi-mkl-devel-2025.0 intel-oneapi-ccl-devel-2021.14'
+            compiler-install: 'intel-oneapi-compiler-dpcpp-cpp-2025.0 intel-oneapi-compiler-fortran-2025.0 intel-oneapi-mkl-2025.0 intel-oneapi-mkl-devel-2025.0 intel-oneapi-ccl-devel-2021.16'
             mpi-install: ''
           - os: 'ubuntu-24.04'
             compiler-type: 'PGI'
@@ -303,51 +310,50 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'clang-18 gfortran'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
-          - os: 'macos-13'
-            compiler-type: 'GNU'
-            mpi-type: 'OpenMPI'
-            compiler-version: '14'
-            c-compiler: 'gcc'
-            cxx-compiler: 'g++'
-            fortran-compiler: 'gfortran'
-            compiler-install: 'gcc@14'
-            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
-          - os: 'macos-13'
-            compiler-type: 'CLANG'
-            mpi-type: 'OpenMPI'
-            compiler-version: '15'
-            fortran-compiler-version: '14'
-            c-compiler: 'clang'
-            cxx-compiler: 'clang++'
-            fortran-compiler: 'gfortran'
-            compiler-install: 'llvm@15 gcc@14'
-            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
           - os: 'macos-14'
             compiler-type: 'GNU'
             mpi-type: 'OpenMPI'
-            compiler-version: '14'
+            compiler-version: '15'
             c-compiler: 'gcc'
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'gcc@14'
-            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
+            compiler-install: 'gcc@15'
+            mpi-install: 'open-mpi'
           - os: 'macos-14'
             compiler-type: 'CLANG'
             mpi-type: 'OpenMPI'
-            compiler-version: '15'
-            fortran-compiler-version: '14'
+            compiler-version: '20'
+            fortran-compiler-version: '15'
             c-compiler: 'clang'
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
-            compiler-install: 'llvm@15 gcc@14'
-            mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
+            compiler-install: 'llvm@20 gcc@15'
+            mpi-install: 'open-mpi'
+          - os: 'macos-15'
+            compiler-type: 'GNU'
+            mpi-type: 'OpenMPI'
+            compiler-version: '15'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'gcc@15'
+            mpi-install: 'open-mpi'
+          - os: 'macos-15'
+            compiler-type: 'CLANG'
+            mpi-type: 'OpenMPI'
+            compiler-version: '20'
+            fortran-compiler-version: '15'
+            c-compiler: 'clang'
+            cxx-compiler: 'clang++'
+            fortran-compiler: 'gfortran'
+            compiler-install: 'llvm@20 gcc@15'
+            mpi-install: 'open-mpi'
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - ${{ matrix.mpi-type }} - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v4
-      - name: 'Linux: Setup Environment Variables for Building and Running Tests'
-        if: runner.os == 'Linux'
+      - name: 'Setup Environment Variables for Building and Running Tests'
         run: |
           echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
           echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
@@ -366,134 +372,116 @@ jobs:
             echo "MPICH_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
             echo "MPICH_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
           fi
-          if [ ${{ matrix.compiler-type }} == 'PGI' ]; then
-            echo PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/comm_libs/mpi/bin:$PATH >> "$GITHUB_ENV"
-            echo INCLUDE_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH >> "$GITHUB_ENV"
-            echo LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/lib:$LIBRARY_PATH >> "$GITHUB_ENV"
-            echo LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/lib:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
-            echo CMAKE_PREFIX_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/:$CMAKE_PREFIX_PATH >> "$GITHUB_ENV"
-            echo "NVHPC=/opt/nvidia/hpc_sdk" >> "$GITHUB_ENV"
-            echo NVHPC_ROOT=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }} >> "$GITHUB_ENV"
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            if [ ${{ matrix.compiler-type }} == 'PGI' ]; then
+              echo PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/comm_libs/mpi/bin:$PATH >> "$GITHUB_ENV"
+              echo INCLUDE_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH >> "$GITHUB_ENV"
+              echo LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/lib:$LIBRARY_PATH >> "$GITHUB_ENV"
+              echo LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/lib:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
+              echo CMAKE_PREFIX_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/:$CMAKE_PREFIX_PATH >> "$GITHUB_ENV"
+              echo "NVHPC=/opt/nvidia/hpc_sdk" >> "$GITHUB_ENV"
+              echo NVHPC_ROOT=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }} >> "$GITHUB_ENV"
+            fi
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+              echo "BREW_COMPILER_PREFIX=$(brew --prefix)/bin" >> "$GITHUB_ENV"
+              if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
+                echo "PATH=$(brew --prefix)/bin:$PATH" >> "$GITHUB_ENV"
+              elif [[ ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+                echo "PATH=$(brew --prefix)/bin:$(brew --prefix)/opt/llvm@${{ matrix.compiler-version }}/bin:$PATH" >> "$GITHUB_ENV"
+              fi
           fi
-      - name: 'MacOS: Setup Environment Variables for Building and Running Tests'
-        if: runner.os == 'macOS'
+      - name: 'Install Dependencies for MPI Version'
         run: |
-          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
-          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
-          echo "LIBRARY_PATH=$PWD/install/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
-          echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
-          echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-          echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-          echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-          if [[ ${{ matrix.mpi-type }} == 'OpenMPI' ]]; then
-            echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-            echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-            echo "OMPI_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-          elif [[ ${{ matrix.mpi-type }} == 'MPICH' ]]; then
-            echo "MPICH_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
-            echo "MPICH_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
-            echo "MPICH_FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-          fi
-          if [[ ${{ matrix.os }} == 'macos-13' ]]; then
-            echo "BREW_COMPILER_PREFIX=/usr/local/bin" >> "$GITHUB_ENV"
-            echo "PATH=/usr/local/bin:$PATH" >> "$GITHUB_ENV"
-          elif [[ ${{ matrix.os }} == 'macos-14' ]]; then
-            echo "BREW_COMPILER_PREFIX=/opt/homebrew/bin" >> "$GITHUB_ENV"
-            echo "PATH=/opt/homebrew/bin:$PATH" >> "$GITHUB_ENV"
-          fi
-      - name: 'Linux: Install Dependencies for MPI Version'
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
-            sudo apt install -y gpg-agent wget
-            wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
-              | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
-            echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
-              | sudo tee /etc/apt/sources.list.d/oneAPI.list
-            sudo apt update
-          elif [ ${{ matrix.compiler-type }} == 'PGI' ]; then
-            sudo apt install -y gpg-agent wget
-            wget -O- https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK \
-              | gpg --dearmor | sudo tee /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg > /dev/null
-            echo "deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /" \
-              | sudo tee /etc/apt/sources.list.d/nvhpc.list
-            sudo apt update
-          fi
-          sudo apt-get -y install ${{ matrix.compiler-install }} ${{ matrix.mpi-install }} cmake
-          if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
-            sudo rm /usr/bin/${{ matrix.c-compiler }}
-            sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
-            sudo rm /usr/bin/${{ matrix.cxx-compiler }}
-            sudo ln -s -T ${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.cxx-compiler }}
-            if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
-              sudo rm /usr/bin/${{ matrix.fortran-compiler }}
-              sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt-get update
+            sudo apt-get upgrade
+            if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+              sudo apt-get install -y gpg-agent wget
+              wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
+                | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
+              echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
+                | sudo tee /etc/apt/sources.list.d/oneAPI.list
+              sudo apt-get update
+            elif [ ${{ matrix.compiler-type }} == 'PGI' ]; then
+              sudo apt-get install -y gpg-agent wget
+              wget -O- https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK \
+                | gpg --dearmor | sudo tee /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg > /dev/null
+              echo "deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /" \
+                | sudo tee /etc/apt/sources.list.d/nvhpc.list
+              sudo apt-get update
+            fi
+            sudo apt-get install -y ${{ matrix.compiler-install }} ${{ matrix.mpi-install }} cmake
+            if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+              sudo rm /usr/bin/${{ matrix.c-compiler }}
+              sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
+              sudo rm /usr/bin/${{ matrix.cxx-compiler }}
+              sudo ln -s -T ${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.cxx-compiler }}
+              if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
+                sudo rm /usr/bin/${{ matrix.fortran-compiler }}
+                sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
+              fi
+            fi
+            sudo apt-get clean
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            brew install --formula --quiet ${{ matrix.compiler-install }} ${{ matrix.mpi-install }}
+            if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+              if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
+                sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
+                  $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
+                sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} \
+                  $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}
+                sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} \
+                  $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
+              elif [[ ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+                sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.fortran-compiler-version }} \
+                  $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
+              fi
             fi
           fi
-      - name: 'MacOS: Install Dependencies for Serial Version'
-        if: runner.os == 'macOS'
+      - name: 'Log Softare Environment Configuration'
         run: |
-          brew install --formula --quiet ${{ matrix.compiler-install }} cmake open-mpi
-          if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
-            sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
-              $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}
-            sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} \
-              $BREW_COMPILER_PREFIX/${{ matrix.cxx-compiler }}
-            if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
-              sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} \
-                $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
-            elif [[ ${{ matrix.compiler-type }} == 'CLANG' ]]; then
-              sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}-${{ matrix.fortran-compiler-version }} \
-                $BREW_COMPILER_PREFIX/${{ matrix.fortran-compiler }}
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+              source /opt/intel/oneapi/setvars.sh
             fi
-          fi
-      - name: 'Linux: Log Softare Environment Configuration'
-        if: runner.os == 'Linux'
-        run: |
-          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
-            source /opt/intel/oneapi/setvars.sh
-          fi
-          echo "OS version:"
-          cat /etc/os-release
-          echo
-          echo "Kernel version:"
-          uname -a
-          echo
-          echo "Glibc version:"
-          ldd --version
-          echo
-          echo "Fortran compiler version:"
-          ${{ matrix.fortran-compiler }} --version
-          echo
-          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
-            echo "MKL install directory:"
-            echo "${MKLROOT}"
+            echo "OS version:"
+            cat /etc/os-release
             echo
+            echo "Kernel version:"
+            uname -a
+            echo
+            echo "Glibc version:"
+            ldd --version
+            echo
+            echo "Fortran compiler version:"
+            ${{ matrix.fortran-compiler }} --version
+            echo
+            if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+              echo "MKL install directory:"
+              echo "${MKLROOT}"
+              echo
+            fi
+            echo "MPI version:"
+            mpirun --version
+            echo
+            echo "CMake version:"
+            cmake --version
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            echo "OS version:"
+            cat /System/Library/CoreServices/SystemVersion.plist
+            echo
+            echo "Kernel version:"
+            uname -a
+            echo
+            echo "Fortran compiler version:"
+            ${{ matrix.fortran-compiler }} --version
+            echo
+            echo "MPI version:"
+            mpirun --version
+            echo
+            echo "CMake version:"
+            cmake --version
           fi
-          echo "MPI version:"
-          mpirun --version
-          echo
-          echo "CMake version:"
-          cmake --version
-      - name: 'MacOS: Log Softare Environment Configuration'
-        if: runner.os == 'macOS'
-        run: |
-          echo "OS version:"
-          cat /System/Library/CoreServices/SystemVersion.plist
-          echo
-          echo "Kernel version:"
-          uname -a
-          echo
-          echo "Fortran compiler version:"
-          ${{ matrix.fortran-compiler }} --version
-          echo
-          echo "MPI version:"
-          mpirun --version
-          echo
-          echo "CMake version:"
-          cmake --version
       - name: 'Configure MPI Version'
         run: |
           mkdir build
@@ -527,7 +515,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mpi-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type }}-${{ matrix.compiler-version }}-${{ matrix.mpi-type }}
-          path: ${{ github.workspace }}/install/test/runs/mpi
+          path: |
+            ${{ github.workspace }}/install/runtest.log
+            ${{ github.workspace }}/install/runtest-verbose.log
+            ${{ github.workspace }}/install/test/runs/mpi
           retention-days: 3
           compression-level: 6
       - name: 'Download Test Artifacts for MPI Version'
