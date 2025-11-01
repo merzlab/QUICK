@@ -70,7 +70,7 @@ jobs:
           if [ "$RUNNER_OS" == "Linux" ]; then
             sudo apt-get update
             sudo apt-get upgrade
-            sudo apt-get install -y ${{ matrix.compiler-install }} parallel
+            sudo apt-get install -y ${{ matrix.compiler-install }} parallel libhdf5-dev
             if [[ ${{ matrix.compiler-type }} == 'gnu' || ${{ matrix.compiler-type }} == 'clang' ]]; then
               sudo rm /usr/bin/${{ matrix.c-compiler }}
               sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
@@ -110,9 +110,12 @@ jobs:
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+          echo LIBRARY_PATH=/usr/lib/`uname -m`-linux-gnu/hdf5/serial:$LIBRARY_PATH >> "$GITHUB_ENV"
+          echo LD_LIBRARY_PATH=/usr/lib/`uname -m`-linux-gnu/hdf5/serial:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
+          echo "HDF5_FORTRAN_MOD_DIR=/usr/include/hdf5/serial" >> "$GITHUB_ENV"
       - name: 'Configure Serial Version'
         run: |
-          ./configure --serial --enablef --shared --verbose --prefix $PWD/install \
+          ./configure --serial --hdf5 --enablef --shared --verbose --prefix $PWD/install \
             ${{ matrix.compiler-type }}
       - name: 'Build and Install Serial Version Using 2 Jobs'
         run: |
@@ -274,13 +277,13 @@ jobs:
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
           if [ "$RUNNER_OS" == "Linux" ]; then
             if [ ${{ matrix.compiler-type }} == 'PGI' ]; then
-              echo PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/bin:$PATH >> "$GITHUB_ENV"
-              echo INCLUDE_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH >> "$GITHUB_ENV"
-              echo LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/lib:$LIBRARY_PATH >> "$GITHUB_ENV"
-              echo LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/lib:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
-              echo CMAKE_PREFIX_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }}/compilers/:$CMAKE_PREFIX_PATH >> "$GITHUB_ENV"
+              echo PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/bin:$PATH >> "$GITHUB_ENV"
+              echo INCLUDE_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH >> "$GITHUB_ENV"
+              echo LIBRARY_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/lib:$LIBRARY_PATH >> "$GITHUB_ENV"
+              echo LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/lib:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
+              echo CMAKE_PREFIX_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/:$CMAKE_PREFIX_PATH >> "$GITHUB_ENV"
               echo "NVHPC=/opt/nvidia/hpc_sdk" >> "$GITHUB_ENV"
-              echo NVHPC_ROOT=/opt/nvidia/hpc_sdk/Linux_x86_64/${{ matrix.compiler-version }} >> "$GITHUB_ENV"
+              echo NVHPC_ROOT=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }} >> "$GITHUB_ENV"
             fi
           elif [ "$RUNNER_OS" == "macOS" ]; then
               echo "BREW_COMPILER_PREFIX=$(brew --prefix)/bin" >> "$GITHUB_ENV"
@@ -310,7 +313,7 @@ jobs:
                 | sudo tee /etc/apt/sources.list.d/nvhpc.list
               sudo apt-get update
             fi
-            sudo apt-get install -y ${{ matrix.compiler-install }} cmake parallel
+            sudo apt-get install -y ${{ matrix.compiler-install }} cmake parallel libhdf5-dev
             if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
               sudo rm /usr/bin/${{ matrix.c-compiler }}
               sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
@@ -323,7 +326,7 @@ jobs:
             fi
             sudo apt-get clean
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            brew install --formula --quiet ${{ matrix.compiler-install }} parallel
+            brew install --formula --quiet ${{ matrix.compiler-install }} parallel hdf5
             if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
               if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
                 sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
@@ -388,11 +391,11 @@ jobs:
           if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
             source /opt/intel/oneapi/setvars.sh
             cmake .. -DCOMPILER=${{ matrix.compiler-type }} \
-              -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install \
+              -DENABLEF=TRUE -DHDF5=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install \
               -DMKL_HOME=$MKLROOT -DMKL_MULTI_THREADED=FALSE -DTRUST_SYSTEM_LIBS=TRUE
           else
             cmake .. -DCOMPILER=${{ matrix.compiler-type }} \
-              -DENABLEF=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install
+              -DENABLEF=TRUE -DHDF5=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install
           fi
       - name: 'Build and Install Serial Version Using 2 Jobs'
         run: |

@@ -152,7 +152,11 @@ module quick_files_module
 
       character line*(*)
 
+      logical :: file_exists
+
       call read(line,'$DATA',datafilename)
+
+!      INQUIRE(FILE=datafilename, EXIST=file_exists)
 
     end subroutine
 

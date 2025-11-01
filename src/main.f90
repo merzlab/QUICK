@@ -35,6 +35,9 @@
     use quick_sad_guess_module, only: getSadGuess
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
          exportMO, exportSCF, exportOPT
+#if defined(RESTART_HDF5)
+    use quick_restart_module, only: data_write_info, write_integer_array, write_double_array
+#endif
     use quick_timer_module, only : timer_end, timer_cumer, timer_begin
     use quick_method_module, only : quick_method
     use quick_files_module, only: ioutfile, outFileName, iDataFile, dataFileName
@@ -108,6 +111,7 @@
     !------------------------------------------------------------------
     !read job spec and mol spec
     call read_Job_and_Atom(ierr)
+
     !allocate essential variables
     call alloc(quick_molspec,ierr)
     !if (quick_method%MFCC) call allocate_MFCC()
@@ -134,6 +138,11 @@
     ! 3. Read Molecule Structure
     !-----------------------------------------------------------------
     SAFE_CALL(getMol(ierr))
+
+#if defined(RESTART_HDF5)
+    !write the required info to data file
+    if(master .and. (quick_method%writeden .or. quick_method%writexyz)) call data_write_info(natom, quick_molspec%nbasis)
+#endif
 
 #if defined(GPU) || defined(MPIV_GPU)
     call gpu_allocate_scratch(quick_method%grad .or. quick_method%opt)
@@ -203,21 +212,24 @@
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         SAFE_CALL(getEnergy(.false.,ierr))
+
         ! One electron properties (ESP, EField)
-
-        !call generate_MKS_surfaces()
-
         if (quick_method%esp_charge .or. quick_method%ext_grid) then
           call compute_oeprop()
         endif
 
         if(master) then
           if(quick_method%writexyz)then
+#if defined(RESTART_HDF5)
+            call write_integer_array(quick_molspec%iattype, natom, 'iattype')
+            call write_double_array(quick_molspec%xyz, 3, natom, 'xyz')
+#else
             open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
             call wchk_int(iDataFile, "natom", natom, fail)
             call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
             call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
             close(iDataFile)
+#endif
           endif 
         endif
 
@@ -242,12 +254,17 @@
 
         if(master) then
           if(quick_method%writexyz)then
+#if defined(RESTART_HDF5)
+            call write_integer_array(quick_molspec%iattype, natom, 'iattype')
+            call write_double_array(quick_molspec%xyz, 3, natom, 'xyz')
+#else
             open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
             call wchk_int(iDataFile, "natom", natom, fail)
             call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
             call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
             close(iDataFile)
             close(iDataFile)
+#endif
           endif 
         endif
     endif
