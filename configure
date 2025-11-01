@@ -705,8 +705,9 @@ verbose='@'
 lapack='no'
 mkl='no'
 
-# flag for HDF5 library
+# flags for HDF5 library
 hdf5='no'
+fort_flags_hdf5=''
 
 # flag for mirp library
 mirp='no'
@@ -1436,13 +1437,6 @@ for buildtype in $buildtypes; do
       fi
     fi
 
-    if [ "$hdf5" = 'yes' ]; then
-      echo "Fortran and HL bindings for HDF5 will be used for restart file support in $buildtype version."
-      fort_flags="$fort_flags -DRESTART_HDF5 -I$HDF5_FORTRAN_MOD_DIR"
-      ldflags="$ldflags -lhdf5_fortran -lhdf5"
-      FFLAGS_HDF5="-DRESTART_HDF5 -I$HDF5_FORTRAN_MOD_DIR"
-    fi
-
     # set mirp library flags
     if [ "$mirp" = "yes" ]; then
       fort_flags="$fort_flags -DMIRP"
@@ -1450,6 +1444,13 @@ for buildtype in $buildtypes; do
       ldflags="$ldflags -L$MIRP_HOME/lib -L$MIRP_DEP_HOME/lib -larb -lflint -lmirp"
     fi
 
+  fi
+
+  if [ "$hdf5" = 'yes' ]; then
+    echo "Fortran and HL bindings for HDF5 will be used for restart file support in $buildtype version."
+    fort_flags="$fort_flags -DRESTART_HDF5 -I$HDF5_FORTRAN_MOD_DIR"
+    ldflags="$ldflags -lhdf5_fortran -lhdf5"
+    fort_flags_hdf5="-DRESTART_HDF5 -I$HDF5_FORTRAN_MOD_DIR"
   fi
 
   # set amber installation flags
@@ -1626,6 +1627,7 @@ FORT_EXT_LIB_FLAGS=$fort_ext_lib_flags
 #!---------------------------------------------------------------------!
 
 FFLAGS=$fort_flags
+FFLAGS_HDF5=$fort_flags_hdf5
 LDFLAGS=$ldflags
 CCFLAGS=$cc_flags
 CXXFLAGS=$cxx_flags
