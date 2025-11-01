@@ -325,6 +325,10 @@ add_executable(test-api ${TEST_API_SOURCES})
 set_target_properties(test-api PROPERTIES LINKER_LANGUAGE Fortran)
 target_compile_options(test-api PRIVATE
 	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>")
+if(HDF5)
+	target_compile_definitions(test-api PRIVATE
+		"$<$<COMPILE_LANGUAGE:Fortran>:${HDF5_Fortran_DEFINITIONS}>" "RESTART_HDF5")
+endif()
 config_module_dirs(test-api quick/serial libxc/serial)
 target_link_libraries(test-api libquick)
 

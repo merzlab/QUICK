@@ -1440,6 +1440,7 @@ for buildtype in $buildtypes; do
       echo "Fortran and HL bindings for HDF5 will be used for restart file support in $buildtype version."
       fort_flags="$fort_flags -DRESTART_HDF5 -I$HDF5_FORTRAN_MOD_DIR"
       ldflags="$ldflags -lhdf5_fortran -lhdf5"
+      FFLAGS_HDF5="-DRESTART_HDF5 -I$HDF5_FORTRAN_MOD_DIR"
     fi
 
     # set mirp library flags
