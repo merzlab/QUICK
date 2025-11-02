@@ -25,6 +25,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-10 g++-10 gfortran-10'
+            hdf5-install: 'libhdf5-dev'
           - os: 'ubuntu-22.04'
             compiler-type: 'gnu'
             compiler-version: '11'
@@ -32,6 +33,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-11 g++-11 gfortran-11'
+            hdf5-install: 'libhdf5-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'gnu'
             compiler-version: '12'
@@ -39,6 +41,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-12 g++-12 gfortran-12'
+            hdf5-install: 'libhdf5-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'gnu'
             compiler-version: '13'
@@ -46,6 +49,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-13 g++-13 gfortran-13'
+            hdf5-install: 'libhdf5-dev'
           - os: 'ubuntu-24.04'
             compiler-type: 'gnu'
             compiler-version: '14'
@@ -53,6 +57,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
+            hdf5-install: 'libhdf5-dev'
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'gnu'
             compiler-version: '14'
@@ -60,6 +65,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
+            hdf5-install: 'libhdf5-dev'
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - Serial - Legacy - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
@@ -70,7 +76,7 @@ jobs:
           if [ "$RUNNER_OS" == "Linux" ]; then
             sudo apt-get update
             sudo apt-get upgrade
-            sudo apt-get install -y ${{ matrix.compiler-install }} parallel libhdf5-dev
+            sudo apt-get install -y ${{ matrix.compiler-install }} parallel ${{ matrix.hdf5-install }}
             if [[ ${{ matrix.compiler-type }} == 'gnu' || ${{ matrix.compiler-type }} == 'clang' ]]; then
               sudo rm /usr/bin/${{ matrix.c-compiler }}
               sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
@@ -104,14 +110,12 @@ jobs:
         run: |
           echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
           echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
-          echo "LIBRARY_PATH=$PWD/install/lib/serial:$LIBRARY_PATH" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$PWD/install/lib/serial:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib/serial:/usr/lib/`uname -m`-linux-gnu/hdf5/serial:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib/serial:/usr/lib/`uname -m`-linux-gnu/hdf5/serial:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
           echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-          echo LIBRARY_PATH=/usr/lib/`uname -m`-linux-gnu/hdf5/serial:$LIBRARY_PATH >> "$GITHUB_ENV"
-          echo LD_LIBRARY_PATH=/usr/lib/`uname -m`-linux-gnu/hdf5/serial:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
           echo "HDF5_FORTRAN_MOD_DIR=/usr/include/hdf5/serial" >> "$GITHUB_ENV"
       - name: 'Configure Serial Version'
         run: |
@@ -153,6 +157,8 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-10 g++-10 gfortran-10'
+            hdf5-install: 'libhdf5-dev'
+            hdf5-restart-support: TRUE
           - os: 'ubuntu-22.04'
             compiler-type: 'GNU'
             compiler-version: '11'
@@ -160,6 +166,8 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-11 g++-11 gfortran-11'
+            hdf5-install: 'libhdf5-dev'
+            hdf5-restart-support: TRUE
           - os: 'ubuntu-24.04'
             compiler-type: 'GNU'
             compiler-version: '12'
@@ -167,6 +175,8 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-12 g++-12 gfortran-12'
+            hdf5-install: 'libhdf5-dev'
+            hdf5-restart-support: TRUE
           - os: 'ubuntu-24.04'
             compiler-type: 'GNU'
             compiler-version: '13'
@@ -174,6 +184,8 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-13 g++-13 gfortran-13'
+            hdf5-install: 'libhdf5-dev'
+            hdf5-restart-support: TRUE
           - os: 'ubuntu-24.04'
             compiler-type: 'GNU'
             compiler-version: '14'
@@ -181,6 +193,8 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
+            hdf5-install: 'libhdf5-dev'
+            hdf5-restart-support: TRUE
           - os: 'ubuntu-24.04'
             compiler-type: 'CLANG'
             compiler-version: '17'
@@ -188,6 +202,8 @@ jobs:
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
             compiler-install: 'clang-17 gfortran'
+            hdf5-install: 'libhdf5-dev'
+            hdf5-restart-support: TRUE
           - os: 'ubuntu-24.04'
             compiler-type: 'CLANG'
             compiler-version: '18'
@@ -195,6 +211,8 @@ jobs:
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
             compiler-install: 'clang-18 gfortran'
+            hdf5-install: 'libhdf5-dev'
+            hdf5-restart-support: TRUE
           - os: 'ubuntu-24.04'
             compiler-type: 'INTELLLVM'
             compiler-version: '2024.2.1'
@@ -202,6 +220,8 @@ jobs:
             cxx-compiler: 'icpx'
             fortran-compiler: 'ifx'
             compiler-install: 'intel-oneapi-compiler-dpcpp-cpp-2024.2 intel-oneapi-compiler-fortran-2024.2 intel-oneapi-mkl-2024.2 intel-oneapi-mkl-devel-2024.2'
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04'
             compiler-type: 'INTELLLVM'
             compiler-version: '2025.0.1'
@@ -209,6 +229,8 @@ jobs:
             cxx-compiler: 'icpx'
             fortran-compiler: 'ifx'
             compiler-install: 'intel-oneapi-compiler-dpcpp-cpp-2025.0 intel-oneapi-compiler-fortran-2025.0 intel-oneapi-mkl-2025.0 intel-oneapi-mkl-devel-2025.0'
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04'
             compiler-type: 'PGI'
             compiler-version: '25.1'
@@ -216,6 +238,8 @@ jobs:
             cxx-compiler: 'pgcc++'
             fortran-compiler: 'pgf90'
             compiler-install: 'nvhpc-25-1 gfortran'
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'GNU'
             compiler-version: '14'
@@ -223,6 +247,8 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
+            hdf5-install: 'libhdf5-dev'
+            hdf5-restart-support: TRUE
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'CLANG'
             compiler-version: '18'
@@ -230,6 +256,8 @@ jobs:
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
             compiler-install: 'clang-18 gfortran'
+            hdf5-install: 'libhdf5-dev'
+            hdf5-restart-support: TRUE
           - os: 'macos-14'
             compiler-type: 'GNU'
             compiler-version: '15'
@@ -237,6 +265,8 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc@15'
+            hdf5-install: 'hdf5'
+            hdf5-restart-support: TRUE
           - os: 'macos-14'
             compiler-type: 'CLANG'
             compiler-version: '20'
@@ -245,6 +275,8 @@ jobs:
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
             compiler-install: 'llvm@20 gcc@15'
+            hdf5-install: 'hdf5'
+            hdf5-restart-support: TRUE
           - os: 'macos-15'
             compiler-type: 'GNU'
             compiler-version: '15'
@@ -252,6 +284,8 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc@15'
+            hdf5-install: 'hdf5'
+            hdf5-restart-support: TRUE
           - os: 'macos-15'
             compiler-type: 'CLANG'
             compiler-version: '20'
@@ -260,6 +294,8 @@ jobs:
             cxx-compiler: 'clang++'
             fortran-compiler: 'gfortran'
             compiler-install: 'llvm@20 gcc@15'
+            hdf5-install: 'hdf5'
+            hdf5-restart-support: TRUE
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - Serial - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
@@ -277,13 +313,13 @@ jobs:
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
           if [ "$RUNNER_OS" == "Linux" ]; then
             if [ ${{ matrix.compiler-type }} == 'PGI' ]; then
-              echo PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/bin:$PATH >> "$GITHUB_ENV"
-              echo INCLUDE_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH >> "$GITHUB_ENV"
-              echo LIBRARY_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/lib:$LIBRARY_PATH >> "$GITHUB_ENV"
-              echo LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/lib:$LD_LIBRARY_PATH >> "$GITHUB_ENV"
-              echo CMAKE_PREFIX_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/:$CMAKE_PREFIX_PATH >> "$GITHUB_ENV"
+              echo "PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/bin:$PATH" >> "$GITHUB_ENV"
+              echo "INCLUDE_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH" >> "$GITHUB_ENV"
+              echo "LIBRARY_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
+              echo "LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+              echo "CMAKE_PREFIX_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/:$CMAKE_PREFIX_PATH" >> "$GITHUB_ENV"
               echo "NVHPC=/opt/nvidia/hpc_sdk" >> "$GITHUB_ENV"
-              echo NVHPC_ROOT=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }} >> "$GITHUB_ENV"
+              echo "NVHPC_ROOT=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}" >> "$GITHUB_ENV"
             fi
           elif [ "$RUNNER_OS" == "macOS" ]; then
               echo "BREW_COMPILER_PREFIX=$(brew --prefix)/bin" >> "$GITHUB_ENV"
@@ -313,7 +349,7 @@ jobs:
                 | sudo tee /etc/apt/sources.list.d/nvhpc.list
               sudo apt-get update
             fi
-            sudo apt-get install -y ${{ matrix.compiler-install }} cmake parallel libhdf5-dev
+            sudo apt-get install -y ${{ matrix.compiler-install }} cmake parallel ${{ matrix.hdf5-install }}
             if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
               sudo rm /usr/bin/${{ matrix.c-compiler }}
               sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
@@ -326,7 +362,7 @@ jobs:
             fi
             sudo apt-get clean
           elif [ "$RUNNER_OS" == "macOS" ]; then
-            brew install --formula --quiet ${{ matrix.compiler-install }} parallel hdf5
+            brew install --formula --quiet ${{ matrix.compiler-install }} parallel ${{ matrix.hdf5-install }}
             if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
               if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
                 sudo ln -Fs $BREW_COMPILER_PREFIX/${{ matrix.c-compiler }}-${{ matrix.compiler-version }} \
@@ -391,11 +427,13 @@ jobs:
           if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
             source /opt/intel/oneapi/setvars.sh
             cmake .. -DCOMPILER=${{ matrix.compiler-type }} \
-              -DENABLEF=TRUE -DHDF5=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install \
+              -DENABLEF=TRUE -DHDF5=${{ matrix.hdf5-restart-support }} \
+              -DCMAKE_INSTALL_PREFIX=$PWD/../install \
               -DMKL_HOME=$MKLROOT -DMKL_MULTI_THREADED=FALSE -DTRUST_SYSTEM_LIBS=TRUE
           else
             cmake .. -DCOMPILER=${{ matrix.compiler-type }} \
-              -DENABLEF=TRUE -DHDF5=TRUE -DCMAKE_INSTALL_PREFIX=$PWD/../install
+              -DENABLEF=TRUE -DHDF5=${{ matrix.hdf5-restart-support }} \
+              -DCMAKE_INSTALL_PREFIX=$PWD/../install
           fi
       - name: 'Build and Install Serial Version Using 2 Jobs'
         run: |
