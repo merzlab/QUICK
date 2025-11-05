@@ -268,15 +268,21 @@ contains
      !-------------- END MPI / ALL NODE -----------
 #endif
 
-#if defined(RESTART_HDF5)
         if(quick_method%readden)then
           nbasis = quick_molspec%nbasis
           if(master)then
+#if defined(RESTART_HDF5)
             call iread('molinfo',2,nbasis)
             call aread('dense', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%dense)
+#else
+            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
+            rewind(iDataFile)
+            call rchk_int(iDataFile, "nbasis", nbasis, fail)
+            call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+            close(iDataFile)
+#endif
           endif
         endif
-#endif
 
 #ifdef MPIV
      if (bMPI) then
@@ -722,9 +728,17 @@ contains
         !--------------- END MPI/ALL NODES -------------------------------------
   
         if (master) then
+          if(quick_method%writeden) then
+            ! open data file then write calculated info to dat file
 #if defined(RESTART_HDF5)
-          if(quick_method%writeden) call write_double_array(quick_qm_struct%dense, nbasis, nbasis, 'dense')
+            call write_double_array(quick_qm_struct%dense, nbasis, nbasis, 'dense')
+#else
+             call quick_open(iDataFile, dataFileName, 'R', 'U', 'A', .true., ierr)
+             call wchk_int(iDataFile, "nbasis", nbasis, fail)
+             call wchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+             close(iDataFile)
 #endif
+          endif
 
 #ifdef USEDAT
            ! open data file then write calculated info to dat file

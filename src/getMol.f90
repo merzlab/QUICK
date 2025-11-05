@@ -38,21 +38,24 @@ subroutine getMol(ierr)
 
       ! read xyz coordinates from the .in file 
       if(.not. isTemplate) then
-#if defined(RESTART_HDF5)
         if(quick_method%read_coord)then
+#if defined(RESTART_HDF5)
           call aread('xyz', (/1,1/), (/3,natom/), xyz)
           call iread('iattype', 1, natom, quick_molspec%iattype)
+#else
+          open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
+          call rchk_darray(iDataFile, "xyz", 3, natom, 1, xyz, fail)
+          call rchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+          close(iDataFile)
+#endif
           quick_molspec%xyz => xyz
         else
-#endif
           call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
           CHECK_ERROR(ierr)
           ! read molecule coordinates
           call read2(quick_molspec,inFile,ierr)
           close(inFile)
-#if defined(RESTART_HDF5)
         endif
-#endif
       endif
 
       quick_molspec%nbasis   => nbasis
