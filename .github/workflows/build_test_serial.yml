@@ -304,30 +304,32 @@ jobs:
       - name: 'Setup Environment Variables for Building and Running Tests'
         run: |
           echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
-          echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
-          echo "LIBRARY_PATH=$PWD/install/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            if [ ${{ matrix.compiler-type }} == 'PGI' ]; then
+              echo "PATH=$PWD/install/bin:/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/bin:$PATH" >> "$GITHUB_ENV"
+              echo "INCLUDE_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH" >> "$GITHUB_ENV"
+              echo "LIBRARY_PATH=$PWD/install/lib:/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
+              echo "LD_LIBRARY_PATH=$PWD/install/lib:/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+              echo "CMAKE_PREFIX_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/:$CMAKE_PREFIX_PATH" >> "$GITHUB_ENV"
+              echo "NVHPC=/opt/nvidia/hpc_sdk" >> "$GITHUB_ENV"
+              echo "NVHPC_ROOT=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}" >> "$GITHUB_ENV"
+            else
+              echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
+              echo "LIBRARY_PATH=$PWD/install/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
+              echo "LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+            fi
+          fi
           echo "PARALLEL_TEST_COUNT=2" >> "$GITHUB_ENV"
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            if [ ${{ matrix.compiler-type }} == 'PGI' ]; then
-              echo "PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/bin:$PATH" >> "$GITHUB_ENV"
-              echo "INCLUDE_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/include:$INCLUDE_PATH" >> "$GITHUB_ENV"
-              echo "LIBRARY_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
-              echo "LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
-              echo "CMAKE_PREFIX_PATH=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}/compilers/:$CMAKE_PREFIX_PATH" >> "$GITHUB_ENV"
-              echo "NVHPC=/opt/nvidia/hpc_sdk" >> "$GITHUB_ENV"
-              echo "NVHPC_ROOT=/opt/nvidia/hpc_sdk/`uname -s`_`uname -m`/${{ matrix.compiler-version }}" >> "$GITHUB_ENV"
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            echo "BREW_COMPILER_PREFIX=$(brew --prefix)/bin" >> "$GITHUB_ENV"
+            if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
+              echo "PATH=$(brew --prefix)/bin:$PATH" >> "$GITHUB_ENV"
+            elif [[ ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+              echo "PATH=$(brew --prefix)/bin:$(brew --prefix)/opt/llvm@${{ matrix.compiler-version }}/bin:$PATH" >> "$GITHUB_ENV"
             fi
-          elif [ "$RUNNER_OS" == "macOS" ]; then
-              echo "BREW_COMPILER_PREFIX=$(brew --prefix)/bin" >> "$GITHUB_ENV"
-              if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
-                echo "PATH=$(brew --prefix)/bin:$PATH" >> "$GITHUB_ENV"
-              elif [[ ${{ matrix.compiler-type }} == 'CLANG' ]]; then
-                echo "PATH=$(brew --prefix)/bin:$(brew --prefix)/opt/llvm@${{ matrix.compiler-version }}/bin:$PATH" >> "$GITHUB_ENV"
-              fi
           fi
       - name: 'Install Dependencies for Serial Version'
         run: |
