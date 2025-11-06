@@ -136,7 +136,7 @@ contains
      use quick_oei_module, only: bCalc1e
      use quick_molden_module, only: quick_molden
 #if defined(RESTART_HDF5)
-     use quick_restart_module, only: write_double_array, iread, aread
+     use quick_restart_module, only: write_hdf5_double_2n, read_hdf5_int, read_hdf5_double_2n
 #endif
 
 #if defined(HIP) || defined(HIP_MPIV)
@@ -242,9 +242,9 @@ contains
           nbasis = quick_molspec%nbasis
           if(master)then
 #if defined(RESTART_HDF5)
-            call iread('molinfo',2,nbasis)
-            call aread('dense', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%dense)
-            call aread('denseb', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%denseb)
+            call read_hdf5_int('molinfo', 2, nbasis)
+            call read_hdf5_double_2n('dense', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%dense)
+            call read_hdf5_double_2n('denseb', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%denseb)
 #else
             open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
             call rchk_int(iDataFile, "nbasis", nbasis, fail)
@@ -855,8 +855,8 @@ contains
           if(quick_method%writeden) then
             ! open data file then write calculated info to dat file
 #if defined(RESTART_HDF5)
-            call write_double_array(quick_qm_struct%denseb, nbasis, nbasis, 'denseb')  
-            call write_double_array(quick_qm_struct%dense, nbasis, nbasis, 'dense')  
+            call write_hdf5_double_2n(quick_qm_struct%denseb, nbasis, nbasis, 'denseb')  
+            call write_hdf5_double_2n(quick_qm_struct%dense, nbasis, nbasis, 'dense')  
 #else
             call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
             call wchk_int(iDataFile, "nbasis", nbasis, fail)

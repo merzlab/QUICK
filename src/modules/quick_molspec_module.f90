@@ -368,7 +368,7 @@ contains
     use quick_method_module, only: quick_method
     use quick_files_module, only : iDataFile, dataFileName
 #if defined(RESTART_HDF5)
-    use quick_restart_module, only: iread
+    use quick_restart_module, only: read_hdf5_int, read_hdf5_int_n
 #endif
 
     implicit none
@@ -445,9 +445,9 @@ contains
       if(quick_method%read_coord)then
 
 #if defined(RESTART_HDF5)
-        call iread('molinfo', 1, natom)
+        call read_hdf5_int('molinfo', 1, natom)
         if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
-        call iread('iattype', 1, natom, self%iattype)
+        call read_hdf5_int_n('iattype', 1, natom, self%iattype)
 #else
         open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
         call rchk_int(iDataFile, "natom", natom, fail)

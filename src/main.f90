@@ -36,7 +36,7 @@
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
          exportMO, exportSCF, exportOPT
 #if defined(RESTART_HDF5)
-    use quick_restart_module, only: data_write_info, write_integer_array, write_double_array
+    use quick_restart_module, only: write_hdf5_info, write_hdf5_int_n, write_hdf5_double_2n
 #endif
     use quick_timer_module, only : timer_end, timer_cumer, timer_begin
     use quick_method_module, only : quick_method
@@ -141,7 +141,7 @@
 
 #if defined(RESTART_HDF5)
     !write the required info to data file
-    if(master .and. (quick_method%writeden .or. quick_method%writexyz)) call data_write_info(natom, quick_molspec%nbasis)
+    if(master .and. (quick_method%writeden .or. quick_method%writexyz)) call write_hdf5_info(natom, quick_molspec%nbasis)
 #endif
 
 #if defined(GPU) || defined(MPIV_GPU)
@@ -221,8 +221,8 @@
         if(master) then
           if(quick_method%writexyz)then
 #if defined(RESTART_HDF5)
-            call write_integer_array(quick_molspec%iattype, natom, 'iattype')
-            call write_double_array(quick_molspec%xyz, 3, natom, 'xyz')
+            call write_hdf5_int_n(quick_molspec%iattype, natom, 'iattype')
+            call write_hdf5_double_2n(quick_molspec%xyz, 3, natom, 'xyz')
 #else
             open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
             call wchk_int(iDataFile, "natom", natom, fail)
@@ -255,8 +255,8 @@
         if(master) then
           if(quick_method%writexyz)then
 #if defined(RESTART_HDF5)
-            call write_integer_array(quick_molspec%iattype, natom, 'iattype')
-            call write_double_array(quick_molspec%xyz, 3, natom, 'xyz')
+            call write_hdf5_int_n(quick_molspec%iattype, natom, 'iattype')
+            call write_hdf5_double_2n(quick_molspec%xyz, 3, natom, 'xyz')
 #else
             open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
             call wchk_int(iDataFile, "natom", natom, fail)

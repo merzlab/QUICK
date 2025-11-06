@@ -20,36 +20,41 @@ module quick_restart_module
 
 #if defined(RESTART_HDF5)
 
-  use HDF5
-  use ISO_C_BINDING
-
-  use quick_files_module, only: dataFileName
-  use quick_exception_module, only: RaiseException
-
   implicit none
 
-  private
+  interface read_hdf5_double_2n
+    module procedure read_double_2n
+  end interface read_hdf5_double_2n
 
-  public :: data_write_info, write_integer_array, write_double_array
-  public :: iread, aread
+  interface read_hdf5_int
+    module procedure read_int
+  end interface read_hdf5_int
 
-  interface write_double_array
-    module procedure write_double_2d_array
-  end interface write_double_array
+  interface read_hdf5_int_n
+    module procedure read_int_n
+  end interface read_hdf5_int_n
 
-  interface aread
-    module procedure areadn_2d
-  end interface aread
+  interface read_hdf5_int_2n
+    module procedure read_int_2n
+  end interface read_hdf5_int_2n
 
-  interface iread
-    module procedure iread_point
-    module procedure ireadn
-    module procedure ireadn_2d
-  end interface iread
+  interface write_hdf5_info
+    module procedure write_info
+  end interface write_hdf5_info
+
+  interface write_hdf5_int_n
+    module procedure write_int_n
+  end interface write_hdf5_int_n
+
+  interface write_hdf5_double_2n
+    module procedure write_double_2n
+  end interface write_hdf5_double_2n
 
 contains
 
-  subroutine areadn_2d(datasetname, ind, n, adata)
+  subroutine read_double_2n(datasetname, ind, n, adata)
+    use HDF5
+    use quick_files_module, only: dataFileName
 
     implicit none
 
@@ -140,9 +145,11 @@ contains
       call quick_exit(OUTFILEHANDLE, 1)
     endif
 
-  end subroutine areadn_2d
+  end subroutine read_double_2n
 
-  subroutine iread_point(datasetname, ind, idata)
+  subroutine read_int(datasetname, ind, idata)
+    use HDF5
+    use quick_files_module, only: dataFileName
 
     implicit none
 
@@ -222,9 +229,11 @@ contains
       call quick_exit(OUTFILEHANDLE, 1)
     endif
 
-  end subroutine iread_point
+  end subroutine read_int
 
-  subroutine ireadn(datasetname, ind, n, idata)
+  subroutine read_int_n(datasetname, ind, n, idata)
+    use HDF5
+    use quick_files_module, only: dataFileName
 
     implicit none
 
@@ -315,9 +324,11 @@ contains
       call quick_exit(OUTFILEHANDLE, 1)
     endif
 
-  end subroutine ireadn
+  end subroutine read_int_n
 
-  subroutine ireadn_2d(datasetname, ind, n, idata)
+  subroutine read_int_2n(datasetname, ind, n, idata)
+    use HDF5
+    use quick_files_module, only: dataFileName
 
     implicit none
 
@@ -408,9 +419,11 @@ contains
       call quick_exit(OUTFILEHANDLE, 1)
     endif
 
-  end subroutine ireadn_2d
+  end subroutine read_int_2n
 
-  subroutine data_write_info(natom, nbasis)
+  subroutine write_info(natom, nbasis)
+    use HDF5
+    use quick_files_module, only: dataFileName
 
     implicit none
 
@@ -482,9 +495,11 @@ contains
       call quick_exit(OUTFILEHANDLE, 1)
     endif
 
-  end subroutine data_write_info
+  end subroutine write_info
 
-  subroutine write_integer_array(Array, length, datasetname)
+  subroutine write_int_n(Array, length, datasetname)
+    use HDF5
+    use quick_files_module, only: dataFileName
 
     implicit none
 
@@ -554,9 +569,11 @@ contains
       call quick_exit(OUTFILEHANDLE, 1)
     endif
 
-  end subroutine write_integer_array
+  end subroutine write_int_n
 
-  subroutine write_double_2d_array(Array, length1, length2, datasetname)
+  subroutine write_double_2n(Array, length1, length2, datasetname)
+    use HDF5
+    use quick_files_module, only: dataFileName
 
     implicit none
 
@@ -634,7 +651,7 @@ contains
       call quick_exit(OUTFILEHANDLE, 1)
     endif
 
-  end subroutine write_double_2d_array
+  end subroutine write_double_2n
 
 #endif
 
