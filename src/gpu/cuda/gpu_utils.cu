@@ -25,7 +25,7 @@ void _gpuGetDeviceCount(int * count, const char * const filename, int line)
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -41,7 +41,7 @@ void _gpuGetDeviceCount(int * count, const char * const filename, int line)
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 
 #if defined(MPIV_GPU)
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(quick_comm, 1);
 #else
         exit(1);
 #endif
@@ -67,7 +67,7 @@ void _gpuGetDeviceCount(int device, const char * const filename, int line)
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -89,7 +89,7 @@ void _gpuGetDeviceCount(int device, const char * const filename, int line)
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 
 #if defined(MPIV_GPU)
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(quick_comm, 1);
 #else
         exit(1);
 #endif
@@ -114,7 +114,7 @@ void _gpuMalloc(void **ptr, size_t size, const char * const filename,
 
 #if defined(DEBUG_FOCUS)
   #if defined(MPIV_GPU)
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_rank(quick_comm, &rank);
 
     fprintf(stderr, "[INFO] gpuMalloc: requesting %zu bytes at line %d in file %.*s on MPI processor %d\n",
             size, line, (int) strlen(filename), filename, rank);
@@ -130,7 +130,7 @@ void _gpuMalloc(void **ptr, size_t size, const char * const filename,
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -146,7 +146,7 @@ void _gpuMalloc(void **ptr, size_t size, const char * const filename,
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 
 #if defined(MPIV_GPU)
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(quick_comm, 1);
 #else
         exit(1);
 #endif
@@ -183,7 +183,7 @@ void _gpuHostAlloc(void **ptr, size_t size, unsigned int flags, const char * con
 
 #if defined(DEBUG_FOCUS)
   #if defined(MPIV_GPU)
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_rank(quick_comm, &rank);
 
     fprintf(stderr, "[INFO] gpuHostAlloc: requesting %zu bytes at line %d in file %.*s on MPI processor %d\n",
             size, line, (int) strlen(filename), filename, rank);
@@ -199,7 +199,7 @@ void _gpuHostAlloc(void **ptr, size_t size, unsigned int flags, const char * con
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -215,7 +215,7 @@ void _gpuHostAlloc(void **ptr, size_t size, unsigned int flags, const char * con
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 
 #if defined(MPIV_GPU)
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(quick_comm, 1);
 #else
         exit(1);
 #endif
@@ -257,7 +257,7 @@ void _gpuFree(void *ptr, const char * const filename, int line)
 
 #if defined(DEBUG_FOCUS)
   #if defined(MPIV_GPU)
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_rank(quick_comm, &rank);
 
     fprintf(stderr, "[INFO] gpuFree: freeing ptr at line %d in file %.*s on MPI processor %d\n",
             line, (int) strlen(filename), filename, rank);
@@ -273,7 +273,7 @@ void _gpuFree(void *ptr, const char * const filename, int line)
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -318,7 +318,7 @@ void _gpuFreeHost(void * ptr, const char * const filename, int line)
 
 #if defined(DEBUG_FOCUS)
   #if defined(MPIV_GPU)
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_rank(quick_comm, &rank);
 
     fprintf(stderr, "[INFO] gpuFreeHost: freeing ptr at line %d in file %.*s on MPI processor %d\n",
             line, (int) strlen(filename), filename, rank);
@@ -334,7 +334,7 @@ void _gpuFreeHost(void * ptr, const char * const filename, int line)
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -377,7 +377,7 @@ void _gpuMemset(void *ptr, int data, size_t count,
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -393,7 +393,7 @@ void _gpuMemset(void *ptr, int data, size_t count,
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 
 #if defined(MPIV_GPU)
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(quick_comm, 1);
 #else
         exit(1);
 #endif
@@ -423,7 +423,7 @@ void _gpuMemsetAsync(void *ptr, int data, size_t count,
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -439,7 +439,7 @@ void _gpuMemsetAsync(void *ptr, int data, size_t count,
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 
 #if defined(MPIV_GPU)
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(quick_comm, 1);
 #else
         exit(1);
 #endif
@@ -468,7 +468,7 @@ void _gpuCheckMalloc(void **ptr, size_t *cur_size, size_t new_size,
   #if defined(MPIV_GPU)
         int rank;
     
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
     
         fprintf(stderr, "[INFO] gpuCheckMalloc: requesting %zu bytes (%zu currently allocated) at line %d in file %.*s on MPI processor %d\n",
                 new_size, *cur_size, line, (int) strlen(filename), filename, rank);
@@ -515,7 +515,7 @@ void _gpuMemcpy(void * const dest, void const * const src, size_t count,
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -531,7 +531,7 @@ void _gpuMemcpy(void * const dest, void const * const src, size_t count,
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 
 #if defined(MPIV_GPU)
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(quick_comm, 1);
 #else
         exit(1);
 #endif
@@ -562,7 +562,7 @@ void _gpuMemcpyAsync(void * const dest, void const * const src, size_t count,
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -578,7 +578,7 @@ void _gpuMemcpyAsync(void * const dest, void const * const src, size_t count,
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 
 #if defined(MPIV_GPU)
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(quick_comm, 1);
 #else
         exit(1);
 #endif
@@ -607,7 +607,7 @@ void _gpuMemcpyToSymbol(void const * const symbol, void const * const src, size_
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -623,7 +623,7 @@ void _gpuMemcpyToSymbol(void const * const symbol, void const * const src, size_
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 
 #if defined(MPIV_GPU)
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(quick_comm, 1);
 #else
         exit(1);
 #endif
@@ -652,7 +652,7 @@ void _gpuHostGetDevicePointer(void ** pdev, void * const phost, unsigned int fla
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -668,7 +668,7 @@ void _gpuHostGetDevicePointer(void ** pdev, void * const phost, unsigned int fla
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 
 #if defined(MPIV_GPU)
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(quick_comm, 1);
 #else
         exit(1);
 #endif
@@ -700,7 +700,7 @@ void _gpuHostAllocCheck(void **ptr, size_t *cur_size, size_t new_size,
   #if defined(MPIV_GPU)
         int rank;
     
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
     
         fprintf(stderr, "[INFO] gpuHostAllocCheck: requesting %zu bytes (%zu currently allocated) with flags %u at line %d in file %.*s on MPI processor %d\n",
                 new_size, *cur_size, flags, line, (int) strlen(filename), filename, rank);
@@ -758,7 +758,7 @@ void _gpuHostReallocCheck(void **ptr, size_t *cur_size, size_t new_size,
   #if defined(MPIV_GPU)
         int rank;
     
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
     
         fprintf(stderr, "[INFO] gpuHostReallocCheck: requesting %zu bytes (%zu currently allocated) with flags %u at line %d in file %.*s on MPI processor %d\n",
                 new_size, *cur_size, flags, line, (int) strlen(filename), filename, rank);
@@ -813,7 +813,7 @@ void _gpuEventCreate(cudaEvent_t * event, const char * const filename, int line)
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -829,7 +829,7 @@ void _gpuEventCreate(cudaEvent_t * event, const char * const filename, int line)
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 
 #if defined(MPIV_GPU)
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(quick_comm, 1);
 #else
         exit(1);
 #endif
@@ -855,7 +855,7 @@ void _gpuEventDestroy(cudaEvent_t event, const char * const filename, int line)
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -871,7 +871,7 @@ void _gpuEventDestroy(cudaEvent_t event, const char * const filename, int line)
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 
 #if defined(MPIV_GPU)
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(quick_comm, 1);
 #else
         exit(1);
 #endif
@@ -898,7 +898,7 @@ void _gpuEventElapsedTime(float * time, cudaEvent_t start, cudaEvent_t end, cons
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -914,7 +914,7 @@ void _gpuEventElapsedTime(float * time, cudaEvent_t start, cudaEvent_t end, cons
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 
 #if defined(MPIV_GPU)
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(quick_comm, 1);
 #else
         exit(1);
 #endif
@@ -941,7 +941,7 @@ void _gpuEventRecord(cudaEvent_t event, cudaStream_t stream, const char * const 
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -957,7 +957,7 @@ void _gpuEventRecord(cudaEvent_t event, cudaStream_t stream, const char * const 
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 
 #if defined(MPIV_GPU)
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(quick_comm, 1);
 #else
         exit(1);
 #endif
@@ -983,7 +983,7 @@ void _gpuEventSynchronize(cudaEvent_t event, const char * const filename, int li
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -999,7 +999,7 @@ void _gpuEventSynchronize(cudaEvent_t event, const char * const filename, int li
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 
 #if defined(MPIV_GPU)
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(quick_comm, 1);
 #else
         exit(1);
 #endif
@@ -1024,7 +1024,7 @@ void _gpuDeviceSynchronize(const char * const filename, int line)
     if (ret != cudaSuccess)
     {
 #if defined(MPIV_GPU)
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_rank(quick_comm, &rank);
 #endif
         const char *str = cudaGetErrorString(ret);
 
@@ -1040,7 +1040,7 @@ void _gpuDeviceSynchronize(const char * const filename, int line)
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 
 #if defined(MPIV_GPU)
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        MPI_Abort(quick_comm, 1);
 #else
         exit(1);
 #endif

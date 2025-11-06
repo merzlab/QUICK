@@ -75,6 +75,7 @@ subroutine get1e(deltaO)
 
 #ifdef MPIV
    use mpi
+  use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
    
    implicit double precision(a-h,o-z)

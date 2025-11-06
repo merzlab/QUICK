@@ -18,6 +18,7 @@
     use test_quick_api_module, only : mpi_initialize, printQuickMPIOutput
     use quick_api_module, only : setQuickMPI
     use mpi
+  use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
 
     implicit none
@@ -114,13 +115,13 @@
       ! print values obtained from quick library
 #ifdef MPIV
       ! dumb way to sequantially print from all cores..
-      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+      call MPI_BARRIER(quick_comm,mpierror)
 
       do j=0, mpisize-1
         if(j .eq. mpirank) then
           call printQuickMPIOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchgGrad, mpirank)
         endif
-        call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+        call MPI_BARRIER(quick_comm,mpierror)
       enddo 
 #else
       call printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchgGrad)

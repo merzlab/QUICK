@@ -44,6 +44,7 @@
     use quick_molsurface_module, only: generate_MKS_surfaces
 #ifdef MPIV
     use mpi
+  use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
     use quick_basis_module, only: quick_basis, aexp, cutprim, dcoeff, itype

@@ -152,8 +152,8 @@ set_target_properties(libquick PROPERTIES OUTPUT_NAME quick)
 if(MPI)
 	make_mpi_version(libquick libquick_mpi LANGUAGES Fortran)
 
-	target_compile_definitions(libquick_mpi PRIVATE MPIV)
-	set_target_properties(libquick_mpi PROPERTIES OUTPUT_NAME quick_mpi)
+	target_sources(libquick_mpi PRIVATE modules/quick_comm_store.c)
+	target_link_libraries(libquick_mpi PUBLIC MPI::MPI_Fortran)
 
 	# change link libraries and mod dirs for MPI
 	remove_link_libraries(libquick_mpi octree)

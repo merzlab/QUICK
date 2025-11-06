@@ -17,6 +17,7 @@ subroutine getMol(ierr)
    use quick_exception_module
 #ifdef MPIV
    use mpi
+  use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
 
    implicit none

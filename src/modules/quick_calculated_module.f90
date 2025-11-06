@@ -473,6 +473,7 @@ contains
       use quick_method_module, only: quick_method
       use quick_molspec_module, only: quick_molspec
       use mpi
+  use quick_mpi_module, only: quick_set_comm, quick_comm
       implicit none
       type (quick_qm_struct_type) self
       integer natom
@@ -486,63 +487,63 @@ contains
       nelec=quick_molspec%nelec
       nelecb=quick_molspec%nelecb
 
-      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%s,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%x,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%oneElecO,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%o,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%oSave,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%co,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%vec,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%dense,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%denseSave,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%denseOld,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%iDegen,nbasis,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BARRIER(quick_comm,mpierror)
+      call MPI_BCAST(self%nbasis,1,mpi_integer,0,quick_comm,mpierror)
+      call MPI_BCAST(self%s,nbasis2,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(self%x,nbasis2,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(self%oneElecO,nbasis2,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(self%o,nbasis2,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(self%oSave,nbasis2,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(self%co,nbasis2,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(self%vec,nbasis2,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(self%dense,nbasis2,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(self%denseSave,nbasis2,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(self%denseOld,nbasis2,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(self%iDegen,nbasis,mpi_integer,0,quick_comm,mpierror)
+      call MPI_BCAST(self%E,nbasis,mpi_double_precision,0,quick_comm,mpierror)
 
-      call MPI_BCAST(self%Mulliken,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%Lowdin,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%Mulliken,nbasis2,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(self%Lowdin,nbasis2,mpi_double_precision,0,quick_comm,mpierror)
 
-      call MPI_BCAST(self%EEl,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%Exc,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%ECore,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%ECharge,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%ETot,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%EEl,1,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(self%Exc,1,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(self%ECore,1,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(self%ECharge,1,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(self%ETot,1,mpi_double_precision,0,quick_comm,mpierror)
 
       if (quick_method%PBSOL) then
-         call MPI_BCAST(self%EElVac,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%EElSol,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%EElPb,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%gsolexp,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%EElVac,1,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(self%EElSol,1,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(self%EElPb,1,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(self%gsolexp,1,mpi_double_precision,0,quick_comm,mpierror)
       endif
 
       if (quick_method%unrst) then
-         call MPI_BCAST(self%cob,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%denseab,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%denseb,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%Eb,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%aElec,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%bElec,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%cob,nbasis2,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(self%denseab,nbasis2,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(self%denseb,nbasis2,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(self%Eb,nbasis,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(self%aElec,1,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(self%bElec,1,mpi_double_precision,0,quick_comm,mpierror)
       endif
 
       if (quick_method%grad) then
-         call MPI_BCAST(self%gradient,3*natom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%gradient,3*natom,mpi_double_precision,0,quick_comm,mpierror)
       endif
 
       if (quick_method%MP2) then
-         call MPI_BCAST(self%gradient,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%gradient,1,mpi_double_precision,0,quick_comm,mpierror)
       endif
 
       if (quick_method%analHess) then
-         call MPI_BCAST(self%hessian,3*natom*3*natom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%hessian,3*natom*3*natom,mpi_double_precision,0,quick_comm,mpierror)
          if (quick_method%unrst) then
             idimA = (nbasis-nelec)*nelec + (nbasis-nelecB)*nelecB
          else
             idimA = 2*(nbasis-(nelec/2))*(nelec/2)
          endif
-         call MPI_BCAST(self%cphfa,idimA*idimA,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%cphfb,idimA*natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%cphfa,idimA*idimA,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(self%cphfb,idimA*natom*3,mpi_double_precision,0,quick_comm,mpierror)
       endif
 
    end subroutine broadcast_quick_qm_struct

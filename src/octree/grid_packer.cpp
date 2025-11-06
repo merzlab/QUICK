@@ -19,6 +19,7 @@
 
 #include "grid_packer.h"
 #include "gpack_type.h"
+#include "../modules/quick_comm_store.h"
 
 #include <cmath>
 #include <fstream>
@@ -32,8 +33,11 @@ void gpack_initialize_()
     gps->totalGPACKMemory = 0;
 
 #if defined(MPIV) && !defined(MPIV_GPU)
-    MPI_Comm_rank(MPI_COMM_WORLD, &mpirank);
-    MPI_Comm_size(MPI_COMM_WORLD, &mpisize);
+    MPI_Comm comm = quick_get_comm_c();
+    if (comm == MPI_COMM_NULL) return;
+    MPI_Comm_rank(comm, &mpirank);
+    MPI_Comm_size(comm, &mpisize);
+
 #endif
 
 // setup debug file if necessary
@@ -402,7 +406,9 @@ void pack_grid_pts(){
 #  if defined(MPIV) && !defined(MPIV_GPU)
     }
 
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Comm comm = quick_get_comm_c();
+    MPI_Barrier(comm);
+
 #  endif
 
     cpu_get_pfbased_basis_function_lists_new_imp(&octree);
@@ -839,7 +845,8 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
         weight= (double*) malloc(init_arr_size * sizeof(double));
 
 #if defined(MPIV) && !defined(MPIV_GPU)
-        MPI_Bcast(&leaf_count, 1, MPI_INT, 0, MPI_COMM_WORLD); 
+        MPI_Comm comm = quick_get_comm_c();
+        MPI_Bcast(&leaf_count, 1, MPI_INT, 0, comm); 
 #endif
 	tmp_gpweight = (unsigned char*) malloc(init_arr_size * sizeof(unsigned char));
 	tmp_cfweight = (unsigned int*) malloc(leaf_count * gps->nbasis * sizeof(unsigned int));
@@ -1295,7 +1302,8 @@ void cpu_get_primf_contraf_lists_method_new_imp(double gridx, double gridy, doub
 #if defined(MPIV) && !defined(MPIV_GPU)
 void setup_gpack_mpi_1()
 {
-	MPI_Bcast(&gps->arr_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Comm comm = quick_get_comm_c();
+	MPI_Bcast(&gps->arr_size, 1, MPI_INT, 0, comm);
 }
 
 
@@ -1347,19 +1355,19 @@ void setup_gpack_mpi_2(unsigned int nbins, double *gridx, double *gridy,
 
         mpi_binlst = tmp_mpi_binlst;
 
-	MPI_Bcast(mpi_binlst, mpisize+1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(bs_tracker, nbins+1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(gridx, gps->arr_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(gridy, gps->arr_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(gridz, gps->arr_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(gpweight, gps->arr_size, MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
-	MPI_Bcast(cfweight, nbins*gps->nbasis, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(pfweight, nbins*gps->nbasis*gps->maxcontract, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(sswt, gps->arr_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(weight, gps->arr_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(iatm, gps->arr_size, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(mpi_binlst, mpisize+1, MPI_INT, 0, comm);
+	MPI_Bcast(bs_tracker, nbins+1, MPI_INT, 0, comm);
+	MPI_Bcast(gridx, gps->arr_size, MPI_DOUBLE, 0, comm);
+	MPI_Bcast(gridy, gps->arr_size, MPI_DOUBLE, 0, comm);
+	MPI_Bcast(gridz, gps->arr_size, MPI_DOUBLE, 0, comm);
+	MPI_Bcast(gpweight, gps->arr_size, MPI_UNSIGNED_CHAR, 0, comm);
+	MPI_Bcast(cfweight, nbins*gps->nbasis, MPI_INT, 0, comm);
+	MPI_Bcast(pfweight, nbins*gps->nbasis*gps->maxcontract, MPI_INT, 0, comm);
+	MPI_Bcast(sswt, gps->arr_size, MPI_DOUBLE, 0, comm);
+	MPI_Bcast(weight, gps->arr_size, MPI_DOUBLE, 0, comm);
+	MPI_Bcast(iatm, gps->arr_size, MPI_INT, 0, comm);
 
-	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Barrier(comm);
 
 
 }
@@ -1374,9 +1382,9 @@ void get_slave_primf_contraf_lists(unsigned int nbins, unsigned char *gpweight,
 
         if(mpirank != 0){
 
-                        MPI_Send(gpweight, gps->arr_size, MPI_UNSIGNED_CHAR, 0, mpirank+600, MPI_COMM_WORLD);
-                        MPI_Send(cfweight, nbins*gps->nbasis, MPI_INT, 0, mpirank+700, MPI_COMM_WORLD);
-                        MPI_Send(pfweight, nbins*gps->nbasis*gps->maxcontract, MPI_INT, 0, mpirank+800, MPI_COMM_WORLD);
+                        MPI_Send(gpweight, gps->arr_size, MPI_UNSIGNED_CHAR, 0, mpirank+600, comm);
+                        MPI_Send(cfweight, nbins*gps->nbasis, MPI_INT, 0, mpirank+700, comm);
+                        MPI_Send(pfweight, nbins*gps->nbasis*gps->maxcontract, MPI_INT, 0, mpirank+800, comm);
 
         }else{
 
@@ -1384,9 +1392,9 @@ void get_slave_primf_contraf_lists(unsigned int nbins, unsigned char *gpweight,
 
 		for(unsigned int i=1; i< mpisize; i++){
 
-			MPI_Recv(tmp_gpweight, gps->arr_size, MPI_UNSIGNED_CHAR, i, i+600, MPI_COMM_WORLD, &status);
-			MPI_Recv(tmp_cfweight, nbins*gps->nbasis, MPI_INT, i, i+700, MPI_COMM_WORLD, &status);
-			MPI_Recv(tmp_pfweight, nbins*gps->nbasis*gps->maxcontract, MPI_INT, i, i+800, MPI_COMM_WORLD, &status);
+			MPI_Recv(tmp_gpweight, gps->arr_size, MPI_UNSIGNED_CHAR, i, i+600, comm, &status);
+			MPI_Recv(tmp_cfweight, nbins*gps->nbasis, MPI_INT, i, i+700, comm, &status);
+			MPI_Recv(tmp_pfweight, nbins*gps->nbasis*gps->maxcontract, MPI_INT, i, i+800, comm, &status);
 
 		        unsigned int bstart=mpi_binlst[i];
 			unsigned int bend=mpi_binlst[i+1];	
@@ -1420,7 +1428,8 @@ void get_slave_primf_contraf_lists(unsigned int nbins, unsigned char *gpweight,
 
         }
 
-        MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Comm comm = quick_get_comm_c();
+        MPI_Barrier(comm);
 
 }
 

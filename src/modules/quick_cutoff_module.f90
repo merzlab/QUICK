@@ -55,6 +55,7 @@ subroutine schwarzoff
   use allmod
 #ifdef MPIV
   use mpi
+  use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
 
   Implicit none
@@ -80,9 +81,9 @@ subroutine schwarzoff
 
 #ifdef MPIV
       if (bMPI) then
-         call MPI_BCAST(YCutoff,nshell*nshell,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(cutprim,jbasis*jbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(YCutoff,nshell*nshell,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(cutprim,jbasis*jbasis,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BARRIER(quick_comm,mpierror)
       endif
 #endif
 

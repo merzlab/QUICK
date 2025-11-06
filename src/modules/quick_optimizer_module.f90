@@ -40,6 +40,7 @@ contains
      use quick_molden_module, only: quick_molden
 #ifdef MPIV
      use mpi
+     use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
      implicit double precision(a-h,o-z)
 
@@ -336,11 +337,11 @@ contains
         !-------------- END MPI/MASTER --------------------
 #ifdef MPIV
         ! we now have new geometry, and let other nodes know the new geometry
-        if (bMPI)call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+        if (bMPI)call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,quick_comm,mpierror)
 
 
         ! Notify every nodes if opt is done
-        if (bMPI)call MPI_BCAST(done,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+        if (bMPI)call MPI_BCAST(done,1,mpi_logical,0,quick_comm,mpierror)
 #endif
 
         !For DFT geometry optimization, we should delete the grid variables here

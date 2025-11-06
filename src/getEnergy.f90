@@ -22,6 +22,7 @@ subroutine getEnergy(isGuess, ierr)
 #endif
 #ifdef MPIV
    use mpi
+  use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
 
    implicit none
@@ -95,9 +96,9 @@ subroutine getEnergy(isGuess, ierr)
 #ifdef MPIV
    !-------------- MPI / ALL NODES ----------------------------------
    if (bMPI) then
-      call MPI_BCAST(quick_qm_struct%s,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_qm_struct%x,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_qm_struct%Ecore,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_qm_struct%s,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(quick_qm_struct%x,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(quick_qm_struct%Ecore,1,mpi_double_precision,0,quick_comm,mpierror)
    endif
    !-------------- END MPI / ALL NODES ------------------------------
 #endif
@@ -168,7 +169,7 @@ subroutine getEnergy(isGuess, ierr)
    !--------------- END MPI/MASTER ----------------------
 
 #if defined(MPIV) || defined(MPIV_GPU)
-  call MPI_BCAST(quick_qm_struct%Etot, 1, mpi_double_precision,0,MPI_COMM_WORLD,mpierror) 
+  call MPI_BCAST(quick_qm_struct%Etot, 1, mpi_double_precision,0,quick_comm,mpierror) 
 #endif
 
 end subroutine getenergy

@@ -33,6 +33,7 @@
 !!****
 module dlf_mpi_module
   use mpi
+  use quick_mpi_module, only: quick_set_comm, quick_comm
   save
 
   integer  :: global_comm      ! set to, and use instead of, mpi_comm_world
@@ -60,7 +61,7 @@ end module dlf_mpi_module
 !!
 !! Deal with MPI initialization if the calling program has not already 
 !! done this, and get processor info (rank, total number) in 
-!! MPI_COMM_WORLD.  Exchange this information with the calling program.
+!! quick_comm.  Exchange this information with the calling program.
 !!
 !! SYNOPSIS
 subroutine dlf_mpi_initialize
