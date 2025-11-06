@@ -733,10 +733,10 @@ contains
 #if defined(RESTART_HDF5)
             call write_hdf5_double_2n(quick_qm_struct%dense, nbasis, nbasis, 'dense')
 #else
-             call quick_open(iDataFile, dataFileName, 'R', 'U', 'A', .true., ierr)
-             call wchk_int(iDataFile, "nbasis", nbasis, fail)
-             call wchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
-             close(iDataFile)
+            call quick_open(iDataFile, dataFileName, 'R', 'U', 'A', .true., ierr)
+            call wchk_int(iDataFile, "nbasis", nbasis, fail)
+            call wchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+            close(iDataFile)
 #endif
           endif
 

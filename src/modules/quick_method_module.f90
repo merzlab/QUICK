@@ -679,8 +679,10 @@ module quick_method_module
             end if
             if (index(keyWD,'ZMAKE').ne.0)      self%zmat=.true.
             if (index(keyWD,'DIPOLE').ne.0)     self%dipole=.true.
-            if (index(keyWD,'WRITE').ne.0)then
+            if (index(keyWD,'WRITEDEN').ne.0)then
                 self%writeden=.true.
+            end if
+            if (index(keyWD,'WRITEXYZ').ne.0)then
                 self%writexyz=.true.
             end if
 
