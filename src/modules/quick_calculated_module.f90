@@ -343,7 +343,7 @@ contains
 
       use quick_method_module, only: quick_method
       use quick_molspec_module, only: quick_molspec
-      logical fail
+      integer fail
 
       integer nbasis
       integer natom

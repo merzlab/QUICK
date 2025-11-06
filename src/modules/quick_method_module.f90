@@ -433,8 +433,8 @@ module quick_method_module
             if (self%printEnergy) write(io,'(" PRINT ENERGY EVERY CYCLE")')
 
             if (self%readDMX)   write(io,'(" READ DENSITY MATRIX FROM FILE")')
-            if (self%read_coord) write(io,'(" READ COORDINATES From DATAFILE")')
-            if (self%readden) write(io,'(" READ DENSITY MATRIX From DATAFILE")')
+            if (self%read_coord) write(io,'(" READ COORDINATES FROM DATAFILE")')
+            if (self%readden) write(io,'(" READ DENSITY MATRIX FROM DATAFILE")')
             if (self%writeden) write(io,'(" WRITE DENSITY MATRIX TO DATA FILE")')
             if (self%writexyz) write(io,'(" WRITE COORDINATES TO DATA FILE")')
             if (self%readSAD)   write(io,'(" READ SAD GUESS FROM FILE")')

@@ -178,5 +178,5 @@ esp_charge_acetate_radical          #ESP test: Tests ESP evaluation and charge c
 esp_charge_acetate_anion            #ESP test: Tests ESP evaluation and charge calculation for charged molecule
 ene_multiple_keyword_lines          #Acetate: DFT energy test: Tests if reading of keywords from multiple lines works
 rw_acetate_xyz_checkpoint           #RW test: reading of coordinates from checkpoint file
-rw_xyz_and_density_checkpoint       #RW test: reading of both density and coordinate from checkpoint file
+rw_acetate_xyz_density_checkpoint   #RW test: reading of both density and coordinate from checkpoint file
 rw_acetate_density_checkpoint       #RW test: reading of density from checkpoint file

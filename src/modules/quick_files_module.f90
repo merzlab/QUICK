@@ -132,7 +132,11 @@ module quick_files_module
         rstFileName=inFileName(1:i-1)//'.rst'
         CPHFFileName=inFileName(1:i-1)//'.cphf'
         pdbFileName=inFileName(1:i-1)//'.pdb'
+#if defined(RESTART_HDF5)
+        dataFileName=inFileName(1:i-1)//'.h5'
+#else
         dataFileName=inFileName(1:i-1)//'.dat'
+#endif
         intFileName=inFileName(1:i-1)//'.int'
         moldenFileName=inFileName(1:i-1)//'.molden'
         espFileName=inFileName(1:i-1)//'.esp'

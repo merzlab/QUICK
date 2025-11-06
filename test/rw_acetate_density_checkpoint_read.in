@@ -1,4 +1,4 @@
-$DATA=rw_acetate_density_checkpoint.dat
+$DATA=rw_acetate_density_checkpoint.h5
 B3LYP CHARGE=-1 cutoff=1.0e-9 BASIS=def2-svp denserms=1.0e-6 readden
 
 C -1.372717 -0.239147 -0.003757

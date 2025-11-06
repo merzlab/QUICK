@@ -47,6 +47,7 @@ end subroutine calchessian
 subroutine fdhessian(failed)
   use allmod
   use quick_grad_cshell_module, only: cshell_gradient
+  use quick_exception_module
   implicit double precision(a-h,o-z)
 
   character(len=1) cartsym(3)
@@ -77,7 +78,9 @@ subroutine fdhessian(failed)
   do Iatom = 1,natom
      do Idirection = 1,3
         xyz(Idirection,Iatom) = xyz(Idirection,Iatom) + stepsize
-        call getenergy(failed, .false.)
+        call getEnergy(failed, ierr)
+        CHECK_ERROR(ierr)
+
         if (failed) return
 
         ! BLOCKED by YIPU MIAO
@@ -96,7 +99,9 @@ subroutine fdhessian(failed)
         enddo
 
         xyz(Idirection,Iatom) = xyz(Idirection,Iatom)-2.d0*stepsize
-        call getenergy(failed, .false.)
+        call getEnergy(failed, ierr)
+        CHECK_ERROR(ierr)
+
         if (failed) return
         if (quick_method%unrst) then
            !                if (quick_method%HF) call uhfgrad

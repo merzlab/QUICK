@@ -58,17 +58,17 @@ contains
 
     implicit none
 
-    CHARACTER(LEN=*), intent(in) :: datasetname
-    INTEGER, intent(in) :: ind(2)
-    INTEGER, intent(in) :: n(2)
-    double precision, intent(out) :: adata(:,:)
+    character(LEN=*), intent(in) :: datasetname
+    integer, dimension(2), intent(in) :: ind
+    integer, intent(in) :: n(2)
+    double precision, dimension(n(1), n(2)), intent(out) :: adata
 
-    INTEGER, parameter :: rank = 2
+    integer, parameter :: rank = 2
     double precision, allocatable :: abuf(:,:)
-    INTEGER :: hdferr
-    INTEGER(HID_T) :: file, dset, space_id, file_space ! Handles
-    INTEGER(HSIZE_T) :: dims(2)
-    INTEGER(HSIZE_T) :: start(2), stride(2), countn(2), blockn(2)
+    integer :: hdferr
+    integer(HID_T) :: file, dset, space_id, file_space ! Handles
+    integer(HSIZE_T) :: dims(2)
+    integer(HSIZE_T) :: start(2), stride(2), countn(2), blockn(2)
 
     ! index at which the data is located
     dims(:) = n(:)
@@ -122,7 +122,7 @@ contains
     endif
 
     ! The data in the buffer is transferred to return to the calling program
-    adata(:,:) = abuf(:,:)
+    adata = abuf
 
     if(allocated(abuf)) deallocate(abuf)
 
@@ -153,17 +153,17 @@ contains
 
     implicit none
 
-    CHARACTER(LEN=*), intent(in) :: datasetname
-    INTEGER, intent(in) :: ind
-    INTEGER, intent(out) :: idata
+    character(LEN=*), intent(in) :: datasetname
+    integer, intent(in) :: ind
+    integer, intent(out) :: idata
 
-    INTEGER, parameter :: rank = 1
-    INTEGER :: ibuf(1,1)
-    INTEGER :: hdferr
-    INTEGER(HID_T) :: file, dset, space_id, file_space ! Handles
-    INTEGER(HSIZE_T) :: dims(1,1)
-    INTEGER(HSIZE_T), parameter :: dimn(2) = (/1,1/)
-    INTEGER(HSIZE_T), parameter :: npoints = 1
+    integer, parameter :: rank = 1
+    integer :: ibuf(1,1)
+    integer :: hdferr
+    integer(HID_T) :: file, dset, space_id, file_space ! Handles
+    integer(HSIZE_T) :: dims(1,1)
+    integer(HSIZE_T), parameter :: dimn(2) = (/1,1/)
+    integer(HSIZE_T), parameter :: npoints = 1
 
     ! index at which the data is located
     dims(1,1) = ind
@@ -201,7 +201,7 @@ contains
     call H5Screate_F(H5S_SCALAR_F, space_id, hdferr)
 
     ! Read the array in dataset "datasetname"
-    call h5dread_f(dset, H5T_NATIVE_INTEGER, ibuf, dimn, hdferr, space_id, file_space)
+    call h5dread_f(dset, H5T_NATIVE_integer, ibuf, dimn, hdferr, space_id, file_space)
     if (hdferr /= 0) then
       call PrtErr(OUTFILEHANDLE,'Error reading data from dataset')
       call quick_exit(OUTFILEHANDLE,1)
@@ -237,17 +237,17 @@ contains
 
     implicit none
 
-    CHARACTER(LEN=*), intent(in) :: datasetname
-    INTEGER, intent(in) :: ind
-    INTEGER, intent(in) :: n
-    INTEGER, intent(out) :: idata(:)
+    character(LEN=*), intent(in) :: datasetname
+    integer, intent(in) :: ind
+    integer, intent(in) :: n
+    integer, intent(out) :: idata(n)
 
-    INTEGER, parameter :: rank = 1
-    INTEGER, allocatable :: ibuf(:)
-    INTEGER :: hdferr
-    INTEGER(HID_T) :: file, dset, space_id, file_space ! Handles
-    INTEGER(HSIZE_T) :: dims(1)
-    INTEGER(HSIZE_T) :: start(1), stride(1), countn(1), blockn(1)
+    integer, parameter :: rank = 1
+    integer, allocatable :: ibuf(:)
+    integer :: hdferr
+    integer(HID_T) :: file, dset, space_id, file_space ! Handles
+    integer(HSIZE_T) :: dims(1)
+    integer(HSIZE_T) :: start(1), stride(1), countn(1), blockn(1)
 
     ! index at which the data is located
     dims(1) = n
@@ -294,14 +294,14 @@ contains
 
     ! Read the array in dataset "datasetname"
     allocate(ibuf(n))
-    call h5dread_f(dset, H5T_NATIVE_INTEGER, ibuf, dims, hdferr, mem_space_id=space_id, file_space_id=file_space)
+    call h5dread_f(dset, H5T_NATIVE_integer, ibuf, dims, hdferr, mem_space_id=space_id, file_space_id=file_space)
     if (hdferr /= 0) then
       call PrtErr(OUTFILEHANDLE,'Error reading data from dataset')
       call quick_exit(OUTFILEHANDLE,1)
     endif
 
     ! The data in the buffer is transferred to return to the calling program
-    idata(:) = ibuf(:)
+    idata = ibuf
 
     if(allocated(ibuf)) deallocate(ibuf)
 
@@ -332,17 +332,17 @@ contains
 
     implicit none
 
-    CHARACTER(LEN=*), intent(in) :: datasetname
-    INTEGER, intent(in) :: ind(2)
-    INTEGER, intent(in) :: n(2)
-    INTEGER, intent(out) :: idata(:,:)
+    character(LEN=*), intent(in) :: datasetname
+    integer, dimension(2), intent(in) :: ind
+    integer, dimension(2), intent(in) :: n
+    integer, dimension(n(1), n(2)), intent(out) :: idata
 
-    INTEGER, parameter :: rank = 2
-    INTEGER, allocatable :: ibuf(:,:)
-    INTEGER :: hdferr
-    INTEGER(HID_T) :: file, dset, space_id, file_space ! Handles
-    INTEGER(HSIZE_T) :: dims(2)
-    INTEGER(HSIZE_T) :: start(2), stride(2), countn(2), blockn(2)
+    integer, parameter :: rank = 2
+    integer, allocatable :: ibuf(:,:)
+    integer :: hdferr
+    integer(HID_T) :: file, dset, space_id, file_space ! Handles
+    integer(HSIZE_T) :: dims(2)
+    integer(HSIZE_T) :: start(2), stride(2), countn(2), blockn(2)
 
     ! index at which the data is located
     dims(:) = n(:)
@@ -389,14 +389,14 @@ contains
 
     ! Read the array in dataset "datasetname"
     allocate(ibuf(n(1),n(2)))
-    call h5dread_f(dset, H5T_NATIVE_INTEGER, ibuf, dims, hdferr, mem_space_id=space_id, file_space_id=file_space)
+    call h5dread_f(dset, H5T_NATIVE_integer, ibuf, dims, hdferr, mem_space_id=space_id, file_space_id=file_space)
     if (hdferr /= 0) then
       call PrtErr(OUTFILEHANDLE,'Error reading data from dataset')
       call quick_exit(OUTFILEHANDLE,1)
     endif
 
     ! The data in the buffer is transferred to return to the calling program
-    idata(:,:) = ibuf(:,:)
+    idata = ibuf
 
     if(allocated(ibuf)) deallocate(ibuf)
 
@@ -427,16 +427,16 @@ contains
 
     implicit none
 
-    INTEGER, intent(in) :: natom
-    INTEGER, intent(in) :: nbasis
+    integer, intent(in) :: natom
+    integer, intent(in) :: nbasis
 
-    CHARACTER(LEN=7), PARAMETER :: datasetname = "molinfo"
-    INTEGER, PARAMETER :: dim0 = 2
-    INTEGER, DIMENSION(1:dim0) :: wdata
-    INTEGER :: hdferr
-    INTEGER, PARAMETER :: rank = 1
-    INTEGER(HSIZE_T) :: length(rank)
-    INTEGER(HID_T) :: file, space_id, dset ! Handles
+    character(LEN=7), parameter :: datasetname = "molinfo"
+    integer, parameter :: dim0 = 2
+    integer, dimension(1:dim0) :: wdata
+    integer :: hdferr
+    integer, parameter :: rank = 1
+    integer(HSIZE_T) :: length(rank)
+    integer(HID_T) :: file, space_id, dset ! Handles
 
     ! Initialize FORTRAN interface.
     CALL h5open_f(hdferr)
@@ -463,14 +463,14 @@ contains
     endif
 
     ! Create dataset
-    call h5dcreate_f(file, datasetname, H5T_NATIVE_INTEGER, space_id, dset, hdferr)
+    call h5dcreate_f(file, datasetname, H5T_NATIVE_integer, space_id, dset, hdferr)
     if (hdferr /= 0) then
       call PrtErr(OUTFILEHANDLE, 'Failed to create HDF5 dataset')
       call quick_exit(OUTFILEHANDLE, 1)
     endif
 
     ! Write the array to a dataset "datasetname"
-    call h5dwrite_f(dset, H5T_NATIVE_INTEGER, wdata, length, hdferr)
+    call h5dwrite_f(dset, H5T_NATIVE_integer, wdata, length, hdferr)
     if (hdferr /= 0) then
       call PrtErr(OUTFILEHANDLE, 'Error writing data to dataset')
       call quick_exit(OUTFILEHANDLE, 1)
@@ -503,15 +503,15 @@ contains
 
     implicit none
 
-    INTEGER, intent(in) :: length
-    INTEGER, DIMENSION(length), intent(in) :: Array
-    CHARACTER(LEN=*), intent(in) :: datasetname
+    integer, intent(in) :: length
+    integer, dimension(length), intent(in) :: Array
+    character(LEN=*), intent(in) :: datasetname
 
-    INTEGER, PARAMETER :: rank = 1
-    INTEGER(HSIZE_T) :: lenArr(rank)
+    integer, parameter :: rank = 1
+    integer(HSIZE_T) :: lenArr(rank)
 
-    INTEGER :: hdferr
-    INTEGER(HID_T)  :: file, space_id, dset ! Handles  
+    integer :: hdferr
+    integer(HID_T)  :: file, space_id, dset ! Handles  
 
     lenArr=shape(Array)
 
@@ -537,14 +537,14 @@ contains
     endif
 
     ! Create dataset
-    call h5dcreate_f(file, datasetname, H5T_NATIVE_INTEGER, space_id, dset, hdferr)
+    call h5dcreate_f(file, datasetname, H5T_NATIVE_integer, space_id, dset, hdferr)
     if (hdferr /= 0) then
       call PrtErr(OUTFILEHANDLE,'Failed to create HDF5 dataset')
       call quick_exit(OUTFILEHANDLE,1)
     endif
 
     ! Write the array to a dataset "datasetname"
-    call h5dwrite_f(dset, H5T_NATIVE_INTEGER, Array, lenArr, hdferr)
+    call h5dwrite_f(dset, H5T_NATIVE_integer, Array, lenArr, hdferr)
     if (hdferr /= 0) then
       call PrtErr(OUTFILEHANDLE,'Error writing data to dataset')
       call quick_exit(OUTFILEHANDLE,1)
@@ -577,15 +577,15 @@ contains
 
     implicit none
 
-    INTEGER, intent(in) :: length1, length2
-    double precision, DIMENSION(length1, length2), intent(in) :: Array
-    CHARACTER(LEN=*), intent(in) :: datasetname
+    integer, intent(in) :: length1, length2
+    double precision, dimension(length1, length2), intent(in) :: Array
+    character(LEN=*), intent(in) :: datasetname
 
-    INTEGER, PARAMETER :: rank = 2
-    INTEGER(HSIZE_T) :: lenArr(rank)
-    INTEGER :: hdferr
+    integer, parameter :: rank = 2
+    integer(HSIZE_T) :: lenArr(rank)
+    integer :: hdferr
     logical :: exists
-    INTEGER(HID_T) :: file, space_id, dset ! Handles  
+    integer(HID_T) :: file, space_id, dset ! Handles  
 
     lenArr=shape(Array)
 
