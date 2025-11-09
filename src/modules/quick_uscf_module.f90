@@ -69,6 +69,9 @@ contains
      !-------------------------------------------------------
      use allmod
      use quick_molden_module, only: quick_molden, exportMO, exportSCF
+#if defined(RESTART_HDF5)
+     use quick_restart_module, only: write_hdf5_double_2n, read_hdf5_int, read_hdf5_double_2n
+#endif
      implicit none
   
      logical :: done
@@ -91,7 +94,23 @@ contains
      ! The cycles stop when prms  is less than pmaxrms or when the maximum
      ! number of scfcycles has been reached.
      jscf=0
-  
+ 
+     if (quick_method%readden) then
+       nbasis = quick_molspec%nbasis
+       if (master) then
+#if defined(RESTART_HDF5)
+         call read_hdf5_int('molinfo', 2, nbasis)
+         call read_hdf5_double_2n('dense', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%dense)
+         call read_hdf5_double_2n('denseb', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%denseb)
+#else
+         open(unit=iDataFile, file=dataFileName, status='OLD', form='UNFORMATTED')
+         call rchk_int(iDataFile, "nbasis", nbasis, fail)
+         call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+         call rchk_darray(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%denseb, fail)
+         close(iDataFile)
+#endif
+       endif
+     endif
   
      ! Alessandro GENONI 03/21/2007
      ! ECP integrals computation exploiting Alexander V. Mitin Subroutine
@@ -109,6 +128,22 @@ contains
 !    After SCF is done the total density is calculated for
 !    property calculations.
      quick_qm_struct%denseab = quick_qm_struct%dense+quick_qm_struct%denseb
+
+     ! write density to checkpoint file
+     if (master) then
+       if (quick_method%writeden) then
+#if defined(RESTART_HDF5)
+         call write_hdf5_double_2n(quick_qm_struct%denseb, nbasis, nbasis, 'denseb')  
+         call write_hdf5_double_2n(quick_qm_struct%dense, nbasis, nbasis, 'dense')  
+#else
+         call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
+         call wchk_int(iDataFile, "nbasis", nbasis, fail)
+         call wchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+         call wchk_darray(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%denseb, fail)
+         close(iDataFile)
+#endif
+       endif
+     endif
   
      !if (quick_method%debug)  call debug_SCF(jscf)
 
@@ -135,10 +170,6 @@ contains
      use quick_scf_module  
      use quick_oei_module, only: bCalc1e
      use quick_molden_module, only: quick_molden
-#if defined(RESTART_HDF5)
-     use quick_restart_module, only: write_hdf5_double_2n, read_hdf5_int, read_hdf5_double_2n
-#endif
-
 #if defined(HIP) || defined(HIP_MPIV)
      use quick_rocblas_module, only: rocDGEMM
 #if defined(WITH_MAGMA)
@@ -237,23 +268,6 @@ contains
      if (bMPI) call MPI_setup_hfoperator
      !-------------- END MPI / ALL NODE -----------
 #endif
- 
-        if(quick_method%readden)then
-          nbasis = quick_molspec%nbasis
-          if(master)then
-#if defined(RESTART_HDF5)
-            call read_hdf5_int('molinfo', 2, nbasis)
-            call read_hdf5_double_2n('dense', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%dense)
-            call read_hdf5_double_2n('denseb', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%denseb)
-#else
-            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
-            call rchk_int(iDataFile, "nbasis", nbasis, fail)
-            call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
-            call rchk_darray(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%denseb, fail)
-            close(iDataFile)
-#endif
-          endif
-        endif
 
 #ifdef MPIV
      if (bMPI) then
@@ -852,20 +866,6 @@ contains
         !--------------- END MPI/ALL NODES -------------------------------------
   
         if (master) then
-          if(quick_method%writeden) then
-            ! open data file then write calculated info to dat file
-#if defined(RESTART_HDF5)
-            call write_hdf5_double_2n(quick_qm_struct%denseb, nbasis, nbasis, 'denseb')  
-            call write_hdf5_double_2n(quick_qm_struct%dense, nbasis, nbasis, 'dense')  
-#else
-            call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
-            call wchk_int(iDataFile, "nbasis", nbasis, fail)
-            call wchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
-            call wchk_darray(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%denseb, fail)
-            close(iDataFile)
-#endif
-          endif
-
 #ifdef USEDAT
            ! open data file then write calculated info to dat file
            SAFE_CALL(quick_open(iDataFile, dataFileName, 'R', 'U', 'R',.true.,ierr)

@@ -106,13 +106,31 @@ contains
      ! this subroutine is to do scf job for restricted system
      !-------------------------------------------------------
      use allmod
-     use quick_molden_module, only: quick_molden
+#if defined(RESTART_HDF5)
+     use quick_restart_module, only: write_hdf5_double_2n, read_hdf5_int, read_hdf5_double_2n
+#endif
      implicit none
   
      logical :: done
      integer, intent(inout) :: ierr
      integer :: jscf
      done=.false.
+
+     if (quick_method%readden) then
+       nbasis = quick_molspec%nbasis
+       if (master) then
+#if defined(RESTART_HDF5)
+         call read_hdf5_int('molinfo', 2, nbasis)
+         call read_hdf5_double_2n('dense', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%dense)
+#else
+         open(unit=iDataFile, file=dataFileName, status='OLD', form='UNFORMATTED')
+         rewind(iDataFile)
+         call rchk_int(iDataFile, "nbasis", nbasis, fail)
+         call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+         close(iDataFile)
+#endif
+       endif
+     endif
   
      !-----------------------------------------------------------------
      ! The purpose of this subroutine is to perform scf cycles.  At this
@@ -130,7 +148,6 @@ contains
      ! number of scfcycles has been reached.
      jscf=0
   
-  
      ! Alessandro GENONI 03/21/2007
      ! ECP integrals computation exploiting Alexander V. Mitin Subroutine
      ! Note: the integrals are stored in the array ecp_int that corresponds
@@ -144,6 +161,20 @@ contains
   !   if (quick_method%diisscf .and. quick_method%divcon) call electdiisdc(jscf,PRMS)     ! div & con scf
   
      jscf=jscf+1
+
+     ! write density to checkpoint file
+     if (master) then
+       if(quick_method%writeden) then
+#if defined(RESTART_HDF5)
+        call write_hdf5_double_2n(quick_qm_struct%dense, nbasis, nbasis, 'dense')
+#else
+        call quick_open(iDataFile, dataFileName, 'R', 'U', 'A', .true., ierr)
+        call wchk_int(iDataFile, "nbasis", nbasis, fail)
+        call wchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+        close(iDataFile)
+#endif
+       endif
+     endif
   
      if (quick_method%debug)  call debug_SCF(jscf)
   end subroutine scf
@@ -159,14 +190,9 @@ contains
      use quick_oei_module, only: bCalc1e 
      use quick_lri_module, only: computeLRI
      use quick_molden_module, only: quick_molden
-#if defined(RESTART_HDF5)
-     use quick_restart_module, only: write_hdf5_double_2n, read_hdf5_int, read_hdf5_double_2n
-#endif
-
 #ifdef CEW 
      use quick_cew_module, only : quick_cew
 #endif
-
 #if defined(HIP) || defined(HIP_MPIV)
      use quick_rocblas_module, only: rocDGEMM
 #if defined(WITH_MAGMA)
@@ -267,22 +293,6 @@ contains
      if (bMPI) call MPI_setup_hfoperator
      !-------------- END MPI / ALL NODE -----------
 #endif
-
-        if(quick_method%readden)then
-          nbasis = quick_molspec%nbasis
-          if(master)then
-#if defined(RESTART_HDF5)
-            call read_hdf5_int('molinfo', 2, nbasis)
-            call read_hdf5_double_2n('dense', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%dense)
-#else
-            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
-            rewind(iDataFile)
-            call rchk_int(iDataFile, "nbasis", nbasis, fail)
-            call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
-            close(iDataFile)
-#endif
-          endif
-        endif
 
 #ifdef MPIV
      if (bMPI) then
@@ -728,18 +738,6 @@ contains
         !--------------- END MPI/ALL NODES -------------------------------------
   
         if (master) then
-          if(quick_method%writeden) then
-            ! open data file then write calculated info to dat file
-#if defined(RESTART_HDF5)
-            call write_hdf5_double_2n(quick_qm_struct%dense, nbasis, nbasis, 'dense')
-#else
-            call quick_open(iDataFile, dataFileName, 'R', 'U', 'A', .true., ierr)
-            call wchk_int(iDataFile, "nbasis", nbasis, fail)
-            call wchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
-            close(iDataFile)
-#endif
-          endif
-
 #ifdef USEDAT
            ! open data file then write calculated info to dat file
            SAFE_CALL(quick_open(iDataFile, dataFileName, 'R', 'U', 'R',.true.,ierr)
@@ -749,15 +747,6 @@ contains
 #endif
            current_diis=mod(idiis-1,quick_method%maxdiisscf)
            current_diis=current_diis+1
-
-           ! DELETE ME
-           !write(*,'(A,3es20.10)')"SCF Iter",quick_qm_struct%Ecore,quick_qm_struct%Eel, & ! DELETE ME
-           !& quick_qm_struct%Eel+quick_qm_struct%Ecore ! DELETE ME
-
-           !do i=1,10 ! DELETE ME
-           !   write(6,'(A,I3,f20.10)')"MO",i,quick_qm_struct%E(i) ! DELETE ME
-           !end do ! DELETE ME
-           
            
            write (ioutfile,'("|",I3,1x)',advance="no") jscf
            if(quick_method%printEnergy)then

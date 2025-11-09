@@ -255,7 +255,6 @@
         if(master) then
           if(quick_method%writexyz)then
 #if defined(RESTART_HDF5)
-            call read_hdf5_int('molinfo', 1, natom)
             call write_hdf5_int_n(quick_molspec%iattype, natom, 'iattype')
             call write_hdf5_double_2n(quick_molspec%xyz, 3, natom, 'xyz')
 #else
