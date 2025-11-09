@@ -70,7 +70,7 @@ contains
      use allmod
      use quick_molden_module, only: quick_molden, exportMO, exportSCF
 #if defined(RESTART_HDF5)
-     use quick_restart_module, only: write_hdf5_double_2n, read_hdf5_int, read_hdf5_double_2n
+     use quick_restart_module, only: read_hdf5_int, read_hdf5_double_2n
 #endif
 
      implicit none
@@ -132,22 +132,6 @@ contains
 !    After SCF is done the total density is calculated for
 !    property calculations.
      quick_qm_struct%denseab = quick_qm_struct%dense+quick_qm_struct%denseb
-
-     ! write density to checkpoint file
-     if (master) then
-       if (quick_method%writeden) then
-#if defined(RESTART_HDF5)
-         call write_hdf5_double_2n(quick_qm_struct%denseb, nbasis, nbasis, 'denseb')  
-         call write_hdf5_double_2n(quick_qm_struct%dense, nbasis, nbasis, 'dense')  
-#else
-         call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
-         call wchk_int(iDataFile, "nbasis", nbasis, fail)
-         call wchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
-         call wchk_darray(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%denseb, fail)
-         close(iDataFile)
-#endif
-       endif
-     endif
   
      !if (quick_method%debug)  call debug_SCF(jscf)
 

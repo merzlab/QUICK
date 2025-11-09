@@ -33,6 +33,7 @@
     use quick_oeproperties_module, only: compute_oeprop
     use quick_optimizer_module
     use quick_sad_guess_module, only: getSadGuess
+    use quick_calculated_module, only: quick_qm_struct
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
          exportMO, exportSCF, exportOPT
 #if defined(RESTART_HDF5)
@@ -218,16 +219,33 @@
           call compute_oeprop()
         endif
 
-        if(master) then
-          if(quick_method%writexyz)then
+        if (master) then
+          if (quick_method%writeden .or. quick_method%writexyz) then
 #if defined(RESTART_HDF5)
-            call write_hdf5_int_n(quick_molspec%iattype, natom, 'iattype')
-            call write_hdf5_double_2n(quick_molspec%xyz, 3, natom, 'xyz')
+            if (quick_method%writexyz) then
+              call write_hdf5_int_n(quick_molspec%iattype, natom, 'iattype')
+              call write_hdf5_double_2n(quick_molspec%xyz, 3, natom, 'xyz')
+            end if
+            if (quick_method%writeden) then
+              call write_hdf5_double_2n(quick_qm_struct%dense, quick_molspec%nbasis, quick_molspec%nbasis, 'dense')
+              if (quick_method%UNRST) then
+                call write_hdf5_double_2n(quick_qm_struct%denseb, quick_molspec%nbasis, quick_molspec%nbasis, 'denseb')  
+              end if
+            end if
 #else
             open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
-            call wchk_int(iDataFile, "natom", natom, fail)
-            call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
-            call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
+            if (quick_method%writexyz) then
+              call wchk_int(iDataFile, "natom", natom, fail)
+              call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+              call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
+            end if
+            if (quick_method%writeden) then
+              call wchk_int(iDataFile, "nbasis", quick_molspec%nbasis, fail)
+              call wchk_darray(iDataFile, "dense", quick_molspec%nbasis, quick_molspec%nbasis, 1, quick_qm_struct%dense, fail)
+              if (quick_method%UNRST) then
+                call wchk_darray(iDataFile, "denseb", quick_molspec%nbasis, quick_molspec%nbasis, 1, quick_qm_struct%denseb, fail)
+              end if
+            end if
             close(iDataFile)
 #endif
           endif 
@@ -252,16 +270,33 @@
             SAFE_CALL(lopt(ierr))         ! Cartesian
         endif
 
-        if(master) then
-          if(quick_method%writexyz)then
+        if (master) then
+          if (quick_method%writeden .or. quick_method%writexyz) then
 #if defined(RESTART_HDF5)
-            call write_hdf5_int_n(quick_molspec%iattype, natom, 'iattype')
-            call write_hdf5_double_2n(quick_molspec%xyz, 3, natom, 'xyz')
+            if (quick_method%writexyz) then
+              call write_hdf5_int_n(quick_molspec%iattype, natom, 'iattype')
+              call write_hdf5_double_2n(quick_molspec%xyz, 3, natom, 'xyz')
+            end if
+            if (quick_method%writeden) then
+              call write_hdf5_double_2n(quick_qm_struct%dense, quick_molspec%nbasis, quick_molspec%nbasis, 'dense')
+              if (quick_method%UNRST) then
+                call write_hdf5_double_2n(quick_qm_struct%denseb, quick_molspec%nbasis, quick_molspec%nbasis, 'denseb')  
+              end if
+            end if
 #else
             open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED',position='APPEND',action='WRITE')
-            call wchk_int(iDataFile, "natom", natom, fail)
-            call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
-            call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
+            if (quick_method%writexyz) then
+              call wchk_int(iDataFile, "natom", natom, fail)
+              call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+              call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
+            end if
+            if (quick_method%writeden) then
+              call wchk_int(iDataFile, "nbasis", quick_molspec%nbasis, fail)
+              call wchk_darray(iDataFile, "dense", quick_molspec%nbasis, quick_molspec%nbasis, 1, quick_qm_struct%dense, fail)
+              if (quick_method%UNRST) then
+                call wchk_darray(iDataFile, "denseb", quick_molspec%nbasis, quick_molspec%nbasis, 1, quick_qm_struct%denseb, fail)
+              end if
+            end if
             close(iDataFile)
 #endif
           endif 
