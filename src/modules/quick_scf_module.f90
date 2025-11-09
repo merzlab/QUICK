@@ -99,22 +99,26 @@ contains
   end subroutine deallocate_quick_scf
 
 
+  !-------------------------------------------------------
+  ! this subroutine is to do scf job for restricted system
+  !-------------------------------------------------------
   ! Ed Brothers. November 27, 2001
   ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
   subroutine scf(ierr)
-     !-------------------------------------------------------
-     ! this subroutine is to do scf job for restricted system
-     !-------------------------------------------------------
      use allmod
 #if defined(RESTART_HDF5)
      use quick_restart_module, only: write_hdf5_double_2n, read_hdf5_int, read_hdf5_double_2n
 #endif
+
      implicit none
+
+     integer, intent(inout) :: ierr
   
      logical :: done
-     integer, intent(inout) :: ierr
      integer :: jscf
-     done=.false.
+     integer :: fail
+
+     done = .false.
 
      if (quick_method%readden) then
        nbasis = quick_molspec%nbasis
@@ -157,8 +161,8 @@ contains
      ! if not direct SCF, generate 2e int file
      ! if (quick_method%nodirect) call aoint
   
-     if (quick_method%diisscf .and. .not. quick_method%divcon) call electdiis(jscf,ierr)       ! normal scf
-  !   if (quick_method%diisscf .and. quick_method%divcon) call electdiisdc(jscf,PRMS)     ! div & con scf
+     if (quick_method%diisscf .and. .not. quick_method%divcon) call electdiis(jscf,ierr)  ! normal scf
+!     if (quick_method%diisscf .and. quick_method%divcon) call electdiisdc(jscf,PRMS)     ! div & con scf
   
      jscf=jscf+1
 
@@ -206,8 +210,6 @@ contains
 #endif
 
      implicit none
- 
-     integer :: fail
  
      ! variable inputed to return
      integer :: jscf                ! scf iteration

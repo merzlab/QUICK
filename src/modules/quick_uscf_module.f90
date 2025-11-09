@@ -61,23 +61,27 @@ contains
 
   end subroutine deallocate_quick_uscf
 
+  !-------------------------------------------------------
+  ! this subroutine is to do scf job for restricted system
+  !-------------------------------------------------------
   ! Ed Brothers. November 27, 2001
   ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
   subroutine uscf(ierr)
-     !-------------------------------------------------------
-     ! this subroutine is to do scf job for restricted system
-     !-------------------------------------------------------
      use allmod
      use quick_molden_module, only: quick_molden, exportMO, exportSCF
 #if defined(RESTART_HDF5)
      use quick_restart_module, only: write_hdf5_double_2n, read_hdf5_int, read_hdf5_double_2n
 #endif
+
      implicit none
+
+     integer, intent(inout) :: ierr
   
      logical :: done
-     integer, intent(inout) :: ierr
      integer :: jscf
-     done=.false.
+     integer :: fail
+
+     done = .false.
   
      !-----------------------------------------------------------------
      ! The purpose of this subroutine is to perform scf cycles.  At this
@@ -183,8 +187,6 @@ contains
 #endif
 
      implicit none
- 
-     integer :: fail
  
      ! variable inputed to return
      integer :: jscf                ! scf iteration
