@@ -96,7 +96,6 @@ Please install one and try again, or set MPI_${LANG}_INCLUDE_PATH and MPI_${LANG
 	
 		
 		# figure out if it's an object library, and if so, use mpi_object_library()		
-  use quick_mpi_module, only: quick_set_comm, quick_comm
 		get_property(TARGET_TYPE TARGET ${TARGET} PROPERTY TYPE)
 		
 		if("${TARGET_TYPE}" STREQUAL "OBJECT_LIBRARY")
