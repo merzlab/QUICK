@@ -26,7 +26,7 @@ subroutine gradient(ierr)
    use allmod
 #ifdef MPIV
    use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+   use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
    implicit double precision(a-h,o-z)
 
@@ -117,7 +117,7 @@ subroutine scf_gradient
    use quick_grad_cshell_module
 #ifdef MPIV
    use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+   use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
    implicit double precision(a-h,o-z)
 
@@ -384,7 +384,6 @@ subroutine get_oneen_grad
   use allmod
 #ifdef MPIV
    use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
   implicit none
   integer :: Iatm, Imomentum, IIsh, JJsh, i, j, nshell_mpi
@@ -490,7 +489,7 @@ subroutine get_kinetic_grad
    use allmod
 #ifdef MPIV
    use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+   use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
    implicit double precision(a-h,o-z)
 
@@ -609,7 +608,7 @@ subroutine get_electron_replusion_grad
    use quick_cutoff_module, only: cshell_dnscreen
 #ifdef MPIV
    use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+   use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
    implicit double precision(a-h,o-z)
 
@@ -748,7 +747,7 @@ subroutine get_xc_grad
    use xc_f90_lib_m
 #ifdef MPIV
    use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+   use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
    implicit double precision(a-h,o-z)
 

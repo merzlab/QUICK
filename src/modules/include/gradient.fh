@@ -85,7 +85,6 @@ contains
      use quick_lri_grad_module
 #ifdef MPIV
      use mpi
-     use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
      implicit double precision(a-h,o-z)
   
@@ -525,7 +524,6 @@ contains
 #endif
 #ifdef MPIV
      use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
     implicit none
     integer :: Iatm, Imomentum, IIsh, JJsh, i, j, nshell_mpi
@@ -692,7 +690,7 @@ contains
 #endif
 #ifdef MPIV
      use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+     use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
      implicit double precision(a-h,o-z)
   
@@ -840,7 +838,7 @@ contains
 #endif
 #ifdef MPIV
      use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+     use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
      implicit double precision(a-h,o-z)
   
@@ -994,7 +992,6 @@ contains
      use xc_f90_lib_m
 #ifdef MPIV 
      use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
      implicit none
   

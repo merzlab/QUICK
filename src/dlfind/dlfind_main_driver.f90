@@ -168,7 +168,7 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
 
   nz         = quick_molspec%natom
   nmass      = quick_molspec%natom
-  ncons      = quick_molspec%nconsatom
+  ncons      = 0
   nconn      = 0
   nzero      = 0 
   nframe     = 0
@@ -181,10 +181,8 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
         coords((iat-1)*3 + jat) = xyz(jat, iat)
     enddo 
   enddo
-
-  spec(1:nz) = quick_molspec%dlfind_freezeatm(:)
+ 
   spec(1+nz:nz+nz) = quick_molspec%iattype(:)
-  spec(nz+nz+1:nz+nz+(5*ncons)) = reshape(quick_molspec%dlfind_constr,(/5*ncons/))
 
   do iat = 1, quick_molspec%natom
     coords2(iat) = EMASS(quick_molspec%iattype(iat))
@@ -311,9 +309,7 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   use quick_method_module,only: quick_method
   use quick_exception_module, only: RaiseException 
 #ifdef MPIV
-  use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
-  use quick_mpi_module, only: master, bMPI, mpierror
+  use quick_mpi_module, only: master
 #endif
   !use vib_pot
   implicit none
@@ -341,11 +337,6 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
 ! **********************************************************************
 !  call test_update
   status=1
-
-#ifdef MPIV
-     ! we now have new geometry, and let other nodes know the new geometry
-     if (bMPI)call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,quick_comm,mpierror)
-#endif
 
 #if defined(GPU) || defined(MPIV_GPU)
   call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &                  

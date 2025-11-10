@@ -12,7 +12,7 @@ subroutine optimize(ierr)
    use quick_grad_cshell_module, only: scf_gradient
 #ifdef MPIV
    use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+   use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
    implicit double precision(a-h,o-z)
 

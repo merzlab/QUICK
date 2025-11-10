@@ -473,7 +473,6 @@ contains
       use quick_method_module, only: quick_method
       use quick_molspec_module, only: quick_molspec
       use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
       implicit none
       type (quick_qm_struct_type) self
       integer natom

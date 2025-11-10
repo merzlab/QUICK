@@ -12,7 +12,6 @@
 
 ! Program for testing QUICK library API
   program test_quick_api
-
     use test_quick_api_module, only : loadTestData, printQuickOutput
     use quick_api_module, only : setQuickJob, getQuickEnergy, getQuickEnergyGradients, deleteQuickJob 
     use quick_exception_module
@@ -22,10 +21,12 @@
 #endif
 #ifdef MPIV
     use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+    use quick_mpi_module, only: quick_set_comm, quick_comm
+    ! use qmmm_module, only: qmmm_nml, qmmm_mpi
 #endif
 
     implicit none
+#include "../../amber/AmberTools/src/sander/parallel.h"
 
     ! i, j are some integers useful for loops, frames is the number of
     ! test snapshots (md steps), ierr is for error handling
@@ -107,7 +108,7 @@
 
     ! initialize QUICK, required only once. Assumes keywords for
     ! the QUICK job are provided through a template file.  
-    call setQuickJob(fname, keywd, natoms, atomic_numbers, reuse_dmx, ierr)
+    call setQuickJob(fname, keywd, natoms, atomic_numbers, reuse_dmx, .false., .false., 100, ierr)
     CHECK_ERROR(ierr)
 
     do i=1, frames

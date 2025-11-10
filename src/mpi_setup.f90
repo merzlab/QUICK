@@ -8,7 +8,7 @@
     subroutine initialize_quick_mpi()
     use allmod
     use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+    use quick_mpi_module, only: quick_set_comm, quick_comm
     implicit none
     logical mpi_initialized_flag
 
@@ -47,7 +47,6 @@
     subroutine mpi_setup_job(ierr)
     use allmod
     use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
     implicit none
     integer, intent(inout) :: ierr   
     
@@ -73,7 +72,7 @@
     use allmod
     use quick_gridpoints_module
     use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+    use quick_mpi_module, only: quick_set_comm, quick_comm
     implicit none
 
     integer :: i    
@@ -101,7 +100,7 @@
     use allmod
     use quick_gridpoints_module
     use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+    use quick_mpi_module, only: quick_set_comm, quick_comm
     implicit none
     integer, intent(inout) :: ierr
 
@@ -126,7 +125,7 @@
       use quick_size_module, only: MAXRADGRID
       use quick_mpi_module, only: mpierror
       use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+      use quick_mpi_module, only: quick_set_comm, quick_comm
       implicit none
 
       call MPI_BCAST(RGRID,MAXRADGRID,mpi_double_precision,0,quick_comm,mpierror)
@@ -141,7 +140,7 @@
     subroutine mpi_setup_basis
     use allmod
     use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+    use quick_mpi_module, only: quick_set_comm, quick_comm
     implicit none
     
     integer :: i, j
@@ -212,7 +211,7 @@
     subroutine mpi_setup_inidivcon(natomt)
     use allmod
     use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+    use quick_mpi_module, only: quick_set_comm, quick_comm
     implicit none
     integer natomt,i,k1,k2,j,k,tempinteger,tempinteger2
     
@@ -302,7 +301,7 @@
     subroutine MPI_setup_hfoperator()
     use allmod
     use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+    use quick_mpi_module, only: quick_set_comm, quick_comm
     implicit none
     integer i,k1,k2,j,k,tempinteger,tempinteger2
     integer temp1d(nbasis)
@@ -371,7 +370,7 @@
 
       use quick_mpi_module
       use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+      use quick_mpi_module, only: quick_set_comm, quick_comm
       implicit none
       integer :: i, IERROR
 
@@ -415,7 +414,7 @@
    use allmod
    use quick_gridpoints_module
    use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+   use quick_mpi_module, only: quick_set_comm, quick_comm
    implicit double precision(a-h,o-z)
 
       call MPI_BARRIER(quick_comm,mpierror)
@@ -437,7 +436,7 @@
    use allmod
    use quick_gridpoints_module
    use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+   use quick_mpi_module, only: quick_set_comm, quick_comm
    implicit double precision(a-h,o-z)
 
    integer, dimension(1:mpisize) :: itotgridspn
@@ -518,7 +517,6 @@
    use allmod
    use quick_gridpoints_module
    use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
    implicit double precision(a-h,o-z)
 
    integer, dimension(1:mpisize) :: itotgridspn
@@ -590,7 +588,6 @@ call MPI_BARRIER(quick_comm,mpierror)
    use allmod
    use quick_gridpoints_module
    use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
    implicit double precision(a-h,o-z)
 
    call MPI_BARRIER(quick_comm,mpierror)

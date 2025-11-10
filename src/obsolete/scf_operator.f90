@@ -31,7 +31,7 @@ subroutine scf_operator(deltaO)
    use quick_eri_cshell_module, only: getCshellEri, getCshellEriEnergy 
 #ifdef MPIV
    use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+   use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
 
    implicit none
@@ -270,7 +270,7 @@ subroutine get_xc
    use xc_f90_lib_m
 #ifdef MPIV
    use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+   use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
    implicit none
 

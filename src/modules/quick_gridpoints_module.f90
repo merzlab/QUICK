@@ -159,8 +159,6 @@ module quick_gridpoints_module
 
     
     call alloc_xcg_tmp_variables(xcg_tmp)
-    xcg_tmp%sswt = 0.0d0
-    xcg_tmp%weight = 0.0d0
 
 #ifdef MPIV
    if(master) then
@@ -647,7 +645,6 @@ module quick_gridpoints_module
       use allmod
 #ifdef MPIV
       use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
       implicit double precision(a-h,o-z)
    

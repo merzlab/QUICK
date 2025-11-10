@@ -37,7 +37,6 @@ void gpack_initialize_()
     if (comm == MPI_COMM_NULL) return;
     MPI_Comm_rank(comm, &mpirank);
     MPI_Comm_size(comm, &mpisize);
-
 #endif
 
 // setup debug file if necessary
@@ -408,7 +407,6 @@ void pack_grid_pts(){
 
     MPI_Comm comm = quick_get_comm_c();
     MPI_Barrier(comm);
-
 #  endif
 
     cpu_get_pfbased_basis_function_lists_new_imp(&octree);
@@ -845,7 +843,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
         weight= (double*) malloc(init_arr_size * sizeof(double));
 
 #if defined(MPIV) && !defined(MPIV_GPU)
-        MPI_Comm comm = quick_get_comm_c();
+	MPI_Comm comm = quick_get_comm_c();
         MPI_Bcast(&leaf_count, 1, MPI_INT, 0, comm); 
 #endif
 	tmp_gpweight = (unsigned char*) malloc(init_arr_size * sizeof(unsigned char));
@@ -1355,6 +1353,7 @@ void setup_gpack_mpi_2(unsigned int nbins, double *gridx, double *gridy,
 
         mpi_binlst = tmp_mpi_binlst;
 
+	MPI_Comm comm = quick_get_comm_c();
 	MPI_Bcast(mpi_binlst, mpisize+1, MPI_INT, 0, comm);
 	MPI_Bcast(bs_tracker, nbins+1, MPI_INT, 0, comm);
 	MPI_Bcast(gridx, gps->arr_size, MPI_DOUBLE, 0, comm);
@@ -1382,6 +1381,7 @@ void get_slave_primf_contraf_lists(unsigned int nbins, unsigned char *gpweight,
 
         if(mpirank != 0){
 
+		        MPI_Comm comm = quick_get_comm_c();
                         MPI_Send(gpweight, gps->arr_size, MPI_UNSIGNED_CHAR, 0, mpirank+600, comm);
                         MPI_Send(cfweight, nbins*gps->nbasis, MPI_INT, 0, mpirank+700, comm);
                         MPI_Send(pfweight, nbins*gps->nbasis*gps->maxcontract, MPI_INT, 0, mpirank+800, comm);
@@ -1392,6 +1392,7 @@ void get_slave_primf_contraf_lists(unsigned int nbins, unsigned char *gpweight,
 
 		for(unsigned int i=1; i< mpisize; i++){
 
+			MPI_Comm comm = quick_get_comm_c();
 			MPI_Recv(tmp_gpweight, gps->arr_size, MPI_UNSIGNED_CHAR, i, i+600, comm, &status);
 			MPI_Recv(tmp_cfweight, nbins*gps->nbasis, MPI_INT, i, i+700, comm, &status);
 			MPI_Recv(tmp_pfweight, nbins*gps->nbasis*gps->maxcontract, MPI_INT, i, i+800, comm, &status);

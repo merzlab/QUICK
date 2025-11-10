@@ -39,7 +39,7 @@ contains
      use quick_oei_module, only: get1eEnergy, get1e
 #ifdef MPIV
      use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+     use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
   
      implicit none
@@ -286,7 +286,7 @@ contains
      use xc_f90_lib_m
 #ifdef MPIV
      use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+     use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
      implicit none
   

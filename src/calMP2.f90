@@ -504,7 +504,7 @@ subroutine MPI_calmp2
 
      !---------------- MPI/ MASTER -------------------------------
 
-     call MPI_Reduce(ntemp, total_ntemp, 1, MPI_INT, MPI_SUM, 0, quick_comm,IERROR);
+     call MPI_Reduce(ntemp, total_ntemp, 1, MPI_INT, MPI_SUM, 0, quick_comm, IERROR);
      if (master) then
         !write (ioutfile,'("EFFECT INTEGRALS    =",i8)') total_ntemp
 

@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/liz7/isilon/Zhen/QUICK/src/gpu/xc_redistribute.cpp
+iostream
+-
+cmath
+-
+cstring
+-
+mpi.h
+-
+xc_redistribute.h
+/home/liz7/isilon/Zhen/QUICK/src/gpu/xc_redistribute.h
+../modules/quick_comm_store.h
+/home/liz7/isilon/Zhen/QUICK/src/modules/quick_comm_store.h
+
+/home/liz7/isilon/Zhen/QUICK/src/gpu/xc_redistribute.h
+
+/home/liz7/isilon/Zhen/QUICK/src/modules/quick_comm_store.h
+mpi.h
+-
+

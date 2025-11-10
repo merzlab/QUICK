@@ -22,7 +22,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
 
 #ifdef MPIV
    use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+   use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
 
    !

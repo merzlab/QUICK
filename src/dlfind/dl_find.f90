@@ -88,8 +88,6 @@ subroutine dl_find (ierr2, master &
   integer   ,intent(inout) :: ierr2
   integer   ,intent(in)   :: master ! 1 if this task is the master of
                                      ! a parallel run, 0 otherwise
-  integer      :: ncons
-  integer      :: nconn
 #ifdef GAMESS
   real(rk) :: core(*) ! GAMESS memory, not used in DL-FIND
 #endif
@@ -99,12 +97,7 @@ subroutine dl_find (ierr2, master &
   ! Flag for dlf_fail - needs to be set before anything else
   glob%cleanup = 0
 
-  
-  ! nspec= nat + nz + 5*ncons + 2*nconn + nat
-
-  ncons = quick_molspec%nconsatom
-  nconn = 0
-  nspec = 3*quick_molspec%natom + 5*ncons + 2*nconn
+  nspec = 3*quick_molspec%natom
   nvarin = 3*quick_molspec%natom
   nvarin2 = quick_molspec%natom
 
@@ -354,11 +347,6 @@ subroutine dlf_run(ierr2 &
   use quick_method_module,only: quick_method
   use quick_files_module, only: write_molden
   use quick_molden_module, only: quick_molden
-#ifdef MPIV
-  use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
-  use quick_mpi_module, only: bMPI, mpierror
-#endif
   implicit none
 #ifdef GAMESS
   real(rk) :: core(*) ! GAMESS memory, not used in DL-FIND
@@ -897,14 +885,7 @@ subroutine dlf_run(ierr2 &
       if(.not.testconv) then
          if (glob%imicroiter < 2) then
             ! Standard convergence test
-#ifdef MPIV
-    call MPI_BARRIER(quick_comm,mpierror)
-#endif
             call convergence_test(stat%ccycle,.true.,tconv)
-#ifdef MPIV
-    call MPI_BARRIER(quick_comm,mpierror)
-    if (bMPI)call MPI_BCAST(tconv,1,mpi_logical,0,quick_comm,mpierror)
-#endif
             if (tconv) then
               if (printl > 0) then
                 write(stdout,'(/" GEOMETRY OPTIMIZED AFTER",i5," CYCLES")') stat%ccycle

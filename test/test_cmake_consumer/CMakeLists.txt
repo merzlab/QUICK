@@ -13,6 +13,12 @@ find_package(QUICK CONFIG REQUIRED)
 add_executable(test-api quick_api_test.F90)
 target_link_libraries(test-api QUICK::libquick)
 
-add_executable(test-api.mpi quick_api_test.F90)
-target_compile_definitions(test-api.mpi PRIVATE MPIV)
+add_executable(test-api.mpi quick_api_test.F90
+	../../src/quick_api_test.f90
+        ../../src/module/test_quick_api_module.f90
+        ../../src/module/quick_api_module.f90
+        ../../src/module/quick_mpi_module.f90
+        ../../src/mpi_setup.f90
+	)
+target_compile_definitions(test-api.mpi PRIVATE MPIV MPIV_GPU)
 target_link_libraries(test-api.mpi QUICK::libquick_mpi)

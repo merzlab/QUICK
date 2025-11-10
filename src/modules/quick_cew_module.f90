@@ -130,7 +130,6 @@ contains
 #ifdef MPIV
     use quick_mpi_module
     use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif    
 
     implicit none
@@ -412,7 +411,6 @@ contains
    use quick_molspec_module, only : quick_molspec
 #ifdef MPIV
     use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
    implicit none
 
@@ -903,7 +901,6 @@ contains
    use quick_molspec_module, only : quick_molspec
 #ifdef MPIV
    use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
    
    implicit double precision(a-h,o-z)

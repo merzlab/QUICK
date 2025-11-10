@@ -44,7 +44,6 @@
     use quick_molsurface_module, only: generate_MKS_surfaces
 #ifdef MPIV
     use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
     use quick_basis_module, only: quick_basis, aexp, cutprim, dcoeff, itype
@@ -208,9 +207,7 @@
 
         !call generate_MKS_surfaces()
 
-        if (quick_method%esp_charge .or. quick_method%ext_grid) then
-          call compute_oeprop()
-        endif
+        call compute_oeprop()
 
         if(master) then
           if(quick_method%writexyz)then
@@ -261,9 +258,7 @@
         endif
 
         ! One electron properties (ESP, EField) 
-        if (quick_method%esp_charge .or. quick_method%ext_grid) then
-            call compute_oeprop()
-        endif
+        call compute_oeprop()
 
     endif
 

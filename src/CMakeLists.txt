@@ -19,7 +19,7 @@ endif()
 # --------------------------------------------------------------------
 
 set(QUICK_MODULES_SOURCES
-	quick_mpi_module.f90 quick_constants_module.f90 quick_method_module.f90
+	quick_mpi_module.f90 quick_constants_module.f90 quick_method_module.f90 quick_io_module.f90
 	quick_molspec_module.f90 quick_gaussian_class_module.f90 quick_size_module.f90
 	quick_basis_module.f90 quick_calculated_module.f90 quick_magma_module.f90 quick_overlap_module.f90
 	quick_divcon_module.f90 quick_ecp_module.f90 quick_electrondensity_module.f90
@@ -152,12 +152,18 @@ set_target_properties(libquick PROPERTIES OUTPUT_NAME quick)
 if(MPI)
 	make_mpi_version(libquick libquick_mpi LANGUAGES Fortran)
 
+	target_compile_definitions(libquick_mpi PRIVATE MPIV)
+	set_target_properties(libquick_mpi PROPERTIES OUTPUT_NAME quick_mpi)
+	
 	target_sources(libquick_mpi PRIVATE modules/quick_comm_store.c)
 	target_link_libraries(libquick_mpi PUBLIC MPI::MPI_Fortran)
 
 	# change link libraries and mod dirs for MPI
 	remove_link_libraries(libquick_mpi octree)
 	target_link_libraries(libquick_mpi PRIVATE octree_mpi)
+
+	#target_link_libraries(octree_mpi PRIVATE libquick_mpi)
+
 	if(INSIDE_AMBER)
 		remove_link_libraries(libquick_mpi libcew)
 		target_link_libraries(libquick_mpi PRIVATE libcew_mpi)
@@ -301,16 +307,18 @@ endif()
 # --------------------------------------------------------------------
 
 add_executable(quick ${MAIN_SOURCES})
-set_target_properties(quick PROPERTIES LINKER_LANGUAGE Fortran)
 target_compile_options(quick PRIVATE 
-	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>")
+	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:C>:${OPT_CFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:CXX>:${OPT_CXXFLAGS}>")
 config_module_dirs(quick quick/serial libxc/serial)
 target_link_libraries(quick libquick)
 
 add_executable(test-api ${TEST_API_SOURCES})
-set_target_properties(test-api PROPERTIES LINKER_LANGUAGE Fortran)
 target_compile_options(test-api PRIVATE
-	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>")
+	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:C>:${OPT_CFLAGS}>"
+	"$<$<COMPILE_LANGUAGE:CXX>:${OPT_CXXFLAGS}>")
 config_module_dirs(test-api quick/serial libxc/serial)
 target_link_libraries(test-api libquick)
 

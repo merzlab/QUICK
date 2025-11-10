@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/liz7/isilon/Zhen/QUICK/src/subs/time.cpp
+stdio.h
+-
+sys/time.h
+-
+time.hpp
+/home/liz7/isilon/Zhen/QUICK/src/subs/time.hpp
+
+/home/liz7/isilon/Zhen/QUICK/src/subs/time.hpp
+

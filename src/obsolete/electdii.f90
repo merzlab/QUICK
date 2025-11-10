@@ -544,7 +544,7 @@ end subroutine electdiis
     subroutine electdiisdc(jscf,PRMS)
       use allmod
       use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+      use quick_mpi_module, only: quick_set_comm, quick_comm
       implicit double precision(a-h,o-z)
 
       logical :: diisdone

@@ -1,0 +1,38 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/liz7/isilon/Zhen/QUICK/src/gpu/cuda/cusolver/cusolver_fortran_common.h
+
+/home/liz7/isilon/Zhen/QUICK/src/gpu/cuda/cusolver/quick_cusolver.c
+ctype.h
+-
+stdio.h
+-
+string.h
+-
+stddef.h
+-
+stdlib.h
+-
+stdint.h
+-
+assert.h
+-
+cublas_v2.h
+-
+cuda_runtime.h
+-
+cusolverDn.h
+-
+quick_cusolver.h
+/home/liz7/isilon/Zhen/QUICK/src/gpu/cuda/cusolver/quick_cusolver.h
+cusolver_fortran_common.h
+/home/liz7/isilon/Zhen/QUICK/src/gpu/cuda/cusolver/cusolver_fortran_common.h
+
+/home/liz7/isilon/Zhen/QUICK/src/gpu/cuda/cusolver/quick_cusolver.h
+

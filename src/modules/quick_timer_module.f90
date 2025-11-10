@@ -130,7 +130,7 @@ module quick_timer_module
         use quick_method_module
 #ifdef MPIV
         use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+        use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
         implicit none
         integer i,IERROR,io
@@ -475,7 +475,7 @@ module quick_timer_module
 
         use quick_mpi_module
         use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+        use quick_mpi_module, only: quick_set_comm, quick_comm
         implicit none
 
         ! declaim mpi timer
@@ -494,7 +494,6 @@ module quick_timer_module
     subroutine get_mgpu_time
         use quick_mpi_module
         use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
         implicit none
         integer :: IERROR
         double precision :: tsum_2elb, tsum_xclb, tsum_xcrb, tsum_xcpg

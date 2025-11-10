@@ -174,7 +174,7 @@ contains
 #endif
 #if defined(MPIV)
      use mpi
-  use quick_mpi_module, only: quick_set_comm, quick_comm
+     use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
 
      implicit none

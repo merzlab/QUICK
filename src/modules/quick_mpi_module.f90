@@ -21,11 +21,12 @@ module quick_mpi_module
 !  AUTHOR      : Yipu Miao
 !------------------------------------------------------------------------    
 
+!ZL2026
 #ifdef MPIV
     use, intrinsic :: iso_c_binding
     use mpi
     public :: quick_comm, quick_set_comm, is_master
-#include "../../../sander/parallel.h"
+#include "../../../amber/AmberTools/src/sander/parallel.h"
     integer :: quick_comm = MPI_COMM_WORLD  ! default
     logical, save :: is_master = .true.
 
@@ -75,7 +76,7 @@ module quick_mpi_module
     end subroutine quick_set_comm
 
 #endif 
- 
+
     !----------------
     ! check mpi setup
     !----------------
