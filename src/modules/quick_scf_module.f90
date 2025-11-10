@@ -128,7 +128,6 @@ contains
          call read_hdf5_double_2n('dense', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%dense)
 #else
          open(unit=iDataFile, file=dataFileName, status='OLD', form='UNFORMATTED')
-         rewind(iDataFile)
          call rchk_int(iDataFile, "nbasis", nbasis, fail)
          call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
          close(iDataFile)

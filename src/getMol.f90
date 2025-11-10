@@ -37,15 +37,13 @@ subroutine getMol(ierr)
       call PrtAct(iOutfile,"Begin Reading Molecular Information")
 
       ! read xyz coordinates from the .in file 
-      if(.not. isTemplate) then
-        if(quick_method%read_coord)then
+      if (.not. isTemplate) then
+        if (quick_method%read_coord) then
 #if defined(RESTART_HDF5)
           call read_hdf5_double_2n('xyz', (/1,1/), (/3,natom/), xyz)
-          call read_hdf5_int_n('iattype', 1, natom, quick_molspec%iattype)
 #else
-          open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
+          open(unit=iDataFile, file=dataFileName, status='OLD', form='UNFORMATTED')
           call rchk_darray(iDataFile, "xyz", 3, natom, 1, xyz, fail)
-          call rchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
           close(iDataFile)
 #endif
           quick_molspec%xyz => xyz
