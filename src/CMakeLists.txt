@@ -140,7 +140,8 @@ if(HDF5)
 	target_include_directories(libquick PRIVATE 
 		"$<$<COMPILE_LANGUAGE:Fortran>:${HDF5_Fortran_INCLUDE_DIRS}>")
 	config_module_dirs(libquick quick/serial libxc/serial ${HDF5_Fortran_INCLUDE_DIRS})
-	target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS} ${HDF5_LIBRARIES})
+	target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS}
+		${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
 else()
 	config_module_dirs(libquick quick/serial libxc/serial)
 	target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS})

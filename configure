@@ -71,7 +71,8 @@ echo  "
       --mkl          Use matrix diagonalizer from MKL. MKLROOT environment
                      variable must be set with the correct mkl installation path.
                      This path must contain lib and include directories.
-      --hdf5         Enable restart file support. This requires an HDF5 library be installed.
+      --hdf5         Enable restart file support. This requires an HDF5 library be installed
+                     with the HL and Fortran bindings.
                      HDF5_FORTRAN_MOD_DIR environment variable must be set with the correct
 		     HDF5 Fortran module installation path
 		     (e.g., /usr/lib64/gfortran/modules for GNU).
@@ -1449,7 +1450,7 @@ for buildtype in $buildtypes; do
   if [ "$hdf5" = 'yes' ]; then
     echo "Fortran and HL bindings for HDF5 will be used for restart file support in $buildtype version."
     fort_flags="$fort_flags -DRESTART_HDF5 -I$HDF5_FORTRAN_MOD_DIR"
-    ldflags="$ldflags -lhdf5_fortran -lhdf5"
+    ldflags="$ldflags -lhdf5hl_fortran -lhdf5_hl -lhdf5_fortran -lhdf5"
     fort_flags_hdf5="-DRESTART_HDF5 -I$HDF5_FORTRAN_MOD_DIR"
   fi
 
