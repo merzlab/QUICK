@@ -28,6 +28,7 @@ jobs:
             compiler-install: 'gcc-10 g++-10 gfortran-10'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
             hdf5-install: 'libhdf5-dev'
+            hdf5-restart-support: TRUE
           - os: 'ubuntu-22.04'
             compiler-type: 'gnu'
             mpi-type: 'OpenMPI'
@@ -38,6 +39,7 @@ jobs:
             compiler-install: 'gcc-11 g++-11 gfortran-11'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
             hdf5-install: 'libhdf5-dev'
+            hdf5-restart-support: TRUE
           - os: 'ubuntu-24.04'
             compiler-type: 'gnu'
             mpi-type: 'OpenMPI'
@@ -47,7 +49,8 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-12 g++-12 gfortran-12'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
-            hdf5-install: 'libhdf5-dev'
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04'
             compiler-type: 'gnu'
             mpi-type: 'OpenMPI'
@@ -57,7 +60,8 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-13 g++-13 gfortran-13'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
-            hdf5-install: 'libhdf5-dev'
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04'
             compiler-type: 'gnu'
             mpi-type: 'OpenMPI'
@@ -67,7 +71,8 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
-            hdf5-install: 'libhdf5-dev'
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04'
             compiler-type: 'gnu'
             mpi-type: 'MPICH'
@@ -77,7 +82,8 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
             mpi-install: 'mpich libmpich-dev'
-            hdf5-install: 'libhdf5-dev'
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'gnu'
             mpi-type: 'OpenMPI'
@@ -87,7 +93,8 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
-            hdf5-install: 'libhdf5-dev'
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'gnu'
             mpi-type: 'MPICH'
@@ -97,7 +104,8 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
             mpi-install: 'mpich libmpich-dev'
-            hdf5-install: 'libhdf5-dev'
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - ${{ matrix.mpi-type }} - Legacy - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
@@ -163,8 +171,13 @@ jobs:
           fi
       - name: 'Configure MPI Version'
         run: |
-          ./configure --mpi --hdf5 --enablef --shared --verbose --prefix $PWD/install \
-            ${{ matrix.compiler-type }}
+          if [ ${{ matrix.hdf5-restart-support }} == TRUE ]; then
+            ./configure --mpi --hdf5 --enablef --shared --verbose --prefix $PWD/install \
+              ${{ matrix.compiler-type }}
+          else
+            ./configure --mpi --enablef --shared --verbose --prefix $PWD/install \
+              ${{ matrix.compiler-type }}
+          fi
       - name: 'Build and Install MPI Version Using 2 Jobs'
         run: |
           make -j2 all install
@@ -225,8 +238,8 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-12 g++-12 gfortran-12'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
-            hdf5-install: 'libhdf5-dev'
-            hdf5-restart-support: TRUE
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04'
             compiler-type: 'GNU'
             mpi-type: 'OpenMPI'
@@ -236,8 +249,8 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-13 g++-13 gfortran-13'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
-            hdf5-install: 'libhdf5-dev'
-            hdf5-restart-support: TRUE
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04'
             compiler-type: 'GNU'
             mpi-type: 'OpenMPI'
@@ -247,8 +260,8 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
-            hdf5-install: 'libhdf5-dev'
-            hdf5-restart-support: TRUE
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04'
             compiler-type: 'GNU'
             mpi-type: 'MPICH'
@@ -258,8 +271,8 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
             mpi-install: 'mpich libmpich-dev'
-            hdf5-install: 'libhdf5-dev'
-            hdf5-restart-support: TRUE
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04'
             compiler-type: 'CLANG'
             mpi-type: 'OpenMPI'
@@ -269,8 +282,8 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'clang-17 gfortran'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
-            hdf5-install: 'libhdf5-dev'
-            hdf5-restart-support: TRUE
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04'
             compiler-type: 'CLANG'
             mpi-type: 'OpenMPI'
@@ -280,8 +293,8 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'clang-18 gfortran'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
-            hdf5-install: 'libhdf5-dev'
-            hdf5-restart-support: TRUE
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04'
             compiler-type: 'INTELLLVM'
             mpi-type: 'Intel-MPI'
@@ -324,8 +337,8 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
-            hdf5-install: 'libhdf5-dev'
-            hdf5-restart-support: TRUE
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'GNU'
             mpi-type: 'MPICH'
@@ -335,8 +348,8 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'gcc-14 g++-14 gfortran-14'
             mpi-install: 'mpich libmpich-dev'
-            hdf5-install: 'libhdf5-dev'
-            hdf5-restart-support: TRUE
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'CLANG'
             mpi-type: 'OpenMPI'
@@ -346,8 +359,8 @@ jobs:
             fortran-compiler: 'gfortran'
             compiler-install: 'clang-18 gfortran'
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
-            hdf5-install: 'libhdf5-dev'
-            hdf5-restart-support: TRUE
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
           - os: 'macos-14'
             compiler-type: 'GNU'
             mpi-type: 'OpenMPI'
