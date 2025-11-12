@@ -159,7 +159,9 @@ jobs:
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
-          echo "HDF5_FORTRAN_MOD_DIR=/usr/include/hdf5/serial" >> "$GITHUB_ENV"
+          if [ ${{ matrix.hdf5-restart-support }} == TRUE ]; then
+            echo "HDF5_FORTRAN_MOD_DIR=/usr/include/hdf5/serial" >> "$GITHUB_ENV"
+          fi
           if [[ ${{ matrix.mpi-type }} == 'OpenMPI' ]]; then
             echo "OMPI_CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
             echo "OMPI_CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
