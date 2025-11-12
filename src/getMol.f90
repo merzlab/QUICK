@@ -16,7 +16,7 @@ subroutine getMol(ierr)
    use quick_gridpoints_module
    use quick_exception_module
 #if defined(RESTART_HDF5)
-   use quick_restart_module, only: read_hdf5_int_n, read_hdf5_double_2n
+   use quick_restart_module, only: read_hdf5_double_2n
 #endif
 #ifdef MPIV
    use mpi

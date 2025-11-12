@@ -37,7 +37,7 @@
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
          exportMO, exportSCF, exportOPT
 #if defined(RESTART_HDF5)
-    use quick_restart_module, only: read_hdf5_int, write_hdf5_info, write_hdf5_int_n, write_hdf5_double_2n
+    use quick_restart_module, only: write_hdf5_info, write_hdf5_int_n, write_hdf5_double_2n
 #endif
     use quick_timer_module, only : timer_end, timer_cumer, timer_begin
     use quick_method_module, only : quick_method
