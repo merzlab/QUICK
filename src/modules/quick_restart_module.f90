@@ -34,10 +34,6 @@ module quick_restart_module
     module procedure read_int_n
   end interface read_hdf5_int_n
 
-  interface read_hdf5_int_2n
-    module procedure read_int_2n
-  end interface read_hdf5_int_2n
-
   interface write_hdf5_info
     module procedure write_info
   end interface write_hdf5_info
@@ -329,103 +325,6 @@ contains
     endif
 
   end subroutine read_int_n
-
-  subroutine read_int_2n(datasetname, ind, n, idata)
-    use HDF5
-    use quick_files_module, only: dataFileName
-
-    implicit none
-
-    character(len=*), intent(in) :: datasetname
-    integer, dimension(2), intent(in) :: ind
-    integer, dimension(2), intent(in) :: n
-    integer, dimension(n(1), n(2)), intent(out) :: idata
-
-    integer, parameter :: rank = 2
-    integer, dimension(:,:), allocatable :: ibuf
-    integer :: hdferr
-    integer(HID_T) :: file_id, dset, space_id, file_space ! Handles
-    integer(HSIZE_T), dimension(2) :: dims
-    integer(HSIZE_T), dimension(2) :: start, stride, countn, blockn
-
-    ! index at which the data is located
-    dims = n
-    start  = ind - 1
-    stride = [1, 1]
-    countn = [1, 1]
-    blockn = n
-
-    ! Initialize FORTRAN interface.
-    call h5open_f(hdferr)
-    if (hdferr /= 0) then
-      call PrtErr(OUTFILEHANDLE, 'Error initializing HDF5 Fortran interface (read_int_2n)')
-      call quick_exit(OUTFILEHANDLE, 1)
-    endif
-
-    ! Open file
-    call h5fopen_f(dataFileName, H5F_ACC_RDONLY_F, file_id, hdferr)
-    if (hdferr /= 0) then
-      call PrtErr(OUTFILEHANDLE, 'Failed to open HDF5 data file (read_int_2n)')
-      call quick_exit(OUTFILEHANDLE, 1)
-    endif
-
-    ! open dataset
-    call h5dopen_f(file_id, datasetname, dset, hdferr)
-    if (hdferr /= 0) then
-      call PrtErr(OUTFILEHANDLE, 'Failed to open HDF5 dataset (read_int_2n)')
-      call quick_exit(OUTFILEHANDLE, 1)
-    endif
-
-    ! Get the file_space
-    call h5dget_space_f(dset, file_space, hdferr)
-    call h5sselect_hyperslab_f(file_space, 0, start, stride, hdferr, countn, blockn)
-    if (hdferr /= 0) then
-      call PrtErr(OUTFILEHANDLE, 'Error getting space in the HDF5 dataset (read_int_2n)')
-      call quick_exit(OUTFILEHANDLE, 1)
-    endif
-
-    ! create a simple datapsace
-    call h5screate_simple_f(rank, dims, space_id, hdferr)
-    if (hdferr /= 0) then
-      call PrtErr(OUTFILEHANDLE, 'Error creating space in the HDF5 dataset (read_int_2n)')
-      call quick_exit(OUTFILEHANDLE, 1)
-    endif
-
-    ! Read the array in dataset "datasetname"
-    allocate(ibuf(n(1),n(2)))
-    call h5dread_f(dset, H5T_NATIVE_integer, ibuf, dims, hdferr, mem_space_id=space_id, file_space_id=file_space)
-    if (hdferr /= 0) then
-      call PrtErr(OUTFILEHANDLE, 'Error reading data from dataset (read_int_2n)')
-      call quick_exit(OUTFILEHANDLE, 1)
-    endif
-
-    ! The data in the buffer is transferred to return to the calling program
-    idata = ibuf
-
-    if(allocated(ibuf)) deallocate(ibuf)
-
-    ! Close dataspace
-    call h5sclose_f(space_id, hdferr)
-    if (hdferr /= 0) then
-      call PrtErr(OUTFILEHANDLE, 'Error closing HDF5 dataspace (read_int_2n)')
-      call quick_exit(OUTFILEHANDLE, 1)
-    endif
-
-    ! Close dataset
-    call h5dclose_f(dset, hdferr)
-    if (hdferr /= 0) then
-      call PrtErr(OUTFILEHANDLE, 'Error closing HDF5 dataset (read_int_2n)')
-      call quick_exit(OUTFILEHANDLE, 1)
-    endif
-
-    ! Close file and interface
-    call h5fclose_f(file_id, hdferr)
-    if (hdferr /= 0) then
-      call PrtErr(OUTFILEHANDLE, 'Error closing HDF5 interface (read_int_2n)')
-      call quick_exit(OUTFILEHANDLE, 1)
-    endif
-
-  end subroutine read_int_2n
 
   subroutine write_info(natom, nbasis)
     use HDF5
