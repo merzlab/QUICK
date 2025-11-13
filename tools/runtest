@@ -447,18 +447,22 @@ run_test()
 {
   # Run the test case
   rm -f "$1.tmp" "$1_read.tmp"
+  qexe2_ret=0
   if [ $buildtype = 'mpi' ] || [ $buildtype = 'cudampi' ] || [ $buildtype = 'hipmpi' ] && [ $ismpirun = 'yes' ]; then
     eval "$DO_PARALLEL $qbindir/$qexe $1.in" >"$1.tmp" 2>&1
+    qexe_ret="$?"
     if [ `echo "$1" | grep '^rw_' | wc -l` -eq 1 ]; then
       eval "$DO_PARALLEL $qbindir/$qexe $1_read.in" >"$1_read.tmp" 2>&1
+      qexe2_ret="$?"
     fi
   else
     "$qbindir/$qexe" "$1.in" >"$1.tmp" 2>&1
+    qexe_ret="$?"
     if [ `echo "$1" | grep '^rw_' | wc -l` -eq 1 ]; then
       "$qbindir/$qexe" "$1_read.in" >"$1_read.tmp" 2>&1
+      qexe2_ret="$?"
     fi
   fi
-  qexe_ret="$?"
 
   lock_file "$6"
   echo "Test $3 of $4" >> "$6"
@@ -486,8 +490,21 @@ run_test()
     lock_file "$5"
     echo "Running test $3 of $4" | tee -a "$5"
     echo "$2" | tee -a "$5"
+    echo "Error: $qexe execution failed." | tee -a "$5"
     unlock_file "$5"
+  fi
+
+  if [ "$qexe2_ret" -ne 0 ] && [ "$check_f_error_ret" -eq 0 ] && [ "$check_mpi_gpu_mismatch_ret" -eq 0 ]; then
+    echo "Error: $qexe execution failed."
+    echo ""
   
+    # on failure, log header of failing test
+    lock_file "$5"
+    echo "Error: $qexe execution failed." | tee -a "$5"
+    unlock_file "$5"
+  fi
+  
+  if [ "$qexe_ret" -ne 0 ] || [ "$qexe2_ret" -ne 0 ]; then
     exit 1
   fi
 }
@@ -974,26 +991,38 @@ print_summary()
       if [ `sed -n '/energy test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_ene=$(($failed_ene+1))
+        elif [ `sed -n '/execution failed/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+          failed_ene=$(($failed_ene+1))
         fi
         
       elif [ `sed -n '/gradient test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_grad=$(($failed_grad+1))
+        elif [ `sed -n '/execution failed/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+          failed_grad=$(($failed_grad+1))
         fi
       elif [ `sed -n '/geometry optimization test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+          failed_opt=$(($failed_opt+1))
+        elif [ `sed -n '/execution failed/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_opt=$(($failed_opt+1))
         fi
       elif [ `sed -n '/API test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_api=$(($failed_api+1))
+        elif [ `sed -n '/execution failed/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+          failed_api=$(($failed_api+1))
         fi
       elif [ `sed -n '/RW test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_rw=$(($failed_rw+1))
+        elif [ `sed -n '/execution failed/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+          failed_rw=$(($failed_rw+1))
         fi
       elif [ `sed -n '/ESP test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+          failed_esp=$(($failed_esp+1))
+        elif [ `sed -n '/execution failed/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_esp=$(($failed_esp+1))
         fi
       fi
