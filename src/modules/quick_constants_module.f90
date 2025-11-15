@@ -150,6 +150,13 @@ module quick_constants_module
     double precision, dimension(0:83) :: RADII
     double precision, dimension(0:83) :: RADII2
 
+    ! Tripathy V 11/14/2025
+    ! Radius of maximum density of outermost shells of
+    ! neutral atoms as given by Slater.
+    !
+    ! J.C. Slater, Phys. Rev. 36 (1930) 57
+    !
+    ! Theses RADII (in bohr) are used in SG1 grid.
     data RADII &
     /0.d0,1.d0,0.5882d0,3.0769d0,2.0513d0,1.5385d0, &
     1.2308d0,1.0256d0,0.8791d0,0.7692d0,0.6838d0, &
@@ -169,7 +176,9 @@ module quick_constants_module
     4.7040d0,4.5231d0,4.3556d0,4.2000d0,4.0552d0, &
     3.5280d0,3.1221d0,2.8000d0/
 
-    ! Xiao HE 02/11/2007    
+    ! Xiao HE 02/11/2007
+    ! RADII2 is used in SG0 Grid. This is old and
+    ! not recommended for production calculation. 
     data RADII2 &
     /0.d0,1.30d0,0.0d0,1.95d0,2.20d0,1.45d0, &
     1.20d0,1.10d0,1.10d0,1.20d0,0.0d0, &
