@@ -157,6 +157,14 @@ module quick_constants_module
     ! J.C. Slater, Phys. Rev. 36 (1930) 57
     !
     ! Theses RADII (in bohr) are used in SG1 grid.
+    !
+    ! R = (n*)^2/(Z-s)
+    !
+    ! where n* is the effective principal quantum number
+    ! of the outermost shell (not equal n for n > 3) and
+    ! s is the screening constant (value depends on the
+    ! type of shell and number of electrons).
+    !
     data RADII &
     /0.d0,1.d0,0.5882d0,3.0769d0,2.0513d0,1.5385d0, &
     1.2308d0,1.0256d0,0.8791d0,0.7692d0,0.6838d0, &
