@@ -395,6 +395,7 @@ jobs:
           if [ "$RUNNER_OS" == "Linux" ]; then
             sudo apt-get update
             sudo apt-get upgrade
+            sudo apt-get clean
             if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
               sudo apt-get install -y gpg-agent wget
               wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
