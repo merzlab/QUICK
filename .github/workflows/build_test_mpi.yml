@@ -400,10 +400,10 @@ jobs:
               while read snapname revision; do
                 sudo snap remove "$snapname" --revision="$revision"
               done
-            sudo apt-get remove -y '^aspnetcore-.*' '^dotnet-.*' 'php.*' '^mongodb-.*' \
-              '^mysql-.*' azure-cli google-chrome-stable firefox powershell mono-devel \
+            sudo apt-get remove -y 'php.*' '^mysql-.*' azure-cli \
+              google-chrome-stable firefox powershell mono-devel \
               libgl1-mesa-dri google-cloud-sdk google-cloud-cli
-            apt-get autoremove -y
+            sudo apt-get autoremove -y
             sudo apt-get clean
             sudo apt-get update
             sudo apt-get upgrade
