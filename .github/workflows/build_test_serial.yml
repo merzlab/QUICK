@@ -302,9 +302,8 @@ jobs:
               done
             sudo apt-get remove -y 'php.*' '^mysql-.*' azure-cli \
               google-chrome-stable firefox powershell mono-devel \
-              libgl1-mesa-dri google-cloud-sdk google-cloud-cli
+              libgl1-mesa-dri google-cloud-sdk google-cloud-cli || true
             sudo apt-get autoremove -y
-            sudo apt-get clean
             sudo apt-get update
             sudo apt-get upgrade
             sudo apt-get clean
