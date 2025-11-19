@@ -93,8 +93,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - ${{ matrix.mpi-type }} - Legacy - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
-      - name: 'Checkout Repository'
+      - name: 'Checkout Repository and Submodules'
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - name: 'Install Dependencies for MPI Version'
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
@@ -147,8 +149,8 @@ jobs:
         run: |
           echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
           echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
-          echo "LIBRARY_PATH=$PWD/install/lib/mpi:$LIBRARY_PATH" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$PWD/install/lib/mpi:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib/mpi:$PWD/install/lib:$PWD/install/lib64:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib/mpi:$PWD/install/lib:$PWD/install/lib64:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
           echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
@@ -362,14 +364,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - ${{ matrix.mpi-type }} - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
-      - name: 'Checkout Repository'
+      - name: 'Checkout Repository and Submodules'
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - name: 'Setup Environment Variables for Building and Running Tests'
         run: |
           echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
           echo "PATH=$PWD/install/bin:$PATH" >> "$GITHUB_ENV"
-          echo "LIBRARY_PATH=$PWD/install/lib:$LIBRARY_PATH" >> "$GITHUB_ENV"
-          echo "LD_LIBRARY_PATH=$PWD/install/lib:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib:$PWD/install/lib64:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib:$PWD/install/lib64::$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
           echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
