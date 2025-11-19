@@ -154,13 +154,43 @@ module quick_constants_module
     double precision, dimension(0:83) :: RADII
     double precision, dimension(0:83) :: RADII2
 
+    ! Tripathy V 11/14/2025
+    ! Radius of maximum density of outermost shells of
+    ! neutral atoms as given by Slater.
+    !
+    ! J.C. Slater, Phys. Rev. 36 (1930) 57
+    !
+    ! Theses RADII (in bohr) are used in SG1 grid.
+    !
+    ! R = (n*)^2/(Z-s)
+    !
+    ! where n* is the effective principal quantum number
+    ! of the outermost shell (not equal n for n > 3) and
+    ! s is the screening constant (value depends on the
+    ! type of shell and number of electrons).
+    !
     data RADII &
     /0.d0,1.d0,0.5882d0,3.0769d0,2.0513d0,1.5385d0, &
     1.2308d0,1.0256d0,0.8791d0,0.7692d0,0.6838d0, &
     4.0909d0,3.1579d0,2.5714d0,2.1687d0,1.8750d0, &
-    1.6514d0,1.4754d0,1.3333d0,65*2.25d0/
+    1.6514d0,1.4754d0,1.3333d0,6.2227d0,4.8035d0, &
+    4.5633d0,4.3460d0,4.1485d0,3.9681d0,3.8028d0, &
+    3.6507d0,3.5103d0,3.3802d0,3.2595d0,3.1471d0, &
+    2.7380d0,2.4230d0,2.1730d0,1.9698d0,1.8013d0, &
+    1.6594d0,7.2727d0,5.6140d0,5.3333d0,5.0794d0, &
+    4.8485d0,4.6377d0,4.4444d0,4.2667d0,4.1026d0, &
+    3.9506d0,3.8095d0,3.6782d0,3.2000d0,2.8319d0, &
+    2.5397d0,2.3022d0,2.1053d0,1.9394d0,8.0182d0, &
+    6.1895d0,6.1895d0,6.1895d0,6.1895d0,6.1895d0, &
+    6.1895d0,6.1895d0,6.1895d0,6.1895d0,6.1895d0, &
+    6.1895d0,6.1895d0,6.1895d0,6.1895d0,6.1895d0, &
+    5.8800d0,5.6000d0,5.3455d0,5.1130d0,4.9000d0, &
+    4.7040d0,4.5231d0,4.3556d0,4.2000d0,4.0552d0, &
+    3.5280d0,3.1221d0,2.8000d0/
 
-    ! Xiao HE 02/11/2007    
+    ! Xiao HE 02/11/2007
+    ! RADII2 is used in SG0 Grid. This is old and
+    ! not recommended for production calculation. 
     data RADII2 &
     /0.d0,1.30d0,0.0d0,1.95d0,2.20d0,1.45d0, &
     1.20d0,1.10d0,1.10d0,1.20d0,0.0d0, &
