@@ -15,6 +15,11 @@ subroutine getMol(ierr)
    use allmod
    use quick_gridpoints_module
    use quick_exception_module
+#if defined(RESTART_HDF5)
+   use quick_io_module, only: read_hdf5_real8_rank2
+#else
+   use quick_io_module, only: read_real8_rank3
+#endif
 #ifdef MPIV
    use mpi
 #endif
@@ -34,24 +39,22 @@ subroutine getMol(ierr)
       call PrtAct(iOutfile,"Begin Reading Molecular Information")
 
       ! read xyz coordinates from the .in file 
-      if(.not. isTemplate) then
-        if(quick_method%read_coord)then
-
-          open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
-          call rchk_darray(iDataFile, "xyz", 3, natom, 1, xyz, fail)
-          call rchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+      if (.not. isTemplate) then
+        if (quick_method%read_coord) then
+#if defined(RESTART_HDF5)
+          call read_hdf5_real8_rank2('xyz', (/1,1/), (/3,natom/), xyz)
+#else
+          open(unit=iDataFile, file=dataFileName, status='OLD', form='UNFORMATTED')
+          call read_real8_rank3(iDataFile, "xyz", 3, natom, 1, xyz, fail)
           close(iDataFile)
-
+#endif
           quick_molspec%xyz => xyz
-
         else
-
           call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
           CHECK_ERROR(ierr)
           ! read molecule coordinates
           call read2(quick_molspec,inFile,ierr)
           close(inFile)
-
         endif
       endif
 
@@ -264,12 +267,12 @@ subroutine initialGuess(ierr)
       CHECK_ERROR(ierr)
 
       ! read first part, which is restricted or alpha density matrix
-      call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, failed)
+      call read_real8_rank3(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, failed)
 
       if(quick_method%unrst) then
          failed = 0
          ! read second part, which is beta density matrix
-         call rchk_darray(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%dense, failed)
+         call read_real8_rank3(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%dense, failed)
          if (failed .eq. 0) then
             call PrtWrn(iOutFile,"CONVERTING RESTRICTED DENSITY TO UNRESTRICTED")
             do I=1,nbasis

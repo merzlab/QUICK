@@ -33,14 +33,15 @@ set(QUICK_MODULES_SOURCES
 	quick_uscf_module.f90 quick_sad_guess_module.f90 quick_optimizer_module.f90
         quick_cew_module.f90 quick_lri_module.f90 quick_lri_grad_module.f90
 	quick_eri_oshell_module.f90 quick_eri_grad_oshell_module.f90 quick_molsurface_module.f90
-	quick_grad_oshell_module.f90 quick_dftd3_module.f90 quick_molden_module.f90 quick_oeproperties_module.f90)
+	quick_grad_oshell_module.f90 quick_dftd3_module.f90 quick_molden_module.f90 quick_oeproperties_module.f90
+	quick_io_module.f90)
 
 set(QUICK_SUBS_FORTRAN_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	degen.f90 denspt.f90 diag.f90 dipole.f90
 	EffChar.f90 eigvec.f90
 	findBlock.f90 fmt.f90 getinum.f90
 	getNum.f90 greedy_distrubute.f90 hrr.f90 iatoi.f90
-	iatoimp.f90 io.f90 iwhole.f90
+	iatoimp.f90 iwhole.f90
 	lbfgs.f90 Lsolve.f90 matComp.f90 matMul.f90
 	order.f90 orthog.f90 PriCol.f90 PriSym.f90
 	PrtAct.f90 PrtDat.f90 PrtErr.f90 PrtLab.f90
@@ -133,9 +134,19 @@ target_compile_options(libquick PRIVATE
 	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>"
 	"$<$<COMPILE_LANGUAGE:C>:${OPT_CFLAGS}>"
 	"$<$<COMPILE_LANGUAGE:CXX>:${OPT_CXXFLAGS}>")
-config_module_dirs(libquick quick/serial libxc/serial)
+if(HDF5)
+	target_compile_definitions(libquick PRIVATE
+		"$<$<COMPILE_LANGUAGE:Fortran>:${HDF5_Fortran_DEFINITIONS}>" "RESTART_HDF5")
+	target_include_directories(libquick PRIVATE 
+		"$<$<COMPILE_LANGUAGE:Fortran>:${HDF5_Fortran_INCLUDE_DIRS}>")
+	config_module_dirs(libquick quick/serial libxc/serial ${HDF5_Fortran_INCLUDE_DIRS})
+	target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS}
+		${HDF5_HL_LIBRARIES} ${HDF5_LIBRARIES})
+else()
+	config_module_dirs(libquick quick/serial libxc/serial)
+	target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS})
+endif()
 
-target_link_libraries(libquick PRIVATE xc octree ${QUICK_LAPACK} ${QUICK_BLAS})
 if(INSIDE_AMBER)
 	target_link_libraries(libquick PRIVATE libcew)
 endif()
@@ -304,6 +315,10 @@ add_executable(quick ${MAIN_SOURCES})
 set_target_properties(quick PROPERTIES LINKER_LANGUAGE Fortran)
 target_compile_options(quick PRIVATE 
 	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>")
+if(HDF5)
+	target_compile_definitions(quick PRIVATE
+		"$<$<COMPILE_LANGUAGE:Fortran>:${HDF5_Fortran_DEFINITIONS}>" "RESTART_HDF5")
+endif()
 config_module_dirs(quick quick/serial libxc/serial)
 target_link_libraries(quick libquick)
 
@@ -311,6 +326,10 @@ add_executable(test-api ${TEST_API_SOURCES})
 set_target_properties(test-api PROPERTIES LINKER_LANGUAGE Fortran)
 target_compile_options(test-api PRIVATE
 	"$<$<COMPILE_LANGUAGE:Fortran>:${OPT_FFLAGS}>")
+if(HDF5)
+	target_compile_definitions(test-api PRIVATE
+		"$<$<COMPILE_LANGUAGE:Fortran>:${HDF5_Fortran_DEFINITIONS}>" "RESTART_HDF5")
+endif()
 config_module_dirs(test-api quick/serial libxc/serial)
 target_link_libraries(test-api libquick)
 

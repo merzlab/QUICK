@@ -433,8 +433,8 @@ module quick_method_module
             if (self%printEnergy) write(io,'(" PRINT ENERGY EVERY CYCLE")')
 
             if (self%readDMX)   write(io,'(" READ DENSITY MATRIX FROM FILE")')
-            if (self%read_coord) write(io,'(" READ COORDINATES From DATAFILE")')
-            if (self%readden) write(io,'(" READ DENSITY MATRIX From DATAFILE")')
+            if (self%read_coord) write(io,'(" READ COORDINATES FROM DATA FILE")')
+            if (self%readden) write(io,'(" READ DENSITY MATRIX FROM DATA FILE")')
             if (self%writeden) write(io,'(" WRITE DENSITY MATRIX TO DATA FILE")')
             if (self%writexyz) write(io,'(" WRITE COORDINATES TO DATA FILE")')
             if (self%readSAD)   write(io,'(" READ SAD GUESS FROM FILE")')
@@ -679,9 +679,11 @@ module quick_method_module
             end if
             if (index(keyWD,'ZMAKE').ne.0)      self%zmat=.true.
             if (index(keyWD,'DIPOLE').ne.0)     self%dipole=.true.
-            if (index(keyWD,'WRITE').ne.0)then
-                self%writeden=.true.
-                self%writexyz=.true.
+            if (index(keyWD,'CHK_WRITE_DEN').ne.0) then
+                self%writeden = .true.
+            end if
+            if (index(keyWD,'CHK_WRITE_XYZ').ne.0) then
+                self%writexyz = .true.
             end if
 
             if (index(keyWD,'EXTCHARGES').ne.0) self%EXTCHARGES=.true.
@@ -704,10 +706,14 @@ module quick_method_module
             endif
 
             !Read density matrix
-            if (index(keyWD,'READDEN').ne.0) self%readden=.true.
+            if (index(keyWD,'CHK_READ_DEN').ne.0)then
+               self%readden=.true.
+            endif
 
             !Read coordinates
-            if (index(keyWD,'READ_COORD').ne.0) self%read_coord=.true.
+            if (index(keyWD,'CHK_READ_COORD').ne.0)then
+              self%read_coord=.true.
+            endif
 
             if (self%DFT) then
                 if (index(keyWD,'SG0').ne.0) then

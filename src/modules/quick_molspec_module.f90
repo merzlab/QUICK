@@ -141,24 +141,30 @@ contains
    !-------------------
    ! allocate
    !-------------------
-   subroutine allocate_quick_molspec(self,ierr)
+   subroutine allocate_quick_molspec(self, read_coord, ierr)
       use quick_exception_module
+
       implicit none
-      integer i,j
-      integer, intent(inout) :: ierr
 
       type (quick_molspec_type), intent(inout) :: self
+      logical, intent(in) :: read_coord
+      integer, intent(inout) :: ierr
+
+      integer i, j
 
       if (.not. allocated(xyz)) allocate(xyz(3,natom))
-!      allocate(self%xyz(3,natom))
       if (.not. allocated(self%distnbor))  allocate(self%distnbor(natom))
       if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
       if (.not. allocated(self%chg)) allocate(self%chg(natom))
       if (.not. allocated(self%AtomDistance)) allocate(self%AtomDistance(natom,natom))
       if (.not. allocated(self%dlfind_freezeatm)) allocate(self%dlfind_freezeatm(natom))
+      if (.not. read_coord) then
+         do i=1,natom
+            self%iattype(i)=0
+         enddo
+      end if
       do i=1,natom
          self%distnbor(i)=0
-         self%iattype(i)=0
          self%chg(i)=0d0
          self%dlfind_freezeatm(i) = 0
          do j=1,3
@@ -287,7 +293,6 @@ contains
 
       if (allocated(xyz)) deallocate(xyz)
       if (allocated(self%distnbor)) deallocate(self%distnbor)
-!      deallocate(self%xyz)
       if (allocated(self%iattype)) deallocate(self%iattype)
       if (allocated(self%chg)) deallocate(self%chg)
       if (allocated(self%dlfind_freezeatm)) deallocate(self%dlfind_freezeatm)
@@ -367,6 +372,11 @@ contains
     use quick_exception_module
     use quick_method_module, only: quick_method
     use quick_files_module, only : iDataFile, dataFileName
+#if defined(RESTART_HDF5)
+    use quick_io_module, only: read_hdf5_int_rank0, read_hdf5_int_rank1
+#else
+    use quick_io_module, only: read_int_rank0, read_int_rank3
+#endif
 
     implicit none
 
@@ -438,14 +448,19 @@ contains
 
     if( .not. isTemplate) then
 
-      ! If reading from data file
-      if(quick_method%read_coord)then
-
-        open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
-        call rchk_int(iDataFile, "natom", natom, fail)
+      ! read atom positions from checkpoint file
+      if (quick_method%read_coord) then
+#if defined(RESTART_HDF5)
+        call read_hdf5_int_rank0('molinfo', 1, natom)
         if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
-        call rchk_iarray(iDataFile, "iattype", natom, 1, 1, self%iattype, fail)
+        call read_hdf5_int_rank1('iattype', 1, natom, self%iattype)
+#else
+        open(unit=iDataFile, file=dataFileName, status='OLD', form='UNFORMATTED')
+        call read_int_rank0(iDataFile, "natom", natom, fail)
+        if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
+        call read_int_rank3(iDataFile, "iattype", natom, 1, 1, self%iattype, fail)
         close(iDataFile)
+#endif
 
         ! Reading external charges from data file is not yet implemented
         nextatom = 0

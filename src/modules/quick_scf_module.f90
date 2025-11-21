@@ -99,20 +99,43 @@ contains
   end subroutine deallocate_quick_scf
 
 
+  !-------------------------------------------------------
+  ! this subroutine is to do scf job for restricted system
+  !-------------------------------------------------------
   ! Ed Brothers. November 27, 2001
   ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
   subroutine scf(ierr)
-     !-------------------------------------------------------
-     ! this subroutine is to do scf job for restricted system
-     !-------------------------------------------------------
      use allmod
-     use quick_molden_module, only: quick_molden
+#if defined(RESTART_HDF5)
+     use quick_io_module, only: read_hdf5_int_rank0, read_hdf5_real8_rank2
+#else
+     use quick_io_module, only: read_int_rank0, read_real8_rank3
+#endif
+
      implicit none
+
+     integer, intent(inout) :: ierr
   
      logical :: done
-     integer, intent(inout) :: ierr
      integer :: jscf
-     done=.false.
+     integer :: fail
+
+     done = .false.
+
+     if (quick_method%readden) then
+       nbasis = quick_molspec%nbasis
+       if (master) then
+#if defined(RESTART_HDF5)
+         call read_hdf5_int_rank0('molinfo', 2, nbasis)
+         call read_hdf5_real8_rank2('dense', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%dense)
+#else
+         open(unit=iDataFile, file=dataFileName, status='OLD', form='UNFORMATTED')
+         call read_int_rank0(iDataFile, "nbasis", nbasis, fail)
+         call read_real8_rank3(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+         close(iDataFile)
+#endif
+       endif
+     endif
   
      !-----------------------------------------------------------------
      ! The purpose of this subroutine is to perform scf cycles.  At this
@@ -130,7 +153,6 @@ contains
      ! number of scfcycles has been reached.
      jscf=0
   
-  
      ! Alessandro GENONI 03/21/2007
      ! ECP integrals computation exploiting Alexander V. Mitin Subroutine
      ! Note: the integrals are stored in the array ecp_int that corresponds
@@ -140,8 +162,8 @@ contains
      ! if not direct SCF, generate 2e int file
      ! if (quick_method%nodirect) call aoint
   
-     if (quick_method%diisscf .and. .not. quick_method%divcon) call electdiis(jscf,ierr)       ! normal scf
-  !   if (quick_method%diisscf .and. quick_method%divcon) call electdiisdc(jscf,PRMS)     ! div & con scf
+     if (quick_method%diisscf .and. .not. quick_method%divcon) call electdiis(jscf,ierr)  ! normal scf
+!     if (quick_method%diisscf .and. quick_method%divcon) call electdiisdc(jscf,PRMS)     ! div & con scf
   
      jscf=jscf+1
   
@@ -159,11 +181,9 @@ contains
      use quick_oei_module, only: bCalc1e 
      use quick_lri_module, only: computeLRI
      use quick_molden_module, only: quick_molden
-
 #ifdef CEW 
      use quick_cew_module, only : quick_cew
 #endif
-
 #if defined(HIP) || defined(HIP_MPIV)
      use quick_rocblas_module, only: rocDGEMM
 #if defined(WITH_MAGMA)
@@ -177,8 +197,6 @@ contains
 #endif
 
      implicit none
- 
-     integer :: fail
  
      ! variable inputed to return
      integer :: jscf                ! scf iteration
@@ -264,17 +282,7 @@ contains
      if (bMPI) call MPI_setup_hfoperator
      !-------------- END MPI / ALL NODE -----------
 #endif
-        if(quick_method%readden)then
-          nbasis = quick_molspec%nbasis
-          if(master)then
-            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
-            rewind(iDataFile)
-            call rchk_int(iDataFile, "nbasis", nbasis, fail)
-            call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
-            close(iDataFile)
-          endif
-        endif
- 
+
 #ifdef MPIV
      if (bMPI) then
   !      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -719,15 +727,6 @@ contains
         !--------------- END MPI/ALL NODES -------------------------------------
   
         if (master) then
-
-           if(quick_method%writeden)then 
-             ! open data file then write calculated info to dat file
-             call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
-             call wchk_int(iDataFile, "nbasis", nbasis, fail)
-             call wchk_darray(iDataFile, "dense",    nbasis, nbasis, 1, quick_qm_struct%dense,    fail)
-             close(iDataFile)
-           endif 
-
 #ifdef USEDAT
            ! open data file then write calculated info to dat file
            SAFE_CALL(quick_open(iDataFile, dataFileName, 'R', 'U', 'R',.true.,ierr)
@@ -737,15 +736,6 @@ contains
 #endif
            current_diis=mod(idiis-1,quick_method%maxdiisscf)
            current_diis=current_diis+1
-
-           ! DELETE ME
-           !write(*,'(A,3es20.10)')"SCF Iter",quick_qm_struct%Ecore,quick_qm_struct%Eel, & ! DELETE ME
-           !& quick_qm_struct%Eel+quick_qm_struct%Ecore ! DELETE ME
-
-           !do i=1,10 ! DELETE ME
-           !   write(6,'(A,I3,f20.10)')"MO",i,quick_qm_struct%E(i) ! DELETE ME
-           !end do ! DELETE ME
-           
            
            write (ioutfile,'("|",I3,1x)',advance="no") jscf
            if(quick_method%printEnergy)then

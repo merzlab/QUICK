@@ -343,7 +343,8 @@ contains
 
       use quick_method_module, only: quick_method
       use quick_molspec_module, only: quick_molspec
-      logical fail
+      use quick_io_module, only: write_int_rank0, write_int_rank3, write_real8_rank3
+      integer fail
 
       integer nbasis
       integer natom
@@ -361,29 +362,29 @@ contains
       nelecb=quick_molspec%nelecb
 
 
-      call wchk_int(idatafile, "nbasis", nbasis, fail)
-      call wchk_int(idatafile, "natom",  natom,  fail)
-      call wchk_int(idatafile, "nelec",  nelec,  fail)
-      call wchk_int(idatafile, "nelecb", nelecb, fail)
-      call wchk_darray(idatafile, "s",        nbasis, nbasis, 1, self%s,        fail)
-      call wchk_darray(idatafile, "x",        nbasis, nbasis, 1, self%x,        fail)
-      call wchk_darray(idatafile, "o",        nbasis, nbasis, 1, self%o,        fail)
-      call wchk_darray(idatafile, "co",       nbasis, nbasis, 1, self%co,       fail)
-      call wchk_darray(idatafile, "vec",      nbasis, nbasis, 1, self%vec,      fail)
-      call wchk_darray(idatafile, "dense",    nbasis, nbasis, 1, self%dense,    fail)
-      call wchk_darray(idatafile, "E",        nbasis, 1,      1, self%E,        fail)
-      call wchk_iarray(idatafile, "iDegen",   nbasis, 1,      1, self%iDegen,   fail)
-      call wchk_darray(idatafile, "Mulliken", nbasis, 1,      1, self%Mulliken, fail)
-      call wchk_darray(idatafile, "Lowdin",   nbasis, 1,      1, self%Lowdin,   fail)
+      call write_int_rank0(idatafile, "nbasis", nbasis, fail)
+      call write_int_rank0(idatafile, "natom",  natom, fail)
+      call write_int_rank0(idatafile, "nelec",  nelec, fail)
+      call write_int_rank0(idatafile, "nelecb", nelecb, fail)
+      call write_real8_rank3(idatafile, "s", nbasis, nbasis, 1, self%s, fail)
+      call write_real8_rank3(idatafile, "x", nbasis, nbasis, 1, self%x, fail)
+      call write_real8_rank3(idatafile, "o", nbasis, nbasis, 1, self%o, fail)
+      call write_real8_rank3(idatafile, "co", nbasis, nbasis, 1, self%co, fail)
+      call write_real8_rank3(idatafile, "vec", nbasis, nbasis, 1, self%vec, fail)
+      call write_real8_rank3(idatafile, "dense", nbasis, nbasis, 1, self%dense, fail)
+      call write_real8_rank3(idatafile, "E", nbasis, 1, 1, self%E, fail)
+      call write_int_rank3(idatafile, "iDegen", nbasis, 1, 1, self%iDegen, fail)
+      call write_real8_rank3(idatafile, "Mulliken", nbasis, 1, 1, self%Mulliken, fail)
+      call write_real8_rank3(idatafile, "Lowdin", nbasis, 1, 1, self%Lowdin, fail)
 
       ! if unrestricted, some more varibles is required to be allocated
       if (quick_method%unrst) then
-         call wchk_darray(idatafile, "cob", nbasis, nbasis, 1, self%cob, fail)
-         call wchk_darray(idatafile, "Eb", nbasis, 1, 1, self%Eb, fail)
+         call write_real8_rank3(idatafile, "cob", nbasis, nbasis, 1, self%cob, fail)
+         call write_real8_rank3(idatafile, "Eb", nbasis, 1, 1, self%Eb, fail)
       endif
 
       if (quick_method%unrst .or. quick_method%DFT) then
-         call wchk_darray(idatafile, "denseb", nbasis, 1, 1, self%denseb, fail)
+         call write_real8_rank3(idatafile, "denseb", nbasis, 1, 1, self%denseb, fail)
       endif
 
 
