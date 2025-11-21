@@ -1,0 +1,3 @@
+$DATA=chk_acetate_xyz.dat
+B3LYP CHARGE=-1 cutoff=1.0e-9 BASIS=def2-svp denserms=1.0e-6 chk_read_coord
+

@@ -30,7 +30,7 @@ SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 	$(objfolder)/dipole.o $(objfolder)/EffChar.o $(objfolder)/eigvec.o \
 	$(objfolder)/findBlock.o $(objfolder)/fmt.o $(objfolder)/getinum.o \
 	$(objfolder)/getNum.o $(objfolder)/greedy_distrubute.o $(objfolder)/hrr.o $(objfolder)/iatoi.o \
-	$(objfolder)/iatoimp.o $(objfolder)/io.o $(objfolder)/iwhole.o \
+	$(objfolder)/iatoimp.o $(objfolder)/iwhole.o \
 	$(objfolder)/lbfgs.o $(objfolder)/Lsolve.o $(objfolder)/matComp.o $(objfolder)/matMul.o \
 	$(objfolder)/order.o $(objfolder)/orthog.o $(objfolder)/PriCol.o $(objfolder)/PriSym.o \
 	$(objfolder)/PrtAct.o $(objfolder)/PrtDat.o $(objfolder)/PrtErr.o $(objfolder)/PrtLab.o \

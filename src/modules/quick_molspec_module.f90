@@ -373,7 +373,9 @@ contains
     use quick_method_module, only: quick_method
     use quick_files_module, only : iDataFile, dataFileName
 #if defined(RESTART_HDF5)
-    use quick_restart_module, only: read_hdf5_int, read_hdf5_int_n
+    use quick_io_module, only: read_hdf5_int_rank0, read_hdf5_int_rank1
+#else
+    use quick_io_module, only: read_int_rank0, read_int_rank3
 #endif
 
     implicit none
@@ -446,17 +448,17 @@ contains
 
     if( .not. isTemplate) then
 
-      ! If reading from data file
+      ! read atom positions from checkpoint file
       if (quick_method%read_coord) then
 #if defined(RESTART_HDF5)
-        call read_hdf5_int('molinfo', 1, natom)
+        call read_hdf5_int_rank0('molinfo', 1, natom)
         if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
-        call read_hdf5_int_n('iattype', 1, natom, self%iattype)
+        call read_hdf5_int_rank1('iattype', 1, natom, self%iattype)
 #else
         open(unit=iDataFile, file=dataFileName, status='OLD', form='UNFORMATTED')
-        call rchk_int(iDataFile, "natom", natom, fail)
+        call read_int_rank0(iDataFile, "natom", natom, fail)
         if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
-        call rchk_iarray(iDataFile, "iattype", natom, 1, 1, self%iattype, fail)
+        call read_int_rank3(iDataFile, "iattype", natom, 1, 1, self%iattype, fail)
         close(iDataFile)
 #endif
 

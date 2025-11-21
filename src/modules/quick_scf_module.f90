@@ -107,7 +107,9 @@ contains
   subroutine scf(ierr)
      use allmod
 #if defined(RESTART_HDF5)
-     use quick_restart_module, only: read_hdf5_int, read_hdf5_double_2n
+     use quick_io_module, only: read_hdf5_int_rank0, read_hdf5_real8_rank2
+#else
+     use quick_io_module, only: read_int_rank0, read_real8_rank3
 #endif
 
      implicit none
@@ -124,12 +126,12 @@ contains
        nbasis = quick_molspec%nbasis
        if (master) then
 #if defined(RESTART_HDF5)
-         call read_hdf5_int('molinfo', 2, nbasis)
-         call read_hdf5_double_2n('dense', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%dense)
+         call read_hdf5_int_rank0('molinfo', 2, nbasis)
+         call read_hdf5_real8_rank2('dense', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%dense)
 #else
          open(unit=iDataFile, file=dataFileName, status='OLD', form='UNFORMATTED')
-         call rchk_int(iDataFile, "nbasis", nbasis, fail)
-         call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+         call read_int_rank0(iDataFile, "nbasis", nbasis, fail)
+         call read_real8_rank3(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
          close(iDataFile)
 #endif
        endif

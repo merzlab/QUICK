@@ -34,14 +34,14 @@ set(QUICK_MODULES_SOURCES
         quick_cew_module.f90 quick_lri_module.f90 quick_lri_grad_module.f90
 	quick_eri_oshell_module.f90 quick_eri_grad_oshell_module.f90 quick_molsurface_module.f90
 	quick_grad_oshell_module.f90 quick_dftd3_module.f90 quick_molden_module.f90 quick_oeproperties_module.f90
-	quick_restart_module.f90)
+	quick_io_module.f90)
 
 set(QUICK_SUBS_FORTRAN_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	degen.f90 denspt.f90 diag.f90 dipole.f90
 	EffChar.f90 eigvec.f90
 	findBlock.f90 fmt.f90 getinum.f90
 	getNum.f90 greedy_distrubute.f90 hrr.f90 iatoi.f90
-	iatoimp.f90 io.f90 iwhole.f90
+	iatoimp.f90 iwhole.f90
 	lbfgs.f90 Lsolve.f90 matComp.f90 matMul.f90
 	order.f90 orthog.f90 PriCol.f90 PriSym.f90
 	PrtAct.f90 PrtDat.f90 PrtErr.f90 PrtLab.f90

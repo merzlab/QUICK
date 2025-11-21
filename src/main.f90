@@ -37,7 +37,9 @@
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
          exportMO, exportSCF, exportOPT
 #if defined(RESTART_HDF5)
-    use quick_restart_module, only: write_hdf5_info, write_hdf5_int_n, write_hdf5_double_2n
+    use quick_io_module, only: write_hdf5_info, write_hdf5_int_rank1, write_hdf5_real8_rank2
+#else
+    use quick_io_module, only: write_int_rank0, write_int_rank3, write_real8_rank3
 #endif
     use quick_timer_module, only : timer_end, timer_cumer, timer_begin
     use quick_method_module, only : quick_method
@@ -142,8 +144,9 @@
     SAFE_CALL(getMol(ierr))
 
 #if defined(RESTART_HDF5)
-    !write the required info to data file
-    if(master .and. (quick_method%writeden .or. quick_method%writexyz)) call write_hdf5_info(natom, nbasis)
+    if (master .and. (quick_method%writeden .or. quick_method%writexyz)) then
+        call write_hdf5_info(natom, nbasis)
+    endif
 #endif
 
 #if defined(GPU) || defined(MPIV_GPU)
@@ -224,27 +227,27 @@
           if (quick_method%writeden .or. quick_method%writexyz) then
 #if defined(RESTART_HDF5)
             if (quick_method%writexyz) then
-              call write_hdf5_int_n(quick_molspec%iattype, natom, 'iattype')
-              call write_hdf5_double_2n(quick_molspec%xyz, 3, natom, 'xyz')
+              call write_hdf5_int_rank1(quick_molspec%iattype, natom, 'iattype')
+              call write_hdf5_real8_rank2(quick_molspec%xyz, 3, natom, 'xyz')
             end if
             if (quick_method%writeden) then
-              call write_hdf5_double_2n(quick_qm_struct%dense, nbasis, nbasis, 'dense')
+              call write_hdf5_real8_rank2(quick_qm_struct%dense, nbasis, nbasis, 'dense')
               if (quick_method%UNRST) then
-                call write_hdf5_double_2n(quick_qm_struct%denseb, nbasis, nbasis, 'denseb')  
+                call write_hdf5_real8_rank2(quick_qm_struct%denseb, nbasis, nbasis, 'denseb')  
               end if
             end if
 #else
             open(unit=iDataFile, file=dataFileName, status='UNKNOWN', form='UNFORMATTED', action='WRITE')
             if (quick_method%writexyz) then
-              call wchk_int(iDataFile, "natom", natom, fail)
-              call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
-              call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
+              call write_int_rank0(iDataFile, "natom", natom, fail)
+              call write_int_rank3(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+              call write_real8_rank3(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
             end if
             if (quick_method%writeden) then
-              call wchk_int(iDataFile, "nbasis", nbasis, fail)
-              call wchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+              call write_int_rank0(iDataFile, "nbasis", nbasis, fail)
+              call write_real8_rank3(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
               if (quick_method%UNRST) then
-                call wchk_darray(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%denseb, fail)
+                call write_real8_rank3(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%denseb, fail)
               end if
             end if
             close(iDataFile)
@@ -275,27 +278,27 @@
           if (quick_method%writeden .or. quick_method%writexyz) then
 #if defined(RESTART_HDF5)
             if (quick_method%writexyz) then
-              call write_hdf5_int_n(quick_molspec%iattype, natom, 'iattype')
-              call write_hdf5_double_2n(quick_molspec%xyz, 3, natom, 'xyz')
+              call write_hdf5_int_rank1(quick_molspec%iattype, natom, 'iattype')
+              call write_hdf5_real8_rank2(quick_molspec%xyz, 3, natom, 'xyz')
             end if
             if (quick_method%writeden) then
-              call write_hdf5_double_2n(quick_qm_struct%dense, nbasis, nbasis, 'dense')
+              call write_hdf5_real8_rank2(quick_qm_struct%dense, nbasis, nbasis, 'dense')
               if (quick_method%UNRST) then
-                call write_hdf5_double_2n(quick_qm_struct%denseb, nbasis, nbasis, 'denseb')  
+                call write_hdf5_real8_rank2(quick_qm_struct%denseb, nbasis, nbasis, 'denseb')  
               end if
             end if
 #else
             open(unit=iDataFile, file=dataFileName, status='UNKNOWN', form='UNFORMATTED', action='WRITE')
             if (quick_method%writexyz) then
-              call wchk_int(iDataFile, "natom", natom, fail)
-              call wchk_iarray(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
-              call wchk_darray(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
+              call write_int_rank0(iDataFile, "natom", natom, fail)
+              call write_int_rank3(iDataFile, "iattype", natom, 1, 1, quick_molspec%iattype, fail)
+              call write_real8_rank3(iDataFile, "xyz", 3, natom, 1, quick_molspec%xyz, fail)
             end if
             if (quick_method%writeden) then
-              call wchk_int(iDataFile, "nbasis", nbasis, fail)
-              call wchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+              call write_int_rank0(iDataFile, "nbasis", nbasis, fail)
+              call write_real8_rank3(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
               if (quick_method%UNRST) then
-                call wchk_darray(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%denseb, fail)
+                call write_real8_rank3(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%denseb, fail)
               end if
             end if
             close(iDataFile)
