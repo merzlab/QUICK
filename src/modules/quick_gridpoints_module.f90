@@ -127,7 +127,7 @@ module quick_gridpoints_module
     RWT(MAXRADGRID)
     double precision,  dimension(:), allocatable :: sigrad2
     integer :: iradial(0:10), iangular(10),iregion
-
+    integer, save :: eml_nradial = 50 ! use to track EML grid radius points amount
 
     interface form_dft_grid
         module procedure form_xc_quadrature
@@ -166,7 +166,13 @@ module quick_gridpoints_module
    if(master) then
 #endif
    
-   if (quick_method%iSG.eq.1) call gridformSG1() 
+if (quick_method%iSG.eq.1) then
+    call gridformEML(50)
+else if (quick_method%iSG.eq.2) then
+    call gridformEML(75)
+else if (quick_method%iSG.eq.3) then
+    call gridformEML(99)
+endif
 
 #ifdef MPIV
   endif
@@ -180,27 +186,40 @@ module quick_gridpoints_module
     RECORD_TIME(timer_begin%TDFTGrdGen)
 
     ! form SG1 grid
-    !if(quick_method%iSG.eq.1) call gridformSG1()
+    !if(quick_method%iSG.eq.1) call gridformEML()
 
     idx_grid = 0
     do Iatm=1,natom
-        if(quick_method%iSG.eq.1)then
-            Iradtemp=50
-        else
-            if(quick_molspec%iattype(iatm).le.10)then
-                Iradtemp=23
-            else
-                Iradtemp=26
-            endif
-        endif
-        do Irad = 1, Iradtemp
+      if (quick_method%iSG.eq.1) then
+         call gridformEML(50)
+      else if (quick_method%iSG.eq.2) then
+         call gridformEML(75)
+      else if (quick_method%iSG.eq.3) then
+         call gridformEML(99)
+      else ! SG-0
+         if(quick_molspec%iattype(iatm).le.10)then
+               Iradtemp=23
+         else
+               Iradtemp=26
+         endif
+      endif
+      do Irad = 1, Iradtemp
             if(quick_method%iSG.eq.1)then
-                call gridformnew(iatm,RGRID(Irad),iiangt)
-                rad = radii(quick_molspec%iattype(iatm))
+               call gridformSG1Angular(iatm,RGRID(Irad),iiangt)
+               rad = radii(quick_molspec%iattype(iatm))
+            else if(quick_method%iSG.eq.0)then
+               call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
+               rad = radii2(quick_molspec%iattype(iatm))
+            else if(quick_method%iSG.eq.2 .or. quick_method%iSG.eq.3)then
+               ! EML Grid (iSG = 2 or 3)
+               call gridformEMLAngular(iatm,RGRID(Irad),iiangt)
+               rad = radii(quick_molspec%iattype(iatm))
             else
-                call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
-                rad = radii2(quick_molspec%iattype(iatm))
+               ! Unknown grid type - fallback to SG-1
+               call gridformSG1Angular(iatm,RGRID(Irad),iiangt)
+               rad = radii(quick_molspec%iattype(iatm))
             endif
+            
             rad3 = rad*rad*rad
             do Iang=1,iiangt
                 idx_grid=idx_grid+1
@@ -213,7 +232,7 @@ module quick_gridpoints_module
                 xcg_tmp%arr_rad3(idx_grid) = rad3
             enddo
 
-        enddo
+      enddo
     enddo
 
     self%init_ngpts  = idx_grid
@@ -1120,9 +1139,11 @@ module quick_gridpoints_module
    
    end subroutine gridformSG0
    
+
+
    ! Xiao HE 1/9/07
    ! SG-1 standard grid Peter MWG, Benny GJ and Pople JA, CPL 209,506,1993,
-   subroutine gridformnew(iitype,distance,iiang)
+   subroutine gridformSG1Angular(iitype,distance,iiang)
       use allmod
       implicit double precision(a-h,o-z)
    
@@ -1202,19 +1223,69 @@ module quick_gridpoints_module
          wtang(I)=wtang(I)*12.56637061435917295385d0
       enddo
    
-   end subroutine gridformnew
+   end subroutine gridformSG1Angular
 
-   subroutine gridformSG1
+      
+   ! EML Grid
+   subroutine gridformEMLAngular(iitype,distance,iiang)
       use allmod
-      implicit none
-      integer itemp,i
-      itemp=50
-      do I=1,itemp
-         RGRID(I)=(I**2.d0)/dble((itemp+1-I)*(itemp+1-I))
-         RWT(I)=2.d0*dble(itemp+1)*(dble(I)**5.d0) &
-               *dble(itemp+1-I)**(-7.d0)
+      implicit double precision(a-h,o-z)
+   
+      !  This subroutine calculates the angular and radial grid points
+      !  and weights.  The current implementation presupposes Lebedev angular
+      !  and Euler-Maclaurin radial grids.
+      ! - 50 radial points → LD0194 (194 angular points)
+      ! - 75 radial points → LD0302 (302 angular points)
+      ! - 99 radial points → LD0590 (590 angular points)
+      ! All shells get the same angular grid/no pruning
+   
+      select case(eml_nradial)
+      
+         case(50)
+            ! SG-1 style: 194 angular points
+            CALL LD0194(XANG, YANG, ZANG, WTANG, N)
+            iiang = 194
+            
+         case(75)
+            ! SG-2 style: 302 angular points
+            CALL LD0302(XANG, YANG, ZANG, WTANG, N)
+            iiang = 302
+            
+         case(99)
+            ! SG-3 style: 590 angular points
+            CALL LD0590(XANG, YANG, ZANG, WTANG, N)
+            iiang = 590
+            
+         case default
+            ! Fallback: use 194 points (SG-1 default)
+            CALL LD0194(XANG, YANG, ZANG, WTANG, N)
+            iiang = 194
+            
+      end select
+   
+   
+      !  The Lebedev weights are returned normalized to 1.  
+      !  Multiply them by 4Pi to get the correct value.
+   
+      do I=1,iiang
+         wtang(I)=wtang(I)*12.56637061435917295385d0
       enddo
-   end subroutine gridformSG1
+   
+   end subroutine gridformEMLAngular
+
+   subroutine gridformEML(ngrid)
+   
+      implicit none
+      integer, intent(in) :: ngrid ! ngrid = 50 for SG-1, 75 for SG-2, 99 for SG-3
+      integer i
+
+      do I = 1, ngrid
+         RGRID(I) = (I**2.d0)/dble((ngrid+1-I)*(ngrid+1-I))
+         RWT(I) = 2.d0*dble(ngrid+1)*(dble(I)**5.d0) &
+               *dble(ngrid+1-I)**(-7.d0)
+      enddo
+   
+   end subroutine gridformEML
    
 #include "./include/labedev.fh"
    
