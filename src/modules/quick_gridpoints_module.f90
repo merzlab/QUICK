@@ -127,7 +127,6 @@ module quick_gridpoints_module
     RWT(MAXRADGRID)
     double precision,  dimension(:), allocatable :: sigrad2
     integer :: iradial(0:10), iangular(10),iregion
-    integer, save :: eml_nradial = 50 ! use to track EML grid radius points amount
 
     interface form_dft_grid
         module procedure form_xc_quadrature
@@ -191,7 +190,8 @@ endif
     idx_grid = 0
     do Iatm=1,natom
       if (quick_method%iSG.eq.1) then
-         call gridformEML(50)
+         Iradtemp = 50
+         call gridformEML(Iradtemp)
       else if (quick_method%iSG.eq.2) then
          call gridformEML(75)
       else if (quick_method%iSG.eq.3) then
@@ -212,7 +212,7 @@ endif
                rad = radii2(quick_molspec%iattype(iatm))
             else if(quick_method%iSG.eq.2 .or. quick_method%iSG.eq.3)then
                ! EML Grid (iSG = 2 or 3)
-               call gridformEMLAngular(iatm,RGRID(Irad),iiangt)
+!               call gridformEMLAngular(iatm,RGRID(Irad),iiangt)
                rad = radii(quick_molspec%iattype(iatm))
             else
                ! Unknown grid type - fallback to SG-1
@@ -1226,52 +1226,52 @@ endif
    end subroutine gridformSG1Angular
 
       
-   ! EML Grid
-   subroutine gridformEMLAngular(iitype,distance,iiang)
-      use allmod
-      implicit double precision(a-h,o-z)
-   
-      !  This subroutine calculates the angular and radial grid points
-      !  and weights.  The current implementation presupposes Lebedev angular
-      !  and Euler-Maclaurin radial grids.
-      ! - 50 radial points → LD0194 (194 angular points)
-      ! - 75 radial points → LD0302 (302 angular points)
-      ! - 99 radial points → LD0590 (590 angular points)
-      ! All shells get the same angular grid/no pruning
-   
-      select case(eml_nradial)
-      
-         case(50)
-            ! SG-1 style: 194 angular points
-            CALL LD0194(XANG, YANG, ZANG, WTANG, N)
-            iiang = 194
-            
-         case(75)
-            ! SG-2 style: 302 angular points
-            CALL LD0302(XANG, YANG, ZANG, WTANG, N)
-            iiang = 302
-            
-         case(99)
-            ! SG-3 style: 590 angular points
-            CALL LD0590(XANG, YANG, ZANG, WTANG, N)
-            iiang = 590
-            
-         case default
-            ! Fallback: use 194 points (SG-1 default)
-            CALL LD0194(XANG, YANG, ZANG, WTANG, N)
-            iiang = 194
-            
-      end select
-   
-   
-      !  The Lebedev weights are returned normalized to 1.  
-      !  Multiply them by 4Pi to get the correct value.
-   
-      do I=1,iiang
-         wtang(I)=wtang(I)*12.56637061435917295385d0
-      enddo
-   
-   end subroutine gridformEMLAngular
+   ! EML Grid -> LBD rename later
+!   subroutine gridformEMLAngular(iitype,distance,iiang)
+!      use allmod
+!      implicit double precision(a-h,o-z)
+!   
+!      !  This subroutine calculates the angular and radial grid points
+!      !  and weights.  The current implementation presupposes Lebedev angular
+!      !  and Euler-Maclaurin radial grids.
+!      ! - 50 radial points → LD0194 (194 angular points)
+!      ! - 75 radial points → LD0302 (302 angular points)
+!      ! - 99 radial points → LD0590 (590 angular points)
+!      ! All shells get the same angular grid/no pruning
+!   
+!      select case(eml_nradial)
+!      
+!         case(50)
+!            ! SG-1 style: 194 angular points
+!            CALL LD0194(XANG, YANG, ZANG, WTANG, N)
+!            iiang = 194
+!            
+!         case(75)
+!            ! SG-2 style: 302 angular points
+!            CALL LD0302(XANG, YANG, ZANG, WTANG, N)
+!            iiang = 302
+!            
+!         case(99)
+!            ! SG-3 style: 590 angular points
+!            CALL LD0590(XANG, YANG, ZANG, WTANG, N)
+!            iiang = 590
+!            
+!         case default
+!            ! Fallback: use 194 points (SG-1 default)
+!            CALL LD0194(XANG, YANG, ZANG, WTANG, N)
+!            iiang = 194
+!            
+!      end select
+!   
+!   
+!      !  The Lebedev weights are returned normalized to 1.  
+!      !  Multiply them by 4Pi to get the correct value.
+!   
+!      do I=1,iiang
+!         wtang(I)=wtang(I)*12.56637061435917295385d0
+!      enddo
+!   
+!   end subroutine gridformEMLAngular
 
    subroutine gridformEML(ngrid)
    
