@@ -459,6 +459,8 @@ module quick_method_module
             if (self%DFT) then
                 if (self%iSG .eq. 0) write(io,'(" STANDARD GRID = SG0")')
                 if (self%iSG .eq. 1) write(io,'(" STANDARD GRID = SG1")')
+                if (self%iSG .eq. 2) write(io,'(" STANDARD GRID = SG2")')
+                if (self%iSG .eq. 3) write(io,'(" STANDARD GRID = SG3")')
             endif
 
            write(io,'(" Level shifting allowed after cycle ", I4)') self%LShift_cycle
@@ -729,8 +731,15 @@ module quick_method_module
             if (self%DFT) then
                 if (index(keyWD,'SG0').ne.0) then
                     self%iSG=0
-                else
+                else if (index(keyWD,'SG1').ne.0) then
                     self%iSG=1
+                else if (index(keyWD,'SG2').ne.0) then
+                    self%iSG=2
+                else if (index(keyWD,'SG3').ne.0) then
+                    self%iSG=3
+                else
+                    self%iSG=2  ! default SG-2
+                    ! this line will cover other definition
                 endif
             endif
 
@@ -981,7 +990,7 @@ module quick_method_module
             self%DIVCON = .false.      ! Div&Con
 
             self%ifragbasis = 1        ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
-            self%iSG = 1               ! =0. SG0, =1. SG1(DEFAULT)
+            self%iSG = 1               ! =0. SG0, =1. (DEFAULT)
             self%MFCC = .false.        ! MFCC
 
             self%iscf = 200

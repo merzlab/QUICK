@@ -26,6 +26,49 @@ module quick_gridpoints_module
     use quick_MPI_module
     implicit double precision(a-h,o-z)
 
+
+    type sg2_pruning_type
+        integer :: n_shells(5)
+        integer :: lebedev_type(5)
+    end type sg2_pruning_type
+
+    ! Table 1
+    type(sg2_pruning_type), parameter :: sg2_prune(17) = (/ &
+        ! H - 1
+        sg2_pruning_type([35, 12, 16, 7, 5], [6, 110, 302, 86, 26]), &
+        sg2_pruning_type([0, 0, 0, 0, 0], [0, 0, 0, 0, 0]), &
+        ! Li - 3
+        sg2_pruning_type([35, 12, 17, 7, 4], [6, 110, 302, 86, 50]), &
+        ! Be - 4
+        sg2_pruning_type([35, 12, 17, 7, 4], [6, 110, 302, 86, 50]), &
+        ! B - 5
+        sg2_pruning_type([35, 12, 17, 7, 4], [6, 110, 302, 146, 26]), &
+        ! C - 6
+        sg2_pruning_type([35, 12, 17, 7, 4], [6, 110, 302, 146, 26]), &
+        ! N - 7
+        sg2_pruning_type([35, 12, 17, 7, 4], [6, 110, 302, 86, 26]), &
+        ! O - 8
+        sg2_pruning_type([30, 14, 18, 8, 5], [6, 110, 302, 146, 50]), &
+        ! F - 9
+        sg2_pruning_type([26, 16, 19, 8, 6], [6, 110, 302, 110, 50]), &
+        sg2_pruning_type([0, 0, 0, 0, 0], [0, 0, 0, 0, 0]), &
+        ! Na - 11
+        sg2_pruning_type([35, 12, 17, 7, 4], [6, 110, 302, 86, 50]), &
+        ! Mg - 12
+        sg2_pruning_type([35, 12, 17, 7, 4], [6, 110, 302, 86, 50]), &
+        ! Al - 13
+        sg2_pruning_type([32, 15, 17, 7, 4], [6, 110, 302, 146, 86]), &
+        ! Si - 14
+        sg2_pruning_type([32, 15, 17, 7, 4], [6, 110, 302, 146, 50]), &
+        ! P - 15
+        sg2_pruning_type([30, 14, 17, 7, 7], [6, 110, 302, 146, 38]), &
+        ! S - 16
+        sg2_pruning_type([30, 14, 17, 7, 7], [6, 110, 302, 146, 38]), &
+        ! Cl - 17
+        sg2_pruning_type([26, 16, 19, 8, 6], [6, 110, 302, 110, 50]) &
+    /)
+
+
     type quick_xc_grid_type
 
     !Binned grid point coordinates
@@ -164,14 +207,6 @@ module quick_gridpoints_module
 #ifdef MPIV
    if(master) then
 #endif
-   
-if (quick_method%iSG.eq.1) then
-    call gridformEML(50)
-else if (quick_method%iSG.eq.2) then
-    call gridformEML(75)
-else if (quick_method%iSG.eq.3) then
-    call gridformEML(99)
-endif
 
 #ifdef MPIV
   endif
@@ -184,8 +219,7 @@ endif
 #endif
     RECORD_TIME(timer_begin%TDFTGrdGen)
 
-    ! form SG1 grid
-    !if(quick_method%iSG.eq.1) call gridformEML()
+    ! form grid
 
     idx_grid = 0
     do Iatm=1,natom
@@ -193,16 +227,23 @@ endif
          Iradtemp = 50
          call gridformEML(Iradtemp)
       else if (quick_method%iSG.eq.2) then
-         call gridformEML(75)
+         Iradtemp = 75
+         call gridformDoubleExp(Iradtemp, quick_molspec%iattype(iatm))
       else if (quick_method%iSG.eq.3) then
-         call gridformEML(99)
-      else ! SG-0
+         Iradtemp = 99
+         call gridformDoubleExp(Iradtemp, quick_molspec%iattype(iatm))
+      else if (quick_method%iSG.eq.0) then
          if(quick_molspec%iattype(iatm).le.10)then
                Iradtemp=23
          else
                Iradtemp=26
          endif
+      else
+         ! default case - fall back to SG1
+         Iradtemp = 50
+         call gridformEML(Iradtemp)
       endif
+
       do Irad = 1, Iradtemp
             if(quick_method%iSG.eq.1)then
                call gridformSG1Angular(iatm,RGRID(Irad),iiangt)
@@ -210,13 +251,15 @@ endif
             else if(quick_method%iSG.eq.0)then
                call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
                rad = radii2(quick_molspec%iattype(iatm))
-            else if(quick_method%iSG.eq.2 .or. quick_method%iSG.eq.3)then
-               ! EML Grid (iSG = 2 or 3)
-!               call gridformEMLAngular(iatm,RGRID(Irad),iiangt)
+            else if(quick_method%iSG.eq.2)then
+               call gridformSG2Angular(quick_molspec%iattype(iatm),Irad,iiangt)
+               rad = radii(quick_molspec%iattype(iatm))
+            else if(quick_method%iSG.eq.3)then
+               call gridformSG3Angular(quick_molspec%iattype(iatm),Irad,iiangt)
                rad = radii(quick_molspec%iattype(iatm))
             else
-               ! Unknown grid type - fallback to SG-1
-               call gridformSG1Angular(iatm,RGRID(Irad),iiangt)
+               ! Unknown grid type - use LBD
+               call gridformLBDAngular(iatm,RGRID(Irad),iiangt,Iradtemp)
                rad = radii(quick_molspec%iattype(iatm))
             endif
             
@@ -1225,58 +1268,141 @@ endif
    
    end subroutine gridformSG1Angular
 
+   subroutine gridformSG2Angular(atomic_number,Irad,iiangt)
+      use allmod
+      implicit double precision(a-h,o-z)
+      integer, intent(in) :: atomic_number
+      integer, intent(out) :: iiangt
+      integer :: lebedev_type
+      type(sg2_pruning_type) :: prune_data
       
-   ! EML Grid -> LBD rename later
-!   subroutine gridformEMLAngular(iitype,distance,iiang)
-!      use allmod
-!      implicit double precision(a-h,o-z)
-!   
-!      !  This subroutine calculates the angular and radial grid points
-!      !  and weights.  The current implementation presupposes Lebedev angular
-!      !  and Euler-Maclaurin radial grids.
-!      ! - 50 radial points → LD0194 (194 angular points)
-!      ! - 75 radial points → LD0302 (302 angular points)
-!      ! - 99 radial points → LD0590 (590 angular points)
-!      ! All shells get the same angular grid/no pruning
-!   
-!      select case(eml_nradial)
-!      
-!         case(50)
-!            ! SG-1 style: 194 angular points
-!            CALL LD0194(XANG, YANG, ZANG, WTANG, N)
-!            iiang = 194
-!            
-!         case(75)
-!            ! SG-2 style: 302 angular points
-!            CALL LD0302(XANG, YANG, ZANG, WTANG, N)
-!            iiang = 302
-!            
-!         case(99)
-!            ! SG-3 style: 590 angular points
-!            CALL LD0590(XANG, YANG, ZANG, WTANG, N)
-!            iiang = 590
-!            
-!         case default
-!            ! Fallback: use 194 points (SG-1 default)
-!            CALL LD0194(XANG, YANG, ZANG, WTANG, N)
-!            iiang = 194
-!            
-!      end select
-!   
-!   
-!      !  The Lebedev weights are returned normalized to 1.  
-!      !  Multiply them by 4Pi to get the correct value.
-!   
-!      do I=1,iiang
-!         wtang(I)=wtang(I)*12.56637061435917295385d0
-!      enddo
-!   
-!   end subroutine gridformEMLAngular
+      ! elements not listed in table 1 won't use pruned grids
+      if (atomic_number == 2 .or. atomic_number == 10 .or. atomic_number > 17) then         
+         CALL LD0302(XANG, YANG, ZANG, WTANG, N)
+         iiangt = 302
+         do I = 1, iiangt
+            wtang(I) = wtang(I) * 12.56637061435917295385d0
+         enddo
+         return
+      endif
+
+   !    type sg2_pruning_type
+   !      integer :: n_shells(5)
+   !      integer :: lebedev_type(5)
+   !  end type sg2_pruning_type
+
+      prune_data = sg2_prune(atomic_number)
+      if(Irad <= prune_data%n_shells(1)) then
+         lebedev_type = prune_data%lebedev_type(1)
+      else if(Irad <= (prune_data%n_shells(1)+prune_data%n_shells(2))) then
+         lebedev_type = prune_data%lebedev_type(2)
+      else if(Irad <= (prune_data%n_shells(1)+prune_data%n_shells(2)+prune_data%n_shells(3))) then
+         lebedev_type = prune_data%lebedev_type(3)
+      else if(Irad <= (prune_data%n_shells(1)+prune_data%n_shells(2)+prune_data%n_shells(3)+prune_data%n_shells(4))) then
+         lebedev_type = prune_data%lebedev_type(4)
+      else
+         lebedev_type = prune_data%lebedev_type(5)
+      endif
+
+      select case(lebedev_type)
+         case(6)
+            CALL LD0006(XANG, YANG, ZANG, WTANG, N)
+            iiang=6
+         case(26)
+            CALL LD0026(XANG, YANG, ZANG, WTANG, N)
+            iiang=26
+         case(38)
+            CALL LD0038(XANG, YANG, ZANG, WTANG, N)
+            iiang=38
+         case(50)
+            CALL LD0050(XANG, YANG, ZANG, WTANG, N)
+            iiang=50
+         case(74)
+            CALL LD0074(XANG, YANG, ZANG, WTANG, N)
+            iiang=74
+         case(86)
+            CALL LD0086(XANG, YANG, ZANG, WTANG, N)
+            iiang=86
+         case(110)
+            CALL LD0110(XANG, YANG, ZANG, WTANG, N)
+            iiang=110
+         case(146)
+            CALL LD0146(XANG, YANG, ZANG, WTANG, N)
+            iiang=146
+         case(170)
+            CALL LD0170(XANG, YANG, ZANG, WTANG, N)
+            iiang=170
+         case(194)
+            CALL LD0194(XANG, YANG, ZANG, WTANG, N)
+            iiang=194
+         case(302)
+            CALL LD0302(XANG, YANG, ZANG, WTANG, N)
+            iiang=302
+      end select
+
+      ! The Lebedev weights are returned normalized to 1.
+      ! Multiply them by 4π to get the correct value.
+      do I = 1, iiangt
+         wtang(I) = wtang(I) * 12.56637061435917295385d0
+      enddo
+   end subroutine gridformSG2Angular
+
+   subroutine gridformSG3Angular(iatm,Irad,iiangt)
+   end subroutine gridformSG3Angular
+
+
+   subroutine gridformLBDAngular(iitype,distance,iiang,eml_nradial)
+      use allmod
+      implicit double precision(a-h,o-z)
+      integer, intent(in) :: iitype, eml_nradial
+      integer, intent(out) :: iiang
+
+      !  This subroutine calculates the angular and radial grid points
+      !  and weights.  The current implementation presupposes Lebedev angular
+      !  and Euler-Maclaurin radial grids.
+      ! - 50 radial points → LD0194 (194 angular points)
+      ! - 75 radial points → LD0302 (302 angular points)
+      ! - 99 radial points → LD0590 (590 angular points)
+      ! All shells get the same angular grid/no pruning
+   
+      select case(eml_nradial)
+      
+         case(50)
+            ! unpruned SG-1 style: 194 angular points
+            CALL LD0194(XANG, YANG, ZANG, WTANG, N)
+            iiang = 194
+            
+         case(75)
+            ! unpruned SG-2 style: 302 angular points
+            CALL LD0302(XANG, YANG, ZANG, WTANG, N)
+            iiang = 302
+            
+         case(99)
+            ! unpruned SG-3 style: 590 angular points
+            CALL LD0590(XANG, YANG, ZANG, WTANG, N)
+            iiang = 590
+            
+         case default
+            ! Fallback: use 302 points (unpruned SG-2 default)
+            CALL LD0302(XANG, YANG, ZANG, WTANG, N)
+            iiang = 302
+            
+      end select
+   
+   
+      !  The Lebedev weights are returned normalized to 1.  
+      !  Multiply them by 4Pi to get the correct value.
+   
+      do I=1,iiang
+         wtang(I)=wtang(I)*12.56637061435917295385d0
+      enddo
+   
+   end subroutine gridformLBDAngular
 
    subroutine gridformEML(ngrid)
    
       implicit none
-      integer, intent(in) :: ngrid ! ngrid = 50 for SG-1, 75 for SG-2, 99 for SG-3
+      integer, intent(in) :: ngrid ! ngrid = 50 for SG-1
       integer i
 
       do I = 1, ngrid
@@ -1286,6 +1412,50 @@ endif
       enddo
    
    end subroutine gridformEML
+
+   subroutine gridformDoubleExp(ngrid, atomic_number)
+   
+      implicit none
+      integer, intent(in) :: atomic_number, ngrid ! ngrid for SG-2, 99 for SG-3
+      integer i
+      real*8 :: h, x_i, exp_term, alpha
+
+      select case(atomic_number)
+         case(1)  ! H
+            alpha = 2.6d0
+         case(3, 11)  ! Li, Na
+            alpha = 3.2d0
+         case (4, 5, 12) !Be, B, Mg
+            alpha = 2.4d0
+         case (6, 7, 8, 9) !C, N, O, F
+            alpha = 2.2d0
+         case (14) !Si
+            alpha = 2.3d0
+         case (13, 15, 16, 17) !Al, P, S, Cl
+            alpha = 2.5d0
+         case default  ! All other elements will use unpruned method-gridformEML
+            alpha = -1
+      end select
+
+      if(alpha == -1) then
+         call gridformEML(ngrid)
+      else 
+         ! Grid spacing in x-space: x ∈ [-1, 1]
+         h = 2.0d0 / dble(ngrid - 1)
+
+         do i = 1, ngrid
+            x_i = -1.0d0 + dble(i-1) * h
+            exp_term = exp(-x_i)
+
+            ! Radial point - Eq. 8
+            RGRID(i) = exp(alpha * x_i - exp_term)
+            ! Weight - Eq. 9
+            RWT(i) = h * exp(3.0d0 * alpha * x_i - 3.0d0 * exp_term) * &
+                        (alpha + exp_term)
+         enddo
+      endif
+      
+   end subroutine gridformDoubleExp
    
 #include "./include/labedev.fh"
    
