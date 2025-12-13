@@ -92,7 +92,7 @@ module quick_method_module
         integer :: ifragbasis = 1      ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
 
         ! this is DFT grid
-        integer :: iSG = 1             ! =0. SG0, =1. SG1(DEFAULT)
+        integer :: iSG = 2             ! =0. SG0, =1. SG1(DEFAULT)
 
         ! Initial guess part
         logical :: SAD = .true.        ! SAD initial guess(default)
@@ -953,7 +953,7 @@ module quick_method_module
             self%DIVCON = .false.      ! Div&Con
 
             self%ifragbasis = 1        ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
-            self%iSG = 1               ! =0. SG0, =1. (DEFAULT)
+            self%iSG = 2               ! =0. SG0, =1. (DEFAULT)
             self%MFCC = .false.        ! MFCC
 
             self%iscf = 200

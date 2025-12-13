@@ -238,33 +238,31 @@ module quick_gridpoints_module
          else
                Iradtemp=26
          endif
-      else
-         ! default case - fall back to SG1
-         Iradtemp = 50
-         call gridformEML(Iradtemp)
       endif
 
       do Irad = 1, Iradtemp
             if(quick_method%iSG.eq.1)then
-               call gridformSG1Angular(iatm,RGRID(Irad),iiangt)
+               call gridformSG1Angular(iatm,RGRID(Irad),iiang)
                rad = radii(quick_molspec%iattype(iatm))
             else if(quick_method%iSG.eq.0)then
-               call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
+               call gridformSG0(iatm,Iradtemp+1-Irad,iiang,RGRID,RWT)
                rad = radii2(quick_molspec%iattype(iatm))
+
             else if(quick_method%iSG.eq.2)then
-               call gridformSG2Angular(quick_molspec%iattype(iatm),Irad,iiangt)
+               call gridformSG2Angular(quick_molspec%iattype(iatm),Irad,iiang)
                rad = radii(quick_molspec%iattype(iatm))
+
             else if(quick_method%iSG.eq.3)then
-               call gridformSG3Angular(quick_molspec%iattype(iatm),Irad,iiangt)
+               call gridformSG3Angular(quick_molspec%iattype(iatm),Irad,iiang)
                rad = radii(quick_molspec%iattype(iatm))
-            else
-               ! Unknown grid type - use LBD
-               call gridformLBDAngular(iatm,RGRID(Irad),iiangt,Iradtemp)
-               rad = radii(quick_molspec%iattype(iatm))
+            ! else
+            !    ! Unknown grid type - use LBD
+            !    call gridformLBDAngular(iiang,Iradtemp)
+            !    rad = radii(quick_molspec%iattype(iatm))
             endif
             
             rad3 = rad*rad*rad
-            do Iang=1,iiangt
+            do Iang=1,iiang
                 idx_grid=idx_grid+1
                 xcg_tmp%init_grid_ptx(idx_grid)=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
                 xcg_tmp%init_grid_pty(idx_grid)=xyz(2,Iatm)+rad*RGRID(Irad)*YANG(Iang)
@@ -1268,28 +1266,25 @@ module quick_gridpoints_module
    
    end subroutine gridformSG1Angular
 
-   subroutine gridformSG2Angular(atomic_number,Irad,iiangt)
+   subroutine gridformSG2Angular(atomic_number,Irad,iiang)
       use allmod
       implicit double precision(a-h,o-z)
       integer, intent(in) :: atomic_number
-      integer, intent(out) :: iiangt
+      integer, intent(in) :: Irad 
+      integer, intent(out) :: iiang
       integer :: lebedev_type
       type(sg2_pruning_type) :: prune_data
       
+
       ! elements not listed in table 1 won't use pruned grids
       if (atomic_number == 2 .or. atomic_number == 10 .or. atomic_number > 17) then         
          CALL LD0302(XANG, YANG, ZANG, WTANG, N)
-         iiangt = 302
-         do I = 1, iiangt
+         iiang = 302
+         do I = 1, iiang
             wtang(I) = wtang(I) * 12.56637061435917295385d0
          enddo
          return
       endif
-
-   !    type sg2_pruning_type
-   !      integer :: n_shells(5)
-   !      integer :: lebedev_type(5)
-   !  end type sg2_pruning_type
 
       prune_data = sg2_prune(atomic_number)
       if(Irad <= prune_data%n_shells(1)) then
@@ -1342,19 +1337,19 @@ module quick_gridpoints_module
 
       ! The Lebedev weights are returned normalized to 1.
       ! Multiply them by 4π to get the correct value.
-      do I = 1, iiangt
+      do I = 1, iiang
          wtang(I) = wtang(I) * 12.56637061435917295385d0
       enddo
    end subroutine gridformSG2Angular
 
-   subroutine gridformSG3Angular(iatm,Irad,iiangt)
+   subroutine gridformSG3Angular(iatm,Irad,iiang)
    end subroutine gridformSG3Angular
 
 
-   subroutine gridformLBDAngular(iitype,distance,iiang,eml_nradial)
+   subroutine gridformLBDAngular(iiang,eml_nradial)
       use allmod
       implicit double precision(a-h,o-z)
-      integer, intent(in) :: iitype, eml_nradial
+      integer, intent(in) :: eml_nradial
       integer, intent(out) :: iiang
 
       !  This subroutine calculates the angular and radial grid points
@@ -1416,8 +1411,8 @@ module quick_gridpoints_module
    subroutine gridformDoubleExp(ngrid, atomic_number)
    
       implicit none
-      integer, intent(in) :: atomic_number, ngrid ! ngrid for SG-2, 99 for SG-3
-      integer i
+      integer, intent(in) :: atomic_number, ngrid ! 75 ngrid for SG-2, 99 for SG-3
+      integer :: i
       real*8 :: h, x_i, exp_term, alpha
 
       select case(atomic_number)
@@ -1439,21 +1434,22 @@ module quick_gridpoints_module
 
       if(alpha == -1) then
          call gridformEML(ngrid)
-      else 
-         ! Grid spacing in x-space: x ∈ [-1, 1]
-         h = 2.0d0 / dble(ngrid - 1)
-
-         do i = 1, ngrid
-            x_i = -1.0d0 + dble(i-1) * h
-            exp_term = exp(-x_i)
-
-            ! Radial point - Eq. 8
-            RGRID(i) = exp(alpha * x_i - exp_term)
-            ! Weight - Eq. 9
-            RWT(i) = h * exp(3.0d0 * alpha * x_i - 3.0d0 * exp_term) * &
-                        (alpha + exp_term)
-         enddo
+         return
       endif
+      
+      ! Grid spacing in x-space: x ∈ [-1, 1]
+      h = 2.0d0 / dble(ngrid - 1)
+
+      do i = 1, ngrid
+         x_i = -1.0d0 + dble(i-1) * h
+         exp_term = exp(-x_i)
+
+         ! Radial point - Eq. 8
+         RGRID(i) = exp(alpha * x_i - exp_term)
+         ! Weight - Eq. 9
+         RWT(i) = h * (alpha + exp_term) * exp(3.0d0 * alpha * x_i - 3.0d0 * exp_term)
+      enddo
+
       
    end subroutine gridformDoubleExp
    
