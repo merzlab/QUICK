@@ -1,6 +1,23 @@
 #!/usr/bin/python
 import re, sys
 
+##############################################################
+#                                                            #
+#    This script removes the redundant primitives from       #
+#    Dunning basis sets following the procedure outlined in  #
+#    Chem. Phys. Lett., 260 (1996) 514-18                    #
+#                                                            #
+#    Input: The basis set file from "Basis Set Exchange"     #
+#           with the headers removed along with the empty    #
+#           lines above "H     0"                            #
+#    Output: out.txt file with modified primitives           #
+#                                                            #
+#    Note: In case of an out.txt file alread present it      #
+#          will be overwritten                               #
+#          Compatible up to G functions (trivial to extend)  #
+#                                                            #
+##############################################################
+
 tol = 1.0E-10
 
 def eliminate(original):
@@ -66,57 +83,59 @@ def eliminate(original):
 
     return modified, elim
     
-alllines = open(sys.argv[1],'r').readlines()
+if __name__ == "__main__":
 
-with open("out.txt", "r+") as f:
-    f.truncate(0)
+    alllines = open(sys.argv[1],'r').readlines()
 
-lines = []
-for allline in alllines:
-    if allline != '****\n':
-        lines.append(allline)
-    else:
-        shellexps = {'S':[],'P':[],'D':[],'F':[],'G':[]}
-        shellmaxprim = {'S':0,'P':0,'D':0,'F':0,'G':0}
-        shellcoeffs = {'S':[],'P':[],'D':[],'F':[],'G':[]}
-        
-        for ind,line in enumerate(lines):
-            if re.search('[A-Z]\s+\d+\s+1.00',line):
-                shellnew = re.search('([A-Z])\s+\d+\s+1.00',line).group(1)
-                nprim = int(re.search('[A-Z]\s+(\d+)\s+1.00',line).group(1))
-                shellexps[shellnew] = shellexps[shellnew] + [ float(re.sub('D','E',x.strip().split()[0])) for x in lines[ind+1:ind+1+nprim] ]
-        
-        for j in list(shellexps.keys()):
-            shellexps[j] = list(set(shellexps[j]))
-            shellexps[j].sort(reverse=True)
-            shellmaxprim[j] = len(shellexps[j])
-        
-        for ind,line in enumerate(lines):
-            if re.search('[A-Z]\s+\d+\s+1.00',line):
-                shellnew = re.search('([A-Z])\s+\d+\s+1.00',line).group(1)
-                nprim = int(re.search('[A-Z]\s+(\d+)\s+1.00',line).group(1))
-                if shellmaxprim[shellnew] != 0:
-                    shellcoeffs[shellnew].append([ 0.0 for i in range(shellmaxprim[shellnew]) ])
-                    for x in lines[ind+1:ind+1+nprim]:
-                        expnew = float(re.sub('D','E',x.strip().split()[0]))
-                        for ind1,exp in enumerate(shellexps[shellnew]):
-                            if exp == expnew:
-                                shellcoeffs[shellnew][-1][ind1] = float(re.sub('D','E',x.strip().split()[1]))
-                                break
-        
-        modifiedcoeffs = {'S':[],'P':[],'D':[],'F':[],'G':[]}
-        elimcoeffs = {'S':[],'P':[],'D':[],'F':[],'G':[]}
-        
-        with open('out.txt','a') as fh:
-            fh.write(lines[0])
+    with open("out.txt", "r+") as f:
+        f.truncate(0)
+
+    lines = []
+    for allline in alllines:
+        if allline != '****\n':
+            lines.append(allline)
+        else:
+            shellexps = {'S':[],'P':[],'D':[],'F':[],'G':[]}
+            shellmaxprim = {'S':0,'P':0,'D':0,'F':0,'G':0}
+            shellcoeffs = {'S':[],'P':[],'D':[],'F':[],'G':[]}
+            
+            for ind,line in enumerate(lines):
+                if re.search('[A-Z]\s+\d+\s+1.00',line):
+                    shellnew = re.search('([A-Z])\s+\d+\s+1.00',line).group(1)
+                    nprim = int(re.search('[A-Z]\s+(\d+)\s+1.00',line).group(1))
+                    shellexps[shellnew] = shellexps[shellnew] + [ float(re.sub('D','E',x.strip().split()[0])) for x in lines[ind+1:ind+1+nprim] ]
+            
             for j in list(shellexps.keys()):
-                if shellmaxprim[j] != 0:
-                    modifiedcoeffs[j], elimcoeffs[j] = eliminate(shellcoeffs[j])
-                    for i in range(len(shellcoeffs[j])):
-                        fh.write(j+'    '+str(len(modifiedcoeffs[j][i])-len(elimcoeffs[j][i]))+'   1.00\n')
-                        for ind,line in enumerate(modifiedcoeffs[j][i]):
-                            if ind not in elimcoeffs[j][i]:
-                                fh.write(str(f"{shellexps[j][ind]:18.6E}").replace("E", "D")+str(f"{modifiedcoeffs[j][i][ind]:23.6E}").replace("E", "D")+'\n')
-            fh.write('****\n')
-        lines = []
+                shellexps[j] = list(set(shellexps[j]))
+                shellexps[j].sort(reverse=True)
+                shellmaxprim[j] = len(shellexps[j])
+            
+            for ind,line in enumerate(lines):
+                if re.search('[A-Z]\s+\d+\s+1.00',line):
+                    shellnew = re.search('([A-Z])\s+\d+\s+1.00',line).group(1)
+                    nprim = int(re.search('[A-Z]\s+(\d+)\s+1.00',line).group(1))
+                    if shellmaxprim[shellnew] != 0:
+                        shellcoeffs[shellnew].append([ 0.0 for i in range(shellmaxprim[shellnew]) ])
+                        for x in lines[ind+1:ind+1+nprim]:
+                            expnew = float(re.sub('D','E',x.strip().split()[0]))
+                            for ind1,exp in enumerate(shellexps[shellnew]):
+                                if exp == expnew:
+                                    shellcoeffs[shellnew][-1][ind1] = float(re.sub('D','E',x.strip().split()[1]))
+                                    break
+            
+            modifiedcoeffs = {'S':[],'P':[],'D':[],'F':[],'G':[]}
+            elimcoeffs = {'S':[],'P':[],'D':[],'F':[],'G':[]}
+            
+            with open('out.txt','a') as fh:
+                fh.write(lines[0])
+                for j in list(shellexps.keys()):
+                    if shellmaxprim[j] != 0:
+                        modifiedcoeffs[j], elimcoeffs[j] = eliminate(shellcoeffs[j])
+                        for i in range(len(shellcoeffs[j])):
+                            fh.write(j+'    '+str(len(modifiedcoeffs[j][i])-len(elimcoeffs[j][i]))+'   1.00\n')
+                            for ind,line in enumerate(modifiedcoeffs[j][i]):
+                                if ind not in elimcoeffs[j][i]:
+                                    fh.write(str(f"{shellexps[j][ind]:18.6E}").replace("E", "D")+str(f"{modifiedcoeffs[j][i][ind]:23.6E}").replace("E", "D")+'\n')
+                fh.write('****\n')
+            lines = []
 
