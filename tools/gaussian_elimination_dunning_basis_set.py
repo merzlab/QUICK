@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import re, sys
+from pathlib import Path
 
 ##############################################################
 #                                                            #
@@ -19,6 +20,7 @@ import re, sys
 ##############################################################
 
 tol = 1.0E-10
+thresh = 1.0E-3
 
 def eliminate(original):
     # list of elements that can be discarded
@@ -28,6 +30,40 @@ def eliminate(original):
     modified = [row[:] for row in original]
     
     nelems = len(original[0])
+    
+    row_consider = True
+    
+    for indi,i in enumerate(modified):
+        pivot = 0
+        found_scale = False
+        for indj,j in enumerate(i):
+            if abs(j) < tol and indj not in elim[indi]:
+                elim[indi].append(indj)
+        for indk,k in enumerate(modified):
+            if indk > indi:
+                for indj,j in enumerate(k):
+                    if abs(j) < tol and indj not in elim[indk]:
+                        elim[indk].append(indj)
+                for l in elim[indk]:
+                    if l not in elim[indi]:
+                        row_consider = False
+                        break
+                if not row_consider:
+                    row_consider = True
+                    continue
+                if not found_scale:
+                    for m in range(nelems):
+                        if m not in elim[indi] and abs(i[m]) > tol and abs(k[m]) > thresh:
+                            scale = k[m]/i[m]
+                            pivot = m
+                            found_scale = True
+                            break
+                else:
+                    scale = k[pivot]/i[pivot]
+                for m in range(nelems):
+                    modified[indk][m] = modified[indk][m] - scale*modified[indi][m]
+    
+    elim = [ x for x in list(reversed(elim)) ]
     
     row_consider = True
     
@@ -53,42 +89,21 @@ def eliminate(original):
                         break
                 for m in reversed(range(nelems)):
                     modified[(-1)*(indk+1)][m] = modified[(-1)*(indk+1)][m] - scale*modified[(-1)*(indi+1)][m]
-    
+
     elim = [ x for x in list(reversed(elim)) ]
     
-    row_consider = True
-    
-    for indi,i in enumerate(modified):
-        for indj,j in enumerate(i):
-            if abs(j) < tol and indj not in elim[indi]:
-                elim[indi].append(indj)
-        for indk,k in enumerate(modified):
-            if indk > indi:
-                for indj,j in enumerate(k):
-                    if abs(j) < tol and indj not in elim[indk]:
-                        elim[indk].append(indj)
-                for l in elim[indk]:
-                    if l not in elim[indi]:
-                        row_consider = False
-                        break
-                if not row_consider:
-                    row_consider = True
-                    continue
-                for m in reversed(range(nelems)):
-                    if m not in elim[indi] and abs(i[m]) > tol:
-                        scale = k[m]/i[m]
-                        break
-                for m in reversed(range(nelems)):
-                    modified[indk][m] = modified[indk][m] - scale*modified[indi][m]
-
     return modified, elim
     
 if __name__ == "__main__":
 
     alllines = open(sys.argv[1],'r').readlines()
 
-    with open("out.txt", "r+") as f:
-        f.truncate(0)
+    file = Path("out.txt")
+
+    if file.exists():
+        file.write_text("")   # truncates
+    else:
+        file.touch()          # creates empty file
 
     lines = []
     for allline in alllines:
