@@ -52,10 +52,12 @@
  *       type conventions than the one used below
  */
 #define CUDA_DIAG cuda_diag_
+#define Fock_DIAG fock_diag_
 
 #elif CUBLAS_FORTRAN_COMPILER==CUBLAS_INTEL_FORTRAN
 
 #define CUDA_DIAG cuda_diag_
+#define Fock_DIAG fock_diag_
 
 
 #else

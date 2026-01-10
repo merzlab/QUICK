@@ -476,10 +476,8 @@ subroutine electdiis(jscf,ierr)
          !-----------------------------------------------
 #if defined(GPU) || defined(MPIV_GPU)
         call cpu_time(timer_begin%TDiag)
-        call cuda_diag(quick_qm_struct%o, quick_qm_struct%x, quick_scratch%hold,&
-              quick_qm_struct%E, quick_qm_struct%idegen, &
-              quick_qm_struct%vec, quick_qm_struct%co, &
-              V2, nbasis)
+        call fock_diag(quick_qm_struct%o, quick_qm_struct%x, &
+              quick_qm_struct%E, quick_qm_struct%vec, nbasis)
          call cpu_time(timer_end%TDiag)
 
          call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &

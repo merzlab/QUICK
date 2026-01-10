@@ -243,8 +243,7 @@ subroutine fullx
    RECORD_TIME(timer_begin%T1eSD)
 
 #if defined(CUDA) || defined(CUDA_MPIV)
-   call cuda_diag(quick_scratch%hold, quick_scratch%tmpx, quick_scratch%tmphold, &
-   quick_scratch%Sminhalf, quick_scratch%IDEGEN1, quick_scratch%hold2, quick_scratch%tmpco, quick_scratch%V, nbasis)
+   call cuda_diag(quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, nbasis)
 #else
 #if defined(HIP) || defined(HIP_MPIV)
 #if defined(WITH_MAGMA)
@@ -268,6 +267,9 @@ subroutine fullx
 #endif
 #endif
 #endif
+
+   write(*,*)'quick_scratch%Sminhalf(1) = ', quick_scratch%Sminhalf(1)
+   write(*,*)'quick_scratch%hold2(1,1) = ',quick_scratch%hold2(1,1)
 
    RECORD_TIME(timer_end%T1eSD)
    timer_cumer%T1eSD = timer_cumer%T1eSD + timer_end%T1eSD - timer_begin%T1eSD

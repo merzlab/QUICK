@@ -1011,7 +1011,7 @@ extern "C" void mgpu_get_device_info_(int* dev_id, int* gpu_dev_mem,
     device_mem = (prop.totalGlobalMem / (1024 * 1024));
     *gpu_dev_mem = (int) device_mem;
     *gpu_num_proc = (int) (prop.multiProcessorCount);
-    *gpu_core_freq = (double) (prop.clockRate * 1e-6f);
+//    *gpu_core_freq = (double) (prop.clockRate * 1e-6f);
     strcpy(gpu_dev_name, prop.name);
     *name_len = strlen(gpu_dev_name);
     *majorv = prop.major;

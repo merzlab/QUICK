@@ -85,44 +85,43 @@ static void wrapperError (const char *funcName, int error)
 }
 
 
-void CUDA_DIAG (double* o, const double* x,double* hold,
-        const double* E, const double* idegen,
-        const double* vec, const double* co,
-        const double* V2, const int* nbasis)
+void Fock_DIAG (double* o, const double* x, const double* E, const double* vec, const int* nbasis)
 {
-    int ka, kb;
+    cudaError_t err1, err2, err3;
     cublasStatus_t stat1, stat2, stat3;
 
     double* devPtr_o = NULL;
     double* devPtr_x = NULL;
     double* devPtr_hold = NULL;
 
-    if (nbasis == 0) return;
+    if (*nbasis == 0) return;
 
     int dim = *nbasis;
 
-    stat1 = cudaMalloc((void**)&devPtr_o, sizeof(double) * imax(1, dim * dim));
-    stat2 = cudaMalloc((void**)&devPtr_x, sizeof(double) * imax(1, dim * dim));
-    stat3 = cudaMalloc((void**)&devPtr_hold, sizeof(double) * dim * dim);
+    err1 = cudaMalloc((void**)&devPtr_o, sizeof(double) * imax(1, dim * dim));
+    err2 = cudaMalloc((void**)&devPtr_x, sizeof(double) * imax(1, dim * dim));
+    err3 = cudaMalloc((void**)&devPtr_hold, sizeof(double) * dim * dim);
 
-    if ((stat1 != cudaSuccess)
-            || (stat2 != cudaSuccess)
-            || (stat3 != cudaSuccess)) {
-        wrapperError ("Dgemm", CUBLAS_WRAPPER_ERROR_ALLOC);
+    if ((err1 != cudaSuccess)
+            || (err2 != cudaSuccess)
+            || (err3 != cudaSuccess)) {
+        fprintf(stderr, "cudaMalloc failed in Fock_DIAG\n");
         cudaFree(devPtr_o);
         cudaFree(devPtr_x);
         cudaFree(devPtr_hold);
         return;
     }
 
-    stat1=cublasSetMatrix(dim,dim,sizeof(devPtr_o[0]),o,dim,devPtr_o,dim);
-    stat2=cublasSetMatrix(dim,dim,sizeof(devPtr_x[0]),x,dim,devPtr_x,dim);
-    stat3=cublasSetMatrix(dim,dim,sizeof(devPtr_hold[0]),hold,dim,devPtr_hold,dim);
+    err1 = cudaMemcpy(devPtr_o, o, sizeof(double)*dim*dim, cudaMemcpyHostToDevice);
+    err2 = cudaMemcpy(devPtr_x, x, sizeof(double)*dim*dim, cudaMemcpyHostToDevice);
 
-    if ((stat1 != CUBLAS_STATUS_SUCCESS) ||
-            (stat2 != CUBLAS_STATUS_SUCCESS) ||
-            (stat3 != CUBLAS_STATUS_SUCCESS)) {
-        wrapperError ("Dgemm", CUBLAS_WRAPPER_ERROR_SET);
+//    stat1=cublasSetMatrix(dim,dim,sizeof(devPtr_o[0]),o,dim,devPtr_o,dim);
+//    stat2=cublasSetMatrix(dim,dim,sizeof(devPtr_x[0]),x,dim,devPtr_x,dim);
+//    stat3=cublasSetMatrix(dim,dim,sizeof(devPtr_hold[0]),hold,dim,devPtr_hold,dim);
+
+    if ((err1 != cudaSuccess)
+            || (err2 != cudaSuccess)) {
+        fprintf(stderr, "cudaMemcpyHostToDevice cudaMemcpy failed in Fock_DIAG\n");
         cudaFree(devPtr_o);
         cudaFree(devPtr_x);
         cudaFree(devPtr_hold);
@@ -133,6 +132,7 @@ void CUDA_DIAG (double* o, const double* x,double* hold,
     cublasStatus_t cublas_status = CUBLAS_STATUS_SUCCESS;
     cublas_status = cublasCreate_v2(&cublasH);
     assert(CUBLAS_STATUS_SUCCESS == cublas_status);
+
 
     const double h_one = 1;
     const double h_zero = 0;
@@ -145,29 +145,60 @@ void CUDA_DIAG (double* o, const double* x,double* hold,
     cublasDgemm_v2(cublasH, CUBLAS_OP_N,CUBLAS_OP_N, dim, dim, dim, &h_one, devPtr_x, dim,
             devPtr_hold, dim, &h_zero, devPtr_o, dim);
 
-    //retrieve output matrix: stat1=cublasGetMatrix(dim, dim, sizeof(o[0]), devPtr_o, dim, o, dim);
-    //
-    //
-    //      stat1=cublasGetMatrix(dim, dim, sizeof(hold[0]), devPtr_hold, dim, hold, dim);
+    err3 = cudaMemcpy(o, devPtr_o, sizeof(double)*dim*dim, cudaMemcpyDeviceToHost);
+
+    if (err3 != cudaSuccess){
+        fprintf(stderr, "cudaMemcpyDeviceToHost cudaMemcpy failed in Fock_DIAG\n");
+    };
+
+    CUDA_DIAG (o, E, vec, nbasis);
+
+    if (devPtr_o) cudaFree(devPtr_o);
+    if (devPtr_x) cudaFree(devPtr_x);
+    if (devPtr_hold) cudaFree(devPtr_hold);
+    if (cublasH) cublasDestroy_v2(cublasH);
+}
+
+void CUDA_DIAG (double* M, const double* E, const double* vec, const int* nbasis)
+{
+    if (nbasis == 0) return;
+
+    int dim = *nbasis;
+
     cusolverDnHandle_t cusolverH = NULL;
     cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS;
 
     cudaError_t cudaStat1 = cudaSuccess;
     cudaError_t cudaStat2 = cudaSuccess;
     cudaError_t cudaStat3 = cudaSuccess;
+    cudaError_t cudaStat4 = cudaSuccess;
 
     //Step 1: create cusolver handle
     cusolver_status = cusolverDnCreate(&cusolverH);
     assert(CUSOLVER_STATUS_SUCCESS == cusolver_status);
 
     //Step 2: Copy arrays to device
+    double* devPtr_M = NULL;
+    cudaStat1 = cudaMalloc((void**)&devPtr_M, sizeof(double) * dim * dim);
+    if (cudaStat1 != cudaSuccess) {
+        fprintf(stderr, "cudaMalloc failed in CUDA_DIAG\n");
+        cudaFree(devPtr_M);
+        return;
+    }
+    cudaStat1 = cudaMemcpy(devPtr_M, M, sizeof(double)*dim*dim, cudaMemcpyHostToDevice);
+    if (cudaStat1 != cudaSuccess) {
+        fprintf(stderr, "cudaMemcpy failed in CUDA_DIAG\n");
+        cudaFree(devPtr_M);
+        return;
+    }
+
     double* devPtr_E = NULL;
-    cudaStat1 = cudaMalloc((void**)&devPtr_E, sizeof(double) * dim);
-    assert(cudaSuccess == cudaStat1);
+    cudaStat2 = cudaMalloc((void**)&devPtr_E, sizeof(double) * dim);
+    assert(cudaSuccess == cudaStat2);
 
     int* devPtr_devInfo = NULL;
-    cudaStat2 = cudaMalloc((void**)&devPtr_devInfo, sizeof(double));
-    assert(cudaSuccess == cudaStat2);
+    cudaStat3 = cudaMalloc((void**)&devPtr_devInfo, sizeof(double));
+    assert(cudaSuccess == cudaStat3);
 
     cusolverEigMode_t jobz = CUSOLVER_EIG_MODE_VECTOR;
     cublasFillMode_t uplo = CUBLAS_FILL_MODE_UPPER;
@@ -176,60 +207,32 @@ void CUDA_DIAG (double* o, const double* x,double* hold,
 
     // Query the workspace for work buffer size
     cusolver_status = cusolverDnDsyevd_bufferSize(cusolverH, jobz,
-            uplo, dim, devPtr_o, dim, devPtr_E, &lwork);
+            uplo, dim, devPtr_M, dim, devPtr_E, &lwork);
     assert(cusolver_status == CUSOLVER_STATUS_SUCCESS);
 
     double* devPtr_work = NULL;
 
     // Allocate work space
-    cudaStat3 = cudaMalloc((void**)&devPtr_work, sizeof(double)*lwork);
-    assert(cudaSuccess == cudaStat3);
+    cudaStat4 = cudaMalloc((void**)&devPtr_work, sizeof(double)*lwork);
+    assert(cudaSuccess == cudaStat4);
 
     // Compute Spectrum
     cusolver_status = cusolverDnDsyevd(cusolverH, jobz,
-            uplo, dim, devPtr_o, dim, devPtr_E, devPtr_work, lwork, devPtr_devInfo);
-    cudaStat1 = cudaDeviceSynchronize();
+            uplo, dim, devPtr_M, dim, devPtr_E, devPtr_work, lwork, devPtr_devInfo);
+    cudaStat2 = cudaDeviceSynchronize();
     assert(CUSOLVER_STATUS_SUCCESS == cusolver_status);
-    assert(cudaSuccess == cudaStat1);
+    assert(cudaSuccess == cudaStat2);
 
     //kwk
 
-    cudaStat1 = cudaMemcpy((void*) vec, devPtr_o, sizeof(double)*dim*dim, cudaMemcpyDeviceToHost);
-    cudaStat2 = cudaMemcpy((void*) E, devPtr_E, sizeof(double)*dim, cudaMemcpyDeviceToHost);
-    assert(cudaSuccess == cudaStat1 && cudaSuccess == cudaStat2);
+    cudaStat3 = cudaMemcpy((void*) vec, devPtr_M, sizeof(double)*dim*dim, cudaMemcpyDeviceToHost);
+    cudaStat4 = cudaMemcpy((void*) E, devPtr_E, sizeof(double)*dim, cudaMemcpyDeviceToHost);
+    assert(cudaSuccess == cudaStat3 && cudaSuccess == cudaStat4);
 
-    //stat1=cublasGetMatrix(dim, dim, sizeof(vec[0]), devPtr_o, dim, vec, dim);
-
-    /*
-       stat1=cublasGetMatrix(dim, dim, sizeof(o[0]), devPtr_o, dim, o, dim);
-       printf("o\n");
-       for(int i=0; i<dim*dim; i++)
-       {
-       printf("%d %f\n", i, o[i]);
-       }
-
-       stat1=cublasGetMatrix(dim, dim, sizeof(o[0]), devPtr_E, dim, o, dim);
-       printf("E\n");
-       for(int i=0; i<dim*dim; i++)
-       {
-       printf("%d %f\n", i, o[i]);
-       }
-
-       stat1=cublasGetMatrix(dim, dim, sizeof(o[0]), devPtr_work, dim, o, dim);
-       printf("work\n");
-       for(int i=0; i<dim*dim; i++)
-       {
-       printf("%d %f\n", i, o[i]);
-       }
-*/
-
-    if (devPtr_o) cudaFree(devPtr_o);
-    if (devPtr_x) cudaFree(devPtr_x);
-    if (devPtr_hold) cudaFree(devPtr_hold);
+    if (devPtr_M) cudaFree(devPtr_M);
     if (devPtr_E) cudaFree(devPtr_E);
     if (devPtr_devInfo) cudaFree(devPtr_devInfo);
     if (devPtr_work) cudaFree(devPtr_work);
 
     if (cusolverH) cusolverDnDestroy(cusolverH);
-    if (cublasH) cublasDestroy_v2(cublasH);
 }
