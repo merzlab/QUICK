@@ -345,6 +345,15 @@ extern "C" void gpu_init_device_(int* ierr)
     status = hipGetDeviceProperties(&deviceProp, device);
     PRINTERROR(status, "hipGetDeviceProperties gpu_init failed!");
 
+#if defined(HIP) || defined(HIP_MPIV)
+    hipDeviceSetCacheConfig(hipFuncCachePreferL1);
+    /* NOTE: setting the stack size limit to 8K is required for correctness
+     * in HIP/MPI+HIP codes to workaround GPU kernel issues for recent ROCm versions (>= v6.2.1);
+     * ideally, this could be dropped in the future if ROCm properly addresses
+     * this issues internally */
+    hipDeviceSetLimit(hipLimitStackSize, 8192);
+#endif
+
 #if defined(DEBUG)
     size_t val;
 

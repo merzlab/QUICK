@@ -168,7 +168,7 @@ vector<node> generate_octree(_gpack_type gps, int bin_size, int max_lvl){
 	int id = 0;
 
 	/*Create the root node and set properties*/
-	node root;
+	node root{};
 	root.level = 0;
 	root.id = id;
 	root.parent = -1;
@@ -268,7 +268,7 @@ vector<node> generate_octree(_gpack_type gps, int bin_size, int max_lvl){
 				*********************************/ 
 
 				/*Define a new node and set temporary boundaries*/
-				node nnew;
+				node nnew{};
 				nnew.xmin = n.xmin;
 				nnew.ymin = n.ymin;
 				nnew.zmin = n.zmin;
