@@ -268,9 +268,6 @@ subroutine fullx
 #endif
 #endif
 
-   write(*,*)'quick_scratch%Sminhalf(1) = ', quick_scratch%Sminhalf(1)
-   write(*,*)'quick_scratch%hold2(1,1) = ',quick_scratch%hold2(1,1)
-
    RECORD_TIME(timer_end%T1eSD)
    timer_cumer%T1eSD = timer_cumer%T1eSD + timer_end%T1eSD - timer_begin%T1eSD
 

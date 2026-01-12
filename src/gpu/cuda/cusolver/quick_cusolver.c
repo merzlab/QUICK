@@ -115,10 +115,6 @@ void Fock_DIAG (double* o, const double* x, const double* E, const double* vec, 
     err1 = cudaMemcpy(devPtr_o, o, sizeof(double)*dim*dim, cudaMemcpyHostToDevice);
     err2 = cudaMemcpy(devPtr_x, x, sizeof(double)*dim*dim, cudaMemcpyHostToDevice);
 
-//    stat1=cublasSetMatrix(dim,dim,sizeof(devPtr_o[0]),o,dim,devPtr_o,dim);
-//    stat2=cublasSetMatrix(dim,dim,sizeof(devPtr_x[0]),x,dim,devPtr_x,dim);
-//    stat3=cublasSetMatrix(dim,dim,sizeof(devPtr_hold[0]),hold,dim,devPtr_hold,dim);
-
     if ((err1 != cudaSuccess)
             || (err2 != cudaSuccess)) {
         fprintf(stderr, "cudaMemcpyHostToDevice cudaMemcpy failed in Fock_DIAG\n");
