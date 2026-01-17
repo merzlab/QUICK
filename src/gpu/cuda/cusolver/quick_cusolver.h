@@ -44,8 +44,6 @@
 #if defined(__cplusplus)
 extern "C" {
 
-  void Fock_DIAG (double* o, const double* x, const double* E, const double* vec, const int* nbasis);  
-
   void CUDA_DIAG (double* o, const double* E, const double* vec, const int* nbasis);  
 
 }
