@@ -632,13 +632,7 @@ contains
            ! First you have to transpose this into an orthogonal basis, which
            ! is accomplished by calculating Transpose[X] . O . X.
            !-----------------------------------------------
-#if defined(CUDA) || defined(CUDA_MPIV)
-          RECORD_TIME(timer_begin%TDiag)
-          call fock_diag(quick_qm_struct%o, quick_qm_struct%x, &
-                quick_qm_struct%E, quick_qm_struct%vec, nbasis)
-           RECORD_TIME(timer_end%TDiag)
-#else
-#if defined(HIP) || defined(HIP_MPIV)
+#if defined(GPU) || defined(GPU_MPIV)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold, nbasis)
 
@@ -666,6 +660,8 @@ contains
                  quick_qm_struct%idegen, quick_qm_struct%vec, IERROR)
 #endif
 #endif
+#elif defined(CUDA) || defined(CUDA_MPIV)
+           call CUDA_DIAG(quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, nbasis)
 #else
 #if defined(LAPACK) || defined(MKL)
            call DIAGMKL(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
@@ -675,7 +671,6 @@ contains
 #endif
 #endif
            RECORD_TIME(timer_end%TDiag)
-#endif
 
            timer_cumer%TDiag = timer_end%TDiag - timer_begin%TDiag
   
@@ -738,13 +733,7 @@ contains
            ! First you have to transpose this into an orthogonal basis, which
            ! is accomplished by calculating Transpose[X] . O . X.
            !-----------------------------------------------
-#if defined(CUDA) || defined(CUDA_MPIV)
-          RECORD_TIME(timer_begin%TDiag)
-          call fock_diag(quick_qm_struct%ob, quick_qm_struct%x,&
-                quick_qm_struct%EB, quick_qm_struct%vec, nbasis)
-           RECORD_TIME(timer_end%TDiag)
-#else
-#if defined(HIP) || defined(HIP_MPIV)
+#if defined(GPU) || defined(GPU_MPIV)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%ob, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
@@ -772,6 +761,8 @@ contains
                  quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
 #endif
 #endif
+#elif defined(CUDA) || defined(CUDA_MPIV)
+           call CUDA_DIAG(quick_qm_struct%ob, quick_qm_struct%EB, quick_qm_struct%vec, nbasis)
 #else
 #if defined(LAPACK) || defined(MKL)
            call DIAGMKL(nbasis,quick_qm_struct%ob,quick_qm_struct%EB,quick_qm_struct%vec,IERROR)
@@ -781,7 +772,6 @@ contains
 #endif
 #endif
            RECORD_TIME(timer_end%TDiag)
-#endif
 
            timer_cumer%TDiag=timer_cumer%TDiag+timer_end%TDiag-timer_begin%TDiag
 
