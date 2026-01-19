@@ -6,6 +6,13 @@
 !-----------------------------------------------------------
 
 subroutine MatDiag(Mat,Eig,Vec,Cutoff,idegen,V2,nbasis)
+#if defined(HIP) || defined(HIP_MPIV)
+#if defined(WITH_MAGMA)
+     use quick_magma_module, only: magmaDIAG
+#elif defined(WITH_ROCSOLVER)
+     use quick_rocsolver_module, only: rocDIAG
+#endif
+#endif
 
     integer :: nbasis,IERROR
     double precision :: Mat(nbasis,nbasis), Eig(nbasis), Vec(nbasis,nbasis)
