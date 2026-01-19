@@ -634,29 +634,6 @@ contains
            RECORD_TIME(timer_begin%TDiag)
            call MatDiag(quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, &
              quick_method%DMCutoff, quick_qm_struct%idegen, V2, nbasis)
-!#if defined(HIP) || defined(HIP_MPIV)
-!#if defined(WITH_MAGMA)
-!           call magmaDIAG(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
-!#elif defined(WITH_ROCSOLVER)
-!           call rocDIAG(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
-!#else
-!#if defined(LAPACK) || defined(MKL)
-!           call DIAGMKL(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
-!#else
-!           call DIAG(nbasis, quick_qm_struct%o, nbasis, quick_method%DMCutoff, V2, quick_qm_struct%E, &
-!                 quick_qm_struct%idegen, quick_qm_struct%vec, IERROR)
-!#endif
-!#endif
-!#elif defined(CUDA) || defined(CUDA_MPIV)
-!           call CUDA_DIAG(quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, nbasis)
-!#else
-!#if defined(LAPACK) || defined(MKL)
-!           call DIAGMKL(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
-!#else
-!           call DIAG(nbasis, quick_qm_struct%o, nbasis, quick_method%DMCutoff, V2, quick_qm_struct%E, &
-!                 quick_qm_struct%idegen, quick_qm_struct%vec, IERROR)
-!#endif
-!#endif
            RECORD_TIME(timer_end%TDiag)
 
            ! Calculate C = XC' and form a new density matrix.
