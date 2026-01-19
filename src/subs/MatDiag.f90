@@ -7,9 +7,9 @@
 
 subroutine MatDiag(Mat,Eig,Vec,Cutoff,idegen,V2,nbasis)
 
-    double precision :: Mat(nbasis,nbasis), Eig(nbasis), Vec(nbasis,nbasis)
-    double precision :: V2(3, nbasis), idegen(nbasis)
     integer :: nbasis,IERROR
+    double precision :: Mat(nbasis,nbasis), Eig(nbasis), Vec(nbasis,nbasis)
+    double precision :: V2(3, nbasis), idegen(nbasis), Cutoff
 
 #if defined(HIP) || defined(HIP_MPIV)                                          
 #if defined(WITH_MAGMA)
