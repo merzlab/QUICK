@@ -166,11 +166,6 @@ contains
 
 #if defined(HIP) || defined(HIP_MPIV)
      use quick_rocblas_module, only: rocDGEMM
-#if defined(WITH_MAGMA)
-     use quick_magma_module, only: magmaDIAG
-#elif defined(WITH_ROCSOLVER)
-     use quick_rocsolver_module, only: rocDIAG
-#endif
 #endif
 #if defined(MPIV)
      use mpi
