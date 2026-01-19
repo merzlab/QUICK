@@ -241,33 +241,8 @@ subroutine fullx
 
    ! Now diagonalize HOLD to generate the eigenvectors and eigenvalues.
    RECORD_TIME(timer_begin%T1eSD)
-
-#if defined(CUDA) || defined(CUDA_MPIV)
-   call cuda_diag(quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, nbasis)
-#else
-#if defined(HIP) || defined(HIP_MPIV)
-#if defined(WITH_MAGMA)
-   call magmaDIAG(nbasis, quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, IERROR)
-#elif defined(WITH_ROCSOLVER)
-   call rocDIAG(nbasis, quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, IERROR)
-#else
-#if defined(LAPACK) || defined(MKL)
-   call DIAGMKL(nbasis, quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, IERROR)
-#else
-   call DIAG(NBASIS, quick_scratch%hold, NBASIS,quick_method%DMCutoff, quick_scratch%V, quick_scratch%Sminhalf, &
-   quick_scratch%IDEGEN1, quick_scratch%hold2, IERROR)
-#endif
-#endif
-#else
-#if defined(LAPACK) || defined(MKL)
-   call DIAGMKL(nbasis, quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, IERROR)
-#else
-   call DIAG(NBASIS, quick_scratch%hold, NBASIS,quick_method%DMCutoff, quick_scratch%V, quick_scratch%Sminhalf, &
-   quick_scratch%IDEGEN1, quick_scratch%hold2, IERROR)
-#endif
-#endif
-#endif
-
+   call MatDiag(quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, &
+     quick_method%DMCutoff, quick_scratch%IDEGEN1, quick_scratch%V, nbasis)
    RECORD_TIME(timer_end%T1eSD)
    timer_cumer%T1eSD = timer_cumer%T1eSD + timer_end%T1eSD - timer_begin%T1eSD
 
