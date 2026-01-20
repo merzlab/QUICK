@@ -16,18 +16,19 @@
 #define MAX_STR_LEN (256)
 
 
-extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gpu_dev_mem,
-        int* gpu_num_proc,double* gpu_core_freq,char* gpu_dev_name,int* name_len, int* majorv, int* minorv)
+extern "C" void gpu_get_device_info_(int *gpu_dev_count, int *gpu_dev_id, int *gpu_dev_mem,
+        int *gpu_num_proc, double *gpu_core_freq, char *gpu_dev_name, int *name_len,
+        int *majorv, int *minorv)
 {
     cudaDeviceProp prop;
     size_t device_mem;
+    int gpu_clockrate_khz;
     cudaError_t status;
     
     *gpu_dev_id = 0;  // currently one single GPU is supported
     gpuGetDeviceCount(gpu_dev_count);
 
-    if (*gpu_dev_count == 0) 
-    {
+    if (*gpu_dev_count == 0) {
         printf("NO GPU DEVICE FOUND\n");
         exit(-1);
     }
@@ -38,7 +39,8 @@ extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id,int* gp
     device_mem = (prop.totalGlobalMem / (1024 * 1024));
     *gpu_dev_mem = (int) device_mem;
     *gpu_num_proc = (int) (prop.multiProcessorCount);
-    *gpu_core_freq = (double) (prop.clockRate * 1e-6f);
+    cudaDeviceGetAttribute(&gpu_clockrate_khz, cudaDevAttrClockRate, *gpu_dev_id);
+    *gpu_core_freq = (double) (gpu_clockrate_khz * 1e-6f);
     strncpy(gpu_dev_name, prop.name, MAX_STR_LEN);
     *name_len = strnlen(gpu_dev_name, MAX_STR_LEN);
     *majorv = prop.major;
