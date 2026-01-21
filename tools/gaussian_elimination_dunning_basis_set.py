@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import re, sys
+import re, argparse
 from pathlib import Path
 
 ##############################################################
@@ -10,8 +10,10 @@ from pathlib import Path
 #                                                            #
 #    Input: The basis set file from "Basis Set Exchange"     #
 #           with the headers removed along with the empty    #
-#           lines above "H     0"                            #
-#    Output: out.txt file with modified primitives           #
+#           lines above "H     0". You can use any           #
+#           combination of atoms                             #
+#                                                            #
+#    Output: file with modified primitives (default:out.txt) #
 #                                                            #
 #    Note: In case of an out.txt file alread present it      #
 #          will be overwritten                               #
@@ -96,9 +98,21 @@ def eliminate(original):
     
 if __name__ == "__main__":
 
-    alllines = open(sys.argv[1],'r').readlines()
+    parser=argparse.ArgumentParser()
+    parser.add_argument("-i","--input",help="Name of input file. Input file contains the basis set of elements (can be one or more). If you taking the file from basis set exchange, use Gaussian format and remove all the header and empty lines above H     0",type=str)
+    parser.add_argument("-o","--output",help="Output file to write your general linear transformed Dunning basis set",default="out.txt",type=str)
+    args=parser.parse_args()
 
-    file = Path("out.txt")
+    output_file = getattr(args,"output")
+
+    print("printing the transformed Dunning basis set to '"+output_file+"'. "+output_file+" will be overwritten.\nPress enter if that is okay.")
+    input()
+
+    input_file = getattr(args,"input") or input("input file with dunning basis sets: ")
+
+    alllines = open(input_file,'r').readlines()
+
+    file = Path(output_file)
 
     if file.exists():
         file.write_text("")   # truncates
@@ -141,7 +155,7 @@ if __name__ == "__main__":
             modifiedcoeffs = {'S':[],'P':[],'D':[],'F':[],'G':[]}
             elimcoeffs = {'S':[],'P':[],'D':[],'F':[],'G':[]}
             
-            with open('out.txt','a') as fh:
+            with open(output_file,'a') as fh:
                 fh.write(lines[0])
                 for j in list(shellexps.keys()):
                     if shellmaxprim[j] != 0:
