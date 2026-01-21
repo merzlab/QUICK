@@ -128,9 +128,10 @@ subroutine quick_exit(io, ierr)
 
    use allmod
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
    implicit none
+
    integer io           ! close this unit if greater than zero
    integer, intent(inout) :: ierr
 
