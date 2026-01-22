@@ -103,12 +103,14 @@ if __name__ == "__main__":
     parser.add_argument("-o","--output",help="Output file to write your general linear transformed Dunning basis set",default="out.txt",type=str)
     args=parser.parse_args()
 
+    input_file = getattr(args,"input") or input("input file with dunning basis sets: ")
+
+    print("The raw dunning basis sets are being taken from the file '"+input_file+"'\n")
+
     output_file = getattr(args,"output")
 
-    print("printing the transformed Dunning basis set to '"+output_file+"'. "+output_file+" will be overwritten.\nPress enter if that is okay.")
+    print("Printing the transformed Dunning basis set to '"+output_file+"'. The file '"+output_file+"' will be overwritten.\nPress enter if that is okay. Otherwise cancel immediately and provide a different output file using the -o flag.")
     input()
-
-    input_file = getattr(args,"input") or input("input file with dunning basis sets: ")
 
     alllines = open(input_file,'r').readlines()
 
