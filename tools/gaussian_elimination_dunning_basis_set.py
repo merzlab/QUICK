@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 import re, argparse
 from pathlib import Path
 
@@ -131,9 +131,9 @@ if __name__ == "__main__":
             shellcoeffs = {'S':[],'P':[],'D':[],'F':[],'G':[]}
             
             for ind,line in enumerate(lines):
-                if re.search('[A-Z]\s+\d+\s+1.00',line):
-                    shellnew = re.search('([A-Z])\s+\d+\s+1.00',line).group(1)
-                    nprim = int(re.search('[A-Z]\s+(\d+)\s+1.00',line).group(1))
+                if re.search(r'[A-Z]\s+\d+\s+1.00',line):
+                    shellnew = re.search(r'([A-Z])\s+\d+\s+1.00',line).group(1)
+                    nprim = int(re.search(r'[A-Z]\s+(\d+)\s+1.00',line).group(1))
                     shellexps[shellnew] = shellexps[shellnew] + [ float(re.sub('D','E',x.strip().split()[0])) for x in lines[ind+1:ind+1+nprim] ]
             
             for j in list(shellexps.keys()):
@@ -142,9 +142,9 @@ if __name__ == "__main__":
                 shellmaxprim[j] = len(shellexps[j])
             
             for ind,line in enumerate(lines):
-                if re.search('[A-Z]\s+\d+\s+1.00',line):
-                    shellnew = re.search('([A-Z])\s+\d+\s+1.00',line).group(1)
-                    nprim = int(re.search('[A-Z]\s+(\d+)\s+1.00',line).group(1))
+                if re.search(r'[A-Z]\s+\d+\s+1.00',line):
+                    shellnew = re.search(r'([A-Z])\s+\d+\s+1.00',line).group(1)
+                    nprim = int(re.search(r'[A-Z]\s+(\d+)\s+1.00',line).group(1))
                     if shellmaxprim[shellnew] != 0:
                         shellcoeffs[shellnew].append([ 0.0 for i in range(shellmaxprim[shellnew]) ])
                         for x in lines[ind+1:ind+1+nprim]:
