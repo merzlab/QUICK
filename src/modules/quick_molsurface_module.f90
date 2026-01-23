@@ -393,7 +393,7 @@ module quick_molsurface_module
                   end do
                 end if
                 ! once the point is considered overlapping we do not need to continue checking rest of the neighbors.
-                if (proximal)exit
+                if (proximal) exit
               end if
             end if
           end do
