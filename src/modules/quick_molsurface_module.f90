@@ -90,7 +90,7 @@ module quick_molsurface_module
     ! Record time needed to create the grid.
     RECORD_TIME(timer_begin%TESPsurface)
     ! Maximum no of points including all the four surfaces.
-    ! This is being reallocated when later when required.
+    ! This is being reallocated later if required.
     ! Segmentation fault will not arise from xyz_points array overflow.
     max_points = int(natom*200/(quick_method%espgrid_spacing)**2)
     allocate(xyz_points(3,max_points), stat=alloc_status)
@@ -158,7 +158,7 @@ module quick_molsurface_module
         ! The temporary array is deallocated
         deallocate(temp)
       end if
-      ! Copy the data from array containing individual van der waals surafce to the xyz_points array
+      ! Copy the data from array containing individual van der waals surface to the xyz_points array
       ! containing all the points.
       xyz_points(1:3,total_points-npoints+1:total_points) = surface_points(1:3,1:npoints)
     end do
@@ -168,7 +168,7 @@ module quick_molsurface_module
     ! assign correct value to it.
     quick_molspec%nvdwpoint = total_points
     ! We also need quick_molspec%vdwpointxyz elsewhere to compute ESP on those points. So, we are
-    ! allocating it and copying the all the points to it.
+    ! allocating it and copying all the points to it.
     allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint), stat=alloc_status)
 
     if(alloc_status /= 0) then
@@ -236,9 +236,11 @@ module quick_molsurface_module
     ! points being too close leads has the artifact of those points having
     ! larger weight during fitting. We try to avoid this.
     thresh = espgrid_spacing/2.5
+
     !  create an array of vanderwaals radii for atom. The radii are in atomic units.
     if (quick_method%vdw_radii == "BONDI")then
-      do i = 1, natom
+
+       do i = 1, natom
         ! checking if every atom has a corresponding Van der waals radius defined
         if (any(int(quick_molspec%chg(i)) == Bondi_atom_list)) then 
           ! Here we scale the van der waals radius of the atom using the scale_factor
@@ -253,7 +255,9 @@ module quick_molsurface_module
           call quick_exit(OUTFILEHANDLE,1)
         endif
       end do
-    else if (quick_method%vdw_radii == "TC")then
+
+   else if (quick_method%vdw_radii == "TC")then
+
       do i = 1, natom
         ! Tkatchenko_vdw_radii does not have the data for Lv
         if (int(quick_molspec%chg(i)) /= 116) then
@@ -264,17 +268,19 @@ module quick_molsurface_module
           call quick_exit(OUTFILEHANDLE,1)
         endif
       end do
-    endif
+
+   endif
+
     ! Initialize the counter for points on this scaled van der waals surface
     npoints = 0
-    ! Initialize the variable to be used for detection of overlapping points later
-    proximal = .False.
     ! Initialize the variable to determine the range of points corresponding to each atom
     start_index = 0
     end_index   = 0
+
     ! Go over each atom and get points on their vanderwaals surface using 
     ! the correspnding atomic_vdw_radii
     do i = 1, natom
+
       ! Create a list of neighbors for efficiency
       ! Initialize the no of neighbors
       nneighbor=0
@@ -290,6 +296,7 @@ module quick_molsurface_module
           endif
         endif
       enddo
+
       ! Initialize the no points for individual atoms.
       npts = 0
       ! Just a variable name which is appropriate here
@@ -301,6 +308,7 @@ module quick_molsurface_module
       start_theta = (PI*radius-(ncircles-1)*espgrid_spacing)/(2*radius)
       ! differnce between the azimuthal angle of consecutive latitudes.
       delta_theta = espgrid_spacing/radius
+
       ! Loop over all the latitudes.
       do circle = 1, ncircles
         ! Azimuthal angle of this latitude.
@@ -335,7 +343,8 @@ module quick_molsurface_module
       ! Now we are looking for overlapping points.
       ! Special case for the first atom.
       if (npoints.eq.0)then
-        ! For the first atom we do not need to check for overlapping points.
+
+         ! For the first atom we do not need to check for overlapping points.
         surface_points(1:3,1:npts)=xyz_sphere(1:3,1:npts)
         npoints = npts
         ! If there are no points corresponding to the atom we do not need to assign any range
@@ -345,8 +354,10 @@ module quick_molsurface_module
           start_index(i) = 1
           end_index(i) = npoints
         end if
+
       ! Lets consider the atom if it is not the first atom.
       else
+
         ! Checking if the array index is exceeding size of surface_points
         if(int(npoints+npts).gt.int(size(surface_points)/3)) then
           call PrtErr(OUTFILEHANDLE, 'If you are getting segmentation fault, it is due to the no of points on the &
@@ -355,8 +366,13 @@ module quick_molsurface_module
             &array while computing ESP charges.')
           call quick_exit(OUTFILEHANDLE,1)
         end if
+
         ! Go over all the newly obtained points.
         do j = 1, npts
+
+          ! Initialize the variable to be used for detection of overlapping points
+          proximal = .False.
+
           ! Go over all the neighbors to check if there is any overlap with any of their points.
           do k = 1, nneighbor
             ! Only consider the previous atoms for which points on the surface are already generated.
@@ -381,20 +397,22 @@ module quick_molsurface_module
               end if
             end if
           end do
+
           ! If the point is not overlapping then add it to the list of surface_points.
           if (.not. proximal) then
             npoints = npoints + 1
             surface_points(1:3,npoints) = xyz_sphere(1:3,j)
-          else
-            proximal = .False.
           end if
         end do
+
         ! We need to add the range of points for this atom. But, first we need to check if it has any points.
         if(npoints .gt. end_index(i-1))then
           start_index(i) = end_index(i-1) + 1
           end_index(i) = npoints
         end if
+       
       end if
+     
     end do
 
   end subroutine generate_vdW_surface
