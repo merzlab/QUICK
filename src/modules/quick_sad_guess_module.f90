@@ -118,14 +118,13 @@ contains
            quick_molspec%nelec = quick_molspec%iattype(1)
 
            if ((quick_method%DFT .OR. quick_method%SEDFT)) then
-               ! if(quick_method%isg.eq.1) then
-               !    call gridformEML(50) !changed from gridformsg1() to gridformEML()
-               ! else if(quick_method%isg.eq.2) then
-               !    call gridformDoubleExp(75, quick_molspec%iattype(iatm))
-               ! else if(quick_method%isg.eq.3) then
-               !    call gridformDoubleExp(99, quick_molspec%iattype(iatm))
-               ! endif
-               call gridformEML(75)
+               if(quick_method%isg.eq.1) then
+                  call gridformEML(50) !changed from gridformsg1() to gridformEML()
+               else if(quick_method%isg.eq.2) then
+                  call gridformEML(75)
+               else if(quick_method%isg.eq.3) then
+                  call gridformEML(99)
+               endif
             endif
 
             call check_quick_method_and_molspec(ioutfile,quick_molspec,quick_method,ierr)

@@ -92,7 +92,7 @@ module quick_method_module
         integer :: ifragbasis = 1      ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
 
         ! this is DFT grid
-        integer :: iSG = 2             ! =0. SG0, =1. SG1(DEFAULT)
+        integer :: iSG = 3             ! =0. SG0, =1. SG1, =2. SG2, =3. SG3(DEFAULT)
 
         ! Level shift
         integer :: LShift_cycle = 3              ! After what cycle allow Level shifting
@@ -738,7 +738,7 @@ module quick_method_module
                 else if (index(keyWD,'SG3').ne.0) then
                     self%iSG=3
                 else
-                    self%iSG=2  ! default SG-2
+                    self%iSG=3  ! default SG-3
                     ! this line will cover other definition
                 endif
             endif
@@ -990,7 +990,7 @@ module quick_method_module
             self%DIVCON = .false.      ! Div&Con
 
             self%ifragbasis = 1        ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
-            self%iSG = 2               ! =0. SG0, =1. (DEFAULT)
+            self%iSG = 3               ! =0. SG0, =1. (DEFAULT)
             self%MFCC = .false.        ! MFCC
 
             self%iscf = 200
