@@ -40,7 +40,7 @@ module quick_oeproperties_module
    implicit none
 
    logical fail
-   integer ierr, nbasis
+   integer ierr, nbasis, alloc_status
 
    if (quick_method%ext_grid) then
       call compute_oeprop_grid(quick_molspec%nextpoint,quick_molspec%extpointxyz)
@@ -54,7 +54,13 @@ module quick_oeproperties_module
       endif
       call MPI_BCAST(quick_molspec%nvdwpoint,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       if(.not.master)then
-        allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint))
+        allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint), stat=alloc_status)
+
+        if(alloc_status /= 0) then
+          call PrtErr(OUTFILEHANDLE, '!!quick_molspec%vdwpointxyz array reallocation failed in compute_oeprop!!')
+          call quick_exit(OUTFILEHANDLE,1)
+        endif
+      
       endif
       call MPI_BCAST(quick_molspec%vdwpointxyz,quick_molspec%nvdwpoint*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 #endif
@@ -85,12 +91,17 @@ module quick_oeproperties_module
 #endif
 
    implicit none
-   integer :: ierr, npoints
+   integer :: ierr, npoints, alloc_status
    double precision, allocatable :: esp_on_points(:)
    double precision, intent(in) :: xyz_points(:,:)
 
-   allocate(esp_on_points(npoints))
+   allocate(esp_on_points(npoints), stat=alloc_status)
 
+   if(alloc_status /= 0) then
+     call PrtErr(OUTFILEHANDLE, '!!esp_on_points array reallocation failed in compute_oeprop_grid!!')
+     call quick_exit(OUTFILEHANDLE,1)
+   endif
+      
    ierr = 0
 
    ! Electrostatic Potential
@@ -182,7 +193,7 @@ module quick_oeproperties_module
 
 
    implicit none
-   integer :: ierr
+   integer :: ierr, alloc_status
    integer :: IIsh, JJsh
    integer :: igridpoint, npoints
 
@@ -197,10 +208,28 @@ module quick_oeproperties_module
    ierr = 0
    
    ! Allocates ESP_NUC and ESP_ELEC arrays
-   allocate(esp_nuclear(npoints))
-   allocate(esp_electronic(npoints))
+   allocate(esp_nuclear(npoints), stat=alloc_status)
+
+   if(alloc_status /= 0) then
+     call PrtErr(OUTFILEHANDLE, '!! esp_nuclear array reallocation failed in compute_esp!!')
+     call quick_exit(OUTFILEHANDLE,1)
+   endif
+      
+   allocate(esp_electronic(npoints), stat=alloc_status)
+
+   if(alloc_status /= 0) then
+     call PrtErr(OUTFILEHANDLE, '!! esp_electronic array reallocation failed in compute_esp!!')
+     call quick_exit(OUTFILEHANDLE,1)
+   endif
+      
 #ifdef MPIV
    allocate(esp_electronic_aggregate(npoints))
+
+   if(alloc_status /= 0) then
+     call PrtErr(OUTFILEHANDLE, '!! esp_electronic_aggregate array reallocation failed in compute_esp!!')
+     call quick_exit(OUTFILEHANDLE,1)
+   endif
+      
 #endif
 
    ! ESP_ELEC array need initialization as we will be iterating
@@ -332,11 +361,10 @@ module quick_oeproperties_module
      end do
 
      ! Using the inverse distance matrix to form the matrix A and vector B.
+     call DGEMV('N',natom,npoints,One,invdist_arr,natom,esp,1,Zero,B,1)
 #if defined CUDA
-     call CUBLAS_DGEMV('N',natom,npoints,One,invdist_arr,natom,esp,1,Zero,B,1)
      call CUBLAS_DGEMM('N', 'T', natom, natom, npoints, One, invdist_arr, natom, invdist_arr, natom, Zero, A(1:natom,1:natom), natom)
 #else
-     call DGEMV('N',natom,npoints,One,invdist_arr,natom,esp,1,Zero,B,1)
      call DGEMM('N', 'T', natom, natom, npoints, One, invdist_arr, natom, invdist_arr, natom, Zero, A(1:natom,1:natom), natom)
 #endif
 
@@ -369,11 +397,7 @@ module quick_oeproperties_module
 
 !  q = A-1*B
 
-#if defined CUDA
-   call CUBLAS_DGEMV('N',natom+1,natom+1,One,A,LDA,B,1,Zero,q,1)
-#else
    call DGEMV('N',natom+1,natom+1,One,A,LDA,B,1,Zero,q,1)
-#endif
 
 !  B is copied to charge array.
 
