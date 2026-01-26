@@ -166,11 +166,6 @@ contains
 
 #if defined(HIP) || defined(HIP_MPIV)
      use quick_rocblas_module, only: rocDGEMM
-#if defined(WITH_MAGMA)
-     use quick_magma_module, only: magmaDIAG
-#elif defined(WITH_ROCSOLVER)
-     use quick_rocsolver_module, only: rocDIAG
-#endif
 #endif
 #if defined(MPIV)
      use mpi
@@ -617,15 +612,7 @@ contains
            ! First you have to transpose this into an orthogonal basis, which
            ! is accomplished by calculating Transpose[X] . O . X.
            !-----------------------------------------------
-#if defined(CUDA) || defined(CUDA_MPIV)
-          RECORD_TIME(timer_begin%TDiag)
-          call cuda_diag(quick_qm_struct%o, quick_qm_struct%x, quick_scratch%hold, &
-                quick_qm_struct%E, quick_qm_struct%idegen, &
-                quick_qm_struct%vec, quick_qm_struct%co, &
-                V2, nbasis)
-           RECORD_TIME(timer_end%TDiag)
-#else
-#if defined(HIP) || defined(HIP_MPIV)
+#if defined(GPU) || defined(GPU_MPIV)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold, nbasis)
 
@@ -640,42 +627,16 @@ contains
 #endif  
            ! Now diagonalize the operator matrix.
            RECORD_TIME(timer_begin%TDiag)
-#if defined(HIP) || defined(HIP_MPIV)
-#if defined(WITH_MAGMA)
-           call magmaDIAG(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
-#elif defined(WITH_ROCSOLVER)
-           call rocDIAG(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
-#else
-#if defined(LAPACK) || defined(MKL)
-           call DIAGMKL(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
-#else
-           call DIAG(nbasis, quick_qm_struct%o, nbasis, quick_method%DMCutoff, V2, quick_qm_struct%E, &
-                 quick_qm_struct%idegen, quick_qm_struct%vec, IERROR)
-#endif
-#endif
-#else
-#if defined(LAPACK) || defined(MKL)
-           call DIAGMKL(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
-#else
-           call DIAG(nbasis, quick_qm_struct%o, nbasis, quick_method%DMCutoff, V2, quick_qm_struct%E, &
-                 quick_qm_struct%idegen, quick_qm_struct%vec, IERROR)
-#endif
-#endif
+           call MatDiag(quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, &
+             quick_method%DMCutoff, quick_qm_struct%idegen, V2, nbasis)
            RECORD_TIME(timer_end%TDiag)
 
-!        do i = 1,nbasis
-!          do j=1,nbasis
-!            write(*,*) "DSYEVD", i, j, quick_qm_struct%o(j,i), quick_qm_struct%vec(j,i), quick_qm_struct%E(j)
-!          enddo
-!        end do
-#endif
-  
            ! Calculate C = XC' and form a new density matrix.
            ! The C' is from the above diagonalization.  Also, save the previous
            ! Density matrix to check for convergence.
            !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'
   
-#if defined(GPU) || defined(MPIV_GPU)
+#if defined(GPU) || defined(GPU_MPIV)
            call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                  nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
 #else
@@ -686,7 +647,7 @@ contains
            quick_scratch%hold(:,:) = quick_qm_struct%dense(:,:) 
   
            ! Form new density matrix using MO coefficients
-#if defined(GPU) || defined(MPIV_GPU)
+#if defined(GPU) || defined(GPU_MPIV)
            call GPU_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
                  nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)         
 #else

@@ -44,10 +44,7 @@
 #if defined(__cplusplus)
 extern "C" {
 
-  void CUDA_DIAG (double* o, const double* x, double* hold,
-		  const double* E, const double* idegen,
-		  const double* vec, const double* co,
-		  const double* V2, const int* nbasis);  
+  void CUDA_DIAG (double* o, const double* E, const double* vec, const int* nbasis);  
 
 }
 #endif /* __cplusplus */

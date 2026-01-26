@@ -26,7 +26,7 @@ FOR=$(FC) $(FFLAGS)
 
 SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 	$(objfolder)/degen.o $(objfolder)/denspt.o $(objfolder)/oshell_denspt.o \
-	$(objfolder)/diag.o $(objfolder)/diagmkl.o \
+	$(objfolder)/diag.o $(objfolder)/diagmkl.o $(objfolder)/MatDiag.o \
 	$(objfolder)/dipole.o $(objfolder)/EffChar.o $(objfolder)/eigvec.o \
 	$(objfolder)/findBlock.o $(objfolder)/fmt.o $(objfolder)/getinum.o \
 	$(objfolder)/getNum.o $(objfolder)/greedy_distrubute.o $(objfolder)/hrr.o $(objfolder)/iatoi.o \
