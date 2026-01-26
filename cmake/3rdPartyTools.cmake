@@ -378,17 +378,17 @@ if(NEED_blas) # because of the earlier check, we can be sure that NEED_blas == N
 	# this calls FindBLAS
 	find_package(LAPACKFixed)
 
-	if(BLAS_FOUND)
-		set_3rdparty(blas EXTERNAL)
-	else()
+#	if(BLAS_FOUND)
+#		set_3rdparty(blas EXTERNAL)
+#	else()
 		set_3rdparty(blas INTERNAL)
-	endif()
+#	endif()
 
-	if(LAPACK_FOUND)
-		set_3rdparty(lapack EXTERNAL)
-	else()
+#	if(LAPACK_FOUND)
+#		set_3rdparty(lapack EXTERNAL)
+#	else()
 		set_3rdparty(lapack INTERNAL)
-	endif()
+#	endif()
 endif()
 
 if(NEED_arpack)
