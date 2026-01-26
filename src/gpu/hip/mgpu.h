@@ -1001,7 +1001,7 @@ void mgpu_xc_repack() {
 //--------------------------------------------------------
 // Methods passing gpu information to f90 side for printing
 //--------------------------------------------------------
-extern "C" void mgpu_get_device_info_(int *dev_id, int *gpu_dev_mem,
+extern "C" void mgpu_get_device_info_(int *gpu_dev_id, int *gpu_dev_mem,
         int *gpu_num_proc, double *gpu_core_freq, char *gpu_dev_name, int *name_len,
         int *majorv, int *minorv)
 {
@@ -1009,7 +1009,7 @@ extern "C" void mgpu_get_device_info_(int *dev_id, int *gpu_dev_mem,
     int gpu_clockrate_khz;
     size_t device_mem;
 
-    hipGetDeviceProperties(&prop, *dev_id);
+    hipGetDeviceProperties(&prop, *gpu_dev_id);
     device_mem = (prop.totalGlobalMem / (1024 * 1024));
     *gpu_dev_mem = (int) device_mem;
     *gpu_num_proc = (int) (prop.multiProcessorCount);
