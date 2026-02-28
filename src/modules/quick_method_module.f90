@@ -722,7 +722,6 @@ module quick_method_module
                     self%iSG=3
                 else
                     self%iSG=3  ! default SG-3
-                    ! this line will cover other definition
                 endif
             endif
 

@@ -1,6 +1,14 @@
 !---------------------------------------------------------------------!
 ! Updated by Madu Manathunga on 06/09/2020                            !
 !                                                                     !
+! Updated by Yuting Duan on 02/27/2026                                !
+!   - Implemented SG-2 and SG-3 standard grids with pruning           !
+!   - Reference: Dasgupta, S. and Herbert, J. M.                      !
+!     "Standard grids for high-precision integration of modern        !
+!     density functionals: SG-2 and SG-3"                             !
+!     J. Comput. Chem. 38, 869-882 (2017)                             !
+!     DOI: 10.1002/jcc.24761                                          !
+!                                                                     !
 ! Previous contributors: Yipu Miao                                    !
 !                                                                     !
 ! Copyright (C) 2020-2021 Merz lab                                    !
@@ -37,7 +45,18 @@ module quick_gridpoints_module
         integer :: lebedev_type(9)
     end type sg3_pruning_type
 
-    ! Table 1. Lebedev partitions and scalung fatcors that define SG-2 and SG-3
+    !---------------------------------------------------------------------!
+    ! SG-2 PRUNING TABLE
+    !---------------------------------------------------------------------!
+    ! Defines angular quadrature rules for different radial shells in
+    ! SG-2 grids.
+    !
+    ! Structure:
+    !   n_shells(i)     - Number of radial points in shell i
+    !   lebedev_type(i) - Lebedev quadrature rule for shell i
+    !
+    ! Reference: Table 1 in Dasgupta & Herbert (2017)
+    !---------------------------------------------------------------------!
     type(sg2_pruning_type), parameter :: sg2_prune(17) = (/ &
         ! H - 1
         sg2_pruning_type([35, 12, 16, 7, 5], [6, 110, 302, 86, 26]), &
@@ -73,6 +92,15 @@ module quick_gridpoints_module
         sg2_pruning_type([26, 16, 19, 8, 6], [6, 110, 302, 110, 50]) &
     /)
 
+    !---------------------------------------------------------------------!
+    ! SG-3 PRUNING TABLE
+    !---------------------------------------------------------------------!
+    ! Defines angular quadrature rules for different radial shells in
+    ! SG-3 grids.
+    !
+    ! Provides finer gradation than SG-2 for improved accuracy.
+    ! Reference: Table 1 in Dasgupta & Herbert (2017)
+    !---------------------------------------------------------------------!
     type(sg3_pruning_type), parameter :: sg3_prune(17) = (/ &
         ! H - 1
         sg3_pruning_type([45, 16, 21, 10, 7, 0, 0, 0, 0], [6, 110, 590, 194, 50, 0, 0, 0, 0]), &
@@ -299,14 +327,12 @@ module quick_gridpoints_module
       do Irad = 1, Iradtemp
             if(quick_method%iSG == 1)then
                call gridformSG1Angular(iatm,RGRID(Irad),iiang)
-               !call gridformLBDAngular(iiang,Iradtemp)
                rad = radii(quick_molspec%iattype(iatm))
             else if(quick_method%iSG == 0)then
                call gridformSG0(iatm,Iradtemp+1-Irad,iiang,RGRID,RWT)
                rad = radii2(quick_molspec%iattype(iatm))
             else if(quick_method%iSG == 2)then
                call gridformSG2Angular(quick_molspec%iattype(iatm),Irad,iiang)
-               !call gridformLBDAngular(iiang,Iradtemp)
                rad = radii(quick_molspec%iattype(iatm))
             else if(quick_method%iSG == 3)then
                call gridformSG3Angular(quick_molspec%iattype(iatm),Irad,iiang)
@@ -1318,6 +1344,10 @@ module quick_gridpoints_module
    
    end subroutine gridformSG1Angular
 
+
+   ! Yuting Duan 02/27/26
+   ! "Standard grids for high-precision integration of modern density functionals: SG-2 and SG-3"
+   ! J. Comput. Chem. 38, 869-882 (2017) 
    subroutine gridformSG2Angular(atomic_number,Irad,iiang)
       use allmod
       implicit double precision(a-h,o-z)
@@ -1327,8 +1357,7 @@ module quick_gridpoints_module
       integer :: lebedev_type
       type(sg2_pruning_type) :: prune_data
       
-
-      ! elements not listed in table 1 won't use pruned grids
+      ! elements that not listed in table 1 use unpruned grids (75,302)
       if (atomic_number == 2 .or. atomic_number == 10 .or. atomic_number > 17) then         
          CALL LD0302(XANG, YANG, ZANG, WTANG, N)
          iiang = 302
@@ -1338,6 +1367,7 @@ module quick_gridpoints_module
          return
       endif
 
+      ! for elements that can be pruned, select appropriate Lebedev partitions
       prune_data = sg2_prune(atomic_number)
       if(Irad <= prune_data%n_shells(1)) then
          lebedev_type = prune_data%lebedev_type(1)
@@ -1394,6 +1424,10 @@ module quick_gridpoints_module
       enddo
    end subroutine gridformSG2Angular
 
+
+   ! Yuting Duan 02/27/26
+   ! "Standard grids for high-precision integration of modern density functionals: SG-2 and SG-3"
+   ! J. Comput. Chem. 38, 869-882 (2017) 
    subroutine gridformSG3Angular(atomic_number,Irad,iiang)
       use allmod
       implicit double precision(a-h,o-z)
@@ -1403,7 +1437,7 @@ module quick_gridpoints_module
       integer :: lebedev_type
       type(sg3_pruning_type) :: prune_data
 
-      ! elements not listed in table 1 won't use pruned grids
+      ! elements that not listed in table 1 use unpruned grids (99,590)
       if (atomic_number == 2 .or. atomic_number == 10 .or. atomic_number > 17) then         
          CALL LD0590(XANG, YANG, ZANG, WTANG, N)
          iiang = 590
@@ -1413,6 +1447,7 @@ module quick_gridpoints_module
          return
       endif
 
+      ! for elements that can be pruned, select appropriate Lebedev partitions
       prune_data = sg3_prune(atomic_number)
       if(Irad <= prune_data%n_shells(1)) then
          lebedev_type = prune_data%lebedev_type(1)
@@ -1515,9 +1550,9 @@ module quick_gridpoints_module
             iiang = 590
             
          case default
-            ! Fallback: use 302 points (unpruned SG-2 default)
-            CALL LD0302(XANG, YANG, ZANG, WTANG, N)
-            iiang = 302
+            ! Fallback: use 590 points (unpruned SG-3 default)
+            CALL LD0590(XANG, YANG, ZANG, WTANG, N)
+            iiang = 590
             
       end select
    
@@ -1531,10 +1566,11 @@ module quick_gridpoints_module
    
    end subroutine gridformLBDAngular
 
+
    subroutine gridformEML(ngrid)
    
       implicit none
-      integer, intent(in) :: ngrid ! ngrid = 50 for SG-1
+      integer, intent(in) :: ngrid 
       integer i
 
       do I = 1, ngrid
@@ -1545,13 +1581,17 @@ module quick_gridpoints_module
    
    end subroutine gridformEML
 
+   ! Yuting Duan 02/27/26
+   ! "Standard grids for high-precision integration of modern density functionals: SG-2 and SG-3"
+   ! J. Comput. Chem. 38, 869-882 (2017) 
    subroutine gridformDoubleExp(ngrid, atomic_number)
    
       implicit none
-      integer, intent(in) :: atomic_number, ngrid ! 75 ngrid for SG-2, 99 for SG-3
+      integer, intent(in) :: atomic_number, ngrid ! applicable for 75 ngrid for SG-2, 99 for SG-3
       integer :: i
       real*8 :: h, x_i, exp_term, alpha
 
+      ! alpha as the scaling factor that define sg-2 and 3 from table 1
       if(ngrid == 75) then
          select case(atomic_number)
             case(1)  ! H
@@ -1566,7 +1606,7 @@ module quick_gridpoints_module
                alpha = 2.5d0
             case (14) !Si
                alpha = 2.3d0
-            case default  ! All other elements will use unpruned method-gridformEML
+            case default  ! All other elements will use unpruned method (gridformEML)
                alpha = -1
          end select
       else if(ngrid == 99) then
@@ -1585,7 +1625,7 @@ module quick_gridpoints_module
                alpha = 3.2d0
             case(14) ! Si
                alpha = 2.8d0
-            case default  ! All other elements will use unpruned method-gridformEML
+            case default  ! All other elements will use unpruned method (gridformEML)
                alpha = -1
          end select
       endif
@@ -1595,7 +1635,9 @@ module quick_gridpoints_module
          return
       endif
       
-      ! Grid spacing in x-space: x ∈ [-1, 1]
+      ! implement the double-exponential quadrature formula
+      ! h is the mapping transformation such that grid spacing in x-space: x ∈ [-1, 1]
+      ! refer Mitani and Yoshioka, Theor Chem Acc 131 (2012) 1169, doi: 10.1007/s00214-012-1169-z
       h = 2.0d0 / dble(ngrid - 1)
 
       do i = 1, ngrid
@@ -1607,7 +1649,6 @@ module quick_gridpoints_module
          ! Weight - Eq. 9
          RWT(i) = h * (alpha + exp_term) * exp(3.0d0 * alpha * x_i - 3.0d0 * exp_term)
       enddo
-
       
    end subroutine gridformDoubleExp
    
