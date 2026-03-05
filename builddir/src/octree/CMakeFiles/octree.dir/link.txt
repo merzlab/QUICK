@@ -1,2 +1,0 @@
-/usr/bin/ar qc liboctree.a  CMakeFiles/octree.dir/octree.cpp.o CMakeFiles/octree.dir/grid_packer.cpp.o
-/usr/bin/ranlib liboctree.a

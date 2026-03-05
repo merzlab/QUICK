@@ -1,2 +1,0 @@
-/usr/bin/ar qc liboctree_gpu.a  CMakeFiles/octree_gpu.dir/octree.cpp.o CMakeFiles/octree_gpu.dir/grid_packer.cpp.o
-/usr/bin/ranlib liboctree_gpu.a

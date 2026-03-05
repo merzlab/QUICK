@@ -1,5 +1,0 @@
-# The fortran modules provided by this target.
-provides
- libxc_funcs_m.mod
- xc_f90_lib_m.mod
- xc_f90_types_m.mod

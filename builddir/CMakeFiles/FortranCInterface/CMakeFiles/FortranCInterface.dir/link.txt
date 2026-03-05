@@ -1,1 +1,0 @@
-/cm/local/apps/gcc/11.2.0/bin/gfortran    -ffree-line-length-none -cpp -fallow-argument-mismatch CMakeFiles/FortranCInterface.dir/main.F.o CMakeFiles/FortranCInterface.dir/call_sub.f.o CMakeFiles/FortranCInterface.dir/call_mod.f90.o  -o FortranCInterface  libsymbols.a libmyfort.a 

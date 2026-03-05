@@ -1,5 +1,0 @@
-/home/liz7/isilon/Zhen/QUICK/builddir/CMakeFiles/FortranCInterface/CMakeFiles/rebuild_cache.dir
-/home/liz7/isilon/Zhen/QUICK/builddir/CMakeFiles/FortranCInterface/CMakeFiles/FortranCInterface.dir
-/home/liz7/isilon/Zhen/QUICK/builddir/CMakeFiles/FortranCInterface/CMakeFiles/symbols.dir
-/home/liz7/isilon/Zhen/QUICK/builddir/CMakeFiles/FortranCInterface/CMakeFiles/edit_cache.dir
-/home/liz7/isilon/Zhen/QUICK/builddir/CMakeFiles/FortranCInterface/CMakeFiles/myfort.dir
