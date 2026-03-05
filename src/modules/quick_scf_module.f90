@@ -20,12 +20,9 @@ module quick_scf_module
   private
 
   public :: allocate_quick_scf, deallocate_quick_scf, scf 
-  public :: V2, B, BSAVE, BCOPY, W, COEFF, RHS, allerror, alloperator
+  public :: B, BSAVE, BCOPY, W, COEFF, RHS, allerror, alloperator
 
 !  type quick_scf_type
-
-    ! a workspace matrix of size 3,nbasis to be passed into the diagonalizer 
-    double precision, allocatable, dimension(:,:) :: V2
 
     ! matrices required for diis procedure
     double precision, allocatable, dimension(:,:)   :: B
@@ -59,7 +56,6 @@ contains
 
     integer, intent(inout) :: ierr
 
-    if(.not. allocated(V2))          allocate(V2(3, nbasis), stat=ierr)
     if(.not. allocated(B))           allocate(B(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1), stat=ierr)
     if(.not. allocated(BSAVE))       allocate(BSAVE(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1), stat=ierr)
     if(.not. allocated(BCOPY))       allocate(BCOPY(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1), stat=ierr)
@@ -70,7 +66,6 @@ contains
     if(.not. allocated(alloperator)) allocate(alloperator(nbasis, nbasis, quick_method%maxdiisscf), stat=ierr)
 
     !initialize values to zero
-    V2          = 0.0d0
     B           = 0.0d0
     BSAVE       = 0.0d0
     BCOPY       = 0.0d0
@@ -87,7 +82,6 @@ contains
 
     integer, intent(inout) :: ierr
 
-    if(allocated(V2))          deallocate(V2, stat=ierr)
     if(allocated(B))           deallocate(B, stat=ierr)
     if(allocated(BSAVE))       deallocate(BSAVE, stat=ierr)
     if(allocated(BCOPY))       deallocate(BCOPY, stat=ierr)
@@ -159,18 +153,8 @@ contains
      use quick_oei_module, only: bCalc1e 
      use quick_lri_module, only: computeLRI
      use quick_molden_module, only: quick_molden
-
 #ifdef CEW 
      use quick_cew_module, only : quick_cew
-#endif
-
-#if defined(HIP) || defined(HIP_MPIV)
-     use quick_rocblas_module, only: rocDGEMM
-#if defined(WITH_MAGMA)
-     use quick_magma_module, only: magmaDIAG
-#elif defined(WITH_ROCSOLVER)
-     use quick_rocsolver_module, only: rocDIAG
-#endif
 #endif
 #if defined(MPIV)
      use mpi
@@ -389,37 +373,21 @@ contains
   
            ! The first part is ODS
   
-#if defined(GPU) || defined(MPIV_GPU)
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-                 nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
+                 nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold, nbasis)
   
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#else
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-                 nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-  
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#endif
+           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
+                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2, nbasis)
   
            allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
   
            ! Calculate D O. then calculate S (do) and subtract that from the allerror matrix.
            ! This means we now have the e(i) matrix.
            ! allerror=ODS-SDO
-#if defined(GPU) || defined(MPIV_GPU)
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-                 nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-  
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#else
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-                 nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#endif
+           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
+                 nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold, nbasis)
+           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
+                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2, nbasis)
   
            errormax = 0.d0
            do I=1,nbasis
@@ -437,19 +405,12 @@ contains
            !-----------------------------------------------
            quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
   
-#if defined(GPU) || defined(MPIV_GPU)
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
+                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold, nbasis)
   
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#else
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-  
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#endif
+           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
+                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2, nbasis)
+
            allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
            !-----------------------------------------------
            ! 4)  Store the e'(I) and O(i).
@@ -618,82 +579,31 @@ contains
            ! First you have to transpose this into an orthogonal basis, which
            ! is accomplished by calculating Transpose[X] . O . X.
            !-----------------------------------------------
-#if defined(CUDA) || defined(CUDA_MPIV)
-          RECORD_TIME(timer_begin%TDiag)
-          call cuda_diag(quick_qm_struct%o, quick_qm_struct%x, quick_scratch%hold, &
-                quick_qm_struct%E, quick_qm_struct%idegen, &
-                quick_qm_struct%vec, quick_qm_struct%co, &
-                V2, nbasis)
-           RECORD_TIME(timer_end%TDiag)
-#else
-#if defined(HIP) || defined(HIP_MPIV)
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold, nbasis)
-
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o, nbasis)
-#else
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
+           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold, nbasis)
   
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
+           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                  nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o, nbasis)
-#endif  
+
            ! Now diagonalize the operator matrix.
            RECORD_TIME(timer_begin%TDiag)
-#if defined(HIP) || defined(HIP_MPIV)
-#if defined(WITH_MAGMA)
-           call magmaDIAG(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
-#elif defined(WITH_ROCSOLVER)
-           call rocDIAG(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
-#else
-#if defined(LAPACK) || defined(MKL)
-           call DIAGMKL(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
-#else
-           call DIAG(nbasis, quick_qm_struct%o, nbasis, quick_method%DMCutoff, V2, quick_qm_struct%E, &
-                 quick_qm_struct%idegen, quick_qm_struct%vec, IERROR)
-#endif
-#endif
-#else
-#if defined(LAPACK) || defined(MKL)
-           call DIAGMKL(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec, IERROR)
-#else
-           call DIAG(nbasis, quick_qm_struct%o, nbasis, quick_method%DMCutoff, V2, quick_qm_struct%E, &
-                 quick_qm_struct%idegen, quick_qm_struct%vec, IERROR)
-#endif
-#endif
+           call MAT_DIAG(quick_qm_struct%o, nbasis, nbasis, quick_qm_struct%E, &
+                   quick_qm_struct%vec)
            RECORD_TIME(timer_end%TDiag)
 
-!        do i = 1,nbasis
-!          do j=1,nbasis
-!            write(*,*) "DSYEVD", i, j, quick_qm_struct%o(j,i), quick_qm_struct%vec(j,i), quick_qm_struct%E(j)
-!          enddo
-!        end do
-#endif
-  
            ! Calculate C = XC' and form a new density matrix.
            ! The C' is from the above diagonalization.  Also, save the previous
            ! Density matrix to check for convergence.
            !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'
   
-#if defined(GPU) || defined(MPIV_GPU)
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
-#else
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
-#endif
+           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
+                 nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co, nbasis)
   
            quick_scratch%hold(:,:) = quick_qm_struct%dense(:,:) 
   
            ! Form new density matrix using MO coefficients
-#if defined(GPU) || defined(MPIV_GPU)
-           call GPU_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
-                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)         
-#else
-           call DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
-                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)         
-#endif
+           call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
+                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense, nbasis)         
   
            RECORD_TIME(timer_end%TDII)
   

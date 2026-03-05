@@ -33,14 +33,14 @@ __device__ static inline void addint_oeprop(unsigned int I, unsigned int J, unsi
     int JJJ2 = LOC2(devSim.Qfbasis, JJ, J, devSim.nshell, 4);
 
     for (int III = III1; III <= III2; III++) {
+        // devTrans maps a basis function with certain angular momentum to store2 array. Get the correct indices now.
+        int i = (int) LOC3(devTrans,
+                LOC2(devSim.KLMN, 0, III - 1, 3, devSim.nbasis),
+                LOC2(devSim.KLMN, 1, III - 1, 3, devSim.nbasis),
+                LOC2(devSim.KLMN, 2, III - 1, 3, devSim.nbasis),
+                TRANSDIM, TRANSDIM, TRANSDIM);
         for (int JJJ = MAX(III,JJJ1); JJJ <= JJJ2; JJJ++) {
-            // devTrans maps a basis function with certain angular momentum to store2 array. Get the correct indices now.
-            int i = (int) LOC3(devTrans,
-                    LOC2(devSim.KLMN, 0, III - 1, 3, devSim.nbasis),
-                    LOC2(devSim.KLMN, 1, III - 1, 3, devSim.nbasis),
-                    LOC2(devSim.KLMN, 2, III - 1, 3, devSim.nbasis),
-                    TRANSDIM, TRANSDIM, TRANSDIM);
-
+        // devTrans maps a basis function with certain angular momentum to store2 array. Get the correct indices now.
             int j = (int) LOC3(devTrans, 
                     LOC2(devSim.KLMN, 0, JJJ - 1, 3, devSim.nbasis),
                     LOC2(devSim.KLMN, 1, JJJ - 1, 3, devSim.nbasis),

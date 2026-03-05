@@ -18,6 +18,8 @@ if(CUDA)
 
     set(CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
 
+    #SM12.1 = GB20B (Blackwell)
+    set(SM121FLAGS -gencode arch=compute_121,code=sm_121)
     #SM12.0 = GB202, GB203, GB205, GB206, GB207 (Blackwell)
     set(SM120FLAGS -gencode arch=compute_120,code=sm_120)
     #SM10.0 = GB100 (Blackwell)
@@ -104,15 +106,27 @@ if(CUDA)
             list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)          
 	    
-	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 12.0) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 12.6))
+	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 12.0) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 12.6.3))
             message(STATUS "Configuring QUICK for SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0, SM7.5, SM8.0, SM8.6, SM8.9 and SM9.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM89FLAGS} ${SM90FLAGS})
             list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)          
 
-	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 12.8) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 12.8))
+	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 12.8) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 12.8.1))
             message(STATUS "Configuring QUICK for SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0, SM7.5, SM8.0, SM8.6, SM8.9, SM9.0, SM10.0, and SM12.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM89FLAGS} ${SM90FLAGS} ${SM100FLAGS} ${SM120FLAGS})
+            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
+            set(DISABLE_OPTIMIZER_CONSTANTS TRUE)          
+
+	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 12.9) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 12.9.1))
+            message(STATUS "Configuring QUICK for SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0, SM7.5, SM8.0, SM8.6, SM8.9, SM9.0, SM10.0, SM12.0, and SM12.1")
+            list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM89FLAGS} ${SM90FLAGS} ${SM100FLAGS} ${SM120FLAGS} ${SM121FLAGS})
+            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
+            set(DISABLE_OPTIMIZER_CONSTANTS TRUE)          
+
+	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 13.0) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 13.1.1))
+            message(STATUS "Configuring QUICK for SM7.5, SM8.0, SM8.6, SM8.9, SM9.0, SM10.0, SM12.0, and SM12.1")
+            list(APPEND CUDA_NVCC_FLAGS ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM89FLAGS} ${SM90FLAGS} ${SM100FLAGS} ${SM120FLAGS} ${SM121FLAGS})
             list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)          
 
@@ -124,7 +138,7 @@ if(CUDA)
 
         set(FOUND "FALSE")
         
-        if("${QUICK_USER_ARCH}" MATCHES "kepler")
+        if("${QUICK_USER_ARCH}" STREQUAL "kepler")
             message(STATUS "Configuring QUICK for SM3.5")
             list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS})
             list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
@@ -132,7 +146,7 @@ if(CUDA)
             set(FOUND "TRUE")
         endif()
             
-        if("${QUICK_USER_ARCH}" MATCHES "maxwell")
+        if("${QUICK_USER_ARCH}" STREQUAL "maxwell")
 	    message(STATUS "Configuring QUICK for SM5.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS})
             list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
@@ -140,14 +154,14 @@ if(CUDA)
             set(FOUND "TRUE")
         endif()
 
-        if("${QUICK_USER_ARCH}" MATCHES "pascal")
+        if("${QUICK_USER_ARCH}" STREQUAL "pascal")
             message(STATUS "Configuring QUICK for SM6.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS})
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
             set(FOUND "TRUE")
         endif()
         
-        if("${QUICK_USER_ARCH}" MATCHES "volta")
+        if("${QUICK_USER_ARCH}" STREQUAL "volta")
             message(STATUS "Configuring QUICK for SM7.0")
 	    list(APPEND CUDA_NVCC_FLAGS ${SM70FLAGS})
             if((${CUDA_VERSION} VERSION_LESS 10.0))
@@ -156,42 +170,42 @@ if(CUDA)
             set(FOUND "TRUE")
         endif()
 
-        if("${QUICK_USER_ARCH}" MATCHES "turing")
+        if("${QUICK_USER_ARCH}" STREQUAL "turing")
             message(STATUS "Configuring QUICK for SM7.5")
             list(APPEND CUDA_NVCC_FLAGS ${SM75FLAGS})
             set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
             set(FOUND "TRUE")
         endif()
 
-        if("${QUICK_USER_ARCH}" MATCHES "ampere")
+        if("${QUICK_USER_ARCH}" STREQUAL "ampere")
             message(STATUS "Configuring QUICK for SM8.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM80FLAGS})
             set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
             set(FOUND "TRUE")
         endif()
 
-        if("${QUICK_USER_ARCH}" MATCHES "adalovelace")
+        if("${QUICK_USER_ARCH}" STREQUAL "adalovelace")
             message(STATUS "Configuring QUICK for SM8.9")
             list(APPEND CUDA_NVCC_FLAGS ${SM89FLAGS})
             set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
             set(FOUND "TRUE")
         endif()
 
-        if("${QUICK_USER_ARCH}" MATCHES "hopper")
+        if("${QUICK_USER_ARCH}" STREQUAL "hopper")
             message(STATUS "Configuring QUICK for SM9.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM90FLAGS})
             set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
             set(FOUND "TRUE")
         endif()
 
-        if("${QUICK_USER_ARCH}" MATCHES "blackwell")
+        if("${QUICK_USER_ARCH}" STREQUAL "blackwell")
             message(STATUS "Configuring QUICK for SM10.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM100FLAGS})
             set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
             set(FOUND "TRUE")
         endif()
 
-        if("${QUICK_USER_ARCH}" MATCHES "blackwell2")
+        if("${QUICK_USER_ARCH}" STREQUAL "blackwell2")
             message(STATUS "Configuring QUICK for SM12.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM120FLAGS})
             set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
@@ -210,12 +224,15 @@ if(CUDA)
     #  https://stackoverflow.com/questions/6622454/cuda-incompatible-with-my-gcc-version
     #  VERSION_EQUAL 10 means 10.0, so use ranges to compare major versions.
     if ( "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" AND (
-	    ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 14.3
-              AND CUDA_VERSION VERSION_GREATER_EQUAL 12.8
-              AND CUDA_VERSION VERSION_LESS_EQUAL 12.8 )
-        OR  ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.4
-              AND CUDA_VERSION VERSION_GREATER_EQUAL 12.4
-              AND CUDA_VERSION VERSION_LESS_EQUAL 12.6 )
+	    ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 15.2
+              AND CUDA_VERSION VERSION_GREATER_EQUAL 13.0.0
+              AND CUDA_VERSION VERSION_LESS_EQUAL 13.1.1 )
+	OR  ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 14.3
+              AND CUDA_VERSION VERSION_GREATER_EQUAL 12.8.0
+              AND CUDA_VERSION VERSION_LESS_EQUAL 12.9.1 )
+        OR  ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 13.2
+              AND CUDA_VERSION VERSION_GREATER_EQUAL 12.4.0
+              AND CUDA_VERSION VERSION_LESS_EQUAL 12.6.2 )
         OR ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 12.3
               AND CUDA_VERSION VERSION_GREATER_EQUAL 12.1
               AND CUDA_VERSION VERSION_LESS_EQUAL 12.3 )
@@ -356,19 +373,19 @@ if(HIP)
     if( NOT "${QUICK_USER_ARCH}" STREQUAL "")
         set(FOUND "FALSE")
 
-        if("${QUICK_USER_ARCH}" MATCHES "gfx908")
+        if("${QUICK_USER_ARCH}" STREQUAL "gfx908")
             message(STATUS "Configuring QUICK for gfx908")
             list(APPEND AMD_HIP_FLAGS -DUSE_LEGACY_ATOMICS)
             set(FOUND "TRUE")
         endif()
 
-        if("${QUICK_USER_ARCH}" MATCHES "gfx90a")
+        if("${QUICK_USER_ARCH}" STREQUAL "gfx90a")
             message(STATUS "Configuring QUICK for gfx90a")
             list(APPEND AMD_HIP_FLAGS -DAMD_ARCH_GFX90a)
             set(FOUND "TRUE")
         endif()
 
-        if("${QUICK_USER_ARCH}" MATCHES "gfx942")
+        if("${QUICK_USER_ARCH}" STREQUAL "gfx942")
             message(STATUS "Configuring QUICK for gfx942")
             list(APPEND AMD_HIP_FLAGS -DAMD_ARCH_GFX90a)
             set(FOUND "TRUE")

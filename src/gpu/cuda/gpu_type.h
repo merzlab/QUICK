@@ -647,7 +647,7 @@ void gpu_buffer_type<T> :: Allocate()
             gpu->totalGPUMemory += sizeof(T) * _length * _length2;
             gpu->totalCPUMemory += sizeof(T) * _length * _length2;
 
-            //Allocate CPU emembory
+            //Allocate CPU memory
             _hostData = new T[_length * _length2];
             memset(_hostData, 0, sizeof(T) * _length * _length2);
         } else {
@@ -667,16 +667,16 @@ void gpu_buffer_type<T> :: Allocate()
             gpu->totalGPUMemory += sizeof(T) * _length * _length2;
             gpu->totalCPUMemory += sizeof(T) * _length * _length2;
 
-            //Allocate CPU emembory
+            //Allocate CPU memory
             _hostData = new T[_length * _length2];
             memset(_hostData, 0, sizeof(T) * _length * _length2);
         } else {
-            //Allocate GPU memeory
+            //Allocate GPU memory
             gpuHostAlloc((void**) &_hostData, sizeof(T) * _length * _length2, cudaHostAllocMapped);
             gpu->totalGPUMemory += sizeof(T) * _length * _length2;
             gpu->totalCPUMemory += sizeof(T) * _length * _length2;
 
-            //Allocate CPU emembory
+            //Allocate CPU memory
             gpuHostGetDevicePointer((void **) &_devData, (void *) _hostData, 0);
             memset(_hostData, 0, sizeof(T) * _length * _length2);
         }
@@ -709,12 +709,12 @@ void gpu_buffer_type<T> :: ReallocateGPU()
     if (_devData == NULL) // if memory has not been allocated
     {
         if (!_bPinned) {
-            //Allocate GPU memeory
+            //Allocate GPU memory
             gpuMalloc((void**) &_devData, sizeof(T) * _length * _length2);
             gpu->totalGPUMemory += sizeof(T) * _length * _length2;
 
         } else {
-            //Allocate GPU memeory
+            //Allocate GPU memory
             gpuHostAlloc((void**) &_hostData, sizeof(T) * _length * _length2, cudaHostAllocMapped);
             gpu->totalGPUMemory += sizeof(T) * _length * _length2;
 

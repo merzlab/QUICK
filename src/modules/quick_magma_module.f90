@@ -34,15 +34,15 @@ module quick_magma_module
 
 contains
 
-    ! Driver for dsyevd, similar to DIAG and DIAGMKL. 
-    subroutine quick_magma_dsyevd(n, A, Eval, Evec, ierr)
+    ! Driver for dsyevd, similar to CPU_DIAG
+    subroutine quick_magma_dsyevd(A, n, m, eval, evec, ierr)
  
         use magma
         implicit none
-        integer, intent(in) :: n  ! Number of rows and columns of matrix A.
-        double precision, dimension(n,n), intent(in) :: A ! Matrix to diagonalize   
-        double precision, dimension(n), intent(out) :: Eval ! Resulting eigenvalues
-        double precision, dimension(n,n), intent(out) :: Evec ! Resulting eigenvectors
+        integer, intent(in) :: n, m  ! Number of rows and columns of matrix A.
+        double precision, dimension(n,m), intent(in) :: A ! Matrix to diagonalize   
+        double precision, dimension(m), intent(out) :: eval ! Resulting eigenvalues
+        double precision, dimension(n,m), intent(out) :: evec ! Resulting eigenvectors
         integer, intent(out) :: ierr ! error code, HIPCHECK should handle the errors here, but pass this anyway
 
         integer :: lda, ldda, i, j, lwork, liwork, aux_iwork(1) ! indices for iterating over results        
@@ -52,12 +52,12 @@ contains
         double precision, allocatable :: h_work(:)
 
         lda=n
-        ldda=n
+        ldda=m
         ierr=0
 
         ierr = magmaf_dmalloc( dA, ldda*n )
         call magmaf_queue_create(0, queue )
-        call magmaf_dsetmatrix( n, n, A, ldda, dA, ldda, queue )
+        call magmaf_dsetmatrix( n, m, A, ldda, dA, ldda, queue )
         call magmaf_queue_destroy( queue )
 
         call magmaf_dsyevd_gpu('V', 'U', n, dev_null_ptr, ldda, w, wA, lda, aux_work, -1, aux_iwork, -1, ierr)
@@ -67,22 +67,22 @@ contains
         if(.not. allocated(h_work)) allocate(h_work(lwork))
         if(.not. allocated(iwork)) allocate(iwork(liwork))
 
-        call magmaf_dsyevd_gpu('V', 'U', n, dA, ldda, Eval, Evec, lda, h_work, lwork, iwork, liwork, ierr)
+        call magmaf_dsyevd_gpu('V', 'U', n, dA, ldda, eval, evec, lda, h_work, lwork, iwork, liwork, ierr)
 
         call magmaf_queue_create( 0, queue )
-        call magmaf_dgetmatrix(n, n, dA, ldda, Evec, lda, queue )
+        call magmaf_dgetmatrix(n, m, dA, ldda, evec, lda, queue )
         call magmaf_queue_destroy( queue )
 
         ierr = magmaf_free( dA )
         if(allocated(h_work)) deallocate(h_work)
         if(allocated(iwork)) deallocate(iwork)
 
-        Evec = -Evec
+        evec = -evec
 
         !Output results
-        !do i = 1,n
+        !do i = 1,m
         !  do j=1,n
-        !    write(*,*) "DSYEVD", i, j, A(j,i), Evec(j,i), Eval(j)
+        !    write(*,*) "DSYEVD", i, j, A(j,i), evec(j,i), eval(j)
         !  enddo
         !end do   
 

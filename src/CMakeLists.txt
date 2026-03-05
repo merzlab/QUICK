@@ -36,8 +36,7 @@ set(QUICK_MODULES_SOURCES
 	quick_grad_oshell_module.f90 quick_dftd3_module.f90 quick_molden_module.f90 quick_oeproperties_module.f90)
 
 set(QUICK_SUBS_FORTRAN_SOURCES Angles.f90 copyDMat.f90 copySym.f90
-	degen.f90 denspt.f90 diag.f90 dipole.f90
-	EffChar.f90 eigvec.f90
+	degen.f90 denspt.f90 dipole.f90 EffChar.f90
 	findBlock.f90 fmt.f90 getinum.f90
 	getNum.f90 greedy_distrubute.f90 hrr.f90 iatoi.f90
 	iatoimp.f90 io.f90 iwhole.f90
@@ -48,11 +47,11 @@ set(QUICK_SUBS_FORTRAN_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	quick_open.f90 random.f90 rdinum.f90 rdnml.f90
 	rdnum.f90 rdword.f90 readPDB.f90 spdfgh.f90
 	ssw.f90 sum2Mat.f90 symmetrize.f90 transpose.f90
-        tridi.f90 upcase.f90 vett.f90 whatis.f90 whole.f90
+        upcase.f90 vett.f90 whatis.f90 whole.f90
 	wrtRestart.f90 xnorm.f90 zeroMatrix.f90 zmake.f90
 	pt2der.f90 sswder.f90 denspt_new_imp.f90
-	pteval_new_imp.f90 scaMatMul.f90 diagmkl.f90
-	oshell_denspt.f90 naive_distribute.f90)
+	pteval_new_imp.f90 scaMatMul.f90 diag.f90
+	oshell_denspt.f90 naive_distribute.f90 mat_diag.f90 mat_dgemm.f90)
 
 set(QUICK_SUBS_CXX_SOURCES
 	time.cpp)
