@@ -92,7 +92,7 @@ module quick_method_module
         integer :: ifragbasis = 1      ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
 
         ! this is DFT grid
-        integer :: iSG = 3             ! =0. SG0, =1. SG1, =2. SG2, =3. SG3(DEFAULT)
+        integer :: iSG = 1             ! =0. SG0, =1. SG1(DEFAULT), =2. SG2, =3. SG3
 
         ! Initial guess part
         logical :: SAD = .true.        ! SAD initial guess(default)
@@ -721,7 +721,7 @@ module quick_method_module
                 else if (index(keyWD,'SG3').ne.0) then
                     self%iSG=3
                 else
-                    self%iSG=3  ! default SG-3
+                    self%iSG=1  ! default SG-1
                 endif
             endif
 

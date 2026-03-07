@@ -782,7 +782,9 @@ module quick_gridpoints_module
       ! -(1 + 2 L)/4   -(3 + 2 L)/4                           3
       !r^L E^-ar^2= 2               a           Sqrt[Pi] signif Sqrt[Gamma[- + L]]
       ! 2
-      use allmod
+      use quick_method_module
+      use quick_basis_module
+      use quick_MPI_module
 #ifdef MPIV
       use mpi
 #endif
@@ -862,7 +864,7 @@ module quick_gridpoints_module
    ! EL-SHERBINY A and POIRIER RA JCC 25,1378,2004
    
    subroutine gridformSG0(iitype,ILEB,iiang,RGRIDt,RWTt)
-      use allmod
+      use quick_molspec_module
       implicit double precision(a-h,o-z)
       parameter(MAXGNUMBER=30)
       double precision RGRIDt(MAXGNUMBER),RWTt(MAXGNUMBER)
@@ -1263,7 +1265,7 @@ module quick_gridpoints_module
    ! Xiao HE 1/9/07
    ! SG-1 standard grid Peter MWG, Benny GJ and Pople JA, CPL 209,506,1993,
    subroutine gridformSG1Angular(iitype,distance,iiang)
-      use allmod
+      use quick_molspec_module
       implicit double precision(a-h,o-z)
    
       double precision :: hpartpara(4),lpartpara(4),npartpara(4)
@@ -1349,7 +1351,6 @@ module quick_gridpoints_module
    ! "Standard grids for high-precision integration of modern density functionals: SG-2 and SG-3"
    ! J. Comput. Chem. 38, 869-882 (2017) 
    subroutine gridformSG2Angular(atomic_number,Irad,iiang)
-      use allmod
       implicit double precision(a-h,o-z)
       integer, intent(in) :: atomic_number
       integer, intent(in) :: Irad 
@@ -1429,7 +1430,6 @@ module quick_gridpoints_module
    ! "Standard grids for high-precision integration of modern density functionals: SG-2 and SG-3"
    ! J. Comput. Chem. 38, 869-882 (2017) 
    subroutine gridformSG3Angular(atomic_number,Irad,iiang)
-      use allmod
       implicit double precision(a-h,o-z)
       integer, intent(in) :: atomic_number
       integer, intent(in) :: Irad 
@@ -1518,7 +1518,6 @@ module quick_gridpoints_module
 
 
    subroutine gridformLBDAngular(iiang,eml_nradial)
-      use allmod
       implicit double precision(a-h,o-z)
       integer, intent(in) :: eml_nradial
       integer, intent(out) :: iiang

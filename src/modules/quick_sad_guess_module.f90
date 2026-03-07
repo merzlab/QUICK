@@ -124,6 +124,8 @@ contains
                   call gridformEML(75)
                else if(quick_method%isg.eq.3) then
                   call gridformEML(99)
+               else
+                  call gridformEML(50)
                endif
             endif
 
