@@ -32,7 +32,7 @@ module quick_gridpoints_module
 
     use quick_size_module
     use quick_MPI_module
-    implicit double precision(a-h,o-z)
+    implicit none
 
 
     type sg2_pruning_type
@@ -258,10 +258,15 @@ module quick_gridpoints_module
     use quick_basis_module
     use quick_timer_module
 
-    implicit double precision(a-h,o-z)
-    type(quick_xc_grid_type) self
-    type(quick_xcg_tmp_type) xcg_tmp
+    implicit none
+    type(quick_xc_grid_type), intent(inout) :: self
+    type(quick_xcg_tmp_type), intent(inout) :: xcg_tmp
     double precision :: t_octree, t_prscrn
+    integer :: Iatm, ipt, idx_grid, Irad, Iradtemp, iiang, Iang, idx, ist, iend
+    double precision :: rad, rad3
+    logical :: bMPI
+    integer :: mpirank
+    double precision, external :: SSW
 
     !Form the quadrature and store coordinates and other information
     !Measure the time to form grid
@@ -573,7 +578,7 @@ module quick_gridpoints_module
     subroutine allocate_sigrad_phi
 
         use quick_basis_module, only: nbasis, quick_basis, alloc
-        implicit double precision(a-h,o-z)
+        implicit none
         logical :: isDFT                 
 
         if (.not. allocated(sigrad2)) allocate(sigrad2(nbasis))
@@ -589,7 +594,7 @@ module quick_gridpoints_module
     subroutine deallocate_sigrad_phi
 
         use quick_basis_module, only: quick_basis, dealloc
-        implicit double precision(a-h,o-z)
+        implicit none
         logical :: isDFT
 
         if (allocated(sigrad2)) deallocate(sigrad2)
@@ -788,7 +793,10 @@ module quick_gridpoints_module
 #ifdef MPIV
       use mpi
 #endif
-      implicit double precision(a-h,o-z)
+      implicit none
+      integer :: Ibas, Icon, i, L, iOutFile
+      double precision :: amin, gamma, gamma2pi, target, stepsize
+      double precision :: radial, current
    
 #ifdef MPIV
       if(master) then
@@ -865,9 +873,13 @@ module quick_gridpoints_module
    
    subroutine gridformSG0(iitype,ILEB,iiang,RGRIDt,RWTt)
       use quick_molspec_module
-      implicit double precision(a-h,o-z)
-      parameter(MAXGNUMBER=30)
-      double precision RGRIDt(MAXGNUMBER),RWTt(MAXGNUMBER)
+      implicit none
+      integer, parameter :: MAXGNUMBER=30
+      integer, intent(in) :: iitype, ILEB
+      integer, intent(out) :: iiang
+      double precision, intent(out) :: RGRIDt(MAXGNUMBER), RWTt(MAXGNUMBER)
+      integer :: i, N
+      double precision :: aa46(46), aa52(52)
    
       !      double precision :: ratomic(18)
       !      data ratomic &
@@ -876,7 +888,6 @@ module quick_gridpoints_module
             !      &
             !      1.45d0,0.0d0/
    
-      double precision :: aa46(46),aa52(52)
       data aa46 &
             /0.001505892474584d0,0.19397997519818d0, &
             0.009949112846861d0,0.262363963659648d0, &
@@ -1266,9 +1277,12 @@ module quick_gridpoints_module
    ! SG-1 standard grid Peter MWG, Benny GJ and Pople JA, CPL 209,506,1993,
    subroutine gridformSG1Angular(iitype,distance,iiang)
       use quick_molspec_module
-      implicit double precision(a-h,o-z)
-   
-      double precision :: hpartpara(4),lpartpara(4),npartpara(4)
+      implicit none
+      integer, intent(in) :: iitype
+      double precision, intent(in) :: distance
+      integer, intent(out) :: iiang
+      integer :: N, I
+      double precision :: hpartpara(4), lpartpara(4), npartpara(4)
    
       data hpartpara /0.2500d0,0.5000d0,1.0000d0,4.5000d0/
       data lpartpara /0.1667d0,0.5000d0,0.9000d0,3.5000d0/
@@ -1351,11 +1365,10 @@ module quick_gridpoints_module
    ! "Standard grids for high-precision integration of modern density functionals: SG-2 and SG-3"
    ! J. Comput. Chem. 38, 869-882 (2017) 
    subroutine gridformSG2Angular(atomic_number,Irad,iiang)
-      implicit double precision(a-h,o-z)
-      integer, intent(in) :: atomic_number
-      integer, intent(in) :: Irad 
+      implicit none
+      integer, intent(in) :: atomic_number, Irad
       integer, intent(out) :: iiang
-      integer :: lebedev_type
+      integer :: lebedev_type, I, N
       type(sg2_pruning_type) :: prune_data
       
       ! elements that not listed in table 1 use unpruned grids (75,302)
@@ -1430,11 +1443,10 @@ module quick_gridpoints_module
    ! "Standard grids for high-precision integration of modern density functionals: SG-2 and SG-3"
    ! J. Comput. Chem. 38, 869-882 (2017) 
    subroutine gridformSG3Angular(atomic_number,Irad,iiang)
-      implicit double precision(a-h,o-z)
-      integer, intent(in) :: atomic_number
-      integer, intent(in) :: Irad 
+      implicit none
+      integer, intent(in) :: atomic_number, Irad
       integer, intent(out) :: iiang
-      integer :: lebedev_type
+      integer :: lebedev_type, I, N
       type(sg3_pruning_type) :: prune_data
 
       ! elements that not listed in table 1 use unpruned grids (99,590)
@@ -1518,7 +1530,7 @@ module quick_gridpoints_module
 
 
    subroutine gridformLBDAngular(iiang,eml_nradial)
-      implicit double precision(a-h,o-z)
+      implicit none
       integer, intent(in) :: eml_nradial
       integer, intent(out) :: iiang
       integer :: I, N
