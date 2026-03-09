@@ -1,5 +1,5 @@
 B3LYP CHARGE=-1 cutoff=1.0e-9 BASIS=6-31g* denserms=1.0e-6
-writexyz writeden opt
+chk_write_xyz chk_write_den opt
 
 C -1.372717 -0.239147 -0.003757
 H -1.610834 -0.823154  0.885252

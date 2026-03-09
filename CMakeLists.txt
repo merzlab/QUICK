@@ -5,7 +5,6 @@ project(quick LANGUAGES NONE VERSION 25.03)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/quick-cmake)
 
 if(NOT INSIDE_AMBER)
-
 	# initialization and include paths
 	#-------------------------------------------------------------
 	include(cmake/AmberBuildSystemInit.cmake NO_POLICY_SCOPE)
@@ -33,7 +32,17 @@ if(NOT INSIDE_AMBER)
 	set(BUNDLE_IDENTIFIER org.merzlab.quick)
 	set(BUNDLE_SIGNATURE QUIK)
 	include(Packaging)
+endif()
 
+# HDF5
+option(HDF5 "Build with restart capability using HDF5." FALSE)
+if(HDF5)
+    find_package(HDF5 REQUIRED COMPONENTS Fortran HL)
+    if(HDF5_FOUND)
+        message(STATUS "Found HDF5: ${HDF5_VERSION}")
+    else()
+        message(FATAL_ERROR "Restart support via HDF5 is requested but was not found. Please, make sure an HDF5 library (HL, Fortran bindings) is installed.")
+    endif()
 endif()
 
 option(ENABLEF "Enables the support for f functions in the ERI code." FALSE)

@@ -171,11 +171,11 @@ opt_const_ang_h2o_hf_3-21g          #Water: RHF DL-FIND constraint angle optimiz
 opt_const_dh_c2h4f2_hf_3-21g        #C2H4F2: RHF DL-FIND constraint dihedral optimizaton test: s and p basis functions
 opt_const_freeze_c2h4f2_hf_3-21g    #C2H4F2: RHF DL-FIND constraint freeze atoms optimizaton test: s and p basis functions
 api_water_rhf_631g                  #Water: API test
-rw_acetate_density_checkpoint       #RW test: reading of density from checkpoint file
-rw_acetate_xyz_checkpoint           #RW test: reading of coordinates from checkpoint file
-rw_xyz_and_density_checkpoint       #RW test: reading of both density and coordinate from checkpoint file
 esp_charge_acetone_b3lyp_def2svp    #ESP test: Tests both ESP charges and ESP on van der Waals surface.
 esp_grid_acetone_b3lyp_def2svp      #ESP test: Tests ESP calculation on external points
 esp_charge_acetate_radical          #ESP test: Tests ESP evaluation and charge calculation for unrestricted DFT
 esp_charge_acetate_anion            #ESP test: Tests ESP evaluation and charge calculation for charged molecule
 ene_multiple_keyword_lines          #Acetate: DFT energy test: Tests if reading of keywords from multiple lines works
+chk_acetate_xyz                     #CHK test: writing/reading coordinates
+chk_acetate_xyz_density             #CHK test: writing/reading densities and coordinates
+chk_acetate_density                 #CHK test: writing/reading densities

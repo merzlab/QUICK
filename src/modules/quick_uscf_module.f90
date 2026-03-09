@@ -61,20 +61,29 @@ contains
 
   end subroutine deallocate_quick_uscf
 
+  !-------------------------------------------------------
+  ! this subroutine is to do scf job for restricted system
+  !-------------------------------------------------------
   ! Ed Brothers. November 27, 2001
   ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
   subroutine uscf(ierr)
-     !-------------------------------------------------------
-     ! this subroutine is to do scf job for restricted system
-     !-------------------------------------------------------
      use allmod
      use quick_molden_module, only: quick_molden, exportMO, exportSCF
+#if defined(RESTART_HDF5)
+     use quick_io_module, only: read_hdf5_int_rank0, read_hdf5_real8_rank2
+#else
+     use quick_io_module, only: read_int_rank0, read_real8_rank3
+#endif
+
      implicit none
+
+     integer, intent(inout) :: ierr
   
      logical :: done
-     integer, intent(inout) :: ierr
      integer :: jscf
-     done=.false.
+     integer :: fail
+
+     done = .false.
   
      !-----------------------------------------------------------------
      ! The purpose of this subroutine is to perform scf cycles.  At this
@@ -91,7 +100,23 @@ contains
      ! The cycles stop when prms  is less than pmaxrms or when the maximum
      ! number of scfcycles has been reached.
      jscf=0
-  
+ 
+     if (quick_method%readden) then
+       nbasis = quick_molspec%nbasis
+       if (master) then
+#if defined(RESTART_HDF5)
+         call read_hdf5_int_rank0('molinfo', 2, nbasis)
+         call read_hdf5_real8_rank2('dense', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%dense)
+         call read_hdf5_real8_rank2('denseb', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%denseb)
+#else
+         open(unit=iDataFile, file=dataFileName, status='OLD', form='UNFORMATTED')
+         call read_int_rank0(iDataFile, "nbasis", nbasis, fail)
+         call read_real8_rank3(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
+         call read_real8_rank3(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%denseb, fail)
+         close(iDataFile)
+#endif
+       endif
+     endif
   
      ! Alessandro GENONI 03/21/2007
      ! ECP integrals computation exploiting Alexander V. Mitin Subroutine
@@ -141,8 +166,6 @@ contains
 #endif
 
      implicit none
- 
-     integer :: fail
  
      ! variable inputed to return
      integer :: jscf                ! scf iteration
@@ -226,18 +249,7 @@ contains
      if (bMPI) call MPI_setup_hfoperator
      !-------------- END MPI / ALL NODE -----------
 #endif
-  
-        if(quick_method%readden)then
-          nbasis = quick_molspec%nbasis
-          if(master)then
-            open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
-            call rchk_int(iDataFile, "nbasis", nbasis, fail)
-            call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
-            call rchk_darray(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%denseb, fail)
-            close(iDataFile)
-          endif
-        endif
- 
+
 #ifdef MPIV
      if (bMPI) then
         call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
@@ -702,16 +714,6 @@ contains
         !--------------- END MPI/ALL NODES -------------------------------------
   
         if (master) then
-  
-           if(quick_method%writeden)then 
-             ! open data file then write calculated info to dat file
-             call quick_open(iDataFile, dataFileName, 'R', 'U', 'A',.true.,ierr)
-             call wchk_int(iDataFile, "nbasis", nbasis, fail)
-             call wchk_darray(iDataFile, "dense",    nbasis, nbasis, 1, quick_qm_struct%dense,    fail)
-             call wchk_darray(iDataFile, "denseb",    nbasis, nbasis, 1, quick_qm_struct%denseb,    fail)
-             close(iDataFile)
-           endif 
-
 #ifdef USEDAT
            ! open data file then write calculated info to dat file
            SAFE_CALL(quick_open(iDataFile, dataFileName, 'R', 'U', 'R',.true.,ierr)

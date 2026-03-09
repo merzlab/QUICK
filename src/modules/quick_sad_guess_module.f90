@@ -118,7 +118,8 @@ contains
            quick_molspec%nelec = quick_molspec%iattype(1)
            if ((quick_method%DFT .OR. quick_method%SEDFT).and.quick_method%isg.eq.1) &
                  call gridformSG1()
-           call check_quick_method_and_molspec(ioutfile,quick_molspec,quick_method)
+           call check_quick_method_and_molspec(ioutfile,quick_molspec,quick_method,ierr)
+           CHECK_ERROR(ierr)
   
            !-------------------------------------------
            ! At this point we have the positions and identities of the atoms. We also
