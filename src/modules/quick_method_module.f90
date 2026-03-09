@@ -989,7 +989,7 @@ module quick_method_module
             self%DIVCON = .false.      ! Div&Con
 
             self%ifragbasis = 1        ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
-            self%iSG = 3               ! =0. SG0, =1. (DEFAULT)
+            self%iSG = 1               ! =0. SG0, =1. (DEFAULT)
             self%MFCC = .false.        ! MFCC
 
             self%iscf = 200
