@@ -1465,24 +1465,26 @@ module quick_gridpoints_module
          lebedev_type = prune_data%lebedev_type(1)
       else if (Irad <= (prune_data%n_shells(1)+prune_data%n_shells(2))) then
          lebedev_type = prune_data%lebedev_type(2)
-      else if (Irad <= (prune_data%n_shells(1)+prune_data%n_shells(2)+prune_data%n_shells(3))) then
+      else if  (Irad <= (prune_data%n_shells(1) + prune_data%n_shells(2) &
+      + prune_data%n_shells(3))) then
          lebedev_type = prune_data%lebedev_type(3)
-      else if (Irad <= (prune_data%n_shells(1)+prune_data%n_shells(2)+prune_data%n_shells(3)+ &
-                        prune_data%n_shells(4))) then
+      else if  (Irad <= (prune_data%n_shells(1) + prune_data%n_shells(2) &
+      + prune_data%n_shells(3) + prune_data%n_shells(4))) then
          lebedev_type = prune_data%lebedev_type(4)
-      else if (Irad <= (prune_data%n_shells(1)+prune_data%n_shells(2)+prune_data%n_shells(3)+ &
-                        prune_data%n_shells(4)+prune_data%n_shells(5))) then
+      else if  (Irad <= (prune_data%n_shells(1) + prune_data%n_shells(2) &
+      + prune_data%n_shells(3) + prune_data%n_shells(4) + prune_data%n_shells(5))) then
          lebedev_type = prune_data%lebedev_type(5)
-      else if (Irad <= (prune_data%n_shells(1)+prune_data%n_shells(2)+prune_data%n_shells(3)+ &
-                        prune_data%n_shells(4)+prune_data%n_shells(5)+prune_data%n_shells(6))) then
+      else if  (Irad <= (prune_data%n_shells(1) + prune_data%n_shells(2) &
+      + prune_data%n_shells(3) + prune_data%n_shells(4) + prune_data%n_shells(5) &
+      + prune_data%n_shells(6))) then
          lebedev_type = prune_data%lebedev_type(6)
-      else if (Irad <= (prune_data%n_shells(1)+prune_data%n_shells(2)+prune_data%n_shells(3)+ &
-                        prune_data%n_shells(4)+prune_data%n_shells(5)+prune_data%n_shells(6)+ &
-                        prune_data%n_shells(7))) then
+      else if  (Irad <= (prune_data%n_shells(1) + prune_data%n_shells(2) &
+      + prune_data%n_shells(3) + prune_data%n_shells(4) + prune_data%n_shells(5) &
+      + prune_data%n_shells(6) + prune_data%n_shells(7))) then
          lebedev_type = prune_data%lebedev_type(7)
-      else if (Irad <= (prune_data%n_shells(1)+prune_data%n_shells(2)+prune_data%n_shells(3)+ &
-                        prune_data%n_shells(4)+prune_data%n_shells(5)+prune_data%n_shells(6)+ &
-                        prune_data%n_shells(7)+prune_data%n_shells(8))) then
+      else if  (Irad <= (prune_data%n_shells(1) + prune_data%n_shells(2) &
+      + prune_data%n_shells(3) + prune_data%n_shells(4) + prune_data%n_shells(5) &
+      + prune_data%n_shells(6) + prune_data%n_shells(7) + prune_data%n_shells(8))) then
          lebedev_type = prune_data%lebedev_type(8)
       else
          lebedev_type = prune_data%lebedev_type(9)
