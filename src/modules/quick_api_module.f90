@@ -74,9 +74,6 @@ module quick_api_module
     ! if density matrix of the previous step should be used for the current
     ! md step
     logical :: reuse_dmx = .true.
-    logical :: pyscf = .false.
-    logical :: lucj = .false.
-    integer :: pyscf_stride = 100
 
     ! total energy in hartree
     double precision :: tot_ene = 0.0d0
@@ -193,7 +190,7 @@ end subroutine check_fqin
 
 ! reads the job card from template file with .qin extension and initialize quick
 ! also allocate memory for quick_api internal arrays
-subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, pyscf, lucj, pyscf_stride, ierr)
+subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
 
   use quick_files_module
   use quick_molspec_module, only : quick_molspec, alloc
@@ -210,9 +207,6 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, pyscf, l
   integer, intent(in) :: natoms
   integer, intent(in) :: atomic_numbers(natoms)
   logical, intent(in) :: reusedmx
-  logical, intent(in) :: pyscf
-  logical, intent(in) :: lucj
-  integer, intent(in) :: pyscf_stride
   integer, intent(out) :: ierr
   integer :: flen
   ierr=0
@@ -222,9 +216,6 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, pyscf, l
   call new_quick_api_type(quick_api, natoms, atomic_numbers, ierr)
 
   quick_api%reuse_dmx    = reusedmx
-  quick_api%pyscf        = pyscf
-  quick_api%lucj         = lucj
-  quick_api%pyscf_stride = pyscf_stride
 
   ! check if fqin string is a input file name or job card
   flen = LEN_TRIM(fqin)
@@ -685,77 +676,7 @@ subroutine run_quick(self,ierr)
 
   ! broadcast results from master to slaves
   call broadcast_quick_mpi_results(self,ierr)
-
-  if(master) then
 #endif
-
-    write(6, '(1x,A16,1x)') '@ ENE AND GRAD :'
-    write(6, '(D25.15)') self%tot_ene
-    write(6, '(D25.15, 5X, D25.15, 5X, D25.15)') self%gradient
-    !write(6, '(D25.15, 5X, D25.15, 5X, D25.15)') self%ptchg_grad
-
-    write(charI,"(I0)") quick_api%step
-
-
-    if (self%pyscf) then
-      write(6, '(1x,A16,1x)') charI
-      if (quick_api%step==1) then
-        stat1 = system('rm -rf PySCF.log results')
-        stat2 = system('mkdir results')
-        write(6,'(A,I0,A,I0)') 'rm status=', stat1, ', mkdir status=', stat2
-        if (stat1 /= 0 .or. stat2 /= 0) then
-          write(6, '(A)') 'CANT INITA PYSCF'
-        end if
-      end if
-      if (mod(quick_api%step,self%pyscf_stride)==0) then
-        stat3 = system('echo PySCF_log_for_step_'//trim(charI)//' >> PySCF.log')
-        !stat = stat + system('cp QUICK_job.in results/QUICK_job_step_'//trim(charI)//'.in')
-        !stat = stat + system('cp QUICK_job.molden results/QUICK_job_step_'//trim(charI)//'.molden')
-        !stat = stat + system('cp quick.out results/QUICK_job_step_'//trim(charI)//'.out')
-        stat4 = system('python -u PySCF-run.py '//trim(charI)//' >> PySCF.log')
-        stat5 = system('cp QUICK_job_PySCF_modified.out results/QUICK_job_PySCF_modified_step_'//trim(charI)//'.out')
-
-        if (stat3 /= 0 .or. stat4 /= 0 .or. stat5 /= 0 ) then
-          write(6, '(1x,A16,1x)') 'CANT EXECT PYSCF'
-        end if
-        call read_quick_out("QUICK_job_PySCF_modified.out", self%natoms, self%tot_ene, self%gradient)
-        write(6, '(1x,A16,1x)') '@ ENE MOD GRAD :'
-        write(6, '(D25.15)') self%tot_ene
-        write(6, '(D25.15, 5X, D25.15, 5X, D25.15)') self%gradient
-      end if
-
-    else if (self%lucj) then
-      if (quick_api%step==1) then
-        stat6 = system('python -u LUCJ-get-optimal-layout.py '//trim(charI)//' ')
-        stat7 = system('rm -rf run-sqd.log ext-SQD-run.log results')
-        stat8 = system('mkdir results')
-        if ( stat6 /= 0 .or. stat7 /= 0 .or. stat8 /= 0) then
-          write(6, '(1x,A16,1x)') 'CANT INITAT LUCJ'
-        end if
-      end if
-      if (mod(quick_api%step,self%pyscf_stride)==0) then
-        stat9 = system('python -u LUCJ-run.py '//trim(charI)//' ')
-        stat10 = system('echo SQD_log_for_step_'//trim(charI)//' >> run-sqd.log')
-        stat11 = system('python -u run-sqd.py '//trim(charI)//' >> run-sqd.log')
-        stat12 = system('python convert_bitstr_matrix_to_address.py')
-        stat13 = system('python -u ext-SQD-run.py '//trim(charI)//' >> ext-SQD-run.log')
-        !stat = stat + system('sh Workflow/clean_tmp.sh')
-        !stat = stat + system('rm -f slurm-*.out')
-        stat14 = system('cp QUICK_job_PySCF_modified.out results/QUICK_job_step_'//trim(charI)//'.out')
-        if ( stat9 /= 0 .or. stat10 /= 0 .or. stat11 /= 0 .or. stat12 /= 0 .or. stat13 /= 0 .or. stat14 /= 0 ) then
-          write(6, '(1x,A16,1x)') 'CANT EXECUT LUCJ'
-        end if
-        call read_quick_out("QUICK_job_PySCF_modified.out", self%natoms, self%tot_ene, self%gradient)
-        write(6, '(1x,A16,1x)') '@ ENE MOD GRAD :'
-        write(6, '(D25.15)') self%tot_ene
-        write(6, '(D25.15, 5X, D25.15, 5X, D25.15)') self%gradient
-      end if
-    end if
-
-#ifdef MPIV
-  endif
-#endif
-
 
   ! increase internal quick step by one
   quick_api%step = quick_api%step + 1
