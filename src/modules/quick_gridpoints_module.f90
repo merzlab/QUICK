@@ -257,6 +257,7 @@ module quick_gridpoints_module
     use quick_molspec_module, only: quick_molspec, xyz, natom
     use quick_basis_module
     use quick_timer_module
+    use quick_mpi_module, only: mpirank, bMPI
 
     implicit none
     type(quick_xc_grid_type), intent(inout) :: self
@@ -264,8 +265,6 @@ module quick_gridpoints_module
     double precision :: t_octree, t_prscrn
     integer :: Iatm, ipt, idx_grid, Irad, Iradtemp, iiang, Iang, idx, ist, iend
     double precision :: rad, rad3
-    logical :: bMPI
-    integer :: mpirank
     double precision, external :: SSW
 
     !Form the quadrature and store coordinates and other information
@@ -294,16 +293,6 @@ module quick_gridpoints_module
     xcg_tmp%weight = 0.0d0
 
 #ifdef MPIV
-   if(master) then
-#endif
-
-#ifdef MPIV
-  endif
-
-   call alloc_mpi_grid_variables(self)
-
-   call mpi_bcast_grid_vars()
-
    if(master) then
 #endif
     RECORD_TIME(timer_begin%TDFTGrdGen)
@@ -370,6 +359,9 @@ module quick_gridpoints_module
 
 #ifdef MPIV
    endif
+
+   call alloc_mpi_grid_variables(self)
+   call mpi_bcast_grid_vars()
 #endif
 
     ! allocate memory for data structures holding radius of significance, phi,
@@ -393,14 +385,14 @@ module quick_gridpoints_module
    if(bMPI) then
 
       call setup_ssw_mpi
-
+      
       ist=self%igridptll(mpirank+1)
       iend=self%igridptul(mpirank+1)
    else
       ist=1
       iend = idx_grid
    endif
-
+   
    do idx=ist, iend
 #else
    do idx=1, idx_grid
@@ -409,7 +401,7 @@ module quick_gridpoints_module
         xcg_tmp%init_grid_atm(idx))
         xcg_tmp%weight(idx)=xcg_tmp%sswt(idx)*xcg_tmp%arr_wtang(idx)*xcg_tmp%arr_rwt(idx)*xcg_tmp%arr_rad3(idx)
     enddo
-
+    
 #if defined(MPIV) && !defined(MPIV_GPU)
    if(bMPI) then
       call get_mpi_ssw
@@ -439,7 +431,6 @@ module quick_gridpoints_module
    if(master) then
 #endif
 
-      
     ! initialize cpp data structure for octree and grid point packing
     call gpack_initialize()
 
