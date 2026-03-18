@@ -241,6 +241,13 @@ subroutine calmp2
   write (iOutFile,'("SECOND ORDER ENERGY =",F16.9)') quick_qm_struct%EMP2
   write (iOutFile,'("EMP2                =",F16.9)') quick_qm_struct%Etot+quick_qm_struct%EMP2
   call PrtAct(ioutfile,"End MP2 Calculation")
+
+  deallocate(mp2shell)
+  deallocate(orbmp2)
+  deallocate(orbmp2i331)
+  deallocate(orbmp2j331)
+  deallocate(orbmp2k331)
+
   return
 end subroutine calmp2
 
@@ -551,6 +558,14 @@ subroutine MPI_calmp2
      write (iOutFile,'("EMP2                =",F16.9)') quick_qm_struct%Etot+quick_qm_struct%EMP2
      call PrtAct(ioutfile,"End MP2 Calculation")
   endif
+
+  deallocate(mp2shell)
+  deallocate(orbmp2)
+  deallocate(orbmp2i331)
+  deallocate(orbmp2j331)
+  deallocate(orbmp2k331)
+  deallocate(temp4d)
+
   return
 end subroutine mpi_calmp2
 #endif

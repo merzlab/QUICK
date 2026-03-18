@@ -517,6 +517,46 @@ extern "C" void gpu_delete_(int* ierr)
 
     PRINTDEBUG("BEGIN GPU DELETE");
 
+    // Free buffers that are never freed by the more targeted delete functions.
+    // The specific delete functions (gpu_cleanup_, gpu_delete_dft_grid_,
+    // gpu_delete_lri_, etc.) are called by Fortran *before* gpu_delete_; those
+    // pointers may already be NULL by the time we reach here, so SAFE_DELETE is
+    // used throughout to guard against double-free.
+
+    // Atom/charge buffers (allocated in gpu_upload_molinfo_)
+    SAFE_DELETE(gpu->iattype);
+    SAFE_DELETE(gpu->chg);
+
+    // Gradient buffers (allocated in gpu_upload_grad_)
+    SAFE_DELETE(gpu->grad);
+    SAFE_DELETE(gpu->gradULL);
+
+    // External point buffer (allocated in gpu_upload_oeprop_)
+    SAFE_DELETE(gpu->extpointxyz);
+
+    // Integral count buffer (allocated in gpu_upload_erilist_)
+    SAFE_DELETE(gpu->intCount);
+
+    // Outer aoint_buffer pointer arrays (elements were already deleted by the
+    // callers of gpu_addint_ / gpu_aoint_kernel_).
+    if (gpu->aoint_buffer != NULL) {
+        delete[] gpu->aoint_buffer;
+        gpu->aoint_buffer = NULL;
+    }
+#if defined(COMPILE_GPU_AOINT)
+    if (gpu->gpu_sim.aoint_buffer != NULL) {
+        delete[] gpu->gpu_sim.aoint_buffer;
+        gpu->gpu_sim.aoint_buffer = NULL;
+    }
+#endif
+
+    // lri_data struct itself (members freed earlier by gpu_delete_lri_ /
+    // gpu_delete_cew_vrecip_)
+    if (gpu->lri_data != NULL) {
+        delete gpu->lri_data;
+        gpu->lri_data = NULL;
+    }
+
 #if defined(MPIV_GPU)
     delete gpu->timer;
 #endif
@@ -2914,6 +2954,20 @@ extern "C" void gpu_cleanup_()
     SAFE_DELETE(gpu->allxyz);
     SAFE_DELETE(gpu->allchg);
     SAFE_DELETE(gpu->gpu_cutoff->sorted_OEICutoffIJ);
+
+    // Unrestricted SCF buffers (allocated in gpu_upload_calculated_beta_ /
+    // gpu_upload_beta_density_matrix_; NULL for closed-shell runs)
+    SAFE_DELETE(gpu->gpu_calculated->ob);
+#if defined(USE_LEGACY_ATOMICS)
+    SAFE_DELETE(gpu->gpu_calculated->obULL);
+#endif
+    SAFE_DELETE(gpu->gpu_calculated->denseb);
+
+    // OEP buffers (allocated in gpu_upload_oeprop_; NULL for non-OEP runs)
+    SAFE_DELETE(gpu->gpu_calculated->esp_electronic);
+#if defined(USE_LEGACY_ATOMICS)
+    SAFE_DELETE(gpu->gpu_calculated->esp_electronicULL);
+#endif
 }
 
 
@@ -3045,6 +3099,10 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
             ERIEntryByBasisIndex[III]++;
         }
 
+        delete[] intERIEntry_tmp;
+        delete[] ERIEntryByBasis;
+        delete[] ERIEntryByBasisIndex;
+
         debut = false;
         totalBuffer = bufferIndex;
     }
@@ -3116,6 +3174,10 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
     for (int i = 0; i<streamNum; i++) {
         delete gpu->aoint_buffer[i];
     }
+    delete[] gpu->aoint_buffer;
+    gpu->aoint_buffer = NULL;
+    delete[] gpu->gpu_sim.aoint_buffer;
+    gpu->gpu_sim.aoint_buffer = NULL;
 
     PRINTDEBUG("COMPLETE KERNEL");
 
@@ -3345,6 +3407,10 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
     for (int i = 0; i < streamNum; i++) {
         delete gpu->aoint_buffer[i];
     }
+    delete[] gpu->aoint_buffer;
+    gpu->aoint_buffer = NULL;
+    delete[] gpu->gpu_sim.aoint_buffer;
+    gpu->gpu_sim.aoint_buffer = NULL;
 
 #if defined(DEBUG)
     GPU_TIMER_START();
@@ -3364,6 +3430,22 @@ extern "C" void gpu_aoint_(QUICKDouble* leastIntegralCutoff, QUICKDouble* maxInt
 #if defined(DEBUG)
     GPU_TIMER_DESTROY();
 #endif
+}
+
+//-----------------------------------------------
+// Free the static intERIEntry buffer allocated in
+// gpu_addint_ and reset the debut/incoreInt flags.
+// Call this after all gpu_addint_ / getAddInt work
+// is complete (e.g. just before gpu_delete_).
+//-----------------------------------------------
+extern "C" void gpu_delete_addint_(int* ierr)
+{
+    if (intERIEntry != NULL) {
+        delete[] intERIEntry;
+        intERIEntry = NULL;
+    }
+    debut    = true;
+    incoreInt = true;
 }
 #endif
 

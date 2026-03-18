@@ -421,8 +421,8 @@ enddo
 
 !    print*,"max=",ttt
 
+    if (allocated(wtospoint)) deallocate(wtospoint)
+
     return
     end subroutine calmp2divcon
-
-
 

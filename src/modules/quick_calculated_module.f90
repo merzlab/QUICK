@@ -454,7 +454,8 @@ contains
    ! subroutine to deallocate variables
    !--------------
    subroutine deallocate_quick_qm_struct(self)
-      use quick_method_module,only: quick_method
+      use quick_method_module,  only: quick_method
+      use quick_molspec_module, only: quick_molspec
       implicit none
       integer io
 
@@ -492,7 +493,9 @@ contains
       ! if 1st order derivation, which is gradient calculation is requested
       if (quick_method%grad) then
          if (allocated(self%gradient)) deallocate(self%gradient)
-         if (quick_method%extCharges) then
+         ! ptchg_gradient is allocated whenever nextatom > 0 (external point charges
+         ! present), regardless of whether extCharges is set; match that condition here.
+         if (quick_molspec%nextatom > 0) then
             if (allocated(self%ptchg_gradient)) deallocate(self%ptchg_gradient)
          endif
          if(quick_method%edisp) then

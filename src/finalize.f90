@@ -44,6 +44,7 @@ subroutine deallocateall(ierr)
 
   use allmod
   use quick_gridpoints_module
+  use quick_ecp_module, only : deallocate_quick_ecp
 
 #ifdef CEW
   use quick_cew_module, only : quick_cew
@@ -55,6 +56,9 @@ subroutine deallocateall(ierr)
     call  dealloc(quick_molspec,ierr)
     call  dealloc(quick_qm_struct)
     call  deallocate_calculated
+
+    ! Deallocate ECP arrays if ECP was used
+    call deallocate_quick_ecp
 
     if (quick_method%DFT &
 #ifdef CEW

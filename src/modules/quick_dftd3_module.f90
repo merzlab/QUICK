@@ -34,7 +34,6 @@ contains
     use quick_calculated_module, only: quick_qm_struct
     use quick_timer_module
     use quick_exception_module
-
 #ifdef MPIV
   use quick_mpi_module
 #endif
@@ -105,7 +104,10 @@ contains
 
     RECORD_TIME(timer_end%Tdisp)
 
-    timer_cumer%Tdisp=timer_cumer%Tdisp+timer_end%Tdisp-timer_begin%Tdisp  
+    timer_cumer%Tdisp=timer_cumer%Tdisp+timer_end%Tdisp-timer_begin%Tdisp
+
+    ! Deallocate dftd3 allocatable members
+    call dftd3_destroy(dftd3)
 
     return
 

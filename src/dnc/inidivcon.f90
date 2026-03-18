@@ -61,6 +61,13 @@ subroutine inidivcon(natomsaved)
   natomt=natomsaved ! avoid modification of important variable natomsaved
   bEliminate=.true.
 
+  ! TODO: The ~35 module-level arrays allocated below (sn, coord, class, ttnumber,
+  ! atomname, residue, selectC, charge, spin, nbasisdc, dccore, dcbuffer1/2, dcsub,
+  ! kshells, kshellf, dcconnect, Odcsub, Pdcsub, Pdcsubtran, Xdcsub, Smatrixdcsub,
+  ! evaldcsub, codcsub, wtospoint, etc.) are never deallocated.
+  ! A deallocate_inidivcon() subroutine should be written and called at program
+  ! cleanup once the DNC code path is re-enabled in main.f90.
+
   allocate(sn(natomt))                     ! ="ATOM"
   allocate(coord(3,natomt))                ! Coordinates, equalance with xyz, but with bohr unit
   allocate(class(natomt))                  ! Residue Name

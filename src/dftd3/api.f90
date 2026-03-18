@@ -27,7 +27,7 @@ module dftd3_api
   public :: dftd3_input, dftd3_calc
   public :: dftd3_init, dftd3_set_params, dftd3_set_functional
   public :: dftd3_dispersion, dftd3_pbc_dispersion
-  public :: get_atomic_number
+  public :: get_atomic_number, dftd3_destroy
 
 
   !> Input for a dftd3 calculator.
@@ -292,6 +292,20 @@ contains
     call elem(trim(species), izp)
 
   end function get_atomic_number
+
+
+  !> Deallocates all allocatable members of a dftd3_calc instance.
+  !!
+  !! \param this  The dftd3_calc instance to destroy.
+  !!
+  subroutine dftd3_destroy(this)
+    type(dftd3_calc), intent(inout) :: this
+
+    if (allocated(this%c6ab)) deallocate(this%c6ab)
+    if (allocated(this%mxc))  deallocate(this%mxc)
+    if (allocated(this%r0ab)) deallocate(this%r0ab)
+
+  end subroutine dftd3_destroy
 
   
 end module dftd3_api

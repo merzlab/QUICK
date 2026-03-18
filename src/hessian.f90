@@ -2108,6 +2108,10 @@ subroutine HFHessian
      enddo
   enddo
 
+  deallocate(W)
+  deallocate(B0)
+  deallocate(BU)
+
 end subroutine hfhessian
 
 

@@ -288,11 +288,12 @@ contains
       type (quick_molspec_type), intent(inout) :: self
       integer, intent(inout) :: ierr
 
-      if (allocated(xyz)) deallocate(xyz)
-      if (allocated(self%distnbor)) deallocate(self%distnbor)
-      if (allocated(self%iattype)) deallocate(self%iattype)
-      if (allocated(self%chg)) deallocate(self%chg)
-      if (allocated(self%dlfind_freezeatm)) deallocate(self%dlfind_freezeatm)
+       if (allocated(xyz)) deallocate(xyz)
+       if (allocated(self%distnbor)) deallocate(self%distnbor)
+       if (allocated(self%iattype)) deallocate(self%iattype)
+       if (allocated(self%chg)) deallocate(self%chg)
+       if (allocated(self%AtomDistance)) deallocate(self%AtomDistance)
+       if (allocated(self%dlfind_freezeatm)) deallocate(self%dlfind_freezeatm)
 
       ! if exist external charge
       if (self%nextatom.gt.0) then
