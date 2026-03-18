@@ -296,6 +296,17 @@ contains
         if (allocated(self%unnorm_gccoeff)) deallocate(self%unnorm_gccoeff)
         if (allocated(self%KLMN)) deallocate(self%KLMN)
 
+#if defined(MPIV_GPU)
+        if (allocated(self%mpi_qshelln)) deallocate(self%mpi_qshelln)
+#endif
+
+#ifdef MPIV
+        if (allocated(mpi_jshelln)) deallocate(mpi_jshelln)
+        if (allocated(mpi_jshell))  deallocate(mpi_jshell)
+        if (allocated(mpi_nbasisn)) deallocate(mpi_nbasisn)
+        if (allocated(mpi_nbasis))  deallocate(mpi_nbasis)
+#endif
+
         if(allocated(Apri))          deallocate(Apri)
         if(allocated(Kpri))          deallocate(Kpri)
         if(allocated(cutprim))       deallocate(cutprim)
