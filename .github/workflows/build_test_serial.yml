@@ -238,6 +238,15 @@ jobs:
             hdf5-install: ''
             hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04'
+            compiler-type: 'LLVM'
+            compiler-version: '20'
+            c-compiler: 'clang'
+            cxx-compiler: 'clang++'
+            fortran-compiler: 'flang'
+            compiler-install: 'clang-20 flang-20'
+            hdf5-install: ''
+            hdf5-restart-support: FALSE
+          - os: 'ubuntu-24.04'
             compiler-type: 'INTELLLVM'
             compiler-version: '2024.2.1'
             c-compiler: 'icx'
@@ -387,13 +396,15 @@ jobs:
               sudo apt-get update
             fi
             sudo apt-get install -y ${{ matrix.compiler-install }} cmake parallel ${{ matrix.hdf5-install }}
-            if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+            if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' || ${{ matrix.compiler-type }} == 'LLVM' ]]; then
               sudo rm /usr/bin/${{ matrix.c-compiler }}
               sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
               sudo rm /usr/bin/${{ matrix.cxx-compiler }}
               sudo ln -s -T ${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.cxx-compiler }}
               if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
                 sudo rm /usr/bin/${{ matrix.fortran-compiler }}
+                sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
+              elif [[ ${{ matrix.compiler-type }} == 'LLVM' ]]; then
                 sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
               fi
             fi
@@ -414,7 +425,7 @@ jobs:
               fi
             fi
           fi
-      - name: 'Log Softare Environment Configuration'
+      - name: 'Log Software Environment Configuration'
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
             if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then

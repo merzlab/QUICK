@@ -101,9 +101,8 @@ contains
      ! number of scfcycles has been reached.
      jscf=0
  
-     if (quick_method%readden) then
-       nbasis = quick_molspec%nbasis
-       if (master) then
+      if (quick_method%readden) then
+        if (master) then
 #if defined(RESTART_HDF5)
          call read_hdf5_int_rank0('molinfo', 2, nbasis)
          call read_hdf5_real8_rank2('dense', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%dense)
@@ -171,6 +170,9 @@ contains
      integer :: jscf                ! scf iteration
      integer, intent(inout) :: ierr
   
+     logical :: LShift  = .false.     ! flag if level shifting is being performed for alpha
+     logical :: LShiftb  = .false.    ! flag if level shifting is being performed for beta
+
      logical :: diisdone = .false.  ! flag to indicate if diis is done
      logical :: deltaO   = .false.  ! delta Operator
      integer :: idiis = 0           ! diis iteration
@@ -178,12 +180,22 @@ contains
      integer :: lsolerr = 0
      integer :: IDIIS_Error_Start, IDIIS_Error_End
      double precision :: BIJ,DENSEJI,errormax,OJK,temp
-     double precision :: Sum2Mat,rms
-     integer :: I,J,K,L,IERROR
+     double precision :: Sum2Mat,rms, shift, bandgap, bandgapb
+     integer :: I,J,K,L,IERROR, homo, homob
   
-     double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
-     double precision :: PRMS,PRMS2,PCHANGE, tmp
-  
+      double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
+      double precision :: PRMS,PRMS2,PCHANGE, tmp
+
+      ! Pointers to select the correct arrays depending on near-linear dependency (NBSuse < nbasis).
+      ! alpha_op_ptr -> oeff  or o   (NBSuse x NBSuse alpha operator in orthogonal basis)
+      ! beta_op_ptr  -> oeffb or ob  (NBSuse x NBSuse beta  operator in orthogonal basis)
+      ! scratch_sq   -> hold4 or hold2  (NBSuse x NBSuse square scratch)
+      ! scratch_rect -> hold3 or hold   (nbasis x NBSuse rectangular scratch)
+      double precision, pointer :: alpha_op_ptr(:,:)
+      double precision, pointer :: beta_op_ptr(:,:)
+      double precision, pointer :: scratch_sq(:,:)
+      double precision, pointer :: scratch_rect(:,:)
+
      !---------------------------------------------------------------------------
      ! The purpose of this subroutine is to utilize Pulay's accelerated
      ! scf convergence as detailed in J. Comp. Chem, Vol 3, #4, pg 566-60, 1982.
@@ -223,7 +235,25 @@ contains
      ! As in scf.F, each step wil be reviewed as we pass through the code.
      !---------------------------------------------------------------------------
   
-     call allocate_quick_uscf(ierr)
+     if(master) call allocate_quick_uscf(ierr)
+
+     ! Set up pointers so the DIIS loop uses a single code path regardless of
+     ! whether near-linear dependency has reduced the basis (NBSuse < nbasis):
+     !   alpha_op_ptr -> oeff  or o   (NBSuse x NBSuse alpha operator)
+     !   beta_op_ptr  -> oeffb or ob  (NBSuse x NBSuse beta  operator)
+     !   scratch_sq   -> hold4 or hold2  (NBSuse x NBSuse square scratch)
+     !   scratch_rect -> hold3 or hold   (nbasis x NBSuse rectangular scratch)
+     if(NBSuse .ne. nbasis) then
+        alpha_op_ptr  => quick_qm_struct%oeff
+        beta_op_ptr   => quick_qm_struct%oeffb
+        scratch_sq    => quick_scratch%hold4
+        scratch_rect  => quick_scratch%hold3
+     else
+        alpha_op_ptr  => quick_qm_struct%o
+        beta_op_ptr   => quick_qm_struct%ob
+        scratch_sq    => quick_scratch%hold2
+        scratch_rect  => quick_scratch%hold
+     end if
   
      if(master) then
         write(ioutfile,'(40x," USCF ENERGY")')
@@ -254,10 +284,10 @@ contains
      if (bMPI) then
         call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
         call MPI_BCAST(quick_qm_struct%denseb,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
-        call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
-        call MPI_BCAST(quick_qm_struct%cob,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
-        call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,quick_comm,mpierror)
-        call MPI_BCAST(quick_qm_struct%Eb,nbasis,mpi_double_precision,0,quick_comm,mpierror)
+        call MPI_BCAST(quick_qm_struct%co,nbasis*NBSuse,mpi_double_precision,0,quick_comm,mpierror)
+        call MPI_BCAST(quick_qm_struct%cob,nbasis*NBSuse,mpi_double_precision,0,quick_comm,mpierror)
+        call MPI_BCAST(quick_qm_struct%E,NBSuse,mpi_double_precision,0,quick_comm,mpierror)
+        call MPI_BCAST(quick_qm_struct%Eb,NBSuse,mpi_double_precision,0,quick_comm,mpierror)
         call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,quick_comm,mpierror)
         call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,quick_comm,mpierror)
         call MPI_BARRIER(quick_comm,mpierror)
@@ -308,6 +338,11 @@ contains
         else
            IDIISfinal=quick_method%maxdiisscf; iidiis=1
         endif
+
+        ! Level shift is not performed by default
+        LShift  = .false.
+        LShiftb = .false.
+
         !-----------------------------------------------
         ! Before Delta Densitry Matrix, normal operator is implemented here
         !-----------------------------------------------
@@ -340,91 +375,74 @@ contains
   
            !-----------------------------------------------
            ! 2)  Form error matrix for step i.
-           ! e(i) = ODS - SDO
+           ! e(i) = OαDαS - SDαOα + OβDβS - SDβOβ
            !-----------------------------------------------
            ! The matrix multiplier comes from Steve Dixon. It calculates
            ! C = Transpose(A) B.  Thus to utilize this we have to make sure that the
-           ! A matrix is symetric. First, calculate DENSE*S and store in the scratch
-           ! matrix hold.Then calculate O*(DENSE*S).  As the operator matrix is symmetric, the
-           ! above code can be used. Store this (the ODS term) in the all error
-           ! matrix.
-  
-           ! The first part is ODS
+           ! A matrix is symmetric. First, calculate DENSE*S and store in the scratch
+           ! matrix hold. Then calculate O*(DENSE*S). Store this (the ODS term) in hold2.
+
+           ! Alpha contribution: OαDαS - SDαOα accumulated into hold2
            call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-                 nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-  
+                 nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold, nbasis)
+
            call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-  
-           allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
-  
-           ! Calculate D O. then calculate S (do) and subtract that from the allerror matrix.
-           ! This means we now have the e(i) matrix.
-           ! allerror=ODS-SDO
+                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2, nbasis)
+
+           ! -SDαOα accumulated into hold2
            call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-                 nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+                 nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold, nbasis)
 
-           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-  
-           do I=1,nbasis
-              do J=1,nbasis
-                 allerror(J,I,iidiis) = allerror(J,I,iidiis) - quick_scratch%hold2(J,I) !e=ODS=SDO
-              enddo
-           enddo
+           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, -1.0d0, quick_qm_struct%s, &
+                 nbasis, quick_scratch%hold, nbasis, 1.0d0, quick_scratch%hold2, nbasis)
 
+           ! Beta contribution: +OβDβS - SDβOβ accumulated into hold2
            ! 3)  Form the beta operator matrix for step i, O(i).  (Store in alloperatorb array.)
-           
+
            ! 4)  Form beta error matrix for step i.
-           ! e(i) = e(i,alpha part)+Ob Db S - S Db Ob
-  
-           ! First, calculate quick_qm_struct%denseb*S and store in the scratch
-           ! matrix hold. Then calculate O*(quick_qm_struct%denseb*S).  As the operator matrix is
-           ! symmetric, the above code can be used. Add this (the ODS term) into the allerror
-           ! matrix.
+           ! e(i) = e(i,alpha part) + OβDβS - SDβOβ
+
+           ! +OβDβS into hold2
            call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%denseb, &
-                    nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-           
+                    nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold, nbasis)
+
            call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%ob, &
-                    nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
+                    nbasis, quick_scratch%hold, nbasis, 1.0d0, quick_scratch%hold2, nbasis)
 
-           do I=1,nbasis
-              do J=1,nbasis
-                 allerror(J,I,iidiis) = allerror(J,I,iidiis) + quick_scratch%hold2(J,I) !e=ODS=SDO
-              enddo
-           enddo
-
-           ! Calculate Db O.Then calculate S (DbO) and subtract that from the allerror matrix.
-           ! This means we now have the complete e(i) matrix.
+           ! -SDβOβ into hold2
            call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%denseb, &
-                 nbasis, quick_qm_struct%ob, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+                 nbasis, quick_qm_struct%ob, nbasis, 0.0d0, quick_scratch%hold, nbasis)
 
-           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
+           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, -1.0d0, quick_qm_struct%s, &
+                 nbasis, quick_scratch%hold, nbasis, 1.0d0, quick_scratch%hold2, nbasis)
 
+           ! hold2 now contains e(i) = OαDαS - SDαOα + OβDβS - SDβOβ
            errormax = 0.d0
            do I=1,nbasis
               do J=1,nbasis
-                 allerror(J,I,iidiis) = allerror(J,I,iidiis) - quick_scratch%hold2(J,I) !e=ODS=SDO
-                 errormax = max(allerror(J,I,iidiis),errormax)
+                 errormax = max(quick_scratch%hold2(J,I), errormax)
               enddo
            enddo
-  
+
            !-----------------------------------------------
            ! 5)  Move e to an orthogonal basis.  e'(i) = Transpose[X] .e(i). X
            ! X is symmetric, but we do not know anything about the symmetry of e.
-           ! The easiest way to do this is to calculate e(i) . X , store
-           ! this in HOLD, and then calculate Transpose[X] (.e(i) . X)
+           ! The easiest way is to calculate e(i).X, store in a scratch matrix,
+           ! and then calculate Transpose[X].(e(i).X).
+           !
+           ! Near-linear dependency (NBSuse < nbasis): use hold3(nbasis,NBSuse) and
+           !   hold4(NBSuse,NBSuse) as rectangular/reduced-size intermediates.
+           ! Standard case (NBSuse == nbasis): reuse hold(nbasis,nbasis) and
+           !   hold2(nbasis,nbasis) — hold2 holds e(i); result written back into hold2,
+           !   then copied to allerror.
            !-----------------------------------------------
-           quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
-  
-           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-  
-           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
+             call MAT_DGEMM ('n', 'n', nbasis, NBSuse, nbasis, 1.0d0, quick_scratch%hold2, &
+                   nbasis, quick_qm_struct%x, nbasis, 0.0d0, scratch_rect, nbasis)
 
-           allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
+             call MAT_DGEMM ('t', 'n', NBSuse, NBSuse, nbasis, 1.0d0, quick_qm_struct%x, &
+                   nbasis, scratch_rect, nbasis, 0.0d0, scratch_sq, NBSuse)
+
+             allerror(:,:,iidiis) = scratch_sq(:,:)
            !-----------------------------------------------
            ! 6)  Store the e'(I) and O(i).
            ! e'(i) is already stored.  Simply store the operator matrix in
@@ -477,16 +495,12 @@ contains
               enddo
            endif
   
-           ! Now copy the current matrix into HOLD2 transposed.  This will be the
-           ! Transpose[ej] used in B(i,j) = Trace(e(i) Transpose(e(j)))
-           quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
-  
-           do I=1,IDIISfinal
-              ! Copy the transpose of error matrix I into HOLD.
-              quick_scratch%hold(:,:) = allerror(:,:,I) 
-  
-              ! Calculate and sum together the diagonal elements of e(i) Transpose(e(j))).
-              BIJ=Sum2Mat(quick_scratch%hold2,quick_scratch%hold,nbasis)
+            ! Now copy the current error slice (j=iidiis) into a scratch array.
+            scratch_sq(:,:) = allerror(:,:,iidiis)
+
+            do I=1,IDIISfinal
+               ! Calculate and sum together the diagonal elements of e(i) Transpose(e(j))).
+               BIJ=Sum2Mat(scratch_sq,allerror(:,:,I),NBSuse)
               
               ! Now place this in the B matrix.
               if(idiis.le.quick_method%maxdiisscf)then
@@ -501,13 +515,14 @@ contains
                  endif
               endif
            enddo
-  
+
            if(idiis.gt.quick_method%maxdiisscf)then
-              quick_scratch%hold(:,:) = allerror(:,:,1)
-              do J=1,quick_method%maxdiisscf-1
-                 allerror(:,:,J) = allerror(:,:,J+1)
-              enddo
-              allerror(:,:,quick_method%maxdiisscf) = quick_scratch%hold(:,:)
+               ! Roll allerror ring buffer: save slot 1, shift down, restore to last slot.
+               scratch_sq(:,:) = allerror(:,:,1)
+               do J=1,quick_method%maxdiisscf-1
+                  allerror(:,:,J) = allerror(:,:,J+1)
+               enddo
+               allerror(:,:,quick_method%maxdiisscf) = scratch_sq(:,:)
            endif
   
            ! Now that all the BIJ elements are in place, fill in all the column
@@ -591,110 +606,165 @@ contains
               
            endif
            !-----------------------------------------------
-           ! 10) Diagonalize the operator matrix to form a new density matrix.
-           ! First you have to transpose this into an orthogonal basis, which
-           ! is accomplished by calculating Transpose[X] . O . X.
+           ! 10) Diagonalize the alpha operator matrix to form a new alpha density matrix.
+           ! First transform into an orthogonal basis:
+           !   Oeff = Transpose[X] . Oα . X
+           ! Near-linear dependency (NBSuse < nbasis): use hold3(nbasis,NBSuse) as
+           !   rectangular intermediate; result stored in oeff(NBSuse,NBSuse).
+           ! Standard case (NBSuse == nbasis): use hold(nbasis,nbasis) as intermediate;
+           !   result stored back in o(nbasis,nbasis).
            !-----------------------------------------------
-           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold, nbasis)
-  
-           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o, nbasis)
+             call MAT_DGEMM ('n', 'n', nbasis, NBSuse, nbasis, 1.0d0, quick_qm_struct%o, &
+                   nbasis, quick_qm_struct%x, nbasis, 0.0d0, scratch_rect, nbasis)
 
-           ! Now diagonalize the operator matrix.
-           RECORD_TIME(timer_begin%TDiag)
-           call MAT_DIAG(quick_qm_struct%o, nbasis, nbasis, quick_qm_struct%E, &
-                   quick_qm_struct%vec)
-           RECORD_TIME(timer_end%TDiag)
+             call MAT_DGEMM ('t', 'n', NBSuse, NBSuse, nbasis, 1.0d0, quick_qm_struct%x, &
+                   nbasis, scratch_rect, nbasis, 0.0d0, alpha_op_ptr, NBSuse)
 
-           timer_cumer%TDiag = timer_end%TDiag - timer_begin%TDiag
-  
-           ! Calculate C = XC' and form a new density matrix.
-           ! The C' is from the above diagonalization.  Also, save the previous
-           ! Density matrix to check for convergence.
-           !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'
-           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
-  
-           quick_scratch%hold(:,:) = quick_qm_struct%dense(:,:) 
-  
-           ! Form new density matrix using MO coefficients
-           call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec, 1.0d0, quick_qm_struct%co, &
-                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)
+            !-----------------------------------------------
+            ! Alpha level shifting (independent, using homo = # alpha electrons)
+            ! Applied when DIIS error is large enough, we are past LShift_cycle and
+            ! small HOMO-LUMO gap.
+            !-----------------------------------------------
+            homo = quick_molspec%nelec      ! number of alpha electrons
+            bandgap = quick_qm_struct%E(homo+1) - quick_qm_struct%E(homo)
+            if(idiis .ge. quick_method%LShift_cycle .and. errormax .gt. quick_method%LShift_err .and. &
+               quick_method%LShift_gap .gt. bandgap) then
+               LShift = .true.
+               call MAT_DGEMM ('n', 'n', NBSuse, NBSuse, NBSuse, 1.0d0, alpha_op_ptr, &
+                    NBSuse, quick_qm_struct%oldvec, NBSuse, 0.0d0, scratch_sq, NBSuse)
 
-           ! Now check for convergence. pchange is the max change
-           ! and prms is the rms
-           PCHANGE=0.d0
-           do I=1,nbasis
-              do J=1,nbasis
-                 PCHANGE=max(PCHANGE,abs(quick_qm_struct%dense(J,I)-quick_scratch%hold(J,I)))
-              enddo
-           enddo
-           PRMS = rms(quick_qm_struct%dense,quick_scratch%hold,nbasis)
+               call MAT_DGEMM ('t', 'n', NBSuse, NBSuse, NBSuse, 1.0d0, quick_qm_struct%oldvec, &
+                    NBSuse, scratch_sq, NBSuse, 0.0d0, alpha_op_ptr, NBSuse)
 
+               shift = quick_method%LShift_gap - bandgap
+               do I=homo+1,NBSuse
+                  alpha_op_ptr(I,I) = alpha_op_ptr(I,I) + shift
+               enddo
+            endif
 
-           !-----------------------------------------------
-           ! 11) Form a new operator matrix based on O(new) = [Sum over i] c(i)O(i)
-           ! If the solution to step eight failed, skip this step and revert
-           ! to a standard scf cycle.
-           !-----------------------------------------------
-           ! Xiao HE 07/20/2007,if the B matrix is ill-conditioned, remove the first,second... error vector
-           if (LSOLERR == 0) then
-              do J=1,nbasis
-                 do K=1,nbasis
-                    OJK=0.d0
-                    do I=IDIIS_Error_Start, IDIIS_Error_End
-                       OJK = OJK + COEFF(I-IDIIS_Error_Start+1) * alloperatorB(K,J,I)
-                    enddo
-                    quick_qm_struct%ob(J,K) = OJK
-                 enddo
-              enddo
+            ! Now diagonalize the alpha operator matrix.
+            RECORD_TIME(timer_begin%TDiag)
+            call MAT_DIAG(alpha_op_ptr, NBSuse, NBSuse, quick_qm_struct%E, quick_qm_struct%vec)
+            RECORD_TIME(timer_end%TDiag)
 
-           endif
+            timer_cumer%TDiag = timer_end%TDiag - timer_begin%TDiag
+   
+            ! Calculate C = XC' and form a new alpha density matrix.
+            if(LShift) then
+               call MAT_DGEMM ('n', 'n', NBSuse, NBSuse, NBSuse, 1.0d0, quick_qm_struct%oldvec, &
+                    NBSuse, quick_qm_struct%vec, NBSuse, 0.0d0, scratch_sq, NBSuse)
+               call MAT_DGEMM ('n', 'n', nbasis, NBSuse, NBSuse, 1.0d0, quick_qm_struct%x, &
+                    nbasis, scratch_sq, NBSuse, 0.0d0, quick_qm_struct%co, nbasis)
+               quick_qm_struct%oldvec(:,:) = scratch_sq(:,:)
+            else
+               call MAT_DGEMM ('n', 'n', nbasis, NBSuse, NBSuse, 1.0d0, quick_qm_struct%x, &
+                    nbasis, quick_qm_struct%vec, NBSuse, 0.0d0, quick_qm_struct%co, nbasis)
+               quick_qm_struct%oldvec(:,:) = quick_qm_struct%vec(:,:)
+            endif
 
-           !-----------------------------------------------
-           ! 12) Diagonalize the beta operator matrix to form a new beta density matrix.
-           ! First you have to transpose this into an orthogonal basis, which
-           ! is accomplished by calculating Transpose[X] . O . X.
-           !-----------------------------------------------
-           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%ob, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+            ! Form new alpha density matrix using MO coefficients
+            call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec, 1.0d0, quick_qm_struct%co, &
+                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense, nbasis)
 
-           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%ob,nbasis)
+            ! Now check for alpha convergence. pchange is the max change, prms is the rms.
+            PCHANGE=0.d0
+            do I=1,nbasis
+               do J=1,nbasis
+                  PCHANGE=max(PCHANGE,abs(quick_qm_struct%dense(J,I)-quick_qm_struct%denseOld(J,I)))
+               enddo
+            enddo
+            PRMS = rms(quick_qm_struct%dense,quick_qm_struct%denseOld,nbasis)
 
-           ! Now diagonalize the operator matrix.
-           RECORD_TIME(timer_begin%TDiag)
-           call MAT_DIAG(quick_qm_struct%ob, nbasis, nbasis, quick_qm_struct%EB, &
-                   quick_qm_struct%vec)
-           RECORD_TIME(timer_end%TDiag)
+            !-----------------------------------------------
+            ! 11) Form a new operator matrix based on O(new) = [Sum over i] c(i)O(i)
+            ! If the solution to step eight failed, skip this step and revert
+            ! to a standard scf cycle.
+            !-----------------------------------------------
+            ! Xiao HE 07/20/2007,if the B matrix is ill-conditioned, remove the first,second... error vector
+            if (LSOLERR == 0) then
+               do J=1,nbasis
+                  do K=1,nbasis
+                     OJK=0.d0
+                     do I=IDIIS_Error_Start, IDIIS_Error_End
+                        OJK = OJK + COEFF(I-IDIIS_Error_Start+1) * alloperatorB(K,J,I)
+                     enddo
+                     quick_qm_struct%ob(J,K) = OJK
+                  enddo
+               enddo
 
-           timer_cumer%TDiag=timer_cumer%TDiag+timer_end%TDiag-timer_begin%TDiag
+            endif
 
-           ! Calculate C = XC' and form a new density matrix.
-           ! The C' is from the above diagonalization.  Also, save the previous
-           ! Density matrix to check for convergence.
-           !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'
-           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%cob,nbasis)
+            !-----------------------------------------------
+            ! 12) Diagonalize the beta operator matrix to form a new beta density matrix.
+            ! First transform into an orthogonal basis:
+            !   Oeffb = Transpose[X] . Ob . X
+            ! Near-linear dependency (NBSuse < nbasis): use hold3(nbasis,NBSuse) as
+            !   rectangular intermediate; result stored in oeffb(NBSuse,NBSuse).
+            ! Standard case (NBSuse == nbasis): use hold(nbasis,nbasis) as intermediate;
+            !   result stored back in ob(nbasis,nbasis).
+            !-----------------------------------------------
+             call MAT_DGEMM ('n', 'n', nbasis, NBSuse, nbasis, 1.0d0, quick_qm_struct%ob, &
+                   nbasis, quick_qm_struct%x, nbasis, 0.0d0, scratch_rect, nbasis)
 
-           quick_scratch%hold(:,:) = quick_qm_struct%denseb(:,:)
+             call MAT_DGEMM ('t', 'n', NBSuse, NBSuse, nbasis, 1.0d0, quick_qm_struct%x, &
+                   nbasis, scratch_rect, nbasis, 0.0d0, beta_op_ptr, NBSuse)
 
-           ! Form new density matrix using MO coefficients
-           call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelecb, 1.0d0, quick_qm_struct%cob, &
-                 nbasis, quick_qm_struct%cob, nbasis, 0.0d0, quick_qm_struct%denseb,nbasis)
+            !-----------------------------------------------
+            ! Beta level shifting (independent, using homob = # beta electrons)
+            ! Applied when DIIS error is large enough, we are past LShift_cycle and
+            ! small HOMO-LUMO gap.
+            !-----------------------------------------------
+            homob = quick_molspec%nelecb    ! number of beta electrons
+            bandgapb = quick_qm_struct%Eb(homob+1) - quick_qm_struct%Eb(homob)
+            if(idiis .ge. quick_method%LShift_cycle .and. errormax .gt. quick_method%LShift_err .and. &
+               quick_method%LShift_gap .gt. bandgapb) then
+               LShiftb = .true.
+               call MAT_DGEMM ('n', 'n', NBSuse, NBSuse, NBSuse, 1.0d0, beta_op_ptr, &
+                    NBSuse, quick_qm_struct%oldvecb, NBSuse, 0.0d0, scratch_sq, NBSuse)
 
-           ! Now check for convergence. pchange is the max change
-           ! and prms is the rms
-           do I=1,nbasis
-              do J=1,nbasis
-                 PCHANGE=max(PCHANGE,abs(quick_qm_struct%denseb(J,I)-quick_scratch%hold(J,I)))
-              enddo
-           enddo
-           PRMS2 = rms(quick_qm_struct%denseb,quick_scratch%hold,nbasis)
-           PRMS = MAX(PRMS,PRMS2)
+               call MAT_DGEMM ('t', 'n', NBSuse, NBSuse, NBSuse, 1.0d0, quick_qm_struct%oldvecb, &
+                    NBSuse, scratch_sq, NBSuse, 0.0d0, beta_op_ptr, NBSuse)
 
-           RECORD_TIME(timer_end%TDII)  
+               shift = quick_method%LShift_gap - bandgapb
+               do I=homob+1,NBSuse
+                  beta_op_ptr(I,I) = beta_op_ptr(I,I) + shift
+               enddo
+            endif
+
+            ! Now diagonalize the beta operator matrix.
+            RECORD_TIME(timer_begin%TDiag)
+            call MAT_DIAG(beta_op_ptr, NBSuse, NBSuse, quick_qm_struct%Eb, quick_qm_struct%vec)
+            RECORD_TIME(timer_end%TDiag)
+
+            timer_cumer%TDiag=timer_cumer%TDiag+timer_end%TDiag-timer_begin%TDiag
+
+            ! Calculate C = XC' and form a new beta density matrix.
+            if(LShiftb) then
+               call MAT_DGEMM ('n', 'n', NBSuse, NBSuse, NBSuse, 1.0d0, quick_qm_struct%oldvecb, &
+                    NBSuse, quick_qm_struct%vec, NBSuse, 0.0d0, scratch_sq, NBSuse)
+               call MAT_DGEMM ('n', 'n', nbasis, NBSuse, NBSuse, 1.0d0, quick_qm_struct%x, &
+                    nbasis, scratch_sq, NBSuse, 0.0d0, quick_qm_struct%cob, nbasis)
+               quick_qm_struct%oldvecb(:,:) = scratch_sq(:,:)
+            else
+               call MAT_DGEMM ('n', 'n', nbasis, NBSuse, NBSuse, 1.0d0, quick_qm_struct%x, &
+                    nbasis, quick_qm_struct%vec, NBSuse, 0.0d0, quick_qm_struct%cob, nbasis)
+               quick_qm_struct%oldvecb(:,:) = quick_qm_struct%vec(:,:)
+            endif
+
+            ! Form new beta density matrix using MO coefficients
+            call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelecb, 1.0d0, quick_qm_struct%cob, &
+                 nbasis, quick_qm_struct%cob, nbasis, 0.0d0, quick_qm_struct%denseb, nbasis)
+
+            ! Now check for beta convergence. pchange is the max change, prms2 is the rms.
+            do I=1,nbasis
+               do J=1,nbasis
+                  PCHANGE=max(PCHANGE,abs(quick_qm_struct%denseb(J,I)-quick_qm_struct%densebOld(J,I)))
+               enddo
+            enddo
+            PRMS2 = rms(quick_qm_struct%denseb,quick_qm_struct%densebOld,nbasis)
+            PRMS = MAX(PRMS,PRMS2)
+
+            RECORD_TIME(timer_end%TDII)
 
            tmp = quick_method%integralCutoff
            call adjust_cutoff(PRMS,PCHANGE,quick_method,ierr)  !from quick_method_module
@@ -740,7 +810,9 @@ contains
            write (ioutfile,'(F8.2,4x)',advance="no") timer_end%TDiag-timer_begin%TDiag
            write (ioutfile,'(E10.4,2x)',advance="no") errormax
            write (ioutfile,'(E10.4,2x,E10.4)')  PRMS,PCHANGE
-  
+
+           if(Lshift) write (ioutfile,'("|   ***  Level shifting applied to alpha ( HOMO-LUMO gap = ",F6.3," au ) ***")') bandgap
+           if(Lshiftb) write (ioutfile,'("|   ***  Level shifting applied to beta ( HOMO-LUMO gap = ",F6.3," au ) ***")') bandgapb
            if (lsolerr /= 0) write (ioutfile,'(" DIIS FAILED !!", &
                  & " PERFORM NORMAL SCF. (NOT FATAL.)")')
   
@@ -789,10 +861,10 @@ contains
            call MPI_BCAST(quick_method%uscf_conv,1,mpi_logical,0,quick_comm,mpierror)
            call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
            call MPI_BCAST(quick_qm_struct%denseb,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
-           call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
-           call MPI_BCAST(quick_qm_struct%cob,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
-           call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,quick_comm,mpierror)
-           call MPI_BCAST(quick_qm_struct%Eb,nbasis,mpi_double_precision,0,quick_comm,mpierror)
+           call MPI_BCAST(quick_qm_struct%co,nbasis*NBSuse,mpi_double_precision,0,quick_comm,mpierror)
+           call MPI_BCAST(quick_qm_struct%cob,nbasis*NBSuse,mpi_double_precision,0,quick_comm,mpierror)
+           call MPI_BCAST(quick_qm_struct%E,NBSuse,mpi_double_precision,0,quick_comm,mpierror)
+           call MPI_BCAST(quick_qm_struct%Eb,NBSuse,mpi_double_precision,0,quick_comm,mpierror)
            call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,quick_comm,mpierror)
            call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,quick_comm,mpierror)
            call MPI_BARRIER(quick_comm,mpierror)
@@ -808,8 +880,8 @@ contains
 #if (defined CUDA || defined CUDA_MPIV) && !defined(HIP)
      ! sign of the coefficient matrix resulting from cusolver is not consistent
      ! with rest of the code (e.g. gradients). We have to correct this.
-     call scalarMatMul(quick_qm_struct%co,nbasis,nbasis,-1.0d0)
-     call scalarMatMul(quick_qm_struct%cob,nbasis,nbasis,-1.0d0)
+     call scalarMatMul(quick_qm_struct%co, NBSuse,nbasis,-1.0d0)
+     call scalarMatMul(quick_qm_struct%cob,NBSuse,nbasis,-1.0d0)
 #endif
   
 #if defined(GPU) || defined(MPIV_GPU)
@@ -822,7 +894,7 @@ contains
     endif
 #endif
   
-     call deallocate_quick_uscf(ierr)
+     if(master) call deallocate_quick_uscf(ierr)
   
      return
   end subroutine uelectdiis

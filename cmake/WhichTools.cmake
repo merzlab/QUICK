@@ -35,7 +35,6 @@ antechamber
 sqm
 
 #   miscellaneous:
-reduce
 sebomd
 emil
 kmmd
@@ -101,6 +100,8 @@ pysander
 pytraj
 pdb4amber
 packmol_memgen
+packmol_memgen/web
+PyPE_RESP
 
 #	moft
 moft
@@ -205,6 +206,7 @@ tool_depends(pysander sander)
 tool_depends(pytraj cpptraj)
 tool_depends(tcpb-cpp sqm)
 tool_depends(tcpb-cpp/pytcpb tcpb-cpp)
+tool_depends(packmol_memgen/web packmol_memgen)
 tool_depends(cew lib)
 tool_depends(quick sqm cew)
 tool_depends(reaxff_puremd sqm)
@@ -242,7 +244,21 @@ endif()
 
 #Python programs (controlled by BUILD_PYTHON option in PythonConfig.cmake)
 if(NOT BUILD_PYTHON)
-	disable_tools("Python programs are disabled" pysander pytraj pymsmt mmpbsa_py parmed packmol_memgen tcpb-cpp/pytcpb)
+	disable_tools("Python programs are disabled" pysander pytraj pymsmt mmpbsa_py parmed packmol_memgen packmol_memgen/web tcpb-cpp/pytcpb)
+endif()
+
+option(BUILD_PMMG_GUI "Install the packmol-memgen web GUI (packmol-memgen-gui)" ON)
+if(NOT BUILD_PMMG_GUI)
+	disable_tool(packmol_memgen/web "BUILD_PMMG_GUI is disabled")
+elseif(BUILD_PYTHON AND NOT PMMG_GUI_DEPS)
+	execute_process(
+		COMMAND "${PYTHON_EXECUTABLE}" -c
+			"import fastapi, uvicorn, pydantic, multipart, webview, PySide6, qtpy"
+		RESULT_VARIABLE _pmmg_web_deps_result)
+	if(NOT _pmmg_web_deps_result EQUAL 0)
+		disable_tool(packmol_memgen/web
+			"Web GUI dependencies not found (set -DPMMG_GUI_DEPS=ON to install them automatically)")
+	endif()
 endif()
 
 if(STATIC)
@@ -252,7 +268,7 @@ if(STATIC)
 endif()
 
 if(boost_DISABLED)
-	disable_tools("Requires boost" packmol_memgen moft)
+	disable_tools("Requires boost" moft)
 endif()
 
 # Perl programs
@@ -265,9 +281,9 @@ if(perlmol_DISABLED)
 endif()
 
 #deprecated programs
-option(BUILD_DEPRECATED "Build outdated and deprecated tools, such as ptraj, moft" FALSE)
+option(BUILD_DEPRECATED "Build outdated and deprecated tools, such as ptraj" FALSE)
 if(NOT BUILD_DEPRECATED)
-	disable_tools("Deprecated tools are disabled" ptraj moft )
+	disable_tools("Deprecated tools are disabled" ptraj )
 endif()
 
 # in-development programs

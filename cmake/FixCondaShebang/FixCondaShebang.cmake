@@ -11,6 +11,7 @@
 
 # figure out bad shebang to replace, and replacement
 set(BUILD_TREE_SHEBANG "#!${MINICONDA_INSTALL_DIR}/bin/python")
+set(BUILD_TREE_SHEBANGB "#!python")
 set(INSTALL_TREE_SHEBANG "#!${AMBER_INSTALL_DIR}/miniconda/bin/python")
 
 # get files to fix
@@ -46,4 +47,5 @@ configuretime_file_replace(${JUPYTER_KERNEL_JSON} ${JUPYTER_KERNEL_JSON} TO_REPL
 
 foreach(FILE ${FILES_NEEDING_REPLACEMENT})
 	configuretime_file_replace(${FILE} ${FILE} TO_REPLACE ${BUILD_TREE_SHEBANG} REPLACEMENT ${INSTALL_TREE_SHEBANG})
+	configuretime_file_replace(${FILE} ${FILE} TO_REPLACE ${BUILD_TREE_SHEBANGB} REPLACEMENT ${INSTALL_TREE_SHEBANG})
 endforeach()

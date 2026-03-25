@@ -10,6 +10,10 @@
 
 subroutine MAT_DGEMM(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, &
                 C, LDC)
+#if defined(HIP) || defined(HIP_MPIV)
+    use quick_rocblas_module, only: rocDGEMM
+#endif
+
     implicit none
 
     double precision, intent(in) :: ALPHA, BETA
@@ -17,10 +21,6 @@ subroutine MAT_DGEMM(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, &
     character, intent(in) :: TRANSA, TRANSB
     double precision, intent(in) :: A(LDA,*), B(LDB,*)
     double precision, intent(out) :: C(LDC,*)
-
-#if defined(HIP) || defined(HIP_MPIV)
-    use quick_rocblas_module, only: rocDGEMM
-#endif
 
 #if defined(GPU) || defined(MPIV_GPU)
     call GPU_DGEMM(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC)

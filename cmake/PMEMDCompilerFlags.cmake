@@ -243,7 +243,7 @@ if(CUDA)
 		set(PMEMD_NVCC_FLAGS -O3)
 		# list(APPEND PMEMD_NVCC_FLAGS -ffast-math)
 
-		list(APPEND PMEMD_NVCC_FLAGS -std=c++14) 
+		list(APPEND PMEMD_NVCC_FLAGS -std=c++17) 
 
 		if(DISABLE_WARNINGS)
 			list(APPEND PMEMD_NVCC_FLAGS -w)

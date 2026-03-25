@@ -497,13 +497,15 @@ jobs:
             fi
             sudo apt-get install -y ${{ matrix.compiler-install }} ${{ matrix.mpi-install }} \
               cmake ${{ matrix.hdf5-install }}
-            if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' ]]; then
+            if [[ ${{ matrix.compiler-type }} == 'GNU' || ${{ matrix.compiler-type }} == 'CLANG' || ${{ matrix.compiler-type }} == 'LLVM' ]]; then
               sudo rm /usr/bin/${{ matrix.c-compiler }}
               sudo ln -s -T ${{ matrix.c-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.c-compiler }}
               sudo rm /usr/bin/${{ matrix.cxx-compiler }}
               sudo ln -s -T ${{ matrix.cxx-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.cxx-compiler }}
               if [[ ${{ matrix.compiler-type }} == 'GNU' ]]; then
                 sudo rm /usr/bin/${{ matrix.fortran-compiler }}
+                sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
+              elif [[ ${{ matrix.compiler-type }} == 'LLVM' ]]; then
                 sudo ln -s -T ${{ matrix.fortran-compiler }}-${{ matrix.compiler-version }} /usr/bin/${{ matrix.fortran-compiler }}
               fi
             fi
@@ -525,7 +527,7 @@ jobs:
               fi
             fi
           fi
-      - name: 'Log Softare Environment Configuration'
+      - name: 'Log Software Environment Configuration'
         run: |
           if [ "$RUNNER_OS" == "Linux" ]; then
             if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then

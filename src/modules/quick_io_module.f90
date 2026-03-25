@@ -608,7 +608,7 @@ contains
      implicit none
      integer chk,i,j,k,l,fail
      character kline*40,key*(*)
-     real*8 dvalu
+     double precision dvalu
   
      l=len(key)
      if (l>=40) then
@@ -639,7 +639,7 @@ contains
      implicit none
      integer chk,nvalu,i,j,k,l,num,fail
      character kline*40,ktype*2,line*41,key*(*)
-     real*8 dvalu
+     double precision dvalu
   
      l=len(key)
      if (l>=40) then
@@ -740,7 +740,7 @@ contains
   subroutine write_real8_rank3(chk,key,x,y,z,dim,fail)
      implicit none
      integer chk,x,y,z,i,j,k,l,fail
-     real*8 dim(x,y,z)
+     double precision dim(x,y,z)
      character kline*40,key*(*)
   
      l=len(key)
@@ -766,7 +766,7 @@ contains
   subroutine read_real8_rank3(chk,key,x,y,z,dim,fail)
      implicit none
      integer chk,x,y,z,i,j,k,l,num,fail
-     real*8 dim(x,y,z)
+     double precision dim(x,y,z)
      character kline*40,ktype*2,line*41,key*(*)
   
      l=len(key)

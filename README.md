@@ -20,6 +20,8 @@ Features
 * Gradient and geometry optimization calculations (in-house and DL-FIND optimizers available) 
 * Includes a wide range of popular Gaussian basis sets
 * Mulliken charge analysis
+* Electrostatic potential (ESP) derived charges as well as ESP computation on a grid
+* Supports RESP and reweighted RESP (rwRESP) charge computation using Amber26
 * Exports Molden format for visualization of geometry and orbital data
 * Supports QM/MM calculations with Amber22 and later
 * Fortran API to use QUICK as QM energy and force engine
@@ -64,6 +66,12 @@ Manathunga, M.; O'Hearn, K. A.; Shajan, A.; Smith, J.; Miao, Y.; He, X.; Ayers, 
 Brothers, E.; Palos, E.; Tripathy, V.; Götz, A. W.; Merz, K. M. QUICK-25.03.
 University of California, San Diego, CA and
 Michigan State University, East Lansing, MI, 2025.
+
+If you perform ESP, RESP or rwRESP charge computation please also cite:
+
+Tripathy, V.; Palos, E.; Merz, K. M.; Paesani, F.; Götz, A. W.
+QUICK and Robust ESP and RESP Charges for Computational Biochemistry: Open-Source GPU Implementation.
+[*J. Chem. Inf. Model.* (2026)](https://doi.org/10.1021/acs.jcim.5c03200)
 
 If you perform density functional theory calculations please also cite:
 

@@ -73,8 +73,9 @@ module quick_molspec_module
       ! atom charge and external atom charge
       double precision, dimension(:), allocatable ::chg,extchg
 
-      ! basis set number
-      integer, pointer:: nbasis
+      ! constrain degrees of freedom
+      integer, dimension(:), allocatable ::dlfind_freezeatm
+      integer, dimension(:,:), allocatable :: dlfind_constr
 
    end type quick_molspec_type
 
@@ -230,7 +231,6 @@ contains
          deallocate(self%extpointxyz, stat=ierr)
          allocate(self%extpointxyz(3,self%nextpoint), stat=ierr)
        endif
-       self%extchg=0.0d0
        self%extpointxyz=0.0d0
      endif
 
@@ -272,6 +272,7 @@ contains
 
       if (allocated(xyz)) deallocate(xyz)
       if (allocated(self%distnbor)) deallocate(self%distnbor)
+      if (allocated(self%AtomDistance)) deallocate(self%AtomDistance)
       if (allocated(self%iattype)) deallocate(self%iattype)
       if (allocated(self%chg)) deallocate(self%chg)
 

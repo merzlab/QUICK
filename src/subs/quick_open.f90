@@ -31,10 +31,6 @@ subroutine quick_open(funit,filename,filestat,fileform,fileacc,log_ow,ierr)
     logical log_ow              ! if overwrite ?
     integer, intent(inout) :: ierr
 
-#ifndef GNU 
-    integer,external :: system
-#endif
-
     ch='~'
     i=0
     
@@ -77,7 +73,7 @@ subroutine quick_open(funit,filename,filestat,fileform,fileacc,log_ow,ierr)
    
     run='mv '//filename(k1:k2)//' '//filename(k1:k2)//ch
     if (log_exist.and.(.not.log_ow)) then
-        i=system(run)
+        call execute_command_line(run, exitstat=i)
     endif 
 
     if (i /= 0) then

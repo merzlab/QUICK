@@ -14,7 +14,8 @@ zlib
 libbz2
 boost
 kmmd
-libm)
+libm
+plumed)
 
 set(3RDPARTY_TOOL_USES
 "for fundamental linear algebra calculations"
@@ -25,7 +26,8 @@ set(3RDPARTY_TOOL_USES
 "for various compression and decompression tasks"
 "for supporting the gamma distribution"
 "Machine-learning molecular dynamics"
-"for fundamental math routines if they are not contained in the C library")
+"for fundamental math routines if they are not contained in the C library"
+"tools for enchanced sampling, free energies, and trajectory analysis")
 
 else()
 
