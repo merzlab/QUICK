@@ -6,7 +6,7 @@ set(QUICK_GPU_PLATFORM "CUDA")
 set(QUICK_GPU_TARGET_NAME "cuda")
 set(GPU_LD_FLAGS "") # hipcc requires special flags for linking (see below)
 
-if(CUDA)
+if(CUDA AND NOT HIP)
     find_package(CUDA REQUIRED)
 
     if(NOT CUDA_FOUND)
@@ -330,11 +330,9 @@ if(CUDA)
     if(NOT INSIDE_AMBER)
 	# --------------------------------------------------------------------
 	# import a couple of CUDA libraries used by amber tools
-
         import_library(cublas "${CUDA_cublas_LIBRARY}")
         import_library(cusolver "${CUDA_cusolver_LIBRARY}")
     endif()
-
 endif()
 
 #option(HIP "Build ${PROJECT_NAME} with HIP GPU acceleration support." FALSE)
@@ -463,13 +461,14 @@ if(HIP)
 #        # set(CMAKE_CXX_CREATE_SHARED_LIBRARY "${CUDA_NVCC_EXECUTABLE} -fgpu-rdc --hip-link <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -Wl,--unresolved-symbols=ignore-in-object-files <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 #    endif()
 
-    import_library(cublas "${CUDA_cublas_LIBRARY}")
-    import_library(cusolver "${CUDA_cusolver_LIBRARY}")
+    if(NOT INSIDE_AMBER)
+	# --------------------------------------------------------------------
+	# import a couple of CUDA libraries used by amber tools
+        import_library(cublas "${CUDA_cublas_LIBRARY}")
+        import_library(cusolver "${CUDA_cusolver_LIBRARY}")
+    endif()
 
     if(MAGMA)
         find_package(Magma REQUIRED)
-	
     endif()
-
 endif()
-
