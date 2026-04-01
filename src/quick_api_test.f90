@@ -108,7 +108,7 @@
 
     ! initialize QUICK, required only once. Assumes keywords for
     ! the QUICK job are provided through a template file.  
-    call setQuickJob(fname, keywd, natoms, atomic_numbers, reuse_dmx, .false., .false., 100, ierr)
+    call setQuickJob(fname, keywd, natoms, atomic_numbers, reuse_dmx, ierr)
     CHECK_ERROR(ierr)
 
     do i=1, frames

@@ -90,6 +90,8 @@ subroutine write_coordinates(self, ierr)
     integer, intent(out) :: ierr
     integer :: i, j, k
 
+    ierr = 0
+
     ! write atomic labels and coordinates
     write(self%iMoldenFile, '("[Atoms] (AU)")')
     do i=1,natom
@@ -120,6 +122,8 @@ subroutine write_basis_info(self, ierr)
     integer :: iatom, ishell, ibas, iprim, nprim, j, ishell_idx
     logical :: print_gto
     double precision :: val_gccoeff, xnorm
+
+    ierr = 0
 
     ! write basis function information
     write(self%iMoldenFile, '("[GTO] (AU)")')
@@ -284,6 +288,8 @@ subroutine write_scf(self, ierr)
     integer :: i, j
     character(len=9) :: label
 
+    ierr = 0
+
     write(self%iMoldenFile, '("[SCFCONV]")')
 
     do i=1, self%iexport_snapshot-1
@@ -311,6 +317,8 @@ subroutine write_opt(self, ierr)
     integer :: i, j, k
     character(len=8) :: lbl1
     character(len=2) :: lbl2
+
+    ierr = 0
 
     write(self%iMoldenFile, '("[GEOCONV]")')
 
@@ -378,6 +386,8 @@ subroutine finalize_molden(self, ierr)
     type (quick_molden_type), intent(inout) :: self
     integer, intent(out) :: ierr
 
+    ierr = 0
+
     ! deallocate memory
     if(allocated(self%atom_symbol)) deallocate(self%atom_symbol)
     if(allocated(self%nscf_snapshots)) deallocate(self%nscf_snapshots)
@@ -398,6 +408,8 @@ subroutine reorder_mo_coeffs(co, KLMN, nbasis, i, reord_mo_vec, ierr)
     double precision, intent(inout) :: reord_mo_vec(:)
     integer, intent(out) :: ierr
     integer :: j
+
+    ierr = 0
    
     j=1
     do while (j <= nbasis)
