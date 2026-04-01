@@ -84,10 +84,10 @@ static void wrapperError (const char *funcName, int error)
     fflush (stdout);
 }
 
-void CUDA_DIAG (double* M, const int * dim1, const int * dim2, const double* E,
+void CUDA_DIAG (double * o, const int * dim1, const int * dim2, const double * E,
         const double* vec)
 {
-    if (dim1 == 0 || dim2 == 0) return;
+    if (*dim1 == 0 || *dim2 == 0) return;
 
     int dim = *dim1;
 
@@ -111,7 +111,7 @@ void CUDA_DIAG (double* M, const int * dim1, const int * dim2, const double* E,
         cudaFree(devPtr_M);
         return;
     }
-    cudaStat1 = cudaMemcpy(devPtr_M, M, sizeof(double)*dim*dim, cudaMemcpyHostToDevice);
+    cudaStat1 = cudaMemcpy(devPtr_M, o, sizeof(double)*dim*dim, cudaMemcpyHostToDevice);
     if (cudaStat1 != cudaSuccess) {
         fprintf(stderr, "cudaMemcpy failed in CUDA_DIAG\n");
         cudaFree(devPtr_M);

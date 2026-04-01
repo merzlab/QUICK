@@ -24,13 +24,14 @@ if(BUILD_PYTHON)
 	#------------------------------------------------------------------------------
 
 	option(SKIP_PYTHON_PACKAGE_CHECKS "If true, the buildscript will not verify that you have the needed Python packages to run Amber's Python programs." FALSE)
+	option(PMMG_GUI_DEPS "Automatically install packmol-memgen web GUI dependencies (fastapi, uvicorn, etc.) during make install" OFF)
 	
 	if(NOT SKIP_PYTHON_PACKAGECHECKS)
 		
 		# check "normal" packages
 		# --------------------------------------------------------------------
 
-		set(NEEDED_PYTHON_PACKAGES numpy scipy matplotlib setuptools)
+		set(NEEDED_PYTHON_PACKAGES numpy scipy matplotlib setuptools pandas numba gemmi)
 		set(HAVE_ALL_PYTHON_PACKAGES TRUE)
 
 		# in Amber releases cython is not needed since pytraj will have been pre-cythonized

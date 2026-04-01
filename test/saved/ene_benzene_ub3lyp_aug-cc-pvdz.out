@@ -40,36 +40,46 @@
 | If you have any comments or queries, please reach out to us on GitHub issues or discussion sections:     
 | https://github.com/merzlab/QUICK.                                                                        
 |                                                                                                          
-| TASK STARTS ON: Fri Mar  6 23:07:16 2026
-| INPUT FILE :    ene_wat2_mp2_631gss.in
-| OUTPUT FILE:    ene_wat2_mp2_631gss.out
+| TASK STARTS ON: Mon Mar  9 15:48:59 2026
+| INPUT FILE :    ene_benzene_ub3lyp_aug-cc-pvdz.in
+| OUTPUT FILE:    ene_benzene_ub3lyp_aug-cc-pvdz.out
 | BASIS SET PATH: /scratch/vtripathy/QUICK/install/basis
+
+| - MPI Enabled -
+| TOTAL RANKS     =    20
+| MASTER NAME     = flamey                        
 
  @ Read Job And Atom
 
-  KEYWORD=MP2 BASIS=6-31G** CUTOFF=1.0E-9 DENSERMS=1.0E-6  ZMAKE ENERGY DIPOLE
+  KEYWORD=UDFT B3LYP BASIS=AUG-CC-PVDZ CUTOFF=1.0E-10 DENSERMS=1.0E-6
  ============== JOB CARD =============
- METHOD = HARTREE FOCK
+ METHOD = DENSITY FUNCTIONAL THEORY
+ USING LIBXC VERSION: 4.3.4
+ FUNCTIONAL INFORMATION:
+ NAME = B3LYP FAMILY = HYBRID GGA KIND = EXCHANGE CORRELATION
  DIRECT SCF 
  SAD INITAL GUESS 
+ UNRESTRICTED SYSTEM
  USE DIIS SCF
  PRINT ENERGY EVERY CYCLE
  READ SAD GUESS FROM FILE
- Z-MATRIX CONSTRUCTION
- DIPOLE
+ STANDARD GRID = SG1
+ Level shifting allowed after cycle    3
+ DIIS error must exceed 0.100 for level shifting
+ HOMO-LUMO gap after level shifting = 0.200
  MAX SCF CYCLES =    200
  MAX DIIS CYCLES =   10
  DELTA DENSITY START CYCLE =    3
  COMPUTATIONAL CUTOFF: 
-      TWO-e INTEGRAL         =  0.100E-08
-      BASIS SET PRIME        =  0.100E-09
+      TWO-e INTEGRAL         =  0.100E-09
+      BASIS SET PRIME        =  0.100E-10
       MATRIX ELEMENTS        =  0.100E-09
       BASIS FUNCTION         =  0.100E-05
       NEAR-LINEAR DEPENDENCY =  0.100E-04
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
- BASIS SET = 6-31G**,  TYPE = CARTESIAN
-| BASIS FILE = /scratch/vtripathy/QUICK/install/basis/6-31GDP.BAS
-| DATA FILE  =    ene_wat2_mp2_631gss.dat
+ BASIS SET = AUG-CC-PVDZ,  TYPE = CARTESIAN
+| BASIS FILE = /scratch/vtripathy/QUICK/install/basis/AUG-CC-PVDZ.BAS
+| DATA FILE  =    ene_benzene_ub3lyp_aug-cc-pvdz.dat
 
  @ Finish reading job
 
@@ -77,11 +87,11 @@
  @ Begin SAD initial guess
 
  For Atom Kind =    1
- ELEMENT = O 
- BASIS FUNCTIONS =   15
+ ELEMENT = C 
+ BASIS FUNCTIONS =   25
  For Atom Kind =    2
  ELEMENT = H 
- BASIS FUNCTIONS =    5
+ BASIS FUNCTIONS =    9
 
  @ Finish SAD initial guess
 
@@ -91,130 +101,123 @@
 
  =========== Molecule Input ==========
  TOTAL MOLECULAR CHARGE  =    0    MULTIPLICITY                =    1
- TOTAL ATOM NUMBER       =    6    NUMBER OF ATOM TYPES        =    2
- NUMBER OF HYDROGEN ATOM =    4    NUMBER OF NON-HYDROGEN ATOM =    2
- NUMBER OF ELECTRONS     =   20
+ TOTAL ATOM NUMBER       =   12    NUMBER OF ATOM TYPES        =    2
+ NUMBER OF HYDROGEN ATOM =    6    NUMBER OF NON-HYDROGEN ATOM =    6
+ NUMBER OF ALPHA ELECTRONS =   21
+ NUMBER OF BETA ELECTRONS  =   21
 
  -- INPUT GEOMETRY -- :
-    O          -1.7945      -0.9234       2.7683
-    O          -0.7415       1.7521       2.8963
-    H          -1.2421       0.9212       2.9842
-    H          -2.3382      -1.3597       3.4309
-    H          -0.8795      -1.3030       2.8658
-    H          -0.9205       2.0364       1.9840
+    C           0.6950      -1.2040       0.0000
+    C           1.3910       0.0000       0.0000
+    C           0.6950       1.2040       0.0000
+    C          -0.6950       1.2040       0.0000
+    C          -1.3910       0.0000       0.0000
+    C          -0.6950      -1.2040       0.0000
+    H           1.2420      -2.1520       0.0000
+    H           2.4850       0.0000       0.0000
+    H           1.2420       2.1520       0.0000
+    H          -1.2420       2.1520       0.0000
+    H          -2.4850       0.0000       0.0000
+    H          -1.2420      -2.1520       0.0000
 
  -- DISTANCE MATRIX -- :
               1           2           3           4           5
       1     0.00000
-      2     5.43885     0.00000
-      3     3.66153     1.84069     0.00000
-      4     1.81759     6.68631     4.85619     0.00000
-      5     1.88100     5.77953     4.26453     2.95829     0.00000
-      6     6.01745     1.83707     2.89541     7.47284     6.52737
-              6
+      2     2.62803     0.00000
+      3     4.55046     2.62803     0.00000
+      4     5.25417     4.55146     2.62672     0.00000
+      5     4.55146     5.25722     4.55146     2.62803     0.00000
+      6     2.62672     4.55146     5.25417     4.55046     2.62803
+      7     2.06829     4.07643     6.42561     7.32246     6.42612
+      8     4.07661     2.06736     4.07661     6.42563     7.32458
+      9     6.42561     4.07643     2.06829     4.07527     6.42612
+     10     7.32246     6.42612     4.07527     2.06829     4.07643
+     11     6.42563     7.32458     6.42563     4.07661     2.06736
+     12     4.07527     6.42612     7.32246     6.42561     4.07643
+              6           7           8           9          10
       6     0.00000
+      7     4.07527     0.00000
+      8     6.42563     4.69632     0.00000
+      9     7.32246     8.13338     4.69632     0.00000
+     10     6.42561     9.39075     8.13277     4.69408     0.00000
+     11     4.07661     8.13277     9.39194     8.13277     4.69632
+     12     2.06829     4.69408     8.13277     9.39075     8.13338
+             11          12
+     11     0.00000
+     12     4.69632     0.00000
 
 ============== BASIS INFOS ==============
- BASIS FUNCTIONS =   50
- NSHELL =   20 NPRIM  =   84
- JSHELL =   20 JBASIS =   42
+ BASIS FUNCTIONS =  204
+ NSHELL =   84 NPRIM  =  324
+ JSHELL =   84 JBASIS =  180
 
 
  @ End Reading Molecular Information 
 
 
+ @ Begin XC Quadrature Formation
+
+ OCTAGO: OCTree Algorithm for Grid Operations 
+   PRUNING CUTOFF       = 0.100E-06
+   INITIAL GRID POINTS  =       45408
+|   FINAL GRID POINTS    =       30871
+|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =       83630
+|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =       88256
+
+ @ End XC Quadrature Formation
+
+
  @ Begin Energy Calculation
 
-| condition number of overlap matrix:    3.373E+02
-| Smallest eigenvalue of overlap matrix:    1.478E-02
+| Number of total basis functions:    204
+| Number of linearly independent basis functions:    200
+| condition number of overlap matrix:    1.113E+07
+| Smallest eigenvalue of overlap matrix:    1.973E-06
 
-                                         SCF ENERGY
+                                         USCF ENERGY
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -151.970212549      ------         0.024     1        0.00      0.02      0.00    0.1753E+01  0.3829E-01  0.4183E+00
-|  2   -151.979201813  0.898926E-02       0.029     2        0.00      0.03      0.00    0.2332E+00  0.9275E-02  0.1682E+00
-|  3   -152.036901274  0.576995E-01       0.028     3        0.00      0.03      0.00    0.9494E-01  0.3444E-02  0.5502E-01
-|  4   -152.049516471  0.126152E-01       0.026     4        0.00      0.03      0.00    0.2768E-01  0.1178E-02  0.2243E-01
-|  5   -152.050695742  0.117927E-02       0.026     5        0.00      0.03      0.00    0.5339E-02  0.5276E-03  0.6275E-02
-|  6   -152.050817985  0.122243E-03       0.025     6        0.00      0.02      0.00    0.1422E-02  0.1191E-03  0.1450E-02
-|  7   -152.050823359  0.537436E-05       0.024     7        0.00      0.02      0.00    0.5047E-03  0.3530E-04  0.4178E-03
-|  8   -152.050823933  0.574052E-06       0.022     8        0.00      0.02      0.00    0.7873E-04  0.1483E-04  0.1708E-03
-|  9   -152.050823997  0.633679E-07       0.021     9        0.00      0.02      0.00    0.1764E-04  0.3974E-05  0.4220E-04
-| 10   -152.050824000  0.303424E-08       0.019    10        0.00      0.02      0.00    0.3785E-05  0.5821E-06  0.7597E-05
+|  1   -234.044260330      ------         0.551     1        0.05      0.50      0.01    0.2144E+01  0.2536E-01  0.5500E+00
+|  2   -232.165107873  -.187915E+01       1.358     2        0.05      1.31      0.01    0.1420E+00  0.8341E-02  0.2273E+00
+|  3   -232.136592267  -.285156E-01       1.368     3        0.07      1.30      0.01    0.1531E+00  0.3362E-02  0.7004E-01
+|   ***  Level shifting is being applied  ***
+|  4   -232.273414304  0.136822E+00       1.346     4        0.05      1.29      0.01    0.2052E-01  0.9549E-03  0.3594E-01
+|  5   -232.277469330  0.405503E-02       1.340     5        0.05      1.29      0.01    0.1931E-02  0.1289E-03  0.2658E-02
+|  6   -232.277503357  0.340273E-04       1.312     6        0.05      1.26      0.01    0.4983E-03  0.1866E-04  0.3310E-03
+|  7   -232.277504608  0.125042E-05       1.299     7        0.05      1.25      0.01    0.3324E-03  0.7226E-05  0.1922E-03
+|  8   -232.277505202  0.594434E-06       1.291     8        0.05      1.24      0.01    0.2690E-04  0.1668E-05  0.4993E-04
+|  9   -232.277505208  0.567974E-08       1.264     9        0.05      1.21      0.01    0.4418E-05  0.1916E-06  0.4667E-05
 | ------------------------------------------------------------------------------------------------------------------------
-| REACH CONVERGENCE AFTER  10 CYCLES
-| MAX ERROR = 0.378482E-05   RMS CHANGE = 0.582102E-06   MAX CHANGE = 0.759714E-05
+| REACH CONVERGENCE AFTER   9 CYCLES
+| MAX ERROR = 0.441770E-05   RMS CHANGE = 0.191589E-06   MAX CHANGE = 0.466682E-05
 | -----------------------------------------------
- ELECTRONIC ENERGY    =   -188.679305431
- CORE_CORE REPULSION  =     36.628481432
- TOTAL ENERGY         =   -152.050824000
+ ALPHA ELECTRON DENSITY    =   21.0001315691
+ BETA ELECTRON DENSITY     =   21.0001315691
+ ELECTRONIC ENERGY    =   -436.021829243
+ CORE_CORE REPULSION  =    203.744324035
+ TOTAL ENERGY         =   -232.277505208
 
  @ End Energy calculation
 
   Skipping one-electron property calculation.
 
- @ Begin MP2 Calculation
-
-SECOND ORDER ENERGY =    -0.403468388
-EMP2                =  -152.454292388
-
- @ End MP2 Calculation
-
-
- @ Begin Zmake conversion
-
-  
- Z-MATRIX:
-
-   ATOM  ELEMENTAL  BOND LENGTH    BOND ANGLE    DIHEDRAL ANGLE
-  NUMBER  SYMBOL    (ANGSTROMS)    (DEGREES)       (DEGREES)
-     I                 I-NA         I-NA-NB        I-NA-NB-NC      NA   NB   NC
-
-     1      O        0.00000  0     0.00000  0      0.00000  0      0    0    0
-     2      O        2.87812  1     0.00000  0      0.00000  0      1    0    0
-     3      H        1.93760  1     6.15055  1      0.00000  0      1    2    0
-     4      H        0.96183  1   126.72240  1    -24.40948  1      1    2    3
-     5      H        0.99538  1    90.79436  1   -135.43640  1      1    2    3
-     6      H        3.18430  1    17.53072  1    112.51553  1      1    2    3
-
- @ End Zmake conversion
-
-
- @ Begin Charge and Dipole Calculation
-
-    ATOMIC CHARGES
-   ATOM          MULLIKEN            LOWDIN
-   O             -0.6877            -0.4484
-   O             -0.7303            -0.4914
-   H              0.3733             0.2230
-   H              0.3551             0.2389
-   H              0.3621             0.2533
-   H              0.3276             0.2247
-   TOTAL        -0.0000             0.0000
-
-    DIPOLE (DEBYE)
-      X         Y         Z        TOTAL
-   -0.7666   -3.0689   -0.0458    3.1635
-
- @ End Charge and Dipole Calculation
-
-
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.076981000( 19.13%)
-| TOTAL SCF TIME      =     0.244499000( 60.76%)
-|       TOTAL OP TIME      =     0.239657000( 59.55%)
-|             TOTAL 1e TIME      =     0.000726000(  0.18%)
-|             TOTAL 2e TIME      =     0.238120000( 59.17%)
-|       TOTAL DII TIME      =     0.004808000(  1.19%)
-|             TOTAL DIAG TIME    =     0.001689000(  0.42%)
-| TOTAL MP2 TIME     =     0.078692000( 19.55%)
-| TOTAL TIME          =     0.402423000
+| INITIAL GUESS TIME  =     0.357587000(  3.09%)
+| DFT GRID OPERATIONS =     0.061579000(  0.53%)
+| TOTAL SCF TIME      =    11.128029000( 96.01%)
+|       TOTAL OP TIME      =    10.645400000( 91.84%)
+|             TOTAL 1e TIME      =     0.002146000(  0.02%)
+|             TOTAL 2e TIME      =     9.327726000( 80.48%)
+|             TOTAL EXC TIME     =     1.286734000( 11.10%)
+|       TOTAL DII TIME      =     0.482619000(  4.16%)
+|             TOTAL DIAG TIME    =     0.012498000(  0.11%)
+| TOTAL TIME          =    11.590820000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  0.4 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes 11.6 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Fri Mar  6 23:07:17 2026
+| Normal Termination. Task Finished on: Mon Mar  9 15:49:10 2026

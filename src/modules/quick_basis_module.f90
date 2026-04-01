@@ -53,6 +53,7 @@ module quick_basis_module
 
         ! total basis number
         integer, pointer :: nbasis
+        integer, pointer :: NBSuse
 
         ! the first and last basis function for an atom
         integer, dimension(:),allocatable :: first_basis_function, last_basis_function
@@ -130,7 +131,7 @@ module quick_basis_module
 
 
    integer,target :: nshell,nprim,jshell,jbasis
-   integer,target :: nbasis
+   integer,target :: nbasis, NBSuse
    integer :: maxcontract
 
    ! used for 2e integral indices

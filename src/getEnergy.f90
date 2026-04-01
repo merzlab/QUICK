@@ -96,8 +96,14 @@ subroutine getEnergy(isGuess, ierr)
 #ifdef MPIV
    !-------------- MPI / ALL NODES ----------------------------------
    if (bMPI) then
+      quick_qm_struct%NBSuse => NBSuse
+
+      call MPI_BCAST(NBSuse,1,mpi_integer,0,quick_comm,mpierror)
+
+      if(.not. master) call allocate_quick_qm_struct_fullx(quick_qm_struct)
+
       call MPI_BCAST(quick_qm_struct%s,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
-      call MPI_BCAST(quick_qm_struct%x,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(quick_qm_struct%x,nbasis*NBSuse,mpi_double_precision,0,quick_comm,mpierror)
       call MPI_BCAST(quick_qm_struct%Ecore,1,mpi_double_precision,0,quick_comm,mpierror)
    endif
    !-------------- END MPI / ALL NODES ------------------------------

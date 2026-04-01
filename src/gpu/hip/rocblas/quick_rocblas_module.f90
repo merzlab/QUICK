@@ -130,7 +130,7 @@ contains
         double precision, intent(in) :: alpha, beta
         double precision, dimension(lda,*), intent(in) :: A
         double precision, dimension(ldb,*), intent(in) :: B
-        double precision, dimension(ldc,n), intent(out) :: C
+        double precision, dimension(ldc,n), intent(inout) :: C
 
         !internal variables
         integer(c_int) :: rb_n, rb_m, rb_k, rb_lda, rb_ldb, rb_ldc, rb_sizea, rb_sizeb, rb_sizec
@@ -148,45 +148,58 @@ contains
         rb_m = m
         rb_n = n
         rb_k = k
+        ! Use the caller-supplied leading dimensions directly — rocBLAS column-major
+        ! convention matches Fortran storage exactly.  Do NOT override rb_lda/rb_ldb
+        ! with m/n/k: that only works for square matrices and corrupts rectangular ones
+        ! (e.g. invdist_arr(natom,npoints) in compute_ESP_charge).
         rb_lda = lda
         rb_ldb = ldb
         rb_ldc = ldc
 
-        if(transa .eq. 'n') then
-          rb_lda = rb_m
-          rb_sizea = rb_k * rb_lda
+        if(transa .eq. 'n' .or. transa .eq. 'N') then
+          rb_sizea = rb_lda * rb_k   ! A is lda x k, stored column-major
         else
-          rb_lda = rb_k
-          rb_sizea = rb_m * rb_lda
+          rb_sizea = rb_lda * rb_m   ! A^T is lda x m, stored column-major
           rb_transa = rocblas_operation_transpose
         endif
 
-
-        if(transb .eq. 'n') then
-          rb_ldb = rb_k
-          rb_sizeb = rb_n * rb_ldb
+        if(transb .eq. 'n' .or. transb .eq. 'N') then
+          rb_sizeb = rb_ldb * rb_n   ! B is ldb x n, stored column-major
         else
-          rb_ldb = rb_n
-          rb_sizeb = rb_k * rb_ldb
+          rb_sizeb = rb_ldb * rb_k   ! B^T is ldb x k, stored column-major
           rb_transb = rocblas_operation_transpose
         endif
 
-        rb_ldc = rb_m
-        rb_sizec = rb_n * rb_ldc
+        rb_sizec = rb_ldc * rb_n
 
         rb_alpha = alpha
         rb_beta = beta
 
-        call rocBlasInit(rb_lda)
+        ! Allocate host memory with sizes specific to this call (may be non-square,
+        ! e.g. invdist_arr(natom, npoints) in compute_ESP_charge where npoints >> natom).
+        ! Do NOT use rocBlasInit here — it allocates only rb_lda*rb_lda elements and
+        ! would overflow for rectangular matrices.
+        allocate(hA(rb_sizea))
+        allocate(hB(rb_sizeb))
+        allocate(hC(rb_sizec))
+
+        ! Allocate device memory with sizes specific to this call
+        call HIP_CHECK(hipMalloc(c_loc(dA), int(rb_sizea, c_size_t) * 8))
+        call HIP_CHECK(hipMalloc(c_loc(dB), int(rb_sizeb, c_size_t) * 8))
+        call HIP_CHECK(hipMalloc(c_loc(dC), int(rb_sizec, c_size_t) * 8))
 
         ! Initialize host memory
-        hA = reshape(A(1:lda,1:rb_lda), (/rb_sizea/))
-        hB = reshape(B(1:ldb,1:rb_ldb), (/rb_sizeb/))
+        ! Use rb_sizea/lda and rb_sizeb/ldb for column counts so that rectangular
+        ! matrices (e.g. invdist_arr(natom,npoints) in compute_ESP_charge) are
+        ! packed correctly.  For square matrices rb_sizea/lda == rb_lda as before.
+        hA = reshape(A(1:lda, 1:rb_sizea/lda), (/rb_sizea/))
+        hB = reshape(B(1:ldb, 1:rb_sizeb/ldb), (/rb_sizeb/))
+        hC(1:rb_sizec) = reshape(C(1:ldc,1:n), (/rb_sizec/))
 
         ! Copy memory from host to device
         call HIP_CHECK(hipMemcpy(dA, c_loc(hA), int(rb_sizea, c_size_t) * 8, 1))
         call HIP_CHECK(hipMemcpy(dB, c_loc(hB), int(rb_sizeb, c_size_t) * 8, 1))
-        call HIP_CHECK(hipMemset(dC, 0, int(rb_sizec, c_size_t) * 8))
+        call HIP_CHECK(hipMemcpy(dC, c_loc(hC), int(rb_sizec, c_size_t) * 8, 1))
 
         ! Create rocBLAS handle
         call ROCBLAS_CHECK(rocblas_create_handle(c_loc(handle)))
@@ -205,10 +218,18 @@ contains
         ! Transfer result
         C = reshape(hC, (/ldc, n/))
 
-        ! Destroy rockblas handle
+        ! Destroy rocblas handle
         call ROCBLAS_CHECK(rocblas_destroy_handle(handle))
 
-        call rocBlasFinalize()
+        ! Deallocate host memory allocated for this call
+        if(allocated(hA)) deallocate(hA)
+        if(allocated(hB)) deallocate(hB)
+        if(allocated(hC)) deallocate(hC)
+
+        ! Free device memory allocated for this call
+        call HIP_CHECK(hipFree(dA))
+        call HIP_CHECK(hipFree(dB))
+        call HIP_CHECK(hipFree(dC))
 
     end subroutine quick_rocblas_dgemm
 

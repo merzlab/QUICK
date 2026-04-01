@@ -58,7 +58,6 @@ subroutine getMol(ierr)
         endif
       endif
 
-      quick_molspec%nbasis   => nbasis
       quick_qm_struct%nbasis => nbasis
       call set(quick_molspec,ierr)
 
@@ -91,7 +90,6 @@ subroutine getMol(ierr)
 #endif
    CHECK_ERROR(ierr)
 
-   quick_molspec%nbasis   => nbasis
    quick_qm_struct%nbasis => nbasis
 
    call alloc(quick_basis)
