@@ -897,12 +897,12 @@ subroutine dlf_run(ierr2 &
          if (glob%imicroiter < 2) then
             ! Standard convergence test
 #ifdef MPIV
-    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+    call MPI_BARRIER(quick_comm,mpierror)
 #endif
             call convergence_test(stat%ccycle,.true.,tconv)
 #ifdef MPIV
-    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-    if (bMPI)call MPI_BCAST(tconv,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+    call MPI_BARRIER(quick_comm,mpierror)
+    if (bMPI)call MPI_BCAST(tconv,1,mpi_logical,0,quick_comm,mpierror)
 #endif
             if (tconv) then
               if (printl > 0) then

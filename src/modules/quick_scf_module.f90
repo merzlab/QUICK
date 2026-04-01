@@ -117,7 +117,6 @@ contains
      done = .false.
 
      if (quick_method%readden) then
-       nbasis = quick_molspec%nbasis
        if (master) then
 #if defined(RESTART_HDF5)
          call read_hdf5_int_rank0('molinfo', 2, nbasis)

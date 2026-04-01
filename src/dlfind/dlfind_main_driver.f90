@@ -343,7 +343,7 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
 
 #ifdef MPIV
      ! we now have new geometry, and let other nodes know the new geometry
-     if (bMPI)call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+     if (bMPI)call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,quick_comm,mpierror)
 #endif
 
 #if defined(GPU) || defined(MPIV_GPU)
