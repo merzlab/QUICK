@@ -165,6 +165,9 @@ if(MPI)
 	target_compile_definitions(libquick_mpi PRIVATE MPIV)
 	set_target_properties(libquick_mpi PROPERTIES OUTPUT_NAME quick_mpi)
 
+	target_sources(libquick_mpi PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/modules/quick_comm_store.c)
+
 	# change link libraries and mod dirs for MPI
 	remove_link_libraries(libquick_mpi octree)
 	target_link_libraries(libquick_mpi PRIVATE octree_mpi)

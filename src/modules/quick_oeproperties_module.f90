@@ -35,7 +35,7 @@ module quick_oeproperties_module
    use quick_calculated_module, only: quick_qm_struct
 #ifdef MPIV
    use mpi
-   use quick_mpi_module, only: master, mpierror
+   use quick_mpi_module, only: master, mpierror, quick_set_comm, quick_comm
 #endif
    implicit none
 
@@ -185,7 +185,7 @@ module quick_oeproperties_module
 #ifdef MPIV
     use mpi
     use quick_basis_module, only: mpi_jshelln, mpi_jshell
-    use quick_mpi_module, only: mpirank, mpierror, quick_set_comm, quick_comm 
+    use quick_mpi_module, only: mpirank, mpierror, quick_set_comm, quick_comm, quick_set_comm, quick_comm 
 #endif
 #if defined(GPU) || defined(MPIV_GPU)
     use quick_method_module, only: quick_method
@@ -533,7 +533,7 @@ module quick_oeproperties_module
 #ifdef MPIV
    use mpi
    use quick_basis_module, only: mpi_jshelln, mpi_jshell
-   use quick_mpi_module, only: master, mpirank, mpierror, quick_set_comm, quick_comm
+   use quick_mpi_module, only: master, mpirank, mpierror, quick_set_comm, quick_comm, quick_set_comm, quick_comm
 #endif
 
    implicit none

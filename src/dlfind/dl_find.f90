@@ -356,7 +356,7 @@ subroutine dlf_run(ierr2 &
   use quick_molden_module, only: quick_molden
 #ifdef MPIV
   use mpi
-  use quick_mpi_module, only: bMPI, mpierror
+  use quick_mpi_module, only: bMPI, mpierror, quick_set_comm, quick_comm
 #endif
   implicit none
 #ifdef GAMESS
