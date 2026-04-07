@@ -237,7 +237,7 @@ contains
 
     subroutine rebuild_input()
         character(len=:), allocatable :: text
-        character(len=32) :: atom_line
+        character(len=64) :: atom_line
         integer :: i
 
         if (has_calc) then
@@ -304,7 +304,7 @@ contains
 
     subroutine job_run()
         ! External free subroutines in libquick.so
-        external :: initialize1, read_Job_and_Atom, getMol, getEnergy
+        external :: initialize1, read_Job_and_Atom, getMol, getEnergy, dipole
         external :: finalize, outputCopyright, PrtDate, quick_open
 
         character(len=:), allocatable :: keyword_line
@@ -333,7 +333,6 @@ contains
 
         ! --- build keyword line ---
         keyword_line = build_keyword_line()
-        if (had_error) return
 
         ! --- guard against silent Fortran truncation on assignment to quick_api%Keywd ---
         if (len_trim(keyword_line) > KEYWORD_LEN) then
@@ -466,6 +465,9 @@ contains
             return
         end if
 
+        ! --- post-SCF: Mulliken/Lowdin charges and dipole moment ---
+        if (quick_method%dipole) call dipole
+
         ! --- harvest scalar results ---
         job_total_energy   = quick_qm_struct%ETot
         job_e_core         = quick_qm_struct%ECore
@@ -475,8 +477,8 @@ contains
         job_e_disp         = quick_qm_struct%Edisp
 
         ! --- set array availability flags ---
-        job_has_mulliken       = allocated(quick_qm_struct%Mulliken) .and. quick_method%dipole
-        job_has_lowdin         = allocated(quick_qm_struct%Lowdin)   .and. quick_method%dipole
+        job_has_mulliken       = quick_method%dipole
+        job_has_lowdin         = quick_method%dipole
         job_has_mo_energies    = allocated(quick_qm_struct%E)
         job_has_density_matrix = allocated(quick_qm_struct%dense)
 
@@ -578,12 +580,6 @@ contains
         character(len=:), allocatable :: text
         integer :: i
 
-        if (.not. has_calc) then
-            call fail('build_keyword_line: calc keyword missing')
-            text = ''
-            return
-        end if
-
         text = trim(calc_keyword)
 
         if (allocated(method_list)) then
@@ -599,10 +595,6 @@ contains
 
         if (has_basis) text = trim(text) // ' ' // trim(basis_token)
 
-        if (len_trim(text) == 0) then
-            call fail('build_keyword_line: no keywords set')
-            return
-        end if
     end function build_keyword_line
 
     subroutine append_method(uname, arg)
