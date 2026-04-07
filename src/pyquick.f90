@@ -7,7 +7,7 @@ module pyquick
     use quick_files_module, only : iOutFile, outFileName, inFileName, isTemplate, &
                                    set_quick_files, print_quick_io_file
     use quick_api_module, only : quick_api
-    use quick_constants_module, only : SYMBOL, SYMBOL_MAX, A_TO_BOHRS, BOHRS_TO_A
+    use quick_constants_module, only : SYMBOL, SYMBOL_MAX, A_TO_BOHRS
     use quick_basis_module, only : nbasis, NBSuse
     use quick_cutoff_module, only : schwarzoff
     use quick_eri_cshell_module, only : getEriPrecomputables
@@ -442,8 +442,8 @@ contains
         external :: initialize1, read_Job_and_Atom, getMol, getEnergy
         external :: finalize, outputCopyright, PrtDate, quick_open
 
-        character(len=KEYWORD_LEN) :: keyword_buf
         character(len=:), allocatable :: keyword_line
+        character(len=10) :: kwlen_str
         integer :: ierr, my_natoms, i, j, k
         integer :: natm_type
         integer :: atm_type_id(geom_natom)
@@ -480,9 +480,13 @@ contains
         keyword_line = build_keyword_line()
         if (had_error) return
 
-        keyword_buf = ''
-        keyword_buf(1:min(len_trim(keyword_line), KEYWORD_LEN)) = &
-            keyword_line(1:min(len_trim(keyword_line), KEYWORD_LEN))
+        ! --- guard against silent Fortran truncation on assignment to quick_api%Keywd ---
+        if (len_trim(keyword_line) > KEYWORD_LEN) then
+            write(kwlen_str, '(I0)') KEYWORD_LEN
+            call fail('job_run: keyword line exceeds maximum length of ' // &
+                      trim(kwlen_str) // ' characters')
+            return
+        end if
 
         ! --- configure quick_api for keyword injection ---
         quick_api%apiMode  = .true.
