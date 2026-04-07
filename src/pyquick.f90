@@ -30,7 +30,8 @@ module pyquick
 
     character(len=8) :: calc_keyword = ''
     character(len=:), allocatable :: basis_token
-    character(len=:), allocatable :: geometry_block
+    integer, allocatable          :: geom_atnum(:)      ! atomic numbers, length geom_natom
+    double precision, allocatable :: geom_coords(:,:)   ! Angstrom coordinates, shape (3, geom_natom)
 
     logical :: has_calc  = .false.
     logical :: has_basis = .false.
@@ -113,7 +114,7 @@ contains
         integer :: i
 
         if (len_trim(keyword) == 0) then
-            call fail('set_method: name must be non-empty')
+            call fail('set_method: keyword name must be non-empty')
             return
         end if
 
@@ -140,235 +141,93 @@ contains
     subroutine read_geom(input)
         character(len=*), intent(in) :: input
         character(len=:), allocatable :: line
-        character(len=:), allocatable :: buffer
-        integer :: start, len_input, nl, atom_count
+        integer :: start, len_input, nl, atom_count, ios, k, z
+        character(len=4) :: sym
+        double precision :: cx, cy, cz
 
-        if (allocated(geometry_block)) deallocate(geometry_block)
-        buffer = ''
+        ! discard any previous geometry so a second call replaces the first
+        if (allocated(geom_atnum))  deallocate(geom_atnum)
+        if (allocated(geom_coords)) deallocate(geom_coords)
+        geom_natom = 0
+        has_geom   = .false.
+
+        ! --- first pass: count non-empty lines to know how many atoms ---
         atom_count = 0
-
-        start = 1
-        len_input = len(input)
+        start      = 1
+        len_input  = len(input)
 
         do while (start <= len_input)
             nl = index(input(start:), new_line('a'))
-
             if (nl == 0) then
-                line = adjustl(trim(input(start:)))
-                call handle_line(line, buffer, atom_count)
-                if (had_error) return
+                if (len_trim(input(start:)) > 0) atom_count = atom_count + 1
                 exit
             else
-                line = adjustl(trim(input(start:start+nl-2)))
-                call handle_line(line, buffer, atom_count)
-                if (had_error) return
+                if (len_trim(input(start:start+nl-2)) > 0) atom_count = atom_count + 1
                 start = start + nl
             end if
         end do
 
-        if (.not. allocated(buffer) .or. len_trim(buffer) == 0) then
+        if (atom_count == 0) then
             call fail('read_geom: geometry must contain at least one atom')
             return
         end if
 
-        geometry_block = buffer
-        geom_natom = atom_count
-        has_geom = .true.
-        call rebuild_input()
+        allocate(geom_atnum(atom_count))
+        allocate(geom_coords(3, atom_count))
 
-    contains
+        ! --- second pass: parse and validate each line ---
+        atom_count = 0
+        start      = 1
 
-        subroutine handle_line(raw_line, current, count)
-            character(len=*), intent(in) :: raw_line
-            character(len=:), allocatable, intent(inout) :: current
-            integer, intent(inout) :: count
-
-            if (len_trim(raw_line) == 0) return
-
-            call validate_line(raw_line)
-            if (had_error) return
-
-            count = count + 1
-
-            if (.not. allocated(current) .or. len(current) == 0) then
-                current = trim(raw_line)
+        do while (start <= len_input)
+            nl = index(input(start:), new_line('a'))
+            if (nl == 0) then
+                line = trim(adjustl(input(start:)))
             else
-                current = trim(current) // new_line('a') // trim(raw_line)
+                line = trim(adjustl(input(start:start+nl-2)))
+                start = start + nl
             end if
-        end subroutine handle_line
 
-        subroutine validate_line(raw_line)
-            character(len=*), intent(in) :: raw_line
-            character(len=:), allocatable :: trimmed_line
-            character(len=len(raw_line)) :: tokens(4)
-            integer :: token_count
-            logical :: overflow
+            if (len_trim(line) == 0) then
+                if (nl == 0) exit
+                cycle
+            end if
 
-            trimmed_line = trim(raw_line)
-            if (len_trim(trimmed_line) == 0) return
-
-            tokens = ''
-
-            call split_line(trimmed_line, tokens, token_count, overflow)
-
-            if (overflow .or. token_count /= 4) then
-                call raise_invalid(trimmed_line, 'expected exactly four columns')
+            ! parse symbol and three coordinates; accepts decimal and scientific notation
+            sym = ''
+            read(line, *, iostat=ios) sym, cx, cy, cz
+            if (ios /= 0) then
+                call fail('read_geom: cannot parse line (expected: SYMBOL X Y Z): ' // &
+                          trim(line))
                 return
             end if
 
-            if (.not. is_valid_symbol(tokens(1))) then
-                call raise_invalid(trimmed_line, 'invalid element symbol')
-                return
-            end if
-
-            if (.not. is_valid_coord(tokens(2))) then
-                call raise_invalid(trimmed_line, 'invalid X coordinate')
-                return
-            end if
-
-            if (.not. is_valid_coord(tokens(3))) then
-                call raise_invalid(trimmed_line, 'invalid Y coordinate')
-                return
-            end if
-
-            if (.not. is_valid_coord(tokens(4))) then
-                call raise_invalid(trimmed_line, 'invalid Z coordinate')
-                return
-            end if
-
-        end subroutine validate_line
-
-        subroutine split_line(text, tokens, token_count, overflow)
-            character(len=*), intent(in) :: text
-            character(len=*), intent(inout) :: tokens(:)
-            integer, intent(out) :: token_count
-            logical, intent(out) :: overflow
-            integer :: len_line, start_pos, end_pos
-
-            len_line = len_trim(text)
-            token_count = 0
-            overflow = .false.
-            start_pos = 1
-
-            if (len_line == 0) return
-
-            do while (start_pos <= len_line)
-                if (text(start_pos:start_pos) == ' ') then
-                    start_pos = start_pos + 1
-                else
-                    end_pos = start_pos
-                    do while (end_pos <= len_line .and. text(end_pos:end_pos) /= ' ')
-                        end_pos = end_pos + 1
-                    end do
-
-                   token_count = token_count + 1
-
-                    if (token_count <= size(tokens)) then
-                        tokens(token_count) = text(start_pos:end_pos-1)
-                    else
-                        overflow = .true.
-                    end if
-
-                    start_pos = end_pos
+            ! validate symbol against the QUICK element table
+            z = 0
+            do k = 1, SYMBOL_MAX
+                if (trim(uppercase(sym)) == trim(uppercase(SYMBOL(k)))) then
+                    z = k
+                    exit
                 end if
             end do
-        end subroutine split_line
-
-        ! We will make sure the symbol is one of the elements in future.
-        logical function is_valid_symbol(symbol)
-            character(len=*), intent(in) :: symbol
-            character(len=:), allocatable :: trimmed
-            integer :: len_sym
-
-            trimmed = adjustl(symbol)
-            len_sym = len_trim(trimmed)
-
-            if (len_sym < 1 .or. len_sym > 2) then
-                is_valid_symbol = .false.
+            if (z == 0) then
+                call fail('read_geom: unknown element symbol "' // trim(sym) // &
+                          '" in line: ' // trim(line))
                 return
             end if
 
-            is_valid_symbol = (verify(trimmed(:len_sym), &
-                'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') == 0)
-        end function is_valid_symbol
+            atom_count = atom_count + 1
+            geom_atnum(atom_count)     = z
+            geom_coords(1, atom_count) = cx
+            geom_coords(2, atom_count) = cy
+            geom_coords(3, atom_count) = cz
 
-        logical function is_valid_coord(token)
-            character(len=*), intent(in) :: token
-            character(len=:), allocatable :: coord
-            integer :: len_coord, i, decimal_count
-            logical :: digit_seen, digit_before_decimal, digit_after_decimal
-            character :: ch
+            if (nl == 0) exit
+        end do
 
-            coord = adjustl(token)
-            coord = trim(coord)
-            len_coord = len_trim(coord)
-
-            if (len_coord == 0) then
-                is_valid_coord = .false.
-                return
-            end if
-
-            decimal_count = 0
-            digit_seen = .false.
-            digit_before_decimal = .false.
-            digit_after_decimal = .true.
-
-            do i = 1, len_coord
-                ch = coord(i:i)
-                select case (ch)
-                case ('0':'9')
-                    digit_seen = .true.
-                    if (decimal_count == 0) then
-                        digit_before_decimal = .true.
-                    else
-                        digit_after_decimal = .true.
-                    end if
-                case ('.')
-                    decimal_count = decimal_count + 1
-                    if (decimal_count > 1) then
-                        is_valid_coord = .false.
-                        return
-                    end if
-                    if (i == 1 .or. i == len_coord) then
-                        is_valid_coord = .false.
-                        return
-                    end if
-                    digit_after_decimal = .false.
-                case ('+', '-')
-                    if (i /= 1) then
-                        is_valid_coord = .false.
-                        return
-                    end if
-                case default
-                    is_valid_coord = .false.
-                    return
-                end select
-            end do
-
-            if (.not. digit_seen) then
-                is_valid_coord = .false.
-                return
-            end if
-
-            if (decimal_count == 1) then
-                if (.not. digit_before_decimal .or. .not. digit_after_decimal) then
-                    is_valid_coord = .false.
-                    return
-                end if
-            end if
-
-            is_valid_coord = .true.
-        end function is_valid_coord
-
-        subroutine raise_invalid(line_text, detail)
-            character(len=*), intent(in) :: line_text
-            character(len=*), intent(in) :: detail
-            character(len=:), allocatable :: message
-
-            message = 'Invalid geometry line (' // trim(detail) // '): ' // &
-                trim(line_text)
-            call fail(message)
-        end subroutine raise_invalid
+        geom_natom = atom_count
+        has_geom   = .true.
+        call rebuild_input()
 
     end subroutine read_geom
 
@@ -378,6 +237,7 @@ contains
 
     subroutine rebuild_input()
         character(len=:), allocatable :: text
+        character(len=32) :: atom_line
         integer :: i
 
         if (has_calc) then
@@ -414,7 +274,12 @@ contains
         end if
 
         if (has_geom) then
-            text = trim(text) // new_line('a') // new_line('a') // trim(geometry_block)
+            do i = 1, geom_natom
+                write(atom_line, '(A2, 3(1X, F12.6))') &
+                    trim(SYMBOL(geom_atnum(i))), &
+                    geom_coords(1,i), geom_coords(2,i), geom_coords(3,i)
+                text = trim(text) // new_line('a') // trim(atom_line)
+            end do
         end if
 
         input_string = ''
@@ -444,11 +309,9 @@ contains
 
         character(len=:), allocatable :: keyword_line
         character(len=10) :: kwlen_str
-        integer :: ierr, my_natoms, i, j, k
+        integer :: ierr, i, j, k
         integer :: natm_type
         integer :: atm_type_id(geom_natom)
-        integer :: atnum(geom_natom)
-        double precision :: coords(3, geom_natom)
         logical :: new_type
         character(len=256) :: note
 
@@ -465,14 +328,6 @@ contains
         end if
         if (.not. has_geom) then
             call fail('job_run: call read_geom before run')
-            return
-        end if
-
-        ! --- parse geometry_block to recover atomic numbers and coordinates ---
-        my_natoms = geom_natom
-        call parse_geom_block(my_natoms, atnum, coords, ierr)
-        if (ierr /= 0) then
-            call fail('job_run: failed to parse geometry block')
             return
         end if
 
@@ -543,7 +398,7 @@ contains
         end if
 
         ! set natom (module-level target) BEFORE alloc uses it
-        natom = my_natoms
+        natom = geom_natom
 
         call alloc(quick_molspec, .false., ierr)
         if (ierr /= 0) then
@@ -556,17 +411,17 @@ contains
         ! build atom type list (deduplicate by atomic number)
         natm_type = 0
         atm_type_id = 0
-        do i = 1, my_natoms
+        do i = 1, geom_natom
             new_type = .true.
             do k = 1, natm_type
-                if (atm_type_id(k) == atnum(i)) then
+                if (atm_type_id(k) == geom_atnum(i)) then
                     new_type = .false.
                     exit
                 end if
             end do
             if (new_type) then
                 natm_type = natm_type + 1
-                atm_type_id(natm_type) = atnum(i)
+                atm_type_id(natm_type) = geom_atnum(i)
             end if
         end do
 
@@ -576,10 +431,10 @@ contains
         end do
 
         ! inject atomic numbers and coordinates (convert Angstrom -> Bohr)
-        do i = 1, my_natoms
-            quick_molspec%iattype(i) = atnum(i)
+        do i = 1, geom_natom
+            quick_molspec%iattype(i) = geom_atnum(i)
             do j = 1, 3
-                xyz(j, i) = coords(j, i) * A_TO_BOHRS
+                xyz(j, i) = geom_coords(j, i) * A_TO_BOHRS
             end do
         end do
         quick_molspec%xyz => xyz
@@ -718,72 +573,6 @@ contains
     ! -----------------------------------------------------------------------
     ! Private helpers
     ! -----------------------------------------------------------------------
-
-    ! Parse geometry_block into atomic numbers and Angstrom coordinates.
-    ! Assumes geometry_block has already been validated by read_geom.
-    subroutine parse_geom_block(n, atnum, coords, ierr)
-        integer, intent(in)    :: n
-        integer, intent(out)   :: atnum(n)
-        double precision, intent(out) :: coords(3, n)
-        integer, intent(out)   :: ierr
-
-        integer :: atom_idx, pos, nl, z, k
-        character(len=:), allocatable :: block, line
-        character(len=4)  :: sym
-        double precision  :: cx, cy, cz
-
-        ierr = 0
-        atom_idx = 0
-
-        block = trim(geometry_block)
-        pos = 1
-
-        do while (pos <= len(block))
-            nl = index(block(pos:), new_line('a'))
-            if (nl == 0) then
-                line = trim(adjustl(block(pos:)))
-            else
-                line = trim(adjustl(block(pos:pos+nl-2)))
-                pos = pos + nl
-            end if
-
-            if (len_trim(line) == 0) then
-                if (nl == 0) exit
-                cycle
-            end if
-
-            atom_idx = atom_idx + 1
-            if (atom_idx > n) then
-                ierr = 1
-                return
-            end if
-
-            ! parse: SYMBOL  X  Y  Z
-            sym = ''
-            read(line, *, iostat=ierr) sym, cx, cy, cz
-            if (ierr /= 0) return
-
-            coords(1, atom_idx) = cx
-            coords(2, atom_idx) = cy
-            coords(3, atom_idx) = cz
-
-            ! look up atomic number from SYMBOL table (case-insensitive)
-            z = 0
-            do k = 1, SYMBOL_MAX
-                if (trim(uppercase(sym)) == trim(uppercase(SYMBOL(k)))) then
-                    z = k
-                    exit
-                end if
-            end do
-            if (z == 0) then
-                ierr = 2
-                return
-            end if
-            atnum(atom_idx) = z
-
-            if (nl == 0) exit
-        end do
-    end subroutine parse_geom_block
 
     function build_keyword_line() result(text)
         character(len=:), allocatable :: text
