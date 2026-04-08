@@ -78,12 +78,12 @@ set(_PYQUICK_SO "${CMAKE_CURRENT_BINARY_DIR}/_pyquick${PYTHON_EXT_SUFFIX}")
 add_custom_command(
     OUTPUT  "${_PYQUICK_SO}"
     COMMAND ${Python3_EXECUTABLE} -m numpy.f2py
-                -c "${CMAKE_SOURCE_DIR}/src/pyquick.f90"
+                -c "${CMAKE_SOURCE_DIR}/src/pyquick/pyquick.f90"
                 "-I${CMAKE_BINARY_DIR}/amber-modules/quick/serial"
                 "-L$<TARGET_FILE_DIR:libquick>"
                 -lquick
                 -m _pyquick
-    DEPENDS libquick "${CMAKE_SOURCE_DIR}/src/pyquick.f90"
+    DEPENDS libquick "${CMAKE_SOURCE_DIR}/src/pyquick/pyquick.f90"
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     COMMENT "Building _pyquick Python extension via f2py"
     VERBATIM)
