@@ -540,14 +540,14 @@ jobs:
           cmake .. -DPYTHON=TRUE
           cmake --build . --parallel 2 --target pyquick
           cmake --install .
-      - name: 'Run pyquick smoke test'
+      - name: 'Run pyquick test'
         if: matrix.python-version
         run: |
           export PYTHONPATH=$PWD/install/lib${PYTHONPATH:+:$PYTHONPATH}
           if [ "$RUNNER_OS" == "macOS" ]; then
             export DYLD_LIBRARY_PATH=$PWD/install/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}
           fi
-          python3 test/pyquick_smoke.py
+          python3 test/pyquick_ene_H2O_rhf_sto3g.py
       - name: 'Run Tests for Serial Version'
         run: |
           if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
