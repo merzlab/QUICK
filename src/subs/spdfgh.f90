@@ -5,18 +5,18 @@
 !Vertical Recursion subroutines by hand, these parts can be optimized by MAPLE
      subroutine PSSS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
-! Integer CPMEM(10,10,0:4)
+!     double precision MEM(10,10,0:4)
+!     Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3)
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
- COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+     double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
      COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD
@@ -33,18 +33,18 @@
 
      subroutine SSPS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
-! Integer CPMEM(10,10,0:4)
+!     double precision MEM(10,10,0:4)
+!     Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3)
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
- COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+     double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
      COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD
@@ -61,18 +61,18 @@
 
      subroutine PSPS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
-! Integer CPMEM(10,10,0:4)
+!     double precision MEM(10,10,0:4)
+!     Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3)
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
- COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+     double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
      COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD
@@ -103,18 +103,18 @@
           
      subroutine DSSS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
-! Integer CPMEM(10,10,0:4)
+!     double precision MEM(10,10,0:4)
+!     Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3)
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
- COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+     double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
      COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD
@@ -155,18 +155,18 @@
 
      subroutine SSDS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
-! Integer CPMEM(10,10,0:4)
+!     double precision MEM(10,10,0:4)
+!     Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3)
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
- COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+     double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
      COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD
@@ -209,18 +209,18 @@
 
      subroutine DSPS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
-! Integer CPMEM(10,10,0:4)
+!     double precision MEM(10,10,0:4)
+!     Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
- COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+     double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
      COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD
@@ -270,17 +270,17 @@
 
      subroutine PSDS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -323,17 +323,17 @@
 
      subroutine DSDS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -390,17 +390,17 @@
 
      subroutine FSSS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -433,17 +433,17 @@
 
      subroutine SSFS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -476,17 +476,17 @@
 
      subroutine GSSS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -519,17 +519,17 @@
 
      subroutine SSGS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -563,17 +563,17 @@
 
      subroutine FSPS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
          
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
              
      COMMON /COM1/RA,RB,RC,RD
@@ -618,17 +618,17 @@
 
      subroutine PSFS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -666,17 +666,17 @@
 
      subroutine GSPS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -721,17 +721,17 @@
 
      subroutine PSGS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -770,17 +770,17 @@
 
      subroutine FSDS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
              
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
      
      COMMON /COM1/RA,RB,RC,RD
@@ -831,17 +831,17 @@
 
      subroutine DSFS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
      
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -893,17 +893,17 @@
 
      subroutine GSDS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -953,17 +953,17 @@
 
      subroutine DSGS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -1013,17 +1013,17 @@
 
      subroutine FSFS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -1076,17 +1076,17 @@
 
      subroutine GSFS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -1141,17 +1141,17 @@
 
      subroutine FSGS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -1208,17 +1208,17 @@
 
      subroutine GSGS(mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -1271,18 +1271,18 @@
 
      subroutine BSLS(IBxiao,ILxiao,mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
      integer IBxiao,ILxiao,mtemp
  
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD
@@ -1366,18 +1366,18 @@
 
      subroutine LSBS(ILxiao,IBxiao,mtemp)
      use allmod
-     Implicit real*8(a-h,o-z)
-     real*8 mem(35,35,0:8)
-!     real*8 fact
+     Implicit double precision(a-h,o-z)
+     double precision mem(35,35,0:8)
+!     double precision fact
      integer CPmem(35,35,0:8)
-! real*8 MEM(10,10,0:4)
+! double precision MEM(10,10,0:4)
 ! Integer CPMEM(10,10,0:4)
      integer IBxiao,ILxiao,mtemp
 
      integer MA(3),MB(3),NA(3),NB(3),LA(3),LB(3),B(3),Axiao(3),firstxiao,secondxiao
-     real*8 RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
-     real*8 FM(0:13)
- real*8 Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+     double precision RA(3),RB(3),RC(3),RD(3),P(3),Q(3),W(3)
+     double precision FM(0:13)
+ double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
  COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
      COMMON /COM1/RA,RB,RC,RD

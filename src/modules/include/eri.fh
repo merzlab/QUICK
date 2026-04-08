@@ -448,6 +448,7 @@ subroutine iclass_oshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
 subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
 #endif
    use allmod
+   use ISO_FORTRAN_ENV, only: int32
 
    Implicit double precision(A-H,O-Z)
    double precision store(120,120)
@@ -469,7 +470,7 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
    COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD
    COMMON /COM4/P,Q,W
    COMMON /COM5/FM
-   integer*4 A, B
+   integer(int32) :: A, B
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /xiaostore/store
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -1206,13 +1207,14 @@ end subroutine aoint
 
 subroutine addInt
    use allmod
+   use ISO_FORTRAN_ENV, only: int32
    Implicit none
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,INTNUM, INTBEG, INTTOT
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    double precision DENSEKI, DENSEKJ, DENSELJ, DENSELI, DENSELK, DENSEJI, DENSEII, DENSEJJ, DENSEKK
    integer  I,J,K,L
-   integer*4 A, B
+   integer(int32) :: A, B
    integer III1, III2, JJJ1, JJJ2, KKK1, KKK2, LLL1, LLL2
    integer NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
    logical intSkip

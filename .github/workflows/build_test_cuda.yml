@@ -1,0 +1,122 @@
+name: 'Build and Test QUICK CUDA Version'
+
+defaults:
+  run:
+    shell: bash
+
+on: workflow_dispatch
+#  push:
+#    paths-ignore:
+#      - '**.md'
+#      - '.github/workflows/build_test_serial.yml'
+#      - '.github/workflows/build_test_mpi.yml'
+#  pull_request:
+#    paths-ignore:
+#      - '**.md'
+#      - '.github/workflows/build_test_serial.yml'
+#      - '.github/workflows/build_test_mpi.yml'
+
+jobs:
+  build-and-test-cuda-cmake:
+    # The specific label for the self-hosted GPU runner
+    runs-on: [self-hosted, linux-gpu-cuda]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        # Only one configuration based on versions provided inside of runner
+          - os: 'ubuntu-22.04'
+            compiler-type: 'gnu'
+            compiler-version: '11'
+            cuda-version: '12.4'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+
+    name: ${{ matrix.os }} - CUDA ${{ matrix.cuda-version }} - CMake - ${{ matrix.compiler-type }}
+
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Setup Environment Variables for Building and Running Tests'
+        run: |
+          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
+          echo "CUDA_PATH=/usr/local/cuda-${{ matrix.cuda-version }}" >> "$GITHUB_ENV"
+          # Add CUDA binaries and libs to paths
+          echo "PATH=$PWD/install/bin:/usr/local/cuda-${{ matrix.cuda-version }}/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib:/usr/local/cuda-${{ matrix.cuda-version }}/lib64:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib:/usr/local/cuda-${{ matrix.cuda-version }}/lib64:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+          echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+          echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+
+      - name: 'Log Software Environment Configuration'
+        run: |
+          echo "OS version:"
+          cat /etc/os-release
+          echo
+          echo "Kernel version:"
+          uname -a
+          echo
+          echo "Glibc version:"
+          ldd --version
+          echo
+          echo "Fortran compiler version:"
+          ${{ matrix.fortran-compiler }} --version
+          echo
+          echo "CMake version:"
+          cmake --version
+          echo
+          echo "GPU Information:"
+          nvidia-smi
+          echo "CUDA Compiler version:"
+          nvcc --version
+
+      # cleans up in case previous builds/installs persist
+      - name: 'Cleanup Previous Builds'
+        run: |
+          rm -rf build/
+          rm -rf install/
+
+      - name: 'Configure CUDA Version'
+        run: |
+          mkdir build
+          cd build
+          cmake .. \
+            -DCOMPILER=${{ matrix.compiler-type }} \
+            -DCUDA=TRUE \
+            -DQUICK_USER_ARCH=ampere \
+            -DCMAKE_INSTALL_PREFIX=$PWD/../install \
+            -DENABLEF=TRUE
+
+      - name: 'Build and Install'
+        run: |
+          cd build
+          cmake --build . --parallel 2 --verbose
+          cmake --install .
+
+      - name: 'Run Tests'
+        run: |
+          cd install
+          ./runtest --cuda --full
+
+      - name: 'Upload Test Artifacts for CUDA Version'
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cuda-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type}}-${{ matrix.compiler-version }}-${{ matrix.cuda-version }}
+          path: |
+            ${{ github.workspace }}/install/runtest.log
+            ${{ github.workspace }}/install/test/runs/cuda
+          retention-days: 3
+          compression-level: 6
+
+      - name: 'Download Test Artifacts for CUDA Version'
+        uses: actions/download-artifact@v4
+        with:
+          name: cuda-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type}}-${{ matrix.compiler-version }}-${{ matrix.cuda-version }}
+
+      - name: 'Display Artifacts'
+        run: |
+          ls -R 

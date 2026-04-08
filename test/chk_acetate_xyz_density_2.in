@@ -1,0 +1,4 @@
+$DATA=chk_acetate_xyz_density.dat
+B3LYP CHARGE=-1 cutoff=1.0e-9 BASIS=6-31g* denserms=1.0e-6
+chk_read_coord chk_read_den ESP_CHARGE
+

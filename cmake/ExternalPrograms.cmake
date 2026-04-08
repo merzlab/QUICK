@@ -10,7 +10,14 @@ check_library_exists(dl dlopen "" HAVE_LIBDL)
 #-----------------------------------
 # M4 for XLeap
 #-----------------------------------
-find_program(M4 m4)
+if(BSD)
+	find_program(M4 gm4)
+	if(NOT M4)
+		find_program(M4 m4)
+	endif()
+else()
+	find_program(M4 m4)
+endif()
 
 #------------------------------------------------------------------------------
 #  Flex
@@ -38,5 +45,9 @@ option(CAN_BUILD_AUTOMAKE "Whether it is possible to build dependencies which us
 #------------------------------------------------------------------------------
 #  make, for configure scripts
 #------------------------------------------------------------------------------
-set(MAKE_COMMAND make CACHE STRING "Command to run to make 3rd party projects with autotools / make-based build systems.")
+if(BSD)
+	set(MAKE_COMMAND gmake CACHE STRING "Command to run to make 3rd party projects with autotools / make-based build systems.")
+else()
+	set(MAKE_COMMAND make CACHE STRING "Command to run to make 3rd party projects with autotools / make-based build systems.")
+endif()
 

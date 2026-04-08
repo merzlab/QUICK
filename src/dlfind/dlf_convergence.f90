@@ -118,9 +118,9 @@ subroutine convergence_test(icycle,tene,tconv)
     le=(svar < tole)
     if(printl>0) then
       if(le) then
-        write(stdout,'(" ENERGY CHANGE           = ",E20.10," (REQUEST= ",E12.5" )")')svar,tole
+        write(stdout,'(" ENERGY CHANGE           = ",E20.10," (REQUEST= ",E12.5," )")')svar,tole
       else
-        write(stdout,'(" ENERGY CHANGE           = ",E20.10," (REQUEST= ",E12.5" )")')svar,tole 
+        write(stdout,'(" ENERGY CHANGE           = ",E20.10," (REQUEST= ",E12.5," )")')svar,tole 
       end if
     end if
 
@@ -128,9 +128,9 @@ subroutine convergence_test(icycle,tene,tconv)
     ls=(vals < tols)
     if(printl>0) then
       if(ls) then
-        write(stdout,'(" MAXIMUM GEOMETRY CHANGE = ",E20.10," (REQUEST= ",E12.5" )")')vals,tols
+        write(stdout,'(" MAXIMUM GEOMETRY CHANGE = ",E20.10," (REQUEST= ",E12.5," )")')vals,tols
       else
-        write(stdout,'(" MAXIMUM GEOMETRY CHANGE = ",E20.10," (REQUEST= ",E12.5" )")')vals,tols
+        write(stdout,'(" MAXIMUM GEOMETRY CHANGE = ",E20.10," (REQUEST= ",E12.5," )")')vals,tols
       end if
     end if
     
@@ -138,9 +138,9 @@ subroutine convergence_test(icycle,tene,tconv)
     lrmss=(valrmss < tolrmss)
     if(printl>0) then
       if(lrmss) then
-        write(stdout,'(" GEOMETRY CHANGE RMS     = ",E20.10," (REQUEST= ",E12.5" )")')valrmss,tolrmss
+        write(stdout,'(" GEOMETRY CHANGE RMS     = ",E20.10," (REQUEST= ",E12.5," )")')valrmss,tolrmss
       else
-        write(stdout,'(" GEOMETRY CHANGE RMS     = ",E20.10," (REQUEST= ",E12.5" )")')valrmss,tolrmss
+        write(stdout,'(" GEOMETRY CHANGE RMS     = ",E20.10," (REQUEST= ",E12.5," )")')valrmss,tolrmss
       end if
     end if
     
@@ -158,9 +158,9 @@ subroutine convergence_test(icycle,tene,tconv)
   lg=(valg < tolg)
   if(printl>0) then
     if(lg) then
-      write(stdout,'(" MAXIMUM GRADIENT ELEMENT= ",E20.10," (REQUEST= ",E12.5" )")')valg,tolg
+      write(stdout,'(" MAXIMUM GRADIENT ELEMENT= ",E20.10," (REQUEST= ",E12.5," )")')valg,tolg
     else
-      write(stdout,'(" MAXIMUM GRADIENT ELEMENT= ",E20.10," (REQUEST= ",E12.5" )")')valg,tolg
+      write(stdout,'(" MAXIMUM GRADIENT ELEMENT= ",E20.10," (REQUEST= ",E12.5," )")')valg,tolg
     end if
   end if
 
@@ -168,9 +168,9 @@ subroutine convergence_test(icycle,tene,tconv)
   lrmsg=(valrmsg < tolrmsg)
   if(printl>0) then
     if(lrmsg) then
-      write(stdout,'(" GRADIENT NORM           = ",E20.10," (REQUEST= ",E12.5" )")') valrmsg,tolrmsg
+      write(stdout,'(" GRADIENT NORM           = ",E20.10," (REQUEST= ",E12.5," )")') valrmsg,tolrmsg
     else
-      write(stdout,'(" GRADIENT NORM           = ",E20.10," (REQUEST= ",E12.5" )")') valrmsg,tolrmsg
+      write(stdout,'(" GRADIENT NORM           = ",E20.10," (REQUEST= ",E12.5," )")') valrmsg,tolrmsg
     end if
   end if
 

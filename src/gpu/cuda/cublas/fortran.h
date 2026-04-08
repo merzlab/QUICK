@@ -34,8 +34,8 @@
  */
  
 /* For now, the GPU only supports a 32-bit address space, so device pointers
-   can be represented as INTEGER*4 in Fortran. In the future, device pointers
-   may become 64-bit pointers, and will have to be represented as INTEGER*8 in
+   can be represented as INTEGER(INT32) in Fortran. In the future, device pointers
+   may become 64-bit pointers, and will have to be represented as INTEGER(INT64) in
    Fortran, at which point devptr_t needs to be typedef'ed as long long.
 */
 typedef size_t devptr_t;

@@ -37,7 +37,6 @@ module quick_files_module
     character(len=80) :: dataFileName     = ''
     character(len=80) :: intFileName      = ''
     character(len=80) :: moldenFileName   = ''
-    character(len=80) :: propFileName     = ''
     character(len=80) :: espFileName      = ''
     character(len=80) :: efieldFileName   = ''
     character(len=80) :: VdwSurfFileName  = ''
@@ -69,7 +68,6 @@ module quick_files_module
     integer :: iDataFile      = DATAFILEHANDLE       ! Data file, similar to chk file in gaussian
     integer :: iIntFile       = INTFILEHANDLE        ! integral file
     integer :: iMoldenFile    = MOLDENFILEHANDLE     ! molden file
-    integer :: iPropFile      = PROPFILEHANDLE       ! properties file for esp, efield, efg, qmmm
     integer :: iESPFile       = ESPFILEHANDLE        ! properties file for esp
     integer :: iEFIELDFile    = EFIELDFILEHANDLE     ! properties file for efield
     integer :: iVdwSurfFile   = VDWSURFFILEHANDLE    ! prints the calculated vanderwaals surface
@@ -80,7 +78,6 @@ module quick_files_module
     logical :: isTemplate = .false.   ! is input file a template (i.e. only the keywords)
     integer :: wrtStep = 1            ! current step for writing to output file.
     logical :: write_molden = .false. ! flag to export data into molden format
-    logical :: write_prop = .false.   ! flag to export data into prop format
     logical :: write_esp = .false.   ! flag to export data into prop format
     logical :: write_efield = .false.   ! flag to export data into prop format
 
@@ -138,7 +135,6 @@ module quick_files_module
         dataFileName=inFileName(1:i-1)//'.dat'
         intFileName=inFileName(1:i-1)//'.int'
         moldenFileName=inFileName(1:i-1)//'.molden'
-        propFileName=inFileName(1:i-1)//'.prop'
         espFileName=inFileName(1:i-1)//'.esp'
         efieldFileName=inFileName(1:i-1)//'.efield'
         VdwSurfFileName=inFileName(1:i-1)//'.vdw'

@@ -1004,7 +1004,7 @@ end subroutine electdiis
     implicit double precision(a-h,o-z)
     logical fermidone
     integer jscf
-    real*8 :: efermi(10)
+    double precision :: efermi(10)
 
     ! Boltzmann constant in eV/Kelvin:
     boltz = 8.617335408d0*0.00001d0/27.2116d0

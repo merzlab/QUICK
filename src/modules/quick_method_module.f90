@@ -94,6 +94,11 @@ module quick_method_module
         ! this is DFT grid
         integer :: iSG = 1             ! =0. SG0, =1. SG1(DEFAULT)
 
+        ! Level shift
+        integer :: LShift_cycle = 3              ! After what cycle allow Level shifting
+        double precision :: LShift_err = 0.1d0   ! Minimum error for allowing Level shifting
+        double precision :: LShift_gap = 0.2d0   ! Maximum HOMO-LUMO gap to allow Level shifting
+
         ! Initial guess part
         logical :: SAD = .true.        ! SAD initial guess(default)
         logical :: MFCC = .false.      ! MFCC
@@ -126,6 +131,7 @@ module quick_method_module
         !tol
         double precision :: pmaxrms        = 1.0d-6   ! density matrix convergence criteria
         double precision :: basisCutoff    = 1.0d-6  ! basis set cutoff
+        double precision :: overlapCutoff  = 1.0d-5  ! cutoff for near-linear dependency
         !signif
 
         ! following are some gradient cutoff criteria
@@ -433,8 +439,8 @@ module quick_method_module
             if (self%printEnergy) write(io,'(" PRINT ENERGY EVERY CYCLE")')
 
             if (self%readDMX)   write(io,'(" READ DENSITY MATRIX FROM FILE")')
-            if (self%read_coord) write(io,'(" READ COORDINATES From DATAFILE")')
-            if (self%readden) write(io,'(" READ DENSITY MATRIX From DATAFILE")')
+            if (self%read_coord) write(io,'(" READ COORDINATES FROM DATA FILE")')
+            if (self%readden) write(io,'(" READ DENSITY MATRIX FROM DATA FILE")')
             if (self%writeden) write(io,'(" WRITE DENSITY MATRIX TO DATA FILE")')
             if (self%writexyz) write(io,'(" WRITE COORDINATES TO DATA FILE")')
             if (self%readSAD)   write(io,'(" READ SAD GUESS FROM FILE")')
@@ -454,6 +460,10 @@ module quick_method_module
                 if (self%iSG .eq. 0) write(io,'(" STANDARD GRID = SG0")')
                 if (self%iSG .eq. 1) write(io,'(" STANDARD GRID = SG1")')
             endif
+
+           write(io,'(" Level shifting allowed after cycle ", I4)') self%LShift_cycle
+           write(io,'(" DIIS error must exceed ", F5.3," for level shifting")') self%LShift_err
+           write(io,'(" Max HOMO-LUMO gap to allow level shifting = ", F5.3)') self%LShift_gap
 
             if (self%opt) then
                 write(io,'(" GEOMETRY OPTIMIZATION")',advance="no")
@@ -486,12 +496,12 @@ module quick_method_module
             ! computing esp, efield and efg
             if (self%esp_charge)then
               write(io,'(" ESP CHARGE CALCULATION")')
-              write(io,'(" ESP grids are created at " F5.3 " A spacing ")') self%espgrid_spacing
+              write(io,'(" ESP grids are created at ", F5.3, " A spacing ")') self%espgrid_spacing
               if (self%vdw_radii == "BONDI")then
-                write(io,'(" Van der waals radii for ESP charges are obtained from " A)') &
+                write(io,'(" Van der waals radii for ESP charges are obtained from ", A)') &
                   "J. Phys. Chem. 1964, 68, 3, 441–451"
               else if (self%vdw_radii == "TC")then
-                write(io,'(" Van der waals radii for ESP charges are obtained from " A)') &
+                write(io,'(" Van der waals radii for ESP charges are obtained from ", A)') &
                   "J. Chem. Theory Comput. 2024, 20, 17, 7469–7478"
               else
                 call PrtErr(OUTFILEHANDLE, 'The keyword vdw_radii has unknown value. Please use either BONDI or TC.')
@@ -524,10 +534,11 @@ module quick_method_module
 
             ! cutoff size
             write (io,'(" COMPUTATIONAL CUTOFF: ")')
-            write (io,'("      TWO-e INTEGRAL   = ",E10.3)') self%integralcutoff
-            write (io,'("      BASIS SET PRIME  = ",E10.3)') self%primLimit
-            write (io,'("      MATRIX ELEMENTS  = ",E10.3)') self%DMCutoff
-            write (io,'("      BASIS FUNCTION   = ",E10.3)') self%basisCutoff
+            write (io,'("      TWO-e INTEGRAL         = ",E10.3)') self%integralcutoff
+            write (io,'("      BASIS SET PRIME        = ",E10.3)') self%primLimit
+            write (io,'("      MATRIX ELEMENTS        = ",E10.3)') self%DMCutoff
+            write (io,'("      BASIS FUNCTION         = ",E10.3)') self%basisCutoff
+            write (io,'("      NEAR-LINEAR DEPENDENCY = ",E10.3)') self%overlapCutoff
             if (self%grad) then
                 write (io,'("      GRADIENT CUTOFF  = ",E10.3)') self%gradCutoff
             endif
@@ -679,9 +690,11 @@ module quick_method_module
             end if
             if (index(keyWD,'ZMAKE').ne.0)      self%zmat=.true.
             if (index(keyWD,'DIPOLE').ne.0)     self%dipole=.true.
-            if (index(keyWD,'WRITE').ne.0)then
-                self%writeden=.true.
-                self%writexyz=.true.
+            if (index(keyWD,'CHK_WRITE_DEN').ne.0) then
+                self%writeden = .true.
+            end if
+            if (index(keyWD,'CHK_WRITE_XYZ').ne.0) then
+                self%writexyz = .true.
             end if
 
             if (index(keyWD,'EXTCHARGES').ne.0) self%EXTCHARGES=.true.
@@ -704,10 +717,14 @@ module quick_method_module
             endif
 
             !Read density matrix
-            if (index(keyWD,'READDEN').ne.0) self%readden=.true.
+            if (index(keyWD,'CHK_READ_DEN').ne.0)then
+               self%readden=.true.
+            endif
 
             !Read coordinates
-            if (index(keyWD,'READ_COORD').ne.0) self%read_coord=.true.
+            if (index(keyWD,'CHK_READ_COORD').ne.0)then
+              self%read_coord=.true.
+            endif
 
             if (self%DFT) then
                 if (index(keyWD,'SG0').ne.0) then
@@ -764,6 +781,11 @@ module quick_method_module
             if (index(keywd,'CUTOFF') /= 0) then
                 call read(keywd, 'CUTOFF', self%integralCutoff)
                 self%primLimit=self%integralCutoff*1.0d-1
+            endif
+
+            ! Overlap-cutoff
+            if (index(keywd,'OVCUT') /= 0) then
+                call read(keywd, 'OVCUT', self%overlapCutoff)
             endif
 
             ! Grad cutoff
@@ -824,7 +846,9 @@ module quick_method_module
             if (index(keyWD,'BASIS=').ne.0)  then
                 tempstring=' '
                 call read(keywd, 'BASIS', tempstring)
-                if(index(tempstring,'+') /= 0) self%diffuse_basis_funcs=.true.
+                if(index(tempstring,'+') /= 0 .or. index(tempstring,'AUG-') /= 0 .or. &
+                   (index(tempstring,'DEF2-') /= 0 .and. &
+                    tempstring(len_trim(tempstring):len_trim(tempstring)) == 'D') ) self%diffuse_basis_funcs=.true.
             endif
 
             if (index(keyWD,'COARSEINT').ne.0) self%coarse_cutoff=.true.
@@ -868,6 +892,15 @@ module quick_method_module
            if (index(keyWD,'EXTGRID_ANGSTROM').ne.0) then
                self%extgrid_angstrom=.true.
                self%ext_grid=.true.
+           endif
+           if (index(keyWD,'LSHIFT_CYCLE').ne.0) then
+               call read(keywd,'LSHIFT_CYCLE', self%LShift_cycle)
+           endif
+           if (index(keyWD,'LSHIFT_ERR').ne.0) then
+               call read(keywd,'LSHIFT_ERR', self%LShift_err)
+           endif
+           if (index(keyWD,'LSHIFT_GAP').ne.0) then
+               call read(keywd,'LSHIFT_GAP', self%LShift_gap)
            endif
         end subroutine read_quick_method
 
@@ -919,6 +952,10 @@ module quick_method_module
             self%efield_grid = .false.     ! Electric field (EFIELD) evaluated on grid
             self%efg_grid = .false.        ! Electric field gradient (EFG)
 
+            self%LShift_cycle = 3     ! After what cycle allow Level shifting
+            self%LShift_err = 0.1d0   ! Minimum error for allowing Level shifting
+            self%LShift_gap = 0.2d0   ! HOMO-LUMO gap after Level shifting
+
             self%diisOpt =  .false.  ! DIIS Optimization
             self%core =  .false.     !
             self%annil =  .false.    !
@@ -966,6 +1003,7 @@ module quick_method_module
 
             self%pmaxrms        = 1.0d-6   ! density matrix convergence criteria
             self%basisCutoff    = 1.0d-6  ! basis set cutoff
+            self%overlapCutoff  = 1.0d-5  ! Near-linear dependency check cutoff
 
             self%stepMax        = .1d0/0.529177249d0
                                            ! max change of one step
@@ -1156,7 +1194,7 @@ module quick_method_module
             .and. (index(functional_name,'mgga') .eq. 0))  then
                 functional_name=trim(functional_name)
 
-                call upcase(functional_name,300)
+                call upcase(functional_name,256)
 
                 if((trim(functional_name) == trim(func1)) .or. (trim(functional_name) == trim(func2))) then 
                         nof_f=nof_f+1

@@ -1,150 +1,62 @@
 #include "util.fh"
-!
-!	diag.f90
-!	new_quick
-!
-!	Created by Yipu Miao on 2/23/11.
-!	Copyright 2011 University of Florida. All rights reserved.
-!
 
-!-----------------------------------------------------------
-! Diag
-!------------------------------------------------------------
-! S. Dixon's diagonalization code from DivCon.
-! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
-!-----------------------------------------------------------
+  !---------------------------------------------------------------------!
+  ! Written by Chi Jin on 02/16/2021                                    !
+  !                                                                     !
+  ! Copyright (C) 2020-2021 Merz lab                                    !
+  ! Copyright (C) 2020-2021 Götz lab                                    !
+  !                                                                     !
+  ! This Source Code Form is subject to the terms of the Mozilla Public !
+  ! License, v. 2.0. If a copy of the MPL was not distributed with this !
+  ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
+  !_____________________________________________________________________!
 
-SUBROUTINE DIAG(NDIM,A,NEVEC1,TOLERA,V,EVAL1,IDEGEN1,EVEC1, &
-     IERROR)
+  !---------------------------------------------------------------------!
+  ! This source file contains methods required for MKL or OPENBLAS      !
+  ! installation. The subroutine provides an alternative diagonalizer   !
+  ! as a wrapper of the dsyev function built in MKL and OPENBLAS.       !
+  !                                                                     !
+  !---------------------------------------------------------------------!
 
-  ! DRIVER ROUTINE FOR DIAGONALIZATION OF THE REAL, SYMMETRIC,
-  ! MATRIX A.
+SUBROUTINE CPU_DIAG(A, N, M, EVAL, EVEC, IERROR)
+  implicit none
 
-  ! VARIABLES REQUIRED:
-  ! ------------------
+  integer, intent(in) :: N, M
+  integer, intent(out) :: IERROR
+  double precision, intent(in) :: A(N,M)
+  double precision, intent(out) :: EVEC(N,M), EVAL(M)
 
-  ! NDIM = ORDER OF THE MATRIX A (I.E., A IS NDIM BY NDIM);
+  integer :: LWMAX, LDA, LWORK, LIWORK  
+  integer, allocatable, dimension(:) :: IWORK
+  double precision, allocatable, dimension(:):: WORK
 
-  ! A = REAL SYMMETRIC MATRIX TO BE DIAGONALIZED.  ONLY THE LOWER
-  ! HALF OF A NEED BE FILLED WHEN CALLING.  A IS DESTROYED BY
-  ! THIS ROUTINE.
+  LDA = N
+  LWMAX = 1+2*N+6*N**2
+  EVEC = A
 
-  ! NEVEC1 = THE NUMBER OF EIGENVECTORS REQUIRED;
+  allocate(IWORK(LWMAX))
+  allocate(WORK(LWMAX))
 
-  ! TOLERA = TOLERANCE FACTOR USED IN THE QR ITERATION TO DETERMINE
-  ! WHEN OFF-DIAGONAL ENTRIES ARE ESSENTIALLY ZERO.  (DEFAULT
-  ! IS 1.0D-8).
-
-  ! V = 3 BY NDIM WORKSPACE.
-
-
-  ! VARIABLES RETURNED:
-  ! ------------------
-
-  ! EVAL1 = EIGENVALUES OF A (SORTED IN INCREASING ALGEBRAIC VALUE);
-
-  ! IDEGEN1 = DEGENERACIES (NUMBER OF TIMES REPEATED) FOR EIGENVALUES;
-
-  ! EVEC1 = EIGENVECTORS OF A (IN COLUMNS OF EVEC1);
-
-  ! ERROR CODES:  IERROR=0 - SUCCESSFUL CALCULATION.
-  ! IERROR=1 - NO CONVERGENCE IN QR ITERATION.
-
-
-  ! PROGRAMMED BY S. L. DIXON, OCT., 1991.
-
-
-  !    use allmod
-  IMPLICIT doUBLE PRECISION (A-H,O-Z)
-  ! DIMENSION A(NDIM,*),V(3,*),EVAL1(*),IDEGEN1(*),EVEC1(NDIM,*)
-  !    DIMENSION A(nbasis,nbasis),V(3,nbasis),EVAL1(nbasis), &
-  !    IDEGEN1(nbasis),EVEC1(nbasis,nbasis)
-
-  DIMENSION A(NDIM,NDIM),V(3,NDIM),IDEGEN1(NDIM),EVAL1(NDIM)
-  DIMENSION EVEC1(NDIM,NDIM)
-
-  ! FLAG FOR WHETHER OR NOT TO COMPUTE EIGENVALUES:
-
-
-  if(NDIM == 1)then
-     EVAL1(1) = A(1,1)
-     IDEGEN1(1) = 1
-     EVEC1(1,1) = 1.0D0
+  if(N == 1)then
+     EVAL(1) = A(1,1)
+     EVEC(1,1) = 1.0D0
      RETURN
   endif
+ 
+  ! Query the optimal workspace
+  LWORK = -1
+  LIWORK = -1
+  call dsyevd('Vectors', 'Upper', N, EVEC, LDA, EVAL, WORK, LWORK, &
+          IWORK, LIWORK, IERROR)
+  LWORK = min(LWMAX, int(WORK(1)))
+  LIWORK = min(LWMAX, IWORK(1))
 
-  ! TRIDIAGONALIZE THE MATRIX A.  THIS WILL OVERWRITE THE DIAGONAL
-  ! AND SUBDIAGONAL OF A WITH THE TRIDIAGONALIZED VERSION.  THE
-  ! HOUSEHOLDER VECTORS ARE RETURNED IN THE ROWS ABOVE THE DIAGONAL,
-  ! AND THE BETAHS ARE RETURNED BELOW THE SUBDIAGONAL.
+  ! Solve eigenproblem
+  call dsyevd('Vectors', 'Upper', N, EVEC, LDA, EVAL, WORK, LWORK, &
+          IWORK, LIWORK, IERROR)
 
-  CALL TRIDI(NDIM,V,A)
+  deallocate(IWORK)
+  deallocate(WORK)
 
-  ! COMPUTE NORM OF TRIDIAGONAL MATRIX FROM THE "LARGEST" COLUMN.
-
-  ANORM = ABS(A(1,1)) + ABS(A(2,1))
-  if(NDIM > 2)then
-     do 20 I=2,NDIM-1
-        AICOL = ABS(A(I-1,I)) + ABS(A(I,I)) + ABS(A(I+1,I))
-        ANORM = MAX(ANORM,AICOL)
-20   enddo
-  endif
-  ANCOL = ABS(A(NDIM-1,NDIM)) + ABS(A(NDIM,NDIM))
-  ANORM = MAX(ANORM,ANCOL)
-
-  ! GET EIGENVALUES AND DEGENERACIES OF THE TRIDIAGONAL MATRIX A.
-  ! if THE CALLING ROUTINE HAS NOT SUPPLIED A TOLERANCE FACTOR FOR
-  ! OFF-DIAGONAL ENTRIES IN THE QR ITERATION, A DEFAULT OF 1.0D-8
-  ! WILL BE USED.
-
-  TOLTMP = TOLERA
-  if(TOLTMP <= 0.0D0) TOLTMP = 1.0D-8
-  CALL EIGVAL(NDIM,A,V,TOLTMP,ANORM,EVAL1,IERROR)
-  if(IERROR /= 0) RETURN
-
-  ! DETERMINE DEGENERACIES OF EIGENVALUES.
-
-  CALL DEGEN(NDIM,EVAL1,TOLTMP,ANORM,IDEGEN1)
-
-  ! GET EIGENVECTORS OF TRIDIAGONALIZED VERSION OF A.
-
-  if(NEVEC1 <= 0) RETURN
-  CALL EIGVEC(NDIM,NEVEC1,A,V,TOLTMP,ANORM,EVAL1,IDEGEN1,EVEC1)
-
-  ! PREMULTIPLY EVEC1 BY THE HOUSEHOLDER MATRIX USED TO TRIDIAGONALIZE
-  ! A.  THIS TRANSFORMS EIGENVECTORS OF THE TRIDIAGONAL MATRIX TO
-  ! THOSE OF THE ORIGINAL MATRIX A.  SEE SUBROUTINE TRIDI FOR
-  ! STORAGE OF HOUSEHOLDER TRANSFORMATION.
-
-  if(NDIM > 2)then
-     do 30 K=1,NDIM-2
-        V(1,K) = A(K+2,K)
-30   enddo
-
-     ! SWAP STORAGE SO THAT THE EXPENSIVE TRIPLE LOOP BELOW doESN'T
-     ! HAVE TO JUMP ACROSS COLUMNS TO GET ENTRIES OF A.
-
-     do 50 I=2,NDIM
-        do 40 J=1,I-1
-           A(I,J) = A(J,I)
-40      enddo
-50   enddo
-     do 160 J=1,NEVEC1
-        do 140 M=2,NDIM-1
-           K = NDIM - M
-           BETAH = V(1,K)
-           !                if(ABS(BETAH) < 1.0D-50) GO TO 140
-           if(ABS(BETAH) < 1.0D-50) CONTINUE
-           SUM = 0.0D0
-           do 100 I=K+1,NDIM
-              SUM = SUM + A(I,K)*EVEC1(I,J)
-100        enddo
-           BSUM = BETAH*SUM
-           do 120 I=K+1,NDIM
-              EVEC1(I,J) = EVEC1(I,J) - A(I,K)*BSUM
-120        enddo
-140     enddo
-160  enddo
-  endif
   RETURN
-end SUBROUTINE DIAG
+end SUBROUTINE CPU_DIAG

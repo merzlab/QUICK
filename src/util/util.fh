@@ -29,10 +29,9 @@
 #define DATAFILEHANDLE       2029
 #define INTFILEHANDLE        2030
 #define MOLDENFILEHANDLE     2031
-#define PROPFILEHANDLE       2032
-#define ESPFILEHANDLE        2033
-#define EFIELDFILEHANDLE     2034
-#define VDWSURFFILEHANDLE    2035
+#define ESPFILEHANDLE        2032
+#define EFIELDFILEHANDLE     2033
+#define VDWSURFFILEHANDLE    2034
 
 
 ! For the following definitions to work, one must use quick_exception_module

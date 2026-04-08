@@ -28,7 +28,7 @@ module quick_rocsolver_module
 contains
 
     ! Driver for dsyevd, similar to DIAG and DIAGMKL. 
-    subroutine quick_rocsolver_dsyevd(n, A, Eval, Evec, ierr)
+    subroutine quick_rocsolver_dsyevd(A, n, m, eval, evec, ierr)
 
         use iso_c_binding
         use rocblas
@@ -40,10 +40,10 @@ contains
 
         implicit none
 
-        integer, intent(in) :: n  ! Number of rows and columns of matrix A.
-        double precision, dimension(n,n), intent(in) :: A ! Matrix to diagonalize   
-        double precision, dimension(n), intent(out) :: Eval ! Resulting eigenvalues
-        double precision, dimension(n,n), intent(out) :: Evec ! Resulting eigenvectors
+        integer, intent(in) :: n, m  ! Number of rows and columns of matrix A.
+        double precision, dimension(n,m), intent(in) :: A ! Matrix to diagonalize   
+        double precision, dimension(m), intent(out) :: eval ! Resulting eigenvalues
+        double precision, dimension(n,m), intent(out) :: evec ! Resulting eigenvectors
         integer, intent(out) :: ierr ! error code, HIPCHECK should handle the errors here, but pass this anyway
 
         integer :: i, j ! indices for iterating over results
@@ -65,7 +65,7 @@ contains
         uplo = rocblas_fill_lower
         rb_n = n
         rb_lda = n
-        size_A=n*n    
+        size_A=n*m    
         hA = reshape(A, (/size_A/))
 
         if(.not. allocated(hinfo)) allocate(hinfo(1))
@@ -97,15 +97,15 @@ contains
         call HIP_CHECK(hipMemcpy(c_loc(hinfo), dinfo, int(1, c_size_t)  * 4, 2))
    
         ! Transfer result
-        Eval = hB(1:n)
-        Evec = reshape(hA, (/n, n/))         
+        eval = hB(1:m)
+        evec = reshape(hA, (/n, m/))         
 
         !write(*,*) ""
 
         !Output results
-        !do i = 1,n
+        !do i = 1,m
         !  do j=1,n
-        !    write(*,*) "DSYEVD", i, j, A(j,i), Evec(j,i), Eval(j), hC(n*(i-1)+j) 
+        !    write(*,*) "DSYEVD", i, j, A(j,i), evec(j,i), eval(j), hC(n*(i-1)+j) 
         !  enddo
         !end do    
     

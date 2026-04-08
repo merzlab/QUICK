@@ -156,9 +156,9 @@ function overlap(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) result(o
 
    implicit none
    ! INPUT PARAMETERS
-   double precision a,b                 ! exponent of basis set 1 and 2
-   integer i,j,k,ii,jj,kk               ! i,j,k are itype for basis set 1 and ii,jj,kk for 2
-   double precision Ax,Ay,Az,Bx,By,Bz   ! Ax,Ay,Az are position for basis set 1 and Bx,By,Bz for 2
+   double precision :: a,b                               ! exponent of basis set 1 and 2
+   integer i,j,k,ii,jj,kk                                ! i,j,k are itype for basis set 1 and ii,jj,kk for 2
+   double precision :: Ax,Ay,Az,Bx,By,Bz                 ! Ax,Ay,Az are position for basis set 1 and Bx,By,Bz for 2
 
    ! INNER VARIBLES
    double precision g_table(200)
@@ -174,14 +174,6 @@ subroutine fullx
    !   matrix X.  The first step is forming the overlap matrix (Smatrix).
    !
    use allmod
-#if defined(HIP) || defined(HIP_MPIV)
-     use quick_rocblas_module, only: rocDGEMM
-#if defined(WITH_MAGMA)
-     use quick_magma_module, only: magmaDIAG
-#elif defined(WITH_ROCSOLVER)
-     use quick_rocsolver_module, only: rocDIAG
-#endif
-#endif
 
    implicit none
 
@@ -241,34 +233,8 @@ subroutine fullx
 
    ! Now diagonalize HOLD to generate the eigenvectors and eigenvalues.
    RECORD_TIME(timer_begin%T1eSD)
-
-#if defined(CUDA) || defined(CUDA_MPIV)
-   call cuda_diag(quick_scratch%hold, quick_scratch%tmpx, quick_scratch%tmphold, &
-   quick_scratch%Sminhalf, quick_scratch%IDEGEN1, quick_scratch%hold2, quick_scratch%tmpco, quick_scratch%V, nbasis)
-#else
-#if defined(HIP) || defined(HIP_MPIV)
-#if defined(WITH_MAGMA)
-   call magmaDIAG(nbasis, quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, IERROR)
-#elif defined(WITH_ROCSOLVER)
-   call rocDIAG(nbasis, quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, IERROR)
-#else
-#if defined(LAPACK) || defined(MKL)
-   call DIAGMKL(nbasis, quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, IERROR)
-#else
-   call DIAG(NBASIS, quick_scratch%hold, NBASIS,quick_method%DMCutoff, quick_scratch%V, quick_scratch%Sminhalf, &
-   quick_scratch%IDEGEN1, quick_scratch%hold2, IERROR)
-#endif
-#endif
-#else
-#if defined(LAPACK) || defined(MKL)
-   call DIAGMKL(nbasis, quick_scratch%hold, quick_scratch%Sminhalf, quick_scratch%hold2, IERROR)
-#else
-   call DIAG(NBASIS, quick_scratch%hold, NBASIS,quick_method%DMCutoff, quick_scratch%V, quick_scratch%Sminhalf, &
-   quick_scratch%IDEGEN1, quick_scratch%hold2, IERROR)
-#endif
-#endif
-#endif
-
+   call MAT_DIAG(quick_scratch%hold, nbasis, nbasis, quick_scratch%Sminhalf, &
+           quick_scratch%hold2)
    RECORD_TIME(timer_end%T1eSD)
    timer_cumer%T1eSD = timer_cumer%T1eSD + timer_end%T1eSD - timer_begin%T1eSD
 
@@ -304,24 +270,79 @@ subroutine fullx
    ! half. (Lower Diagonal)
 
    do I=1,nbasis
-      if (quick_scratch%Sminhalf(I).gt.1E-4) then
-      quick_scratch%tmphold(i,i)= quick_scratch%Sminhalf(I)**(-.5d0)
+      if (quick_scratch%Sminhalf(I).gt.quick_method%overlapCutoff) then
+         NBSuse = nbasis - I + 1
+
+         !
+         !  Detected near-linear dependency
+         !
+         if (NBSuse.ne.nbasis)then
+
+            quick_qm_struct%NBSuse => NBSuse
+
+            allocate(quick_scratch%tmpS(NBSuse,NBSuse))
+            allocate(quick_scratch%tmpU(nbasis,NBSuse))
+
+            quick_scratch%tmpS = 0.0d0
+            quick_scratch%tmpU = 0.0d0
+
+            write(ioutfile,'("| Number of total basis functions:",2X,i5)') nbasis
+            write(ioutfile,'("| Number of linearly independent basis functions:",2X,i5)') NBSuse
+            write(ioutfile,'("| condition number of overlap matrix:",2X,es11.3)') &
+                            maxval(quick_scratch%Sminhalf)/minval(quick_scratch%Sminhalf)
+            write(ioutfile,'("| Smallest eigenvalue of overlap matrix:",2X,es11.3)') minval(quick_scratch%Sminhalf)
+            write(ioutfile,'()')
+
+            do J=I,nbasis
+               quick_scratch%tmpS(J-I+1,J-I+1)= quick_scratch%Sminhalf(J)**(-.5d0)
+               do K=1,nbasis
+#if defined(CUDA)
+                  quick_scratch%tmpU(K,J-I+1)= (-1)*quick_scratch%hold2(K,J)
+#else
+                  quick_scratch%tmpU(K,J-I+1)= quick_scratch%hold2(K,J)
+#endif
+               enddo
+            enddo
+         !
+         ! No near-linear dependency
+         !
+         else
+            quick_qm_struct%NBSuse => nbasis
+
+            write(ioutfile,'("| condition number of overlap matrix:",2X,es11.3)') &
+                            maxval(quick_scratch%Sminhalf)/minval(quick_scratch%Sminhalf)
+            write(ioutfile,'("| Smallest eigenvalue of overlap matrix:",2X,es11.3)') minval(quick_scratch%Sminhalf)
+            write(ioutfile,'()')
+
+            do J=1,nbasis
+               quick_scratch%tmphold(J,J) = quick_scratch%Sminhalf(J)**(-.5d0)
+            enddo
+
+         endif
+
+         exit
+
       endif
    enddo
 
-#if defined(GPU) || defined(MPIV_GPU)
-   call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0,quick_scratch%hold2, &
-   nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%tmpco,nbasis)
+   call allocate_quick_qm_struct_fullx(quick_qm_struct)
 
-   call GPU_DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0,quick_scratch%tmpco, &
-   nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%x,nbasis)
-#else
-   call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
-   nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%tmpco,nbasis)
+   if (NBSuse.ne.nbasis)then
 
-   call DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmpco, &
-   nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%x,nbasis)
-#endif
+      call MAT_DGEMM ('n', 'n', nbasis, NBSuse, NBSuse, 1.0d0, quick_scratch%tmpU, &
+           nbasis, quick_scratch%tmpS, NBSuse, 0.0d0, quick_qm_struct%x,nbasis)
+
+      deallocate(quick_scratch%tmpS)
+      deallocate(quick_scratch%tmpU)
+
+   else
+
+      call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
+           nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%tmpco,nbasis)
+      call MAT_DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmpco, &
+           nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%x,nbasis)
+
+   endif
 
    ! Transpose U onto X then copy on to U.  Now U contains U transpose.
 

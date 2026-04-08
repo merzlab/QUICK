@@ -402,28 +402,29 @@ extern "C" void gpu_init_device_(int* ierr)
 }
 
 
-extern "C" void gpu_get_device_info_(int* gpu_dev_count, int* gpu_dev_id, int* gpu_dev_mem,
-        int* gpu_num_proc, double* gpu_core_freq, char* gpu_dev_name, int* name_len,
-        int* majorv, int* minorv, int* ierr)
+extern "C" void gpu_get_device_info_(int *gpu_dev_count, int *gpu_dev_id, int *gpu_dev_mem,
+        int *gpu_num_proc, double *gpu_core_freq, char *gpu_dev_name, int *name_len,
+        int *majorv, int *minorv, int *ierr)
 {
     cudaError_t error;
     cudaDeviceProp prop;
+    int gpu_clockrate_khz;
     size_t device_mem;
 
     *gpu_dev_id = gpu->gpu_dev_id;  // currently one GPU is supported
     error = cudaGetDeviceCount(gpu_dev_count);
-    PRINTERROR(error,"cudaGetDeviceCount gpu_get_device_info failed!");
-    if (*gpu_dev_count == 0)
-    {
+    PRINTERROR(error, "cudaGetDeviceCount gpu_get_device_info failed!");
+    if (*gpu_dev_count == 0) {
         *ierr = 24;
         return;
     }
-    cudaGetDeviceProperties(&prop,*gpu_dev_id);
+    cudaGetDeviceProperties(&prop, *gpu_dev_id);
     device_mem = (prop.totalGlobalMem / (1024 * 1024));
     *gpu_dev_mem = (int) device_mem;
     *gpu_num_proc = (int) (prop.multiProcessorCount);
-    *gpu_core_freq = (double) (prop.clockRate * 1e-6f);
-    strcpy(gpu_dev_name,prop.name);
+    cudaDeviceGetAttribute(&gpu_clockrate_khz, cudaDevAttrClockRate, *gpu_dev_id);
+    *gpu_core_freq = (double) (gpu_clockrate_khz * 1e-6f);
+    strcpy(gpu_dev_name, prop.name);
     *name_len = strlen(gpu_dev_name);
     *majorv = prop.major;
     *minorv = prop.minor;
@@ -648,6 +649,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu->gpu_xcq->ntotbf = 0;
     gpu->gpu_xcq->ntotpf = 0;
     gpu->gpu_xcq->bin_size = 0;
+    gpu->gpu_xcq->gridx = NULL;
     gpu->gpu_xcq->gridy = NULL;
     gpu->gpu_xcq->gridz = NULL;
     gpu->gpu_xcq->sswt = NULL;
@@ -678,6 +680,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu->gpu_xcq->dphidz = NULL;
     gpu->gpu_xcq->phi_loc = NULL;
     gpu->gpu_xcq->npoints_ssd = 0;
+    gpu->gpu_xcq->gridx_ssd = NULL;
     gpu->gpu_xcq->gridy_ssd = NULL;
     gpu->gpu_xcq->gridz_ssd = NULL;
     gpu->gpu_xcq->exc_ssd = NULL;
@@ -2192,6 +2195,7 @@ extern "C" void gpu_upload_lri_(QUICKDouble* zeta, QUICKDouble* cc, int *ierr)
 }
 
 
+#if defined(CEW)
 //-----------------------------------------------
 //  upload information for CEW quad calculation
 //-----------------------------------------------
@@ -2208,16 +2212,17 @@ extern "C" void gpu_upload_cew_vrecip_(int *ierr)
 
         QUICKDouble vrecip = 0.0;
 
-#ifdef CEW
         cew_getpotatpt_(gridpt, &vrecip);
-#endif
 
         gpu->lri_data->vrecip->_hostData[i] = -vrecip;
     }
 
     gpu->lri_data->vrecip->Upload();
     gpu->gpu_sim.cew_vrecip = gpu->lri_data->vrecip->_devData;
+
+    delete[] gridpt;
 }
+#endif
 
 
 //Computes grid weights before grid point packing
@@ -3043,6 +3048,10 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
             intERIEntry[ERIEntryByBasisIndex[III]] = intERIEntry_tmp[i];
             ERIEntryByBasisIndex[III]++;
         }
+
+        delete[] intERIEntry_tmp;
+        delete[] ERIEntryByBasis;
+        delete[] ERIEntryByBasisIndex;
 
         debut = false;
         totalBuffer = bufferIndex;

@@ -286,7 +286,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
   quick_molspec%iAtomType = quick_api%natm_type
 
   ! allocate memory for coordinates and charges in molspec
-  SAFE_CALL(alloc(quick_molspec,ierr))
+  SAFE_CALL(alloc(quick_molspec, quick_method%read_coord, ierr))
 
 end subroutine set_quick_job
 

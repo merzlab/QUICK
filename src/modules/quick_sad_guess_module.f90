@@ -118,7 +118,8 @@ contains
            quick_molspec%nelec = quick_molspec%iattype(1)
            if ((quick_method%DFT .OR. quick_method%SEDFT).and.quick_method%isg.eq.1) &
                  call gridformSG1()
-           call check_quick_method_and_molspec(ioutfile,quick_molspec,quick_method)
+           call check_quick_method_and_molspec(ioutfile,quick_molspec,quick_method,ierr)
+           CHECK_ERROR(ierr)
   
            !-------------------------------------------
            ! At this point we have the positions and identities of the atoms. We also
@@ -712,9 +713,8 @@ contains
   
         ! Now diagonalize the operator matrix.
   
-        call DIAG(nbasis,quick_qm_struct%o,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%E,&
-              quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
-
+        call MAT_DIAG(quick_qm_struct%o, nbasis, nbasis, quick_qm_struct%E, &
+                quick_qm_struct%vec)
   
         ! Calculate C = XC' and form a new density matrix.
         ! The C' is from the above diagonalization.  Also, save the previous
@@ -775,8 +775,8 @@ contains
 
         ! Now diagonalize the operator matrix.
 
-        call DIAG(nbasis,quick_qm_struct%ob,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%EB,&
-              quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
+        call MAT_DIAG(quick_qm_struct%ob, nbasis, nbasis, quick_qm_struct%EB, &
+                quick_qm_struct%vec)
 
         ! Calculate C = XC' and form a new density matrix.
         ! The C' is from the above diagonalization.  Also, save the previous

@@ -32,8 +32,11 @@ module quick_calculated_module
    ! the elements will be introduced following
    type quick_qm_struct_type
 
-      ! Basis Set Number
+      ! number of basis functions
       integer,pointer :: nbasis
+
+      ! number of basis functions accounting for near-linear dependency
+      integer,pointer :: NBSuse
 
       ! overlap matrix, will be calculated once, independent on
       ! orbital coefficent. Its dimension is nbasis*nbasis
@@ -48,6 +51,12 @@ module quick_calculated_module
 
       ! operator matrix, the dimension is nbasis*nbasis. For HF, it's Fock Matrix
       double precision,dimension(:,:), allocatable :: o
+
+      ! effective operator matrix if basis functions are eliminated to remove near-linear dependency
+      double precision,dimension(:,:), allocatable :: oeff
+
+      ! effective beta operator matrix if basis functions are eliminated to remove near-linear dependency
+      double precision,dimension(:,:), allocatable :: oeffb
 
       ! matrix for saving XC potential, required for incremental KS build
       double precision,dimension(:,:), allocatable :: oxc 
@@ -76,6 +85,14 @@ module quick_calculated_module
       ! matrix to hold eigenvectors after diagonalization,
       ! the dimension is nbasis*nbasis.
       double precision,dimension(:,:), allocatable :: vec
+
+      ! matrix to hold eigenvectors for level shifting,
+      ! the dimension is NBSuse*NBSuse.
+      double precision,dimension(:,:), allocatable :: oldvec
+
+      ! matrix to hold beta eigenvectors for level shifting,
+      ! the dimension is NBSuse*NBSuse.
+      double precision,dimension(:,:), allocatable :: oldvecb
 
       ! Density matrix, when it's unrestricted system, it presents alpha density
       ! the dimension is nbasis*nbasis.
@@ -176,7 +193,7 @@ module quick_calculated_module
 
    end type quick_qm_struct_type
 
-   type (quick_qm_struct_type) quick_qm_struct
+   type (quick_qm_struct_type), target :: quick_qm_struct
 
    !----------------------
    ! Interface
@@ -216,6 +233,54 @@ module quick_calculated_module
 contains
 
    !--------------------------------------
+   ! subroutine to allocate arrays whose
+   ! dimensions depend on near-linear
+   ! dependency
+   !--------------------------------------
+   subroutine allocate_quick_qm_struct_fullx(self)
+       use quick_molspec_module, only: quick_molspec
+       use quick_method_module,  only: quick_method
+
+       implicit none
+
+       type (quick_qm_struct_type) self
+
+       ! alpha fields
+       if(self%NBSuse.ne.self%nbasis) then
+           if(.not. allocated(self%oeff)) allocate(self%oeff(self%NBSuse,self%NBSuse))
+           self%oeff = 0.0d0
+       endif
+       if(.not. allocated(self%x))      allocate(self%x(self%nbasis,self%NBSuse))
+       if(.not. allocated(self%vec))    allocate(self%vec(self%NBSuse,self%NBSuse))
+       if(.not. allocated(self%oldvec)) allocate(self%oldvec(self%NBSuse,self%NBSuse))
+       if(.not. allocated(self%co))     allocate(self%co(self%nbasis,self%NBSuse))
+       if(.not. allocated(self%E))      allocate(self%E(self%NBSuse))
+
+       self%x      = 0.0d0
+       self%vec    = 0.0d0
+       self%oldvec = 0.0d0
+       self%co     = 0.0d0
+       self%E      = 0.0d0
+
+       ! beta fields (unrestricted only): cob and Eb are resized to NBSuse here;
+       ! oeffb is only needed when NBSuse < nbasis; oldvecb is always needed.
+       if(quick_method%unrst) then
+          if(self%NBSuse.ne.self%nbasis)then
+             if(.not. allocated(self%oeffb)) allocate(self%oeffb(self%NBSuse,self%NBSuse))
+             self%oeffb = 0.0d0
+          endif
+          if(.not. allocated(self%cob))     allocate(self%cob(self%nbasis,self%NBSuse))
+          if(.not. allocated(self%Eb))      allocate(self%Eb(self%NBSuse))
+          if(.not. allocated(self%oldvecb)) allocate(self%oldvecb(self%NBSuse,self%NBSuse))
+
+          self%cob     = 0.0d0
+          self%Eb      = 0.0d0
+          self%oldvecb = 0.0d0
+       endif
+
+   end subroutine
+
+   !--------------------------------------
    ! subroutine to allocate variables
    !---------------------------------------
    subroutine allocate_quick_qm_struct(self)
@@ -238,16 +303,12 @@ contains
 
       ! those matrices is necessary for all calculation or the basic of other calculation
       if(.not. allocated(self%s)) allocate(self%s(nbasis,nbasis))
-      if(.not. allocated(self%x)) allocate(self%x(nbasis,nbasis))
       if(.not. allocated(self%oneElecO)) allocate(self%oneElecO(nbasis,nbasis))
       if(.not. allocated(self%o)) allocate(self%o(nbasis,nbasis))
       if(.not. allocated(self%oSave)) allocate(self%oSave(nbasis,nbasis))
-      if(.not. allocated(self%co)) allocate(self%co(nbasis,nbasis))
-      if(.not. allocated(self%vec)) allocate(self%vec(nbasis,nbasis))
       if(.not. allocated(self%dense)) allocate(self%dense(nbasis,nbasis))
       if(.not. allocated(self%denseSave)) allocate(self%denseSave(nbasis,nbasis))
       if(.not. allocated(self%denseOld)) allocate(self%denseOld(nbasis,nbasis))
-      if(.not. allocated(self%E)) allocate(self%E(nbasis))
       if(.not. allocated(self%iDegen)) allocate(self%iDegen(nbasis))
 
       if(.not. allocated(self%Mulliken)) allocate(self%Mulliken(natom))
@@ -274,15 +335,13 @@ contains
          if(.not. allocated(self%CPHFB)) allocate(self%CPHFB(idimA,natom*3))
       endif
 
-      ! if unrestricted, some more varibles is required to be allocated
+      ! if unrestricted, some more variables need to be allocated
       if (quick_method%unrst) then
          if(.not. allocated(self%ob)) allocate(self%ob(nbasis,nbasis))
          if(.not. allocated(self%obSave)) allocate(self%obSave(nbasis,nbasis))
          if(.not. allocated(self%denseab)) allocate(self%denseab(nbasis,nbasis))
          if(.not. allocated(self%densebSave)) allocate(self%densebSave(nbasis,nbasis))
          if(.not. allocated(self%densebOld)) allocate(self%densebOld(nbasis,nbasis))
-         if(.not. allocated(self%cob)) allocate(self%cob(nbasis,nbasis))
-         if(.not. allocated(self%Eb)) allocate(self%Eb(nbasis))
       endif
 
       if (quick_method%unrst .or. quick_method%DFT) then
@@ -343,9 +402,11 @@ contains
 
       use quick_method_module, only: quick_method
       use quick_molspec_module, only: quick_molspec
-      logical fail
+      use quick_io_module, only: write_int_rank0, write_int_rank3, write_real8_rank3
+      integer fail
 
       integer nbasis
+      integer NBSuse
       integer natom
       integer nelec
       integer idimA
@@ -356,34 +417,34 @@ contains
       type (quick_qm_struct_type) self
 
       nbasis=self%nbasis
+      NBSuse=self%NBSuse
       natom=quick_molspec%natom
       nelec=quick_molspec%nelec
       nelecb=quick_molspec%nelecb
 
+      call write_int_rank0(idatafile, "nbasis", nbasis, fail)
+      call write_int_rank0(idatafile, "natom",  natom, fail)
+      call write_int_rank0(idatafile, "nelec",  nelec, fail)
+      call write_int_rank0(idatafile, "nelecb", nelecb, fail)
+      call write_real8_rank3(idatafile, "s", nbasis, nbasis, 1, self%s, fail)
+      call write_real8_rank3(idatafile, "x", nbasis, NBSuse, 1, self%x, fail)
+      call write_real8_rank3(idatafile, "o", nbasis, nbasis, 1, self%o, fail)
+      call write_real8_rank3(idatafile, "co", nbasis, NBSuse, 1, self%co, fail)
+      call write_real8_rank3(idatafile, "vec", NBSuse, NBSuse, 1, self%vec, fail)
+      call write_real8_rank3(idatafile, "dense", nbasis, nbasis, 1, self%dense, fail)
+      call write_real8_rank3(idatafile, "E", NBSuse, 1, 1, self%E, fail)
+      call write_int_rank3(idatafile, "iDegen", nbasis, 1, 1, self%iDegen, fail)
+      call write_real8_rank3(idatafile, "Mulliken", nbasis, 1, 1, self%Mulliken, fail)
+      call write_real8_rank3(idatafile, "Lowdin", nbasis, 1, 1, self%Lowdin, fail)
 
-      call wchk_int(idatafile, "nbasis", nbasis, fail)
-      call wchk_int(idatafile, "natom",  natom,  fail)
-      call wchk_int(idatafile, "nelec",  nelec,  fail)
-      call wchk_int(idatafile, "nelecb", nelecb, fail)
-      call wchk_darray(idatafile, "s",        nbasis, nbasis, 1, self%s,        fail)
-      call wchk_darray(idatafile, "x",        nbasis, nbasis, 1, self%x,        fail)
-      call wchk_darray(idatafile, "o",        nbasis, nbasis, 1, self%o,        fail)
-      call wchk_darray(idatafile, "co",       nbasis, nbasis, 1, self%co,       fail)
-      call wchk_darray(idatafile, "vec",      nbasis, nbasis, 1, self%vec,      fail)
-      call wchk_darray(idatafile, "dense",    nbasis, nbasis, 1, self%dense,    fail)
-      call wchk_darray(idatafile, "E",        nbasis, 1,      1, self%E,        fail)
-      call wchk_iarray(idatafile, "iDegen",   nbasis, 1,      1, self%iDegen,   fail)
-      call wchk_darray(idatafile, "Mulliken", nbasis, 1,      1, self%Mulliken, fail)
-      call wchk_darray(idatafile, "Lowdin",   nbasis, 1,      1, self%Lowdin,   fail)
-
-      ! if unrestricted, some more varibles is required to be allocated
+      ! if unrestricted, some more variables need to be allocated
       if (quick_method%unrst) then
-         call wchk_darray(idatafile, "cob", nbasis, nbasis, 1, self%cob, fail)
-         call wchk_darray(idatafile, "Eb", nbasis, 1, 1, self%Eb, fail)
+         call write_real8_rank3(idatafile, "cob", nbasis, NBSuse, 1, self%cob, fail)
+         call write_real8_rank3(idatafile, "Eb", NBSuse, 1, 1, self%Eb, fail)
       endif
 
       if (quick_method%unrst .or. quick_method%DFT) then
-         call wchk_darray(idatafile, "denseb", nbasis, 1, 1, self%denseb, fail)
+         call write_real8_rank3(idatafile, "denseb", nbasis, 1, 1, self%denseb, fail)
       endif
 
 
@@ -397,7 +458,7 @@ contains
       implicit none
       integer io
 
-      integer nbasis
+      integer nbasis, NBSuse
       integer natom
       integer nelec
       integer idimA
@@ -406,14 +467,19 @@ contains
       type (quick_qm_struct_type) self
 
       nullify(self%nbasis)
+      nullify(self%NBSuse)
       ! those matrices is necessary for all calculation or the basic of other calculation
       if (allocated(self%s)) deallocate(self%s)
       if (allocated(self%x)) deallocate(self%x)
       if (allocated(self%oneElecO)) deallocate(self%oneElecO)
       if (allocated(self%o)) deallocate(self%o)
+      if (allocated(self%oeff)) deallocate(self%oeff)
+      if (allocated(self%oeffb)) deallocate(self%oeffb)
       if (allocated(self%oSave)) deallocate(self%oSave)
       if (allocated(self%co)) deallocate(self%co)
       if (allocated(self%vec)) deallocate(self%vec)
+      if (allocated(self%oldvec)) deallocate(self%oldvec)
+      if (allocated(self%oldvecb)) deallocate(self%oldvecb)
       if (allocated(self%dense)) deallocate(self%dense)
       if (allocated(self%denseSave)) deallocate(self%denseSave)
       if (allocated(self%denseOld)) deallocate(self%denseOld)
@@ -441,7 +507,7 @@ contains
          if (allocated(self%CPHFB)) deallocate(self%CPHFB)
       endif
 
-      ! if unrestricted, some more varibles is required to be allocated
+      ! if unrestricted, some more variables need to be allocated
       if (quick_method%unrst) then
          if(allocated(self%ob)) deallocate(self%ob)
          if(allocated(self%obSave)) deallocate(self%obSave)
@@ -489,17 +555,13 @@ contains
       call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%nbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%s,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%x,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%oneElecO,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%o,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%oSave,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%co,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%vec,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%dense,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%denseSave,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%denseOld,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%iDegen,nbasis,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
 
       call MPI_BCAST(self%Mulliken,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       call MPI_BCAST(self%Lowdin,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
@@ -518,10 +580,8 @@ contains
       endif
 
       if (quick_method%unrst) then
-         call MPI_BCAST(self%cob,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(self%denseab,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(self%denseb,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%Eb,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(self%aElec,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
          call MPI_BCAST(self%bElec,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
       endif
@@ -567,16 +627,12 @@ contains
       nelecb=quick_molspec%nelecb
 
       call zeroMatrix(self%s,nbasis)
-      call zeroMatrix(self%x,nbasis)
       call zeroMatrix(self%oneElecO,nbasis)
       call zeroMatrix(self%o,nbasis)
       call zeroMatrix(self%oSave,nbasis)
-      call zeroMatrix(self%co,nbasis)
-      call zeroMatrix(self%vec,nbasis)
       call zeroMatrix(self%dense,nbasis)
       call zeroMatrix(self%denseSave,nbasis)
       call zeroMatrix(self%denseOld,nbasis)
-      call zeroVec(self%E,nbasis)
       call zeroiVec(self%iDegen,nbasis)
       call zeroVec(self%Mulliken,natom)
       call zeroVec(self%Lowdin,natom)
@@ -600,12 +656,12 @@ contains
          call zeroMatrix2(self%CPHFA,idimA,natom*3)
       endif
 
-      ! if unrestricted, some more varibles is required to be allocated
+      ! if unrestricted, some more variables need to be allocated
       if (quick_method%unrst) then
-         call zeroMatrix(self%cob,nbasis)
+         if (allocated(self%cob))  call zeroMatrix(self%cob,nbasis)
          call zeroMatrix(self%denseab,nbasis)
          call zeroMatrix(self%denseb,nbasis)
-         call zeroVec(self%Eb,nbasis)
+         if (allocated(self%Eb))   call zeroVec(self%Eb,self%NBSuse)
       endif
 
    end subroutine
