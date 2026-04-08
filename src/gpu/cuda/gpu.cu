@@ -649,6 +649,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu->gpu_xcq->ntotbf = 0;
     gpu->gpu_xcq->ntotpf = 0;
     gpu->gpu_xcq->bin_size = 0;
+    gpu->gpu_xcq->gridx = NULL;
     gpu->gpu_xcq->gridy = NULL;
     gpu->gpu_xcq->gridz = NULL;
     gpu->gpu_xcq->sswt = NULL;
@@ -679,6 +680,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu->gpu_xcq->dphidz = NULL;
     gpu->gpu_xcq->phi_loc = NULL;
     gpu->gpu_xcq->npoints_ssd = 0;
+    gpu->gpu_xcq->gridx_ssd = NULL;
     gpu->gpu_xcq->gridy_ssd = NULL;
     gpu->gpu_xcq->gridz_ssd = NULL;
     gpu->gpu_xcq->exc_ssd = NULL;
@@ -2193,6 +2195,7 @@ extern "C" void gpu_upload_lri_(QUICKDouble* zeta, QUICKDouble* cc, int *ierr)
 }
 
 
+#if defined(CEW)
 //-----------------------------------------------
 //  upload information for CEW quad calculation
 //-----------------------------------------------
@@ -2209,16 +2212,17 @@ extern "C" void gpu_upload_cew_vrecip_(int *ierr)
 
         QUICKDouble vrecip = 0.0;
 
-#ifdef CEW
         cew_getpotatpt_(gridpt, &vrecip);
-#endif
 
         gpu->lri_data->vrecip->_hostData[i] = -vrecip;
     }
 
     gpu->lri_data->vrecip->Upload();
     gpu->gpu_sim.cew_vrecip = gpu->lri_data->vrecip->_devData;
+
+    delete[] gridpt;
 }
+#endif
 
 
 //Computes grid weights before grid point packing
@@ -3044,6 +3048,10 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
             intERIEntry[ERIEntryByBasisIndex[III]] = intERIEntry_tmp[i];
             ERIEntryByBasisIndex[III]++;
         }
+
+        delete[] intERIEntry_tmp;
+        delete[] ERIEntryByBasis;
+        delete[] ERIEntryByBasisIndex;
 
         debut = false;
         totalBuffer = bufferIndex;

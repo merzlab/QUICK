@@ -8,9 +8,13 @@ on:
   push:
     paths-ignore:
       - '**.md'
+      - '.github/workflows/build_test_mpi.yml'
+      - '.github/workflows/build_test_cuda.yml'
   pull_request:
     paths-ignore:
       - '**.md'
+      - '.github/workflows/build_test_mpi.yml'
+      - '.github/workflows/build_test_cuda.yml'
 
 jobs:
   build-and-test-serial-legacy-configure-make:

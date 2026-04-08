@@ -2644,8 +2644,8 @@ static void get_cew_accdens(_gpu_type gpu) {
         }
     }
 
-    delete gridpt;
-    delete cewGrad;
+    delete[] gridpt;
+    delete[] cewGrad;
 }
 #endif
 
