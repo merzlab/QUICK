@@ -16,7 +16,7 @@ module pyquick
     implicit none
 
     private
-    public :: set_calc, set_basis, set_method, read_geom, &
+    public :: set_calc, set_basis, set_method, clear_methods, read_geom, &
               had_error, error_message, print_input, input_string, &
               job_run, job_destroy, job_set_output, &
               job_active, &
@@ -596,6 +596,11 @@ contains
         if (has_basis) text = trim(text) // ' ' // trim(basis_token)
 
     end function build_keyword_line
+
+    subroutine clear_methods()
+        if (allocated(method_list)) deallocate(method_list)
+        call rebuild_input()
+    end subroutine clear_methods
 
     subroutine append_method(uname, arg)
         character(len=*), intent(in) :: uname

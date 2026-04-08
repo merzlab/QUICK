@@ -110,6 +110,7 @@ class PyQuick:
     def input_string(self):
         """The assembled QUICK input as a string."""
         # replay this instance's state so Fortran's input_string reflects it
+        _mod.clear_methods()
         if self._calc  is not None: _checked(_mod.set_calc)(self._calc)
         if self._basis is not None: _checked(_mod.set_basis)(self._basis)
         for keyword, arg in self._methods:
@@ -133,6 +134,7 @@ class PyQuick:
         if self._geom is None:
             raise RuntimeError("call read_geom() before run()")
         # replay this instance's state into the Fortran singleton
+        _mod.clear_methods()
         _checked(_mod.set_calc)(self._calc)
         _checked(_mod.set_basis)(self._basis)
         for keyword, arg in self._methods:
