@@ -138,6 +138,12 @@ class PyQuick:
 
         Must be called after :meth:`set_calc`, :meth:`set_basis`, and
         :meth:`read_geom`.  Results are available as properties afterwards.
+
+        If this instance has been run before, the previous QUICK state is
+        fully finalized before the new run begins, so basis sets and array
+        dimensions are always consistent.  Output from successive runs is
+        appended to ``<stem>.out``; call :meth:`set_output` with a different
+        stem between runs if you need separate output files.
         """
         self._results = {}
         self._ran = False

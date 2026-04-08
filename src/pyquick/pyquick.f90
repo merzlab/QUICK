@@ -309,6 +309,7 @@ contains
 
         character(len=:), allocatable :: keyword_line
         character(len=10) :: kwlen_str
+        character(len=1) :: open_mode
         integer :: ierr, i, j, k
         integer :: natm_type
         integer :: atm_type_id(geom_natom)
@@ -316,6 +317,26 @@ contains
         character(len=256) :: note
 
         ierr = 0
+
+        ! --- determine open mode before finalize clears job_active ---
+        ! first run: replace the output file; re-runs: append to it
+        if (job_active) then
+            open_mode = 'A'
+        else
+            open_mode = 'R'
+        end if
+
+        ! --- if a previous run is still active, finalize it before re-running ---
+        ! This deallocates all basis/MO/density arrays sized for the previous run
+        ! so they can be reallocated at the correct dimensions for the new run.
+        if (job_active) then
+            call finalize(iOutFile, ierr, 1)
+            if (ierr /= 0) then
+                call fail('job_run: finalize of previous run failed')
+                return
+            end if
+            job_active = .false.
+        end if
 
         ! --- validate prerequisites ---
         if (.not. has_calc) then
@@ -364,7 +385,7 @@ contains
             return
         end if
 
-        call quick_open(iOutFile, outFileName, 'U', 'F', 'R', .false., ierr)
+        call quick_open(iOutFile, outFileName, 'U', 'F', open_mode, .false., ierr)
         if (ierr /= 0) then
             call fail('job_run: quick_open failed')
             return
