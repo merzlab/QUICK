@@ -139,6 +139,8 @@ class PyQuick:
         Must be called after :meth:`set_calc`, :meth:`set_basis`, and
         :meth:`read_geom`.  Results are available as properties afterwards.
         """
+        self._results = {}
+        self._ran = False
         if self._calc is None:
             raise RuntimeError("call set_calc() before run()")
         if self._basis is None:
