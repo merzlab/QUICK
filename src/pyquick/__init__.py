@@ -83,6 +83,18 @@ class PyQuick:
                 return
         self._methods.append((uname, arg))
 
+    def unset_method(self, keyword):
+        """Remove a keyword token previously added via set_method().
+
+        Raises ValueError if the keyword is not currently set.
+        """
+        uname = keyword.strip().upper()
+        for i, (k, _) in enumerate(self._methods):
+            if k == uname:
+                del self._methods[i]
+                return
+        raise ValueError(f"method keyword {keyword!r} is not set")
+
     def set_output(self, stem):
         """Set the output file stem (default 'pyquick_job').
 
