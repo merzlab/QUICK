@@ -188,7 +188,7 @@ jobs:
             hdf5-install: 'libhdf5-dev'
             hdf5-restart-support: TRUE
             python-version: '3.10'
-            numpy-version: '1.24'
+            numpy-version: '1.26'
           - os: 'ubuntu-22.04'
             compiler-type: 'GNU'
             compiler-version: '11'
@@ -529,7 +529,7 @@ jobs:
       - name: 'Install numpy for pyquick build'
         if: matrix.python-version
         run: |
-          python3 -m pip install "numpy==${{ matrix.numpy-version }}.*"
+          python3 -m pip install "numpy==${{ matrix.numpy-version }}.*" meson ninja
       - name: 'Build and install pyquick Python extension'
         if: matrix.python-version
         run: |
