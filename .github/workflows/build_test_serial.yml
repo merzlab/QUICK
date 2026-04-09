@@ -187,6 +187,8 @@ jobs:
             compiler-install: 'gcc-10 g++-10 gfortran-10'
             hdf5-install: 'libhdf5-dev'
             hdf5-restart-support: TRUE
+            python-version: '3.10'
+            numpy-version: '1.26'
           - os: 'ubuntu-22.04'
             compiler-type: 'GNU'
             compiler-version: '11'
@@ -196,6 +198,8 @@ jobs:
             compiler-install: 'gcc-11 g++-11 gfortran-11'
             hdf5-install: 'libhdf5-dev'
             hdf5-restart-support: TRUE
+            python-version: '3.11'
+            numpy-version: '1.26'
           - os: 'ubuntu-24.04'
             compiler-type: 'GNU'
             compiler-version: '12'
@@ -205,6 +209,8 @@ jobs:
             compiler-install: 'gcc-12 g++-12 gfortran-12'
             hdf5-install: ''
             hdf5-restart-support: FALSE
+            python-version: '3.12'
+            numpy-version: '2.0'
           - os: 'ubuntu-24.04'
             compiler-type: 'GNU'
             compiler-version: '13'
@@ -214,6 +220,8 @@ jobs:
             compiler-install: 'gcc-13 g++-13 gfortran-13'
             hdf5-install: ''
             hdf5-restart-support: FALSE
+            python-version: '3.12'
+            numpy-version: '2.1'
           - os: 'ubuntu-24.04'
             compiler-type: 'GNU'
             compiler-version: '14'
@@ -223,6 +231,8 @@ jobs:
             compiler-install: 'gcc-14 g++-14 gfortran-14'
             hdf5-install: ''
             hdf5-restart-support: FALSE
+            python-version: '3.13'
+            numpy-version: '2.2'
           - os: 'ubuntu-24.04'
             compiler-type: 'CLANG'
             compiler-version: '17'
@@ -232,6 +242,8 @@ jobs:
             compiler-install: 'clang-17 gfortran'
             hdf5-install: ''
             hdf5-restart-support: FALSE
+            python-version: '3.11'
+            numpy-version: '1.26'
           - os: 'ubuntu-24.04'
             compiler-type: 'CLANG'
             compiler-version: '18'
@@ -241,6 +253,8 @@ jobs:
             compiler-install: 'clang-18 gfortran'
             hdf5-install: ''
             hdf5-restart-support: FALSE
+            python-version: '3.12'
+            numpy-version: '2.0'
           - os: 'ubuntu-24.04'
             compiler-type: 'LLVM'
             compiler-version: '20'
@@ -286,6 +300,8 @@ jobs:
             compiler-install: 'gcc-14 g++-14 gfortran-14'
             hdf5-install: ''
             hdf5-restart-support: FALSE
+            python-version: '3.13'
+            numpy-version: '2.2'
           - os: 'ubuntu-24.04-arm'
             compiler-type: 'CLANG'
             compiler-version: '18'
@@ -295,6 +311,8 @@ jobs:
             compiler-install: 'clang-18 gfortran'
             hdf5-install: ''
             hdf5-restart-support: FALSE
+            python-version: '3.12'
+            numpy-version: '2.0'
           - os: 'macos-14'
             compiler-type: 'GNU'
             compiler-version: '15'
@@ -304,6 +322,8 @@ jobs:
             compiler-install: 'gcc@15'
             hdf5-install: 'hdf5'
             hdf5-restart-support: TRUE
+            python-version: '3.12'
+            numpy-version: '2.0'
           - os: 'macos-14'
             compiler-type: 'CLANG'
             compiler-version: '20'
@@ -314,6 +334,8 @@ jobs:
             compiler-install: 'llvm@20 gcc@15'
             hdf5-install: 'hdf5'
             hdf5-restart-support: TRUE
+            python-version: '3.12'
+            numpy-version: '2.1'
           - os: 'macos-15'
             compiler-type: 'GNU'
             compiler-version: '15'
@@ -323,6 +345,8 @@ jobs:
             compiler-install: 'gcc@15'
             hdf5-install: 'hdf5'
             hdf5-restart-support: TRUE
+            python-version: '3.13'
+            numpy-version: '2.2'
           - os: 'macos-15'
             compiler-type: 'CLANG'
             compiler-version: '20'
@@ -333,6 +357,8 @@ jobs:
             compiler-install: 'llvm@20 gcc@15'
             hdf5-install: 'hdf5'
             hdf5-restart-support: TRUE
+            python-version: '3.13'
+            numpy-version: '2.2'
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} - Serial - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
     steps:
@@ -495,6 +521,33 @@ jobs:
           cd build
           cmake --build . --parallel 2 --verbose
           cmake --install .
+      - name: 'Set up Python for pyquick'
+        if: matrix.python-version
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: 'Install numpy for pyquick build'
+        if: matrix.python-version
+        run: |
+          python3 -m pip install "numpy==${{ matrix.numpy-version }}.*" meson ninja
+      - name: 'Build and install pyquick Python extension'
+        if: matrix.python-version
+        run: |
+          if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then
+            source /opt/intel/oneapi/setvars.sh
+          fi
+          cd build
+          cmake .. -DPYTHON=TRUE
+          cmake --build . --parallel 2 --target pyquick
+          cmake --install .
+      - name: 'Run pyquick test'
+        if: matrix.python-version
+        run: |
+          export PYTHONPATH=$PWD/install/lib${PYTHONPATH:+:$PYTHONPATH}
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            export DYLD_LIBRARY_PATH=$PWD/install/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}
+          fi
+          python3 test/pyquick_ene_H2O_rhf_sto3g.py
       - name: 'Run Tests for Serial Version'
         run: |
           if [ ${{ matrix.compiler-type }} == 'INTELLLVM' ]; then

@@ -184,3 +184,4 @@ ene_multiple_keyword_lines              #Acetate: DFT energy test: Tests if read
 chk_acetate_xyz                         #CHK test: writing/reading coordinates
 chk_acetate_xyz_density                 #CHK test: writing/reading densities and coordinates
 chk_acetate_density                     #CHK test: writing/reading densities
+pyq_ene_H2O_rhf_sto3g                   #Water: pyquick Python interface energy test

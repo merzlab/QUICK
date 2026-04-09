@@ -46,6 +46,7 @@ if(HDF5)
 endif()
 
 option(ENABLEF "Enables the support for f functions in the ERI code." FALSE)
+option(PYTHON "Build the pyquick Python extension via f2py (requires numpy)." FALSE)
 
 # Compiler flags
 # These should really go into cmake/CompilerFlags.cmake but with the
