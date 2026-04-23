@@ -392,3 +392,7 @@ if(CUDA AND MPI)
 	install(TARGETS quick.${QUICK_GPU_TARGET_NAME}.MPI DESTINATION ${BINDIR} EXPORT QUICK)
 	install(TARGETS test-api.${QUICK_GPU_TARGET_NAME}.MPI DESTINATION ${BINDIR} EXPORT QUICK)
 endif()
+
+if(PYTHON)
+	add_subdirectory(pyquick)
+endif()
