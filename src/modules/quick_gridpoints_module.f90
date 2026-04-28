@@ -646,9 +646,12 @@ module quick_gridpoints_module
       ! 2
       use allmod
 #ifdef MPIV
-      use mpi
+      use mpi_f08
 #endif
-      implicit double precision(a-h,o-z)
+      implicit none
+
+      double precision :: amin, current, gamma, gamma2pi, radial, stepsize, target
+      integer :: i, Ibas, Icon, L
    
 #ifdef MPIV
       if(master) then

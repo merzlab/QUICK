@@ -21,9 +21,8 @@ subroutine getMol(ierr)
    use quick_io_module, only: read_real8_rank3
 #endif
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-
    implicit none
 
    integer :: fail

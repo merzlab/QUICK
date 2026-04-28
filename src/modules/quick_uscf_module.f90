@@ -160,9 +160,8 @@ contains
      use quick_oei_module, only: bCalc1e
      use quick_molden_module, only: quick_molden
 #ifdef MPIV
-     use mpi
+     use mpi_f08
 #endif
-
      implicit none
  
      ! variable inputed to return

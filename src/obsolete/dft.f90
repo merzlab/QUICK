@@ -559,9 +559,9 @@ subroutine get_sigrad
    ! 2
    use allmod
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-   implicit double precision(a-h,o-z)
+   implicit none
 
 #ifdef MPIV
    if(master) then

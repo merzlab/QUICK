@@ -38,10 +38,10 @@ contains
      use quick_eri_cshell_module, only: getCshellEri, getCshellEriEnergy 
      use quick_oei_module, only:get1eEnergy,get1e
 #ifdef MPIV
-     use mpi
+     use mpi_f08
 #endif
-  
      implicit none
+
   !   double precision oneElecO(nbasis,nbasis)
      logical :: deltaO
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
@@ -278,7 +278,7 @@ contains
      use xc_f90_types_m
      use xc_f90_lib_m
 #ifdef MPIV
-     use mpi
+     use mpi_f08
 #endif
      implicit none
   

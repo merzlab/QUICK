@@ -22,19 +22,24 @@ module quick_mpi_module
 !------------------------------------------------------------------------    
 
 #ifdef MPIV
-    use mpi
+    use mpi_f08
 #endif
+    implicit none
 
     integer :: mpierror
     integer :: mpirank
     integer :: myid
     integer :: namelen
     integer :: mpisize
-    character(len=80) pname
+#ifdef MPIV
+    character(len=MPI_MAX_PROCESSOR_NAME) pname
+#endif
     logical :: master = .true.      ! flag to show if the node is master node
     logical :: bMPI = .true.        ! flag to show if MPI is turn on
     logical :: libMPIMode = .false. ! if mpi is initialized somewhere other than quick
-    integer, allocatable :: QUICK_MPI_STATUS(:)
+#ifdef MPIV
+    type(MPI_Status) :: QUICK_MPI_STATUS
+#endif
     integer, parameter :: MIN_1E_MPI_BASIS=6
     integer, allocatable :: mgpu_ids(:)    
     integer :: mgpu_id
@@ -73,7 +78,9 @@ module quick_mpi_module
         write (io,*)
         write (io,'("| - MPI Enabled -")')
         write (io,'("| TOTAL RANKS     = ",i5)') mpisize
+#ifdef MPIV
         write (io,'("| MASTER NAME     = ",A30)') pname
+#endif
         
     end subroutine print_quick_mpi
 

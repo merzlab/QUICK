@@ -21,9 +21,8 @@ subroutine getEnergy(isGuess, ierr)
    use quick_cew_module, only : quick_cew
 #endif
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-
    implicit none
 
    double precision :: distance

@@ -192,9 +192,8 @@ contains
      use quick_cew_module, only : quick_cew
 #endif
 #if defined(MPIV)
-     use mpi
+     use mpi_f08
 #endif
-
      implicit none
  
      ! variable inputed to return

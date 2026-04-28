@@ -84,7 +84,7 @@ contains
      use allmod
      use quick_lri_grad_module
 #ifdef MPIV
-     use mpi
+     use mpi_f08
 #endif
      implicit double precision(a-h,o-z)
   
@@ -188,7 +188,7 @@ contains
      use quick_grad_cshell_module
 #endif
 #ifdef MPIV
-     use mpi
+     use mpi_f08
 #endif
      implicit double precision(a-h,o-z)
   
@@ -522,7 +522,7 @@ contains
     use quick_cutoff_module, only: cshell_density_cutoff
 #endif
 #ifdef MPIV
-     use mpi
+    use mpi_f08
 #endif
     implicit none
     integer :: Iatm, Imomentum, IIsh, JJsh, i, j, nshell_mpi
@@ -688,7 +688,7 @@ contains
      use quick_grad_cshell_module, only: get_ijbas_derivative
 #endif
 #ifdef MPIV
-     use mpi
+     use mpi_f08
 #endif
      implicit double precision(a-h,o-z)
   
@@ -835,7 +835,7 @@ contains
    use quick_eri_grad_cshell_module, only: cshell_eri_grad
 #endif
 #ifdef MPIV
-     use mpi
+     use mpi_f08
 #endif
      implicit double precision(a-h,o-z)
   
@@ -988,7 +988,7 @@ contains
      use xc_f90_types_m
      use xc_f90_lib_m
 #ifdef MPIV 
-     use mpi
+     use mpi_f08
 #endif
      implicit none
   

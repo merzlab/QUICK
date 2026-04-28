@@ -14,8 +14,8 @@
 !
 subroutine electdiis(jscf,PRMS)
   use allmod
-  use mpi
-  implicit double precision(a-h,o-z)
+  use mpi_f08
+  implicit none
 
   logical :: diisdone
   double precision:: oldEnergy=0.0d0,E1e
@@ -542,8 +542,8 @@ end subroutine electdiis
 !
     subroutine electdiisdc(jscf,PRMS)
       use allmod
-      use mpi
-      implicit double precision(a-h,o-z)
+      use mpi_f08
+      implicit none
 
       logical :: diisdone
       dimension :: B(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1),BSAVE(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1)

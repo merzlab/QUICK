@@ -30,9 +30,8 @@ subroutine scf_operator(deltaO)
    use quick_cutoff_module, only: cshell_density_cutoff
    use quick_eri_cshell_module, only: getCshellEri, getCshellEriEnergy 
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-
    implicit none
 
 !   double precision oneElecO(nbasis,nbasis)
@@ -268,7 +267,7 @@ subroutine get_xc
    use xc_f90_types_m
    use xc_f90_lib_m
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
    implicit none
 

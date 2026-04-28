@@ -59,9 +59,8 @@ subroutine electdiis(jscf,ierr)
    use quick_gridpoints_module
    use quick_scf_module
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-
    implicit none
 
    ! variable inputed to return

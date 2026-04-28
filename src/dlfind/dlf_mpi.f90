@@ -32,7 +32,7 @@
 !! SOURCE
 !!****
 module dlf_mpi_module
-  use mpi
+  use mpi_f08
   save
 
   integer  :: global_comm      ! set to, and use instead of, mpi_comm_world

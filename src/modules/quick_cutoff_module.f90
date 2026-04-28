@@ -54,10 +54,9 @@ end subroutine deallocate_quick_cutoff
 subroutine schwarzoff
   use allmod
 #ifdef MPIV
-  use mpi
+  use mpi_f08
 #endif
-
-  Implicit none
+  implicit none
 
   integer ii,jj
   double precision Ymaxtemp

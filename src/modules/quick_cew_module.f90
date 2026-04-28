@@ -129,9 +129,8 @@ contains
     use quick_method_module, only: quick_method
 #ifdef MPIV
     use quick_mpi_module
-    use mpi
+    use mpi_f08
 #endif    
-
     implicit none
 
     double precision :: E
@@ -410,7 +409,7 @@ contains
    use quick_gridpoints_module, only : quick_dft_grid
    use quick_molspec_module, only : quick_molspec
 #ifdef MPIV
-    use mpi
+    use mpi_f08
 #endif
    implicit none
 
@@ -900,10 +899,9 @@ contains
    use quick_calculated_module, only : quick_qm_struct
    use quick_molspec_module, only : quick_molspec
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-   
-   implicit double precision(a-h,o-z)
+   implicit none
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2

@@ -10,9 +10,9 @@
 subroutine electdiisdc(jscf,PRMS)
    use allmod
 #ifdef MPIV
-   use mpi
+   use mpi_f08
 #endif
-   implicit double precision(a-h,o-z)
+   implicit none
 
    logical :: diisdone
    dimension :: B(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1),BSAVE(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1)
