@@ -129,6 +129,7 @@ subroutine quick_exit(io, ierr)
    use allmod
 #ifdef MPIV
    use mpi
+   use quick_mpi_module, only: quick_comm
 #endif
    implicit none
    integer io           ! close this unit if greater than zero
@@ -143,7 +144,7 @@ subroutine quick_exit(io, ierr)
 
 #ifdef MPIV
    if (ierr /= 0) then
-     call mpi_abort(MPI_COMM_WORLD, ierr, mpierror)
+     call mpi_abort(quick_comm, ierr, mpierror)
    endif
 #endif
 

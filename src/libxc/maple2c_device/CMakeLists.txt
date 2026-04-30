@@ -48,6 +48,7 @@ cuda_add_library(xc_${QUICK_GPU_TARGET_NAME} STATIC ${LIBXC_GPU_SOURCES}
 
 if(MPI)
 	target_compile_definitions(xc_${QUICK_GPU_TARGET_NAME} PRIVATE MPIV_GPU ${QUICK_GPU_PLATFORM}_MPIV)
+	set_property(TARGET xc_${QUICK_GPU_TARGET_NAME} APPEND PROPERTY LINK_LIBRARIES ${MPI_CXX})
 else()
 	target_compile_definitions(xc_${QUICK_GPU_TARGET_NAME} PRIVATE GPU ${QUICK_GPU_PLATFORM})
 endif()

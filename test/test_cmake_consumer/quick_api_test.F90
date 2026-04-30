@@ -14,10 +14,11 @@
 
     use test_quick_api_module, only : loadTestData, printQuickOutput
     use quick_api_module, only : setQuickJob, getQuickEnergy, getQuickEnergyGradients, deleteQuickJob 
-#ifdef MPIV
+#if defined(MPIV) || defined(MPIV_GPU)
     use test_quick_api_module, only : mpi_initialize, printQuickMPIOutput
     use quick_api_module, only : setQuickMPI
     use mpi
+    use quick_mpi_module, only: quick_set_comm, quick_comm
 #endif
 
     implicit none
@@ -56,7 +57,7 @@
 
     ierr = 0
 
-#ifdef MPIV
+#if defined(MPIV) || defined(MPIV_GPU)
     ! initialize mpi library and get mpirank, mpisize
     call mpi_initialize(mpisize, mpirank, master, mpierror)
 
@@ -112,15 +113,15 @@
       call getQuickEnergyGradients(coord, xc_coord, totEne, gradients, ptchgGrad)    
 
       ! print values obtained from quick library
-#ifdef MPIV
+#if defined(MPIV) || defined(MPIV_GPU)
       ! dumb way to sequantially print from all cores..
-      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+      call MPI_BARRIER(quick_comm,mpierror)
 
       do j=0, mpisize-1
         if(j .eq. mpirank) then
           call printQuickMPIOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchgGrad, mpirank)
         endif
-        call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+        call MPI_BARRIER(quick_comm,mpierror)
       enddo 
 #else
       call printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchgGrad)

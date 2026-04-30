@@ -125,7 +125,6 @@ contains
 
 ! allocates memory for a new quick_api_type variable
 subroutine new_quick_api_type(self, natoms, atomic_numbers, ierr)
-
   implicit none
 
   type(quick_api_type), intent(inout) :: self
@@ -141,21 +140,21 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, ierr)
   if ( .not. allocated(self%atm_type_id))    allocate(self%atm_type_id(natm_type), stat=ierr)
   if ( .not. allocated(self%atomic_numbers)) allocate(self%atomic_numbers(natoms), stat=ierr)
   if ( .not. allocated(self%coords))         allocate(self%coords(3,natoms), stat=ierr)
-  if ( .not. allocated(self%gradient))          allocate(self%gradient(3,natoms), stat=ierr)
+  if ( .not. allocated(self%gradient))       allocate(self%gradient(3,natoms), stat=ierr)
 
  ! save values in the quick_api struct
-  self%natoms         = natoms
-  self%natm_type      = natm_type
+  self%natoms = natoms
+  self%natm_type = natm_type
   self%atomic_numbers = atomic_numbers
 
-  do i=1, natm_type
+  do i = 1, natm_type
     self%atm_type_id(i) = atm_type_id(i)
   enddo
 
   ! set result vectors and matrices to zero
-  self%gradient  = 0.0d0
-
+  self%gradient = 0.0d0
 end subroutine new_quick_api_type
+
 
 ! this subroutine checks if the string passed through api is a file name
 ! or a job card
@@ -181,7 +180,6 @@ end subroutine check_fqin
 ! reads the job card from template file with .qin extension and initialize quick
 ! also allocate memory for quick_api internal arrays
 subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
-
   use quick_files_module
   use quick_molspec_module, only : quick_molspec, alloc
   use quick_exception_module
@@ -205,7 +203,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
   ! allocate memory for quick_api_type
   call new_quick_api_type(quick_api, natoms, atomic_numbers, ierr)
 
-  quick_api%reuse_dmx=reusedmx
+  quick_api%reuse_dmx = reusedmx
 
   ! check if fqin string is a input file name or job card
   flen = LEN_TRIM(fqin)
@@ -268,7 +266,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
   SAFE_CALL(mgpu_query(mpisize, mpirank, mgpu_id, ierr))
   SAFE_CALL(mgpu_setup(ierr))
   if (master) SAFE_CALL(mgpu_write_info(iOutFile, mpisize, mgpu_ids, ierr))
-  SAFE_CALL(mgpu_init_device(mpirank, mpisize, mgpu_id, ierr))
+  SAFE_CALL(mgpu_init_device(quick_comm, mpirank, mpisize, mgpu_id, ierr))
 #endif
   call gpu_allocate_scratch(.true.)
 #endif
@@ -448,7 +446,6 @@ end subroutine get_quick_energy_gradients
 
 ! runs quick, partially resembles quick main program
 subroutine run_quick(self,ierr)
-
   use quick_timer_module
   use quick_method_module, only: quick_method
   use quick_files_module
@@ -463,12 +460,9 @@ subroutine run_quick(self,ierr)
   use quick_sad_guess_module, only: getSadGuess
   use quick_molden_module, only: quick_molden, initializeExport, exportCoordinates, exportBasis, &
       exportMO, exportSCF, exportOPT
-
-
 #ifdef CEW 
   use quick_cew_module
 #endif
-
 #ifdef MPIV
   use quick_mpi_module
 #endif
@@ -654,7 +648,6 @@ subroutine run_quick(self,ierr)
 
 end subroutine run_quick
 
-
 ! this subroutine will print the step into quick output file
 subroutine print_step(self,ierr)
 
@@ -773,35 +766,32 @@ subroutine gpu_upload_molspecs(ierr)
   call gpu_upload_oei(quick_molspec%nextatom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
 
 end subroutine gpu_upload_molspecs
-
 #endif
 
 
 #ifdef MPIV
-
 ! sets mpi variables in quick api
-subroutine set_quick_mpi(mpi_rank, mpi_size, ierr)
-
-  use quick_mpi_module
+subroutine set_quick_mpi(mpi_comm, mpi_rank, mpi_size, ierr)
+  use quick_mpi_module, only: mpirank, mpisize, libMPIMode, quick_comm
 
   implicit none
 
-  integer, intent(in) :: mpi_rank, mpi_size
+  integer, intent(in) :: mpi_comm, mpi_rank, mpi_size
   integer, intent(out) :: ierr
 
   ! save information in quick_mpi module
-  mpirank    = mpi_rank
-  mpisize    = mpi_size
+  quick_comm = mpi_comm
+  mpirank = mpi_rank
+  mpisize = mpi_size
   libMPIMode = .true.
   ierr = 0
-  
-
 end subroutine set_quick_mpi
 
-! broadcasts results from master to slaves
 
+! broadcasts results from master to slaves
 subroutine broadcast_quick_mpi_results(self,ierr)
   use mpi
+  use quick_mpi_module, only: quick_comm
 
   implicit none
 
@@ -809,13 +799,12 @@ subroutine broadcast_quick_mpi_results(self,ierr)
   integer :: mpierror
   integer, intent(inout) :: ierr
 
-  call MPI_BCAST(self%tot_ene,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_BCAST(self%gradient,3*self%natoms,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_BCAST(self%ptchg_grad,3*self%nxt_ptchg,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-
+  call MPI_BCAST(self%tot_ene,1,mpi_double_precision,0,quick_comm,mpierror)
+  call MPI_BCAST(self%gradient,3*self%natoms,mpi_double_precision,0,quick_comm,mpierror)
+  call MPI_BCAST(self%ptchg_grad,3*self%nxt_ptchg,mpi_double_precision,0,quick_comm,mpierror)
 end subroutine
-
 #endif
+
 
 ! fialize quick and deallocate memory of quick_api internal arrays
 subroutine delete_quick_job(ierr)

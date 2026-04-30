@@ -63,13 +63,14 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
 //-----------------------------------------------
 // Initialize the devices
 //-----------------------------------------------
-extern "C" void mgpu_init_device_(int *mpirank, int *mpisize, int *device, int* ierr)
+extern "C" void mgpu_init_device_(int *mpi_comm_f, int *mpirank, int *mpisize, int *device, int* ierr)
 {
     hipError_t status;
     hipDeviceProp_t deviceProp;
 
     PRINTDEBUG("BEGIN MULTI GPU INITIALIZATION");
 
+    gpu->mpi_comm = MPI_Comm_f2c((MPI_Fint) (*mpi_comm_f));
     gpu->mpirank = *mpirank;
     gpu->mpisize = *mpisize;
     gpu->gpu_dev_id = *device;

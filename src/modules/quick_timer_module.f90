@@ -130,6 +130,7 @@ module quick_timer_module
         use quick_method_module
 #ifdef MPIV
         use mpi
+        use quick_mpi_module, only: quick_comm
 #endif
         implicit none
         integer i,IERROR,io
@@ -347,20 +348,20 @@ module quick_timer_module
 
 #ifdef MPIV
 
-  call MPI_GATHER(timer_begin%T2e,1,mpi_double_precision,tst2e,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_GATHER(timer_begin%TEx,1,mpi_double_precision,tstxc,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_GATHER(timer_begin%T2eGrad,1,mpi_double_precision,tst2egrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_GATHER(timer_begin%TExGrad,1,mpi_double_precision,tstxcgrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+  call MPI_GATHER(timer_begin%T2e,1,mpi_double_precision,tst2e,1,mpi_double_precision,0,quick_comm,mpierror)
+  call MPI_GATHER(timer_begin%TEx,1,mpi_double_precision,tstxc,1,mpi_double_precision,0,quick_comm,mpierror)
+  call MPI_GATHER(timer_begin%T2eGrad,1,mpi_double_precision,tst2egrad,1,mpi_double_precision,0,quick_comm,mpierror)
+  call MPI_GATHER(timer_begin%TExGrad,1,mpi_double_precision,tstxcgrad,1,mpi_double_precision,0,quick_comm,mpierror)
 
-  call MPI_GATHER(timer_end%T2e,1,mpi_double_precision,tend2e,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_GATHER(timer_end%TEx,1,mpi_double_precision,tendxc,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_GATHER(timer_end%T2eGrad,1,mpi_double_precision,tend2egrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_GATHER(timer_end%TExGrad,1,mpi_double_precision,tendxcgrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+  call MPI_GATHER(timer_end%T2e,1,mpi_double_precision,tend2e,1,mpi_double_precision,0,quick_comm,mpierror)
+  call MPI_GATHER(timer_end%TEx,1,mpi_double_precision,tendxc,1,mpi_double_precision,0,quick_comm,mpierror)
+  call MPI_GATHER(timer_end%T2eGrad,1,mpi_double_precision,tend2egrad,1,mpi_double_precision,0,quick_comm,mpierror)
+  call MPI_GATHER(timer_end%TExGrad,1,mpi_double_precision,tendxcgrad,1,mpi_double_precision,0,quick_comm,mpierror)
 
-  call MPI_GATHER(timer_cumer%T2e,1,mpi_double_precision,t2e,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_GATHER(timer_cumer%TEx,1,mpi_double_precision,txc,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_GATHER(timer_cumer%T2eGrad,1,mpi_double_precision,t2egrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)  
-  call MPI_GATHER(timer_cumer%TExGrad,1,mpi_double_precision,txcgrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+  call MPI_GATHER(timer_cumer%T2e,1,mpi_double_precision,t2e,1,mpi_double_precision,0,quick_comm,mpierror)
+  call MPI_GATHER(timer_cumer%TEx,1,mpi_double_precision,txc,1,mpi_double_precision,0,quick_comm,mpierror)
+  call MPI_GATHER(timer_cumer%T2eGrad,1,mpi_double_precision,t2egrad,1,mpi_double_precision,0,quick_comm,mpierror)  
+  call MPI_GATHER(timer_cumer%TExGrad,1,mpi_double_precision,txcgrad,1,mpi_double_precision,0,quick_comm,mpierror)
 
 #ifdef DEBUGTIME
   if(master) then
@@ -394,12 +395,12 @@ module quick_timer_module
 !        if (bMPI) then
 !            if (.not.master) then
 !                tmp_timer_cumer=timer_cumer
-!                call MPI_SEND(tmp_timer_cumer,1,mpi_timer_cumer_type,0,mpirank,MPI_COMM_WORLD,IERROR)
+!                call MPI_SEND(tmp_timer_cumer,1,mpi_timer_cumer_type,0,mpirank,quick_comm,IERROR)
 !            else
 !                MPI_timer_cumer=timer_cumer
 !                max_timer_cumer=timer_cumer
 !                do i=1,mpisize-1
-!                    call MPI_RECV(tmp_timer_cumer,1,mpi_timer_cumer_type,i,i,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
+!                    call MPI_RECV(tmp_timer_cumer,1,mpi_timer_cumer_type,i,i,quick_comm,QUICK_MPI_STATUS,IERROR)
 !                    MPI_timer_cumer%TTotal=MPI_timer_cumer%TTotal+tmp_timer_cumer%T2e+tmp_timer_cumer%TMP2+ &
 !                        tmp_timer_cumer%T1e+ tmp_timer_cumer%TDiag+tmp_timer_cumer%TGrad
 !                    MPI_timer_cumer%TTotal=MPI_timer_cumer%TTotal+tmp_timer_cumer%TDiag
@@ -474,6 +475,7 @@ module quick_timer_module
 
         use quick_mpi_module
         use mpi
+        use quick_mpi_module, only: quick_comm
         implicit none
 
         ! declaim mpi timer
@@ -496,10 +498,10 @@ module quick_timer_module
         integer :: IERROR
         double precision :: tsum_2elb, tsum_xclb, tsum_xcrb, tsum_xcpg
 
-        call MPI_REDUCE(timer_cumer%T2elb, tsum_2elb, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
-        call MPI_REDUCE(timer_cumer%TDFTlb, tsum_xclb, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
-        call MPI_REDUCE(timer_cumer%TDFTrb, tsum_xcrb, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
-        call MPI_REDUCE(timer_cumer%TDFTpg, tsum_xcpg, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
+        call MPI_REDUCE(timer_cumer%T2elb, tsum_2elb, 1, mpi_double_precision, MPI_MAX, 0, quick_comm, IERROR)
+        call MPI_REDUCE(timer_cumer%TDFTlb, tsum_xclb, 1, mpi_double_precision, MPI_MAX, 0, quick_comm, IERROR)
+        call MPI_REDUCE(timer_cumer%TDFTrb, tsum_xcrb, 1, mpi_double_precision, MPI_MAX, 0, quick_comm, IERROR)
+        call MPI_REDUCE(timer_cumer%TDFTpg, tsum_xcpg, 1, mpi_double_precision, MPI_MAX, 0, quick_comm, IERROR)
 
         if(master) then
           timer_cumer%T2elb=tsum_2elb

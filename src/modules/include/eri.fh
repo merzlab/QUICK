@@ -77,6 +77,7 @@ subroutine get_eri_precomputables
    use allmod
 #ifdef MPIV
    use mpi
+   use quick_mpi_module, only: quick_comm
 #endif
    implicit none
 
@@ -143,11 +144,11 @@ subroutine get_eri_precomputables
 
 #ifdef MPIV
       if (bMPI) then
-         call MPI_BCAST(Ppri,3*jbasis*jbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(Kpri,jbasis*jbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(Apri,jbasis*jbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(quick_basis%Xcoeff,jbasis*jbasis*4*4,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(Ppri,3*jbasis*jbasis,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(Kpri,jbasis*jbasis,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(Apri,jbasis*jbasis,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(quick_basis%Xcoeff,jbasis*jbasis*4*4,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BARRIER(quick_comm,mpierror)
       endif
 #endif
 

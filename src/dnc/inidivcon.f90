@@ -37,6 +37,7 @@ subroutine inidivcon(natomsaved)
   use allmod
 #ifdef MPIV
   use mpi
+  use quick_mpi_module, only: quick_comm
 #endif
   implicit double precision (a-h,o-z)
 
@@ -130,10 +131,10 @@ subroutine inidivcon(natomsaved)
 #ifdef MPIV
   !-------------------MPI/ALL NODES------------------------------------
   if (bMPI) then
-     call MPI_BCAST(np,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-     call MPI_BCAST(npsaved,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-     call MPI_BCAST(NNmax,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BCAST(np,1,mpi_integer,0,quick_comm,mpierror)
+     call MPI_BCAST(npsaved,1,mpi_integer,0,quick_comm,mpierror)
+     call MPI_BCAST(NNmax,1,mpi_integer,0,quick_comm,mpierror)
+     call MPI_BARRIER(quick_comm,mpierror)
   endif
   !-------------------END MPI/ALL NODES--------------------------------
 #endif
@@ -616,9 +617,9 @@ subroutine inidivcon(natomsaved)
 #ifdef MPIV
   !-------------------MPI/ALL NODES------------------------------------
   if (bMPI) then
-     call MPI_BCAST(np,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-     call MPI_BCAST(NNmax,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BCAST(np,1,mpi_integer,0,quick_comm,mpierror)
+     call MPI_BCAST(NNmax,1,mpi_integer,0,quick_comm,mpierror)
+     call MPI_BARRIER(quick_comm,mpierror)
   endif
   !-------------------END MPI/ALL NODES--------------------------------
 #endif
@@ -740,7 +741,7 @@ subroutine inidivcon(natomsaved)
   !-------------------MPI/ALL NODES------------------------------------
   if (bMPI) then
      call mpi_setup_inidivcon(natomt)
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,mpierror)
   endif
   !-------------------END MPI/ALL NODES--------------------------------
 #endif

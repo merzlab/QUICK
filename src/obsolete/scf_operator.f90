@@ -31,6 +31,7 @@ subroutine scf_operator(deltaO)
    use quick_eri_cshell_module, only: getCshellEri, getCshellEriEnergy 
 #ifdef MPIV
    use mpi
+   use quick_mpi_module, only: quick_comm
 #endif
 
    implicit none
@@ -78,7 +79,7 @@ subroutine scf_operator(deltaO)
    call cshell_density_cutoff
 
 #ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,mpierror)
 #endif
 
 !  Start the timer for 2e-integrals
@@ -162,7 +163,7 @@ subroutine scf_operator(deltaO)
    if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
 
 #ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,mpierror)
 #endif
 
 !  Terminate the timer for 2e-integrals
@@ -177,7 +178,7 @@ subroutine scf_operator(deltaO)
 !-----------------------------------------------------------------
 
 #ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,mpierror)
 #endif
 
    if (quick_method%DFT) then
@@ -193,7 +194,7 @@ subroutine scf_operator(deltaO)
 
 
 #ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,mpierror)
 #endif
 
 !  Stop the exchange correlation timer
@@ -206,14 +207,14 @@ subroutine scf_operator(deltaO)
 #ifdef MPIV
 !  MPI reduction operations
 
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,mpierror)
 
    call cpu_time(timer_begin%TEred)
 
    if (quick_method%DFT) then
-   call MPI_REDUCE(quick_qm_struct%Exc, Excsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-   call MPI_REDUCE(quick_qm_struct%aelec, aelec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-   call MPI_REDUCE(quick_qm_struct%belec, belec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+   call MPI_REDUCE(quick_qm_struct%Exc, Excsum, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
+   call MPI_REDUCE(quick_qm_struct%aelec, aelec, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
+   call MPI_REDUCE(quick_qm_struct%belec, belec, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
 
    if(master) then
      quick_qm_struct%Exc = Excsum
@@ -222,8 +223,8 @@ subroutine scf_operator(deltaO)
    endif
    endif
 
-   call MPI_REDUCE(quick_qm_struct%o, quick_scratch%osum, nbasis*nbasis, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-   call MPI_REDUCE(quick_qm_struct%Eel, Eelsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+   call MPI_REDUCE(quick_qm_struct%o, quick_scratch%osum, nbasis*nbasis, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
+   call MPI_REDUCE(quick_qm_struct%Eel, Eelsum, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
 
    if(master) then
      quick_qm_struct%o(:,:) = quick_scratch%osum(:,:)
@@ -269,6 +270,7 @@ subroutine get_xc
    use xc_f90_lib_m
 #ifdef MPIV
    use mpi
+   use quick_mpi_module, only: quick_comm
 #endif
    implicit none
 

@@ -299,6 +299,7 @@ subroutine mpi_hfoperatordc(oneElecO)
    use quick_cutoff_module, only: cshell_density_cutoff
    use quick_eri_cshell_module, only: getCshellEriEnergy
    use mpi
+   use quick_mpi_module, only: quick_comm
    implicit double precision(a-h,o-z)
 
    double precision testtmp,cutoffTest,oneElecO(nbasis,nbasis)
@@ -394,7 +395,7 @@ subroutine mpi_hfoperatordc(oneElecO)
 !-----------------Madu----------------
 
    ! sync every nodes
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,mpierror)
 
    !------------------------------------------------------------------
    ! Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
@@ -421,13 +422,13 @@ subroutine mpi_hfoperatordc(oneElecO)
          enddo
       enddo
       ! send operator to master node
-      call MPI_SEND(temp2d,nbasis*nbasis,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+      call MPI_SEND(temp2d,nbasis*nbasis,mpi_double_precision,0,mpirank,quick_comm,IERROR)
 
       ! master node will receive infos from every nodes
    else
       do i=1,mpisize-1
          ! receive opertors from slave nodes
-         call MPI_RECV(temp2d,nbasis*nbasis,mpi_double_precision,i,i,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
+         call MPI_RECV(temp2d,nbasis*nbasis,mpi_double_precision,i,i,quick_comm,QUICK_MPI_STATUS,IERROR)
          ! and sum them into operator
          do ii=1,nbasis
             do jj=1,nbasis
@@ -438,7 +439,7 @@ subroutine mpi_hfoperatordc(oneElecO)
    endif
 
    ! sync all nodes
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,mpierror)
 
 !-----------------Madu----------------
    if(master) then

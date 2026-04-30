@@ -80,9 +80,9 @@ subroutine schwarzoff
 
 #ifdef MPIV
       if (bMPI) then
-         call MPI_BCAST(YCutoff,nshell*nshell,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(cutprim,jbasis*jbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(YCutoff,nshell*nshell,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(cutprim,jbasis*jbasis,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BARRIER(quick_comm,mpierror)
       endif
 #endif
 

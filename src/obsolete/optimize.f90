@@ -12,6 +12,7 @@ subroutine optimize(ierr)
    use quick_grad_cshell_module, only: scf_gradient
 #ifdef MPIV
    use mpi
+   use quick_mpi_module, only: quick_comm
 #endif
    implicit double precision(a-h,o-z)
 
@@ -294,11 +295,11 @@ subroutine optimize(ierr)
       !-------------- END MPI/MASTER --------------------
 #ifdef MPIV
       ! we now have new geometry, and let other nodes know the new geometry
-      if (bMPI)call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      if (bMPI)call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,quick_comm,mpierror)
 
 
       ! Notify every nodes if opt is done
-      if (bMPI)call MPI_BCAST(done,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+      if (bMPI)call MPI_BCAST(done,1,mpi_logical,0,quick_comm,mpierror)
 #endif
 
       !For DFT geometry optimization, we should delete the grid variables here

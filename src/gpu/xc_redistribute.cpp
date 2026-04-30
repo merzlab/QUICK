@@ -21,6 +21,7 @@
 #include <cstring>
 #include <mpi.h>
 #include "xc_redistribute.h"
+
 using namespace std;
 
 // Distribution matrix for load balancing prior to sswder calculation.
@@ -32,7 +33,7 @@ int* ptcount=NULL;
 // prior to sswder calculation. Sends back the adjustment to 
 // size of the arrays. 
 //--------------------------------------------------------
-int getAdjustment(int mpisize, int mpirank, int count){
+int getAdjustment(MPI_Comm mpi_comm, int mpisize, int mpirank, int count){
 
   bool master=false;
   if(mpirank == 0) master = true;
@@ -52,9 +53,9 @@ int getAdjustment(int mpisize, int mpirank, int count){
 
   ptcount[mpirank]=count;
 
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(mpi_comm);
   // broadcast ptcount array
-  for(int i=0; i<mpisize; ++i) MPI_Bcast(&ptcount[i], 1, MPI_INT, i, MPI_COMM_WORLD);
+  for(int i=0; i<mpisize; ++i) MPI_Bcast(&ptcount[i], 1, MPI_INT, i, mpi_comm);
 
 #ifdef DEBUG 
   if(master) cout << "mpirank= "<<mpirank << " init array:" << endl;
@@ -225,7 +226,7 @@ int getAdjustment(int mpisize, int mpirank, int count){
 // Function to redistribute XC quadrature points among GPUs
 // prior to sswder calculation. 
 //--------------------------------------------------------
-void sswderRedistribute(int mpisize, int mpirank, int count, int ncount, 
+void sswderRedistribute(MPI_Comm mpi_comm, int mpisize, int mpirank, int count, int ncount, 
   double *gridx, double *gridy, double *gridz, double *exc, double *quadwt, int *gatm,
   double *ngridx, double *ngridy, double *ngridz, double *nexc, double *nquadwt, int *ngatm ){
 
@@ -272,21 +273,21 @@ void sswderRedistribute(int mpisize, int mpirank, int count, int ncount,
         if(send_amount > 0){
 
           if(mpirank == i){
-            MPI_Send(&gridx[sptcount[i]], send_amount, MPI_DOUBLE, j, i+1, MPI_COMM_WORLD);
-            MPI_Send(&gridy[sptcount[i]], send_amount, MPI_DOUBLE, j, i+2, MPI_COMM_WORLD);          
-            MPI_Send(&gridz[sptcount[i]], send_amount, MPI_DOUBLE, j, i+3, MPI_COMM_WORLD);
-            MPI_Send(&exc[sptcount[i]], send_amount, MPI_DOUBLE, j, i+4, MPI_COMM_WORLD);
-            MPI_Send(&quadwt[sptcount[i]], send_amount, MPI_DOUBLE, j, i+5, MPI_COMM_WORLD);
-            MPI_Send(&gatm[sptcount[i]], send_amount, MPI_INT, j, i+6, MPI_COMM_WORLD);
+            MPI_Send(&gridx[sptcount[i]], send_amount, MPI_DOUBLE, j, i+1, mpi_comm);
+            MPI_Send(&gridy[sptcount[i]], send_amount, MPI_DOUBLE, j, i+2, mpi_comm);          
+            MPI_Send(&gridz[sptcount[i]], send_amount, MPI_DOUBLE, j, i+3, mpi_comm);
+            MPI_Send(&exc[sptcount[i]], send_amount, MPI_DOUBLE, j, i+4, mpi_comm);
+            MPI_Send(&quadwt[sptcount[i]], send_amount, MPI_DOUBLE, j, i+5, mpi_comm);
+            MPI_Send(&gatm[sptcount[i]], send_amount, MPI_INT, j, i+6, mpi_comm);
           }
 
           if(mpirank == j){
-            MPI_Recv(&ngridx[rptcount[j]], send_amount, MPI_DOUBLE, i, i+1, MPI_COMM_WORLD, &status);                 
-            MPI_Recv(&ngridy[rptcount[j]], send_amount, MPI_DOUBLE, i, i+2, MPI_COMM_WORLD, &status);
-            MPI_Recv(&ngridz[rptcount[j]], send_amount, MPI_DOUBLE, i, i+3, MPI_COMM_WORLD, &status);
-            MPI_Recv(&nexc[rptcount[j]], send_amount, MPI_DOUBLE, i, i+4, MPI_COMM_WORLD, &status);
-            MPI_Recv(&nquadwt[rptcount[j]], send_amount, MPI_DOUBLE, i, i+5, MPI_COMM_WORLD, &status);
-            MPI_Recv(&ngatm[rptcount[j]], send_amount, MPI_INT, i, i+6, MPI_COMM_WORLD, &status);
+            MPI_Recv(&ngridx[rptcount[j]], send_amount, MPI_DOUBLE, i, i+1, mpi_comm, &status);                 
+            MPI_Recv(&ngridy[rptcount[j]], send_amount, MPI_DOUBLE, i, i+2, mpi_comm, &status);
+            MPI_Recv(&ngridz[rptcount[j]], send_amount, MPI_DOUBLE, i, i+3, mpi_comm, &status);
+            MPI_Recv(&nexc[rptcount[j]], send_amount, MPI_DOUBLE, i, i+4, mpi_comm, &status);
+            MPI_Recv(&nquadwt[rptcount[j]], send_amount, MPI_DOUBLE, i, i+5, mpi_comm, &status);
+            MPI_Recv(&ngatm[rptcount[j]], send_amount, MPI_INT, i, i+6, mpi_comm, &status);
           }
 
           sptcount[i] += send_amount;

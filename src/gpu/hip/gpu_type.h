@@ -18,6 +18,9 @@
 #include "gpu_libxc_type.h"
 
 #include <hip/hip_runtime.h>
+#if defined(MPIV_GPU)
+  #include <mpi.h>
+#endif
 
 #include <stdio.h>
 
@@ -461,6 +464,9 @@ struct gpu_type {
     unsigned int xc_threadsPerBlock; //Num of threads/block for octree based dft implementation
     unsigned int sswGradThreadsPerBlock;
     // mpi variable definitions
+#if defined(MPIV_GPU)
+    MPI_Comm mpi_comm;
+#endif
     int mpirank;
     int mpisize;
     // timer

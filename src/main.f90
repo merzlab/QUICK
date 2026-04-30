@@ -58,7 +58,7 @@
 #endif
 
 #if defined CUDA_MPIV || defined HIP_MPIV
-    use quick_mpi_module, only: mpisize, mgpu_id, mgpu_ids
+    use quick_mpi_module, only: quick_comm, mpisize, mgpu_id, mgpu_ids
 #endif
 
     implicit none
@@ -104,7 +104,7 @@
     SAFE_CALL(mgpu_query(mpisize, mpirank, mgpu_id, ierr))
     SAFE_CALL(mgpu_setup(ierr))
     if (master) SAFE_CALL(mgpu_write_info(iOutFile, mpisize, mgpu_ids, ierr))
-    SAFE_CALL(mgpu_init_device(mpirank, mpisize, mgpu_id, ierr))
+    SAFE_CALL(mgpu_init_device(quick_comm, mpirank, mpisize, mgpu_id, ierr))
 #endif
 
     !------------------------------------------------------------------

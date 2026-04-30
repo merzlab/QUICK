@@ -104,15 +104,16 @@ contains
   subroutine mpi_initialize(mpisize, mpirank, master, mpierror)
 
     use mpi
+    use quick_mpi_module, only: quick_comm
     implicit none
 
     integer, intent(inout) :: mpisize, mpirank, mpierror
     logical, intent(inout) :: master
 
     call MPI_INIT(mpierror)
-    call MPI_COMM_RANK(MPI_COMM_WORLD,mpirank,mpierror)
-    call MPI_COMM_SIZE(MPI_COMM_WORLD,mpisize,mpierror)
-    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+    call MPI_COMM_RANK(quick_comm,mpirank,mpierror)
+    call MPI_COMM_SIZE(quick_comm,mpisize,mpierror)
+    call MPI_BARRIER(quick_comm,mpierror)
 
     if(mpirank .eq. 0) then
       master = .true.

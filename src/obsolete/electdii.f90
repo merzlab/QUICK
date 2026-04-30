@@ -15,6 +15,7 @@
 subroutine electdiis(jscf,PRMS)
   use allmod
   use mpi
+  use quick_mpi_module, only: quick_comm
   implicit double precision(a-h,o-z)
 
   logical :: diisdone
@@ -516,15 +517,15 @@ subroutine electdiis(jscf,PRMS)
      endif
         
      if (bMPI) then
-        call MPI_BCAST(diisdone,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-!        call MPI_BCAST(O,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-!        call MPI_BCAST(DENSE,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-!        call MPI_BCAST(CO,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-!        call MPI_BCAST(E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+        call MPI_BCAST(diisdone,1,mpi_logical,0,quick_comm,mpierror)
+!        call MPI_BCAST(O,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
+!        call MPI_BCAST(DENSE,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
+!        call MPI_BCAST(CO,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
+!        call MPI_BCAST(E,nbasis,mpi_double_precision,0,quick_comm,mpierror)
+        call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,quick_comm,mpierror)
+        call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,quick_comm,mpierror)
         
-        call MPI_BARRIER(MPI_COMM_WORLD,mpierror)   
+        call MPI_BARRIER(quick_comm,mpierror)   
      endif
   enddo
   return
@@ -543,6 +544,7 @@ end subroutine electdiis
     subroutine electdiisdc(jscf,PRMS)
       use allmod
       use mpi
+      use quick_mpi_module, only: quick_comm
       implicit double precision(a-h,o-z)
 
       logical :: diisdone
@@ -697,12 +699,12 @@ end subroutine electdiis
          !------ MPI/ALL NODES -----------------------      
          ! Broadcast the new density and operator
          if (bMPI) then
-            call MPI_BCAST(nbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(NNmax,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(np,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(Odcsub,np*NNmax*NNmax,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(Xdcsub,np*NNmax*NNmax,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BARRIER(MPI_COMM_WORLD,mpierror)   
+            call MPI_BCAST(nbasis,1,mpi_integer,0,quick_comm,mpierror)
+            call MPI_BCAST(NNmax,1,mpi_integer,0,quick_comm,mpierror)
+            call MPI_BCAST(np,1,mpi_integer,0,quick_comm,mpierror)
+            call MPI_BCAST(Odcsub,np*NNmax*NNmax,mpi_double_precision,0,quick_comm,mpierror)
+            call MPI_BCAST(Xdcsub,np*NNmax*NNmax,mpi_double_precision,0,quick_comm,mpierror)
+            call MPI_BARRIER(quick_comm,mpierror)   
          endif
          !------ END MPI/ALL NODES -------------------
 
@@ -819,11 +821,11 @@ end subroutine electdiis
                do Ittt=1,mpi_dc_fragn(mpirank)
                   itt=mpi_dc_frag(mpirank,ittt)
                   call MPI_SEND(codcsub(1:NNmax,1:NNmax,itt),NNmax*NNmax, &
-                        mpi_double_precision,0,itt,MPI_COMM_WORLD,IERROR)
+                        mpi_double_precision,0,itt,quick_comm,IERROR)
                   call MPI_SEND(codcsubtran(1:NNmax,1:NNmax,itt),NNmax*NNmax, &
-                        mpi_double_precision,0,itt,MPI_COMM_WORLD,IERROR)
+                        mpi_double_precision,0,itt,quick_comm,IERROR)
                   call MPI_SEND(evaldcsub(itt,1:NNmax),NNmax,mpi_double_precision, &
-                        0,itt,MPI_COMM_WORLD,IERROR)                    
+                        0,itt,quick_comm,IERROR)                    
                enddo
 
             else
@@ -832,15 +834,15 @@ end subroutine electdiis
                   do i=1,mpi_dc_fragn(ittt)
                      itt=mpi_dc_frag(ittt,i)
                      call MPI_RECV(codcsub(1:NNmax,1:NNmax,itt),NNmax*NNmax, &
-                           mpi_double_precision,ittt,itt,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
+                           mpi_double_precision,ittt,itt,quick_comm,QUICK_MPI_STATUS,IERROR)
                      call MPI_RECV(codcsubtran(1:NNmax,1:NNmax,itt),NNmax*NNmax, &
-                           mpi_double_precision,ittt,itt,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
+                           mpi_double_precision,ittt,itt,quick_comm,QUICK_MPI_STATUS,IERROR)
                      call MPI_RECV(evaldcsub(itt,1:NNmax),NNmax,mpi_double_precision, &
-                           ittt,itt,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
+                           ittt,itt,quick_comm,QUICK_MPI_STATUS,IERROR)
                   enddo
                enddo
             endif
-            call MPI_BARRIER(MPI_COMM_WORLD,mpierror)           
+            call MPI_BARRIER(quick_comm,mpierror)           
          endif
          !--------------------------------------------
          ! End of diag for subs
@@ -981,10 +983,10 @@ end subroutine electdiis
          !-------- END MPI/MASTER----------------
 
          if (bMPI) then
-            call MPI_BCAST(diisdone,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(nbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-!            call MPI_BCAST(DENSE,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(diisdone,1,mpi_logical,0,quick_comm,mpierror)
+            call MPI_BCAST(nbasis,1,mpi_integer,0,quick_comm,mpierror)
+!            call MPI_BCAST(DENSE,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
+            call MPI_BARRIER(quick_comm,mpierror)
          endif
       enddo
 

@@ -228,6 +228,9 @@ extern "C" void gpu_new_(
     gpu->xc_blocks = 0;
     gpu->xc_threadsPerBlock = 0;
     gpu->sswGradThreadsPerBlock = 0;
+#if defined(MPIV_GPU)
+    gpu->mpi_comm = MPI_COMM_NULL;
+#endif
     gpu->mpirank = -1;
     gpu->mpisize = 0;    
     gpu->timer = NULL;
@@ -2337,7 +2340,7 @@ void prune_grid_sswgrad()
 #if defined(MPIV_GPU)
     GPU_TIMER_START();
 
-    int netgain = getAdjustment(gpu->mpisize, gpu->mpirank, count);
+    int netgain = getAdjustment(gpu->mpi_comm, gpu->mpisize, gpu->mpirank, count);
     count += netgain;
 
     GPU_TIMER_STOP();
@@ -2357,7 +2360,7 @@ void prune_grid_sswgrad()
 
     GPU_TIMER_START();
 
-    sswderRedistribute(gpu->mpisize, gpu->mpirank, count-netgain, count,
+    sswderRedistribute(gpu->mpi_comm, gpu->mpisize, gpu->mpirank, count-netgain, count,
             tmp_gridx, tmp_gridy, tmp_gridz, tmp_exc, tmp_quadwt, tmp_gatm, gpu->gpu_xcq->gridx_ssd->_hostData,
             gpu->gpu_xcq->gridy_ssd->_hostData, gpu->gpu_xcq->gridz_ssd->_hostData,
             gpu->gpu_xcq->exc_ssd->_hostData, gpu->gpu_xcq->quadwt->_hostData,

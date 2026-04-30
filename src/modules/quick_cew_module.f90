@@ -374,7 +374,7 @@ contains
     !write(6,*)"Ecore",(quick_qm_struct%ECore + E)
 
 #ifdef MPIV
-    call MPI_REDUCE(E,Esum,1,mpi_double_precision,mpi_sum,0, MPI_COMM_WORLD, mpierror)
+    call MPI_REDUCE(E,Esum,1,mpi_double_precision,mpi_sum,0, quick_comm, mpierror)
     E=Esum
 #endif
 

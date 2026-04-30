@@ -150,10 +150,10 @@ subroutine qm2_quick_energy(escf,scf_mchg)
 
     !-------------------MPI/ALL NODES------------------------------------    
     if (bMPI) then
-      call MPI_BCAST(natomsave,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(iatomtype,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(natom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(natomsave,1,mpi_integer,0,quick_comm,mpierror)
+      call MPI_BCAST(iatomtype,1,mpi_integer,0,quick_comm,mpierror)
+      call MPI_BCAST(natom,1,mpi_integer,0,quick_comm,mpierror)
+      call MPI_BARRIER(quick_comm,mpierror)
     endif
     !------------------END MPI/ALL NODES---------------------------------    
 

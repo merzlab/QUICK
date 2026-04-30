@@ -255,6 +255,7 @@ subroutine MPI_calmp2
   use quick_gaussian_class_module
   use quick_cutoff_module, only: cshell_density_cutoff
   use mpi
+  use quick_mpi_module, only: quick_comm
   implicit double precision(a-h,o-z)
 
   double precision cutoffTest,testtmp,testCutoff
@@ -267,9 +268,9 @@ subroutine MPI_calmp2
     nelecb = quick_molspec%nelecb
 
   if (bMPI) then
-!     call MPI_BCAST(DENSE,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-!     call MPI_BCAST(CO,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-!     call MPI_BCAST(E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+!     call MPI_BCAST(DENSE,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
+!     call MPI_BCAST(CO,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
+!     call MPI_BCAST(E,nbasis,mpi_double_precision,0,quick_comm,mpierror)
   endif
 
 
@@ -480,12 +481,12 @@ subroutine MPI_calmp2
            enddo
         enddo
         ! send 3 indices integrals to master node
-        call MPI_SEND(temp4d,nbasis*ivir*iocc*nsteplength,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+        call MPI_SEND(temp4d,nbasis*ivir*iocc*nsteplength,mpi_double_precision,0,mpirank,quick_comm,IERROR)
         ! master node will receive infos from every nodes
      else
         do i=1,mpisize-1
            ! receive integrals from slave nodes
-           call MPI_RECV(temp4d,nbasis*ivir*iocc*nsteplength,mpi_double_precision,i,i,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
+           call MPI_RECV(temp4d,nbasis*ivir*iocc*nsteplength,mpi_double_precision,i,i,quick_comm,QUICK_MPI_STATUS,IERROR)
            ! and sum them into operator
            do j1=1,nbasis
               do k1=1,ivir
@@ -503,7 +504,7 @@ subroutine MPI_calmp2
 
      !---------------- MPI/ MASTER -------------------------------
 
-     call MPI_Reduce(ntemp, total_ntemp, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD,IERROR);
+     call MPI_Reduce(ntemp, total_ntemp, 1, MPI_INT, MPI_SUM, 0, quick_comm, IERROR);
      if (master) then
         !write (ioutfile,'("EFFECT INTEGRALS    =",i8)') total_ntemp
 
@@ -543,7 +544,7 @@ subroutine MPI_calmp2
      !---------------- ALL MPI/ MASTER ---------------------------
 
      ! sync all nodes
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,mpierror)
   enddo
 
   if (master) then

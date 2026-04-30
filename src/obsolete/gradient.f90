@@ -26,6 +26,7 @@ subroutine gradient(ierr)
    use allmod
 #ifdef MPIV
    use mpi
+   use quick_mpi_module, only: quick_comm
 #endif
    implicit double precision(a-h,o-z)
 
@@ -116,6 +117,7 @@ subroutine scf_gradient
    use quick_grad_cshell_module
 #ifdef MPIV
    use mpi
+   use quick_mpi_module, only: quick_comm
 #endif
    implicit double precision(a-h,o-z)
 
@@ -190,7 +192,7 @@ endif
 !  3) The derivative of the electron repulsion term
 !---------------------------------------------------------------------
 #ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,mpierror)
 #endif
 
    call cpu_time(timer_begin%T2eGrad)
@@ -203,7 +205,7 @@ endif
 !  4) If DFT, calculate the derivative of exchahnge correlation  term
 !---------------------------------------------------------------------
 #ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,mpierror)
 #endif
 
    if (quick_method%DFT) then
@@ -223,14 +225,14 @@ endif
 
 #ifdef MPIV
 
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,mpierror)
 
    call cpu_time(timer_begin%TGradred) 
 
 ! sum up all gradient contributions
-   call MPI_REDUCE(quick_qm_struct%gradient, tmp_grad, 3*natom, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+   call MPI_REDUCE(quick_qm_struct%gradient, tmp_grad, 3*natom, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
    if(quick_molspec%nextatom.gt.0) call MPI_REDUCE(quick_qm_struct%ptchg_gradient, tmp_ptchg_grad, 3*quick_molspec%nextatom,& 
-                                   mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+                                   mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
    if(master) then
      quick_qm_struct%gradient(:) = tmp_grad(:)
      if(quick_molspec%nextatom.gt.0) quick_qm_struct%ptchg_gradient(:) = tmp_ptchg_grad(:)
@@ -244,7 +246,7 @@ endif
 
 !!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef MPIV
-!   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+!   call MPI_BARRIER(quick_comm,mpierror)
 if(master) then
 #endif
 
@@ -451,7 +453,7 @@ endif
    timer_cumer%T1eVGrad=timer_cumer%T1eVGrad+timer_end%T1eVGrad-timer_begin%T1eVGrad
 
 #ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,mpierror)
 #endif
 
 #ifdef MPIV
@@ -487,6 +489,7 @@ subroutine get_kinetic_grad
    use allmod
 #ifdef MPIV
    use mpi
+   use quick_mpi_module, only: quick_comm
 #endif
    implicit double precision(a-h,o-z)
 
@@ -526,7 +529,7 @@ subroutine get_kinetic_grad
    enddo
 #ifdef MPIV
    endif
-   call MPI_BCAST(quick_scratch%hold,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+   call MPI_BCAST(quick_scratch%hold,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
 #endif
 
    if (quick_method%debug) then
@@ -590,7 +593,7 @@ subroutine get_kinetic_grad
       enddo
 
 #ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,mpierror)
 #endif
 
    return
@@ -605,6 +608,7 @@ subroutine get_electron_replusion_grad
    use quick_cutoff_module, only: cshell_dnscreen
 #ifdef MPIV
    use mpi
+   use quick_mpi_module, only: quick_comm
 #endif
    implicit double precision(a-h,o-z)
 
@@ -693,7 +697,7 @@ subroutine get_electron_replusion_grad
 #endif
 
 #ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,mpierror)
 #endif
 
    return
@@ -743,6 +747,7 @@ subroutine get_xc_grad
    use xc_f90_lib_m
 #ifdef MPIV
    use mpi
+   use quick_mpi_module, only: quick_comm
 #endif
    implicit double precision(a-h,o-z)
 

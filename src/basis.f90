@@ -22,6 +22,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
 
 #ifdef MPIV
    use mpi
+   use quick_mpi_module, only: quick_comm
 #endif
 
    !
@@ -267,12 +268,12 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
 #ifdef MPIV
    ! =============END MPI/ALL NODES=====================
    if (bMPI) then
-      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(natom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(nshell,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(nbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(nprim,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+      call MPI_BARRIER(quick_comm,mpierror)
+      call MPI_BCAST(natom,1,mpi_integer,0,quick_comm,mpierror)
+      call MPI_BCAST(nshell,1,mpi_integer,0,quick_comm,mpierror)
+      call MPI_BCAST(nbasis,1,mpi_integer,0,quick_comm,mpierror)
+      call MPI_BCAST(nprim,1,mpi_integer,0,quick_comm,mpierror)
+      call MPI_BARRIER(quick_comm,mpierror)
    endif
 #endif
 
@@ -833,8 +834,8 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
 #ifdef MPIV
    !======== MPI/ALL NODES ====================
    if (bMPI) then
-      call MPI_BCAST(maxcontract,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_method%hasF,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(maxcontract,1,mpi_integer,0,quick_comm,mpierror)
+      call MPI_BCAST(quick_method%hasF,1,mpi_logical,0,quick_comm,mpierror)
    endif
    !======== END MPI/ALL NODES ================
 #endif

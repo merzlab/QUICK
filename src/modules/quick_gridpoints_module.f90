@@ -118,7 +118,6 @@ module quick_gridpoints_module
     end type quick_xcg_tmp_type
 
 
-
     type(quick_xc_grid_type), save :: quick_dft_grid
     type(quick_xcg_tmp_type), save :: quick_xcg_tmp
 
@@ -148,6 +147,9 @@ module quick_gridpoints_module
     use quick_molspec_module, only: quick_molspec, xyz, natom
     use quick_basis_module
     use quick_timer_module
+#if defined(MPIV) && !defined(MPIV_GPU)
+    use quick_mpi_module, only: quick_comm
+#endif
 
     implicit double precision(a-h,o-z)
     type(quick_xc_grid_type) self
@@ -156,7 +158,6 @@ module quick_gridpoints_module
 
     !Form the quadrature and store coordinates and other information
     !Measure the time to form grid
-
     
     call alloc_xcg_tmp_variables(xcg_tmp)
     xcg_tmp%sswt = 0.0d0
@@ -165,7 +166,6 @@ module quick_gridpoints_module
 #ifdef MPIV
    if(master) then
 #endif
-   
    if (quick_method%iSG.eq.1) call gridformSG1() 
 
 #ifdef MPIV
@@ -212,7 +212,6 @@ module quick_gridpoints_module
                 xcg_tmp%arr_rwt(idx_grid) = RWT(Irad)
                 xcg_tmp%arr_rad3(idx_grid) = rad3
             enddo
-
         enddo
     enddo
 
@@ -238,7 +237,6 @@ module quick_gridpoints_module
 
     !Calculate the grid weights and store them
 #if defined(GPU) || defined(MPIV_GPU)
-
     call gpu_get_ssw(xcg_tmp%init_grid_ptx, xcg_tmp%init_grid_pty, xcg_tmp%init_grid_ptz, &
     xcg_tmp%arr_wtang, xcg_tmp%arr_rwt, xcg_tmp%arr_rad3, &
     xcg_tmp%sswt, xcg_tmp%weight, xcg_tmp%init_grid_atm, self%init_ngpts)
@@ -246,9 +244,7 @@ module quick_gridpoints_module
 #else
 
 #if defined(MPIV) && !defined(MPIV_GPU)
-
    if(bMPI) then
-
       call setup_ssw_mpi
 
       ist=self%igridptll(mpirank+1)
@@ -271,22 +267,16 @@ module quick_gridpoints_module
    if(bMPI) then
       call get_mpi_ssw
    endif
-
 #endif
-
 #endif
 
 #if defined(MPIV)
    if(master) then
 #endif
-
-    RECORD_TIME(timer_end%TDFTGrdWt)
-
-    timer_cumer%TDFTGrdWt = timer_cumer%TDFTGrdWt + timer_end%TDFTGrdWt - timer_begin%TDFTGrdWt
-
     !Measure time to pack grid points
+    RECORD_TIME(timer_end%TDFTGrdWt)
+    timer_cumer%TDFTGrdWt = timer_cumer%TDFTGrdWt + timer_end%TDFTGrdWt - timer_begin%TDFTGrdWt
     RECORD_TIME(timer_begin%TDFTGrdPck)
-
 #if defined(MPIV)
    endif
 #endif
@@ -295,12 +285,12 @@ module quick_gridpoints_module
 #if defined(MPIV_GPU)
    if(master) then
 #endif
-
-      
     ! initialize cpp data structure for octree and grid point packing
+#if defined(MPIV) && !defined(MPIV_GPU)
+    call gpack_initialize(quick_comm)
+#else
     call gpack_initialize()
-
-
+#endif
     
     ! run octree, pack grid points and get the array sizes for f90 memory allocation
     call gpack_pack_pts(xcg_tmp%init_grid_ptx, xcg_tmp%init_grid_pty, xcg_tmp%init_grid_ptz, &
@@ -308,19 +298,14 @@ module quick_gridpoints_module
     nbasis, maxcontract, quick_method%DMCutoff, quick_method%XCCutoff, sigrad2, ncontract, &
     aexp, dcoeff, quick_basis%ncenter, itype, xyz, &
     self%gridb_count, self%nbins, self%nbtotbf, self%nbtotpf, t_octree, t_prscrn)
-
-
-
     
     timer_cumer%TDFTGrdOct = timer_cumer%TDFTGrdOct + t_octree
     timer_cumer%TDFTPrscrn = timer_cumer%TDFTPrscrn + t_prscrn
-
 #if defined(MPIV_GPU)
     endif
 #endif
 
 #ifdef MPIV
-
     if(master) then
 #endif
 !    write(*,*) "quick_grid_point_module: Total grid pts", self%gridb_count,"bin count:", self%nbins, "total bfs:", self%nbtotbf, &
@@ -328,7 +313,6 @@ module quick_gridpoints_module
 #ifdef MPIV
     endif
 #endif
-
 
 #ifdef MPIV
    call setup_xc_mpi_1
@@ -339,16 +323,13 @@ module quick_gridpoints_module
 #ifdef MPIV
     if(master) then
 #endif
-
 #if defined(GPU) || defined(MPIV_GPU)
 #if defined(MPIV_GPU)
    if(master) then
 #endif
-
     ! save packed grid information into f90 data structures
      call get_gpu_grid_info(self%gridxb, self%gridyb, self%gridzb, self%gridb_sswt, self%gridb_weight, self%gridb_atm, &
      self%bin_locator, self%basf, self%primf, self%basf_counter, self%primf_counter, self%bin_counter)
-
 #if defined(MPIV_GPU)
     endif
 #endif
@@ -357,7 +338,6 @@ module quick_gridpoints_module
     ! save packed grid information into f90 data structures
     call get_cpu_grid_info(self%gridxb, self%gridyb, self%gridzb, self%gridb_sswt, self%gridb_weight, self%gridb_atm, &
     self%basf, self%primf, self%basf_counter, self%primf_counter, self%bin_counter)
-
 #endif
 
 #ifdef MPIV
@@ -382,7 +362,6 @@ module quick_gridpoints_module
 !            enddo
 !    enddo
 #endif
-
 
 !    do i=1, self%nbins
 !        nid=self%basf_counter(i+1)-self%basf_counter(i)
@@ -423,12 +402,11 @@ module quick_gridpoints_module
 !    write(*,*) "DFT grid timings: Grid form:", timer_cumer%TDFTGrdGen, "Compute grid weights:", timer_cumer%TDFTGrdWt, &
 !    "Octree:",timer_cumer%TDFTGrdOct,"Prescreening:",timer_cumer%TDFTPrscrn, "Pack points:",timer_cumer%TDFTGrdPck
 
-
 #ifdef MPIV
     endif
 #endif
-
     end subroutine
+
 
     ! allocate memory for radius of significance, phi and dphi for host xc
     ! version

@@ -60,6 +60,7 @@ subroutine electdiis(jscf,ierr)
    use quick_scf_module
 #ifdef MPIV
    use mpi
+   use quick_mpi_module, only: quick_comm
 #endif
 
    implicit none
@@ -149,13 +150,13 @@ subroutine electdiis(jscf,ierr)
 
 #ifdef MPIV
    if (bMPI) then
-!      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+!      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,quick_comm,mpierror)
+      call MPI_BARRIER(quick_comm,mpierror)
    endif
 #endif
 
@@ -570,15 +571,15 @@ subroutine electdiis(jscf,ierr)
 
 #ifdef MPIV
       if (bMPI) then
-         call MPI_BCAST(diisdone,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-!         call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(quick_qm_struct%denseOld,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(diisdone,1,mpi_logical,0,quick_comm,mpierror)
+!         call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(quick_qm_struct%denseOld,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,quick_comm,mpierror)
+         call MPI_BARRIER(quick_comm,mpierror)
       endif
 #endif
       if (quick_method%debug)  call debug_SCF(jscf)

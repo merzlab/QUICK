@@ -21,8 +21,13 @@ module quick_mpi_module
 !  AUTHOR      : Yipu Miao
 !------------------------------------------------------------------------    
 
+!ZL2026
 #ifdef MPIV
+    use, intrinsic :: iso_c_binding
     use mpi
+    public :: quick_comm, is_master
+    integer :: quick_comm = MPI_COMM_WORLD  ! default
+    logical, save :: is_master = .true.
 #endif
 
     integer :: mpierror
@@ -45,7 +50,8 @@ module quick_mpi_module
     integer, allocatable :: nextatomul(:)
 
     contains
-    
+
+
     !----------------
     ! check mpi setup
     !----------------

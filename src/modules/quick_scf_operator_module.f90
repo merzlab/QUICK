@@ -39,6 +39,7 @@ contains
      use quick_oei_module, only:get1eEnergy,get1e
 #ifdef MPIV
      use mpi
+     use quick_mpi_module, only: quick_comm
 #endif
   
      implicit none
@@ -82,7 +83,7 @@ contains
      call cshell_density_cutoff
   
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,mpierror)
 #endif
   
   
@@ -165,7 +166,7 @@ contains
 
 
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,mpierror)
 #endif
   
   !  Terminate the timer for 2e-integrals
@@ -180,7 +181,7 @@ contains
   !-----------------------------------------------------------------
   
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,mpierror)
 #endif
   
      if (quick_method%DFT) then
@@ -195,7 +196,7 @@ contains
         call copySym(quick_qm_struct%o,nbasis)
  
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,mpierror)
 #endif
   
   !  Stop the exchange correlation timer
@@ -210,14 +211,14 @@ contains
 #ifdef MPIV
   !  MPI reduction operations
   
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,mpierror)
   
      RECORD_TIME(timer_begin%TEred)
   
      if (quick_method%DFT) then
-     call MPI_REDUCE(quick_qm_struct%Exc, Excsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-     call MPI_REDUCE(quick_qm_struct%aelec, aelec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-     call MPI_REDUCE(quick_qm_struct%belec, belec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+     call MPI_REDUCE(quick_qm_struct%Exc, Excsum, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
+     call MPI_REDUCE(quick_qm_struct%aelec, aelec, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
+     call MPI_REDUCE(quick_qm_struct%belec, belec, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
   
      if(master) then
        quick_qm_struct%Exc = Excsum
@@ -226,8 +227,8 @@ contains
      endif
      endif
   
-     call MPI_REDUCE(quick_qm_struct%o, quick_scratch%osum, nbasis*nbasis, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-     call MPI_REDUCE(quick_qm_struct%Eel, Eelsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+     call MPI_REDUCE(quick_qm_struct%o, quick_scratch%osum, nbasis*nbasis, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
+     call MPI_REDUCE(quick_qm_struct%Eel, Eelsum, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
   
      if(master) then
        quick_qm_struct%o(:,:) = quick_scratch%osum(:,:)
@@ -279,6 +280,7 @@ contains
      use xc_f90_lib_m
 #ifdef MPIV
      use mpi
+     use quick_mpi_module, only: quick_comm
 #endif
      implicit none
   
