@@ -40,14 +40,14 @@
 | If you have any comments or queries, please reach out to us on GitHub issues or discussion sections:     
 | https://github.com/merzlab/QUICK.                                                                        
 |                                                                                                          
-| TASK STARTS ON: Mon Mar  2 15:06:43 2026
+| TASK STARTS ON: Fri May  1 14:30:50 2026
 | INPUT FILE :    ene_psb3_blyp_631g_sg2.in
 | OUTPUT FILE:    ene_psb3_blyp_631g_sg2.out
 | BASIS SET PATH: /Users/duanyuting/quick_install/basis
 
  @ Read Job And Atom
 
-  KEYWORD=BLYP BASIS=6-31G CUTOFF=1.0E-9 DENSERMS=1.0E-6  ZMAKE ENERGY DIPOLE CHARGE=+1 DFT SG2 IRADTEMP=50 LEBEDEV_TYPE=194 BLYP 6-31G
+  KEYWORD=BLYP BASIS=6-31G CUTOFF=1.0E-9 DENSERMS=1.0E-6  ZMAKE ENERGY DIPOLE CHARGE=+1 SG2
  ============== JOB CARD =============
  METHOD = DENSITY FUNCTIONAL THEORY
  USING LIBXC VERSION: 4.3.4
@@ -62,14 +62,18 @@
  Z-MATRIX CONSTRUCTION
  DIPOLE
  STANDARD GRID = SG2
+ Level shifting allowed after cycle    3
+ DIIS error must exceed 0.100 for level shifting
+ Max HOMO-LUMO gap to allow level shifting = 0.200
  MAX SCF CYCLES =    200
  MAX DIIS CYCLES =   10
  DELTA DENSITY START CYCLE =    3
  COMPUTATIONAL CUTOFF: 
-      TWO-e INTEGRAL   =  0.100E-08
-      BASIS SET PRIME  =  0.100E-09
-      MATRIX ELEMENTS  =  0.100E-09
-      BASIS FUNCTION   =  0.100E-05
+      TWO-e INTEGRAL         =  0.100E-08
+      BASIS SET PRIME        =  0.100E-09
+      MATRIX ELEMENTS        =  0.100E-09
+      BASIS FUNCTION         =  0.100E-05
+      NEAR-LINEAR DEPENDENCY =  0.100E-04
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G,  TYPE = CARTESIAN
 | BASIS FILE = /Users/duanyuting/quick_install/basis/6-31G.BAS
@@ -173,34 +177,41 @@
 
  @ Begin Energy Calculation
 
+| condition number of overlap matrix:    2.035E+03
+| Smallest eigenvalue of overlap matrix:    2.433E-03
+
                                          SCF ENERGY
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -250.519179891      ------         0.481     1        0.00      0.48      0.00    0.2182E+01  0.5672E-01  0.5612E+00
-|  2   -249.449300578  -.106988E+01       0.559     2        0.00      0.56      0.00    0.1744E+00  0.3802E-01  0.4616E+00
-|  3   -248.835727964  -.613573E+00       0.550     3        0.00      0.55      0.00    0.3257E+00  0.3433E-01  0.4458E+00
-|  4   -249.527329589  0.691602E+00       0.551     4        0.00      0.55      0.00    0.1839E+00  0.1264E-01  0.2003E+00
-|  5   -249.634278774  0.106949E+00       0.598     5        0.00      0.60      0.00    0.5005E-01  0.4336E-02  0.6857E-01
-|  6   -249.646186095  0.119073E-01       0.511     6        0.00      0.51      0.00    0.2672E-01  0.1614E-02  0.2405E-01
-|  7   -249.649741887  0.355579E-02       0.498     7        0.00      0.50      0.00    0.4975E-02  0.4113E-03  0.7033E-02
-|  8   -249.649839903  0.980160E-04       0.488     8        0.00      0.49      0.00    0.3061E-02  0.1793E-03  0.2690E-02
-|  9   -249.649862594  0.226909E-04       0.510     9        0.00      0.51      0.00    0.7897E-03  0.6749E-04  0.9624E-03
-| 10   -249.649865647  0.305265E-05       0.476    10        0.00      0.48      0.00    0.3018E-03  0.2514E-04  0.3418E-03
-| 11   -249.649866242  0.595436E-06       0.499     1        0.00      0.50      0.00    0.2580E-04  0.4010E-05  0.4220E-04
-| 12   -249.649866248  0.605473E-08       0.462     2        0.00      0.46      0.00    0.6974E-05  0.5233E-06  0.9793E-05
+|  1   -250.519179891      ------         0.458     1        0.00      0.46      0.00    0.2182E+01  0.5672E-01  0.5612E+00
+|  2   -249.449300578  -.106988E+01       0.530     2        0.00      0.53      0.00    0.1744E+00  0.3802E-01  0.4616E+00
+|  3   -248.835727964  -.613573E+00       0.523     3        0.00      0.52      0.00    0.3257E+00  0.2460E-01  0.3580E+00
+|   ***  Level shifting applied  ( HOMO-LUMO gap =  0.057 au ) ***
+|  4   -249.597390580  0.761663E+00       0.521     4        0.00      0.52      0.00    0.1128E+00  0.8792E-02  0.1078E+00
+|   ***  Level shifting applied  ( HOMO-LUMO gap =  0.176 au ) ***
+|  5   -249.647468448  0.500779E-01       0.516     5        0.00      0.52      0.00    0.2841E-01  0.3122E-02  0.4603E-01
+|  6   -249.647425049  -.433986E-04       0.507     6        0.00      0.51      0.00    0.3051E-01  0.1338E-02  0.2699E-01
+|  7   -249.649810558  0.238551E-02       0.505     7        0.00      0.50      0.00    0.4117E-02  0.3085E-03  0.6194E-02
+|  8   -249.649830109  0.195511E-04       0.489     8        0.00      0.49      0.00    0.3976E-02  0.2071E-03  0.4393E-02
+|  9   -249.649862182  0.320723E-04       0.484     9        0.00      0.48      0.00    0.9540E-03  0.5708E-04  0.9755E-03
+| 10   -249.649865918  0.373664E-05       0.470    10        0.00      0.47      0.00    0.2762E-03  0.2205E-04  0.3802E-03
+| 11   -249.649866236  0.317368E-06       0.462     1        0.00      0.46      0.00    0.5896E-04  0.5908E-05  0.7782E-04
+| 12   -249.649866250  0.141719E-07       0.444     2        0.00      0.44      0.00    0.2398E-04  0.1837E-05  0.1878E-04
+| 13   -249.649866253  0.312974E-08       0.431     3        0.00      0.43      0.00    0.6193E-05  0.6933E-06  0.7577E-05
 | ------------------------------------------------------------------------------------------------------------------------
-| REACH CONVERGENCE AFTER  12 CYCLES
-| MAX ERROR = 0.697396E-05   RMS CHANGE = 0.523335E-06   MAX CHANGE = 0.979322E-05
+| REACH CONVERGENCE AFTER  13 CYCLES
+| MAX ERROR = 0.619325E-05   RMS CHANGE = 0.693341E-06   MAX CHANGE = 0.757749E-05
 | -----------------------------------------------
- ALPHA ELECTRON DENSITY    =    21.9992550134
- BETA ELECTRON DENSITY     =    21.9992550134
- ELECTRONIC ENERGY    =   -456.835044616
+ ALPHA ELECTRON DENSITY    =    21.9992550113
+ BETA ELECTRON DENSITY     =    21.9992550113
+ ELECTRONIC ENERGY    =   -456.835044621
  CORE_CORE REPULSION  =    207.185178368
- TOTAL ENERGY         =   -249.649866248
+ TOTAL ENERGY         =   -249.649866253
 
  @ End Energy calculation
 
+  Skipping one-electron property calculation.
 
  @ Begin Zmake conversion
 
@@ -251,7 +262,7 @@
 
     DIPOLE (DEBYE)
       X         Y         Z        TOTAL
-    3.5265    0.9910    0.7268    3.7345
+    3.5264    0.9910    0.7268    3.7344
 
  @ End Charge and Dipole Calculation
 
@@ -259,19 +270,19 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.122112000(  1.89%)
-| DFT GRID OPERATIONS =     0.139673000(  2.16%)
-| TOTAL SCF TIME      =     6.187854000( 95.56%)
-|       TOTAL OP TIME      =     6.180598000( 95.45%)
-|             TOTAL 1e TIME      =     0.003779000(  0.06%)
-|             TOTAL 2e TIME      =     2.385424000( 36.84%)
-|             TOTAL EXC TIME     =     3.787217000( 58.48%)
-|       TOTAL DII TIME      =     0.007108000(  0.11%)
-|             TOTAL DIAG TIME    =     0.004536000(  0.07%)
-| TOTAL TIME          =     6.475556000
+| INITIAL GUESS TIME  =     0.090010000(  1.37%)
+| DFT GRID OPERATIONS =     0.131461000(  2.00%)
+| TOTAL SCF TIME      =     6.342446000( 96.26%)
+|       TOTAL OP TIME      =     6.334166000( 96.13%)
+|             TOTAL 1e TIME      =     0.003571000(  0.05%)
+|             TOTAL 2e TIME      =     2.447261000( 37.14%)
+|             TOTAL EXC TIME     =     3.879348000( 58.88%)
+|       TOTAL DII TIME      =     0.008124000(  0.12%)
+|             TOTAL DIAG TIME    =     0.004672000(  0.07%)
+| TOTAL TIME          =     6.589039000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  6.5 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  6.6 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Mon Mar  2 15:06:50 2026
+| Normal Termination. Task Finished on: Fri May  1 14:30:56 2026

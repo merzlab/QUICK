@@ -40,14 +40,14 @@
 | If you have any comments or queries, please reach out to us on GitHub issues or discussion sections:     
 | https://github.com/merzlab/QUICK.                                                                        
 |                                                                                                          
-| TASK STARTS ON: Mon Mar  2 15:06:55 2026
+| TASK STARTS ON: Fri May  1 14:31:00 2026
 | INPUT FILE :    ene_psb3_blyp_631g_sg3.in
 | OUTPUT FILE:    ene_psb3_blyp_631g_sg3.out
 | BASIS SET PATH: /Users/duanyuting/quick_install/basis
 
  @ Read Job And Atom
 
-  KEYWORD=BLYP BASIS=6-31G CUTOFF=1.0E-9 DENSERMS=1.0E-6  ZMAKE ENERGY DIPOLE CHARGE=+1 DFT SG3 IRADTEMP=50 LEBEDEV_TYPE=194 BLYP 6-31G
+  KEYWORD=BLYP BASIS=6-31G CUTOFF=1.0E-9 DENSERMS=1.0E-6  ZMAKE ENERGY DIPOLE CHARGE=+1 SG3
  ============== JOB CARD =============
  METHOD = DENSITY FUNCTIONAL THEORY
  USING LIBXC VERSION: 4.3.4
@@ -62,14 +62,18 @@
  Z-MATRIX CONSTRUCTION
  DIPOLE
  STANDARD GRID = SG3
+ Level shifting allowed after cycle    3
+ DIIS error must exceed 0.100 for level shifting
+ Max HOMO-LUMO gap to allow level shifting = 0.200
  MAX SCF CYCLES =    200
  MAX DIIS CYCLES =   10
  DELTA DENSITY START CYCLE =    3
  COMPUTATIONAL CUTOFF: 
-      TWO-e INTEGRAL   =  0.100E-08
-      BASIS SET PRIME  =  0.100E-09
-      MATRIX ELEMENTS  =  0.100E-09
-      BASIS FUNCTION   =  0.100E-05
+      TWO-e INTEGRAL         =  0.100E-08
+      BASIS SET PRIME        =  0.100E-09
+      MATRIX ELEMENTS        =  0.100E-09
+      BASIS FUNCTION         =  0.100E-05
+      NEAR-LINEAR DEPENDENCY =  0.100E-04
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G,  TYPE = CARTESIAN
 | BASIS FILE = /Users/duanyuting/quick_install/basis/6-31G.BAS
@@ -173,34 +177,41 @@
 
  @ Begin Energy Calculation
 
+| condition number of overlap matrix:    2.035E+03
+| Smallest eigenvalue of overlap matrix:    2.433E-03
+
                                          SCF ENERGY
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -250.521920493      ------         0.860     1        0.00      0.86      0.00    0.2182E+01  0.5671E-01  0.5611E+00
-|  2   -249.451985844  -.106993E+01       0.942     2        0.00      0.94      0.00    0.1744E+00  0.3802E-01  0.4616E+00
-|  3   -248.838274565  -.613711E+00       0.937     3        0.00      0.94      0.00    0.3258E+00  0.3434E-01  0.4458E+00
-|  4   -249.529990783  0.691716E+00       0.930     4        0.00      0.93      0.00    0.1839E+00  0.1264E-01  0.2004E+00
-|  5   -249.636968929  0.106978E+00       0.932     5        0.00      0.93      0.00    0.5005E-01  0.4336E-02  0.6856E-01
-|  6   -249.648878529  0.119096E-01       0.919     6        0.00      0.92      0.00    0.2671E-01  0.1614E-02  0.2403E-01
-|  7   -249.652434950  0.355642E-02       0.909     7        0.00      0.91      0.00    0.4966E-02  0.4113E-03  0.7022E-02
-|  8   -249.652533114  0.981637E-04       0.897     8        0.00      0.90      0.00    0.3053E-02  0.1787E-03  0.2682E-02
-|  9   -249.652555640  0.225254E-04       0.888     9        0.00      0.89      0.00    0.7902E-03  0.6756E-04  0.9616E-03
-| 10   -249.652558692  0.305288E-05       0.878    10        0.00      0.88      0.00    0.3023E-03  0.2516E-04  0.3426E-03
-| 11   -249.652559289  0.596925E-06       0.866     1        0.00      0.87      0.00    0.2582E-04  0.4013E-05  0.4220E-04
-| 12   -249.652559295  0.605576E-08       0.851     2        0.00      0.85      0.00    0.6912E-05  0.5201E-06  0.9712E-05
+|  1   -250.521920493      ------         0.816     1        0.00      0.82      0.00    0.2182E+01  0.5671E-01  0.5611E+00
+|  2   -249.451985844  -.106993E+01       0.895     2        0.00      0.89      0.00    0.1744E+00  0.3802E-01  0.4616E+00
+|  3   -248.838274565  -.613711E+00       0.885     3        0.00      0.88      0.00    0.3258E+00  0.2460E-01  0.3580E+00
+|   ***  Level shifting applied  ( HOMO-LUMO gap =  0.057 au ) ***
+|  4   -249.600074255  0.761800E+00       0.886     4        0.00      0.89      0.00    0.1128E+00  0.8792E-02  0.1078E+00
+|   ***  Level shifting applied  ( HOMO-LUMO gap =  0.176 au ) ***
+|  5   -249.650162736  0.500885E-01       0.871     5        0.00      0.87      0.00    0.2840E-01  0.3122E-02  0.4602E-01
+|  6   -249.650119574  -.431616E-04       0.861     6        0.00      0.86      0.00    0.3051E-01  0.1338E-02  0.2699E-01
+|  7   -249.652503608  0.238403E-02       0.856     7        0.00      0.86      0.00    0.4117E-02  0.3085E-03  0.6194E-02
+|  8   -249.652523166  0.195578E-04       0.840     8        0.00      0.84      0.00    0.3976E-02  0.2071E-03  0.4393E-02
+|  9   -249.652555231  0.320651E-04       0.837     9        0.00      0.84      0.00    0.9539E-03  0.5707E-04  0.9754E-03
+| 10   -249.652558966  0.373561E-05       0.826    10        0.00      0.83      0.00    0.2762E-03  0.2204E-04  0.3801E-03
+| 11   -249.652559283  0.316733E-06       0.814     1        0.00      0.81      0.00    0.5907E-04  0.5914E-05  0.7799E-04
+| 12   -249.652559297  0.142173E-07       0.800     2        0.00      0.80      0.00    0.2398E-04  0.1837E-05  0.1878E-04
+| 13   -249.652559300  0.315384E-08       0.788     3        0.00      0.79      0.00    0.6190E-05  0.6929E-06  0.7572E-05
 | ------------------------------------------------------------------------------------------------------------------------
-| REACH CONVERGENCE AFTER  12 CYCLES
-| MAX ERROR = 0.691246E-05   RMS CHANGE = 0.520120E-06   MAX CHANGE = 0.971223E-05
+| REACH CONVERGENCE AFTER  13 CYCLES
+| MAX ERROR = 0.618956E-05   RMS CHANGE = 0.692907E-06   MAX CHANGE = 0.757229E-05
 | -----------------------------------------------
- ALPHA ELECTRON DENSITY    =    21.9995381442
- BETA ELECTRON DENSITY     =    21.9995381442
- ELECTRONIC ENERGY    =   -456.837737664
+ ALPHA ELECTRON DENSITY    =    21.9995381443
+ BETA ELECTRON DENSITY     =    21.9995381443
+ ELECTRONIC ENERGY    =   -456.837737669
  CORE_CORE REPULSION  =    207.185178368
- TOTAL ENERGY         =   -249.652559295
+ TOTAL ENERGY         =   -249.652559300
 
  @ End Energy calculation
 
+  Skipping one-electron property calculation.
 
  @ Begin Zmake conversion
 
@@ -236,7 +247,7 @@
    C             -0.2146            -0.0886
    C             -0.0194            -0.1077
    C             -0.0681             0.0185
-   C             -0.1051            -0.1437
+   C             -0.1052            -0.1437
    C              0.1952             0.0891
    N             -0.5738            -0.1710
    H              0.1636             0.1443
@@ -251,7 +262,7 @@
 
     DIPOLE (DEBYE)
       X         Y         Z        TOTAL
-    3.5277    0.9913    0.7267    3.7357
+    3.5276    0.9913    0.7268    3.7356
 
  @ End Charge and Dipole Calculation
 
@@ -259,19 +270,19 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.145351000(  1.29%)
-| DFT GRID OPERATIONS =     0.324650000(  2.87%)
-| TOTAL SCF TIME      =    10.811775000( 95.70%)
-|       TOTAL OP TIME      =    10.805245000( 95.64%)
-|             TOTAL 1e TIME      =     0.003898000(  0.03%)
-|             TOTAL 2e TIME      =     2.438592000( 21.59%)
-|             TOTAL EXC TIME     =     8.358438000( 73.99%)
-|       TOTAL DII TIME      =     0.006374000(  0.06%)
-|             TOTAL DIAG TIME    =     0.004506000(  0.04%)
-| TOTAL TIME          =    11.297461000
+| INITIAL GUESS TIME  =     0.088906000(  0.78%)
+| DFT GRID OPERATIONS =     0.301428000(  2.65%)
+| TOTAL SCF TIME      =    10.980491000( 96.44%)
+|       TOTAL OP TIME      =    10.973537000( 96.38%)
+|             TOTAL 1e TIME      =     0.003538000(  0.03%)
+|             TOTAL 2e TIME      =     2.449284000( 21.51%)
+|             TOTAL EXC TIME     =     8.516746000( 74.80%)
+|       TOTAL DII TIME      =     0.006791000(  0.06%)
+|             TOTAL DIAG TIME    =     0.004656000(  0.04%)
+| TOTAL TIME          =    11.385887000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes 11.3 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes 11.4 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Mon Mar  2 15:07:07 2026
+| Normal Termination. Task Finished on: Fri May  1 14:31:11 2026

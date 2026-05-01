@@ -40,14 +40,14 @@
 | If you have any comments or queries, please reach out to us on GitHub issues or discussion sections:     
 | https://github.com/merzlab/QUICK.                                                                        
 |                                                                                                          
-| TASK STARTS ON: Mon Mar  2 15:06:07 2026
+| TASK STARTS ON: Fri May  1 14:31:20 2026
 | INPUT FILE :    ene_wat_blyp_631g_sg3.in
 | OUTPUT FILE:    ene_wat_blyp_631g_sg3.out
 | BASIS SET PATH: /Users/duanyuting/quick_install/basis
 
  @ Read Job And Atom
 
-  KEYWORD=BLYP BASIS=6-31G CUTOFF=1.0E-9 DENSERMS=1.0E-6  ENERGY DIPOLE DFT SG3 IRADTEMP=50 LEBEDEV_TYPE=194 BLYP 6-31G
+  KEYWORD=BLYP BASIS=6-31G CUTOFF=1.0E-9 DENSERMS=1.0E-6  ENERGY DIPOLE SG3
  ============== JOB CARD =============
  METHOD = DENSITY FUNCTIONAL THEORY
  USING LIBXC VERSION: 4.3.4
@@ -61,14 +61,18 @@
  READ SAD GUESS FROM FILE
  DIPOLE
  STANDARD GRID = SG3
+ Level shifting allowed after cycle    3
+ DIIS error must exceed 0.100 for level shifting
+ Max HOMO-LUMO gap to allow level shifting = 0.200
  MAX SCF CYCLES =    200
  MAX DIIS CYCLES =   10
  DELTA DENSITY START CYCLE =    3
  COMPUTATIONAL CUTOFF: 
-      TWO-e INTEGRAL   =  0.100E-08
-      BASIS SET PRIME  =  0.100E-09
-      MATRIX ELEMENTS  =  0.100E-09
-      BASIS FUNCTION   =  0.100E-05
+      TWO-e INTEGRAL         =  0.100E-08
+      BASIS SET PRIME        =  0.100E-09
+      MATRIX ELEMENTS        =  0.100E-09
+      BASIS FUNCTION         =  0.100E-05
+      NEAR-LINEAR DEPENDENCY =  0.100E-04
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = 6-31G,  TYPE = CARTESIAN
 | BASIS FILE = /Users/duanyuting/quick_install/basis/6-31G.BAS
@@ -132,21 +136,25 @@
 
  @ Begin Energy Calculation
 
+| condition number of overlap matrix:    4.902E+01
+| Smallest eigenvalue of overlap matrix:    6.950E-02
+
                                          SCF ENERGY
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
 |  1    -76.339268378      ------         0.029     1        0.00      0.03      0.00    0.1650E+01  0.1022E+00  0.4253E+00
 |  2    -76.281206232  -.580621E-01       0.029     2        0.00      0.03      0.00    0.2852E+00  0.9652E-01  0.4821E+00
-|  3    -76.173185148  -.108021E+00       0.029     3        0.00      0.03      0.00    0.4399E+00  0.6175E-01  0.3377E+00
-|  4    -76.364881108  0.191696E+00       0.029     4        0.00      0.03      0.00    0.3377E-02  0.1264E-02  0.4139E-02
-|  5    -76.364900534  0.194261E-04       0.029     5        0.00      0.03      0.00    0.1037E-02  0.1303E-03  0.4703E-03
-|  6    -76.364901427  0.893657E-06       0.029     6        0.00      0.03      0.00    0.1049E-03  0.1646E-04  0.6995E-04
-|  7    -76.364901437  0.959144E-08       0.028     7        0.00      0.03      0.00    0.1525E-04  0.3027E-05  0.9216E-05
-|  8    -76.364901437  0.292152E-09       0.029     8        0.00      0.03      0.00    0.7879E-06  0.1212E-06  0.4578E-06
+|  3    -76.173185148  -.108021E+00       0.029     3        0.00      0.03      0.00    0.4399E+00  0.5642E-01  0.3110E+00
+|   ***  Level shifting applied  ( HOMO-LUMO gap =  0.155 au ) ***
+|  4    -76.364370863  0.191186E+00       0.029     4        0.00      0.03      0.00    0.2060E-01  0.5375E-02  0.2700E-01
+|  5    -76.364896087  0.525224E-03       0.029     5        0.00      0.03      0.00    0.2329E-02  0.4172E-03  0.1712E-02
+|  6    -76.364901429  0.534180E-05       0.029     6        0.00      0.03      0.00    0.6528E-04  0.1629E-04  0.5852E-04
+|  7    -76.364901437  0.774752E-08       0.029     7        0.00      0.03      0.00    0.1119E-04  0.2675E-05  0.7394E-05
+|  8    -76.364901437  0.490612E-10       0.029     8        0.00      0.03      0.00    0.2191E-05  0.3154E-06  0.1201E-05
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   8 CYCLES
-| MAX ERROR = 0.787895E-06   RMS CHANGE = 0.121162E-06   MAX CHANGE = 0.457801E-06
+| MAX ERROR = 0.219088E-05   RMS CHANGE = 0.315382E-06   MAX CHANGE = 0.120134E-05
 | -----------------------------------------------
  ALPHA ELECTRON DENSITY    =     4.9999634405
  BETA ELECTRON DENSITY     =     4.9999634405
@@ -156,6 +164,7 @@
 
  @ End Energy calculation
 
+  Skipping one-electron property calculation.
 
  @ Begin Charge and Dipole Calculation
 
@@ -176,19 +185,19 @@
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.107864000( 28.96%)
-| DFT GRID OPERATIONS =     0.026362000(  7.08%)
-| TOTAL SCF TIME      =     0.231337000( 62.10%)
-|       TOTAL OP TIME      =     0.231135000( 62.05%)
-|             TOTAL 1e TIME      =     0.000127000(  0.03%)
-|             TOTAL 2e TIME      =     0.009299000(  2.50%)
-|             TOTAL EXC TIME     =     0.221334000( 59.42%)
-|       TOTAL DII TIME      =     0.000199000(  0.05%)
-|             TOTAL DIAG TIME    =     0.000136000(  0.04%)
-| TOTAL TIME          =     0.372499000
+| INITIAL GUESS TIME  =     0.066299000( 20.19%)
+| DFT GRID OPERATIONS =     0.025530000(  7.77%)
+| TOTAL SCF TIME      =     0.232958000( 70.93%)
+|       TOTAL OP TIME      =     0.232723000( 70.86%)
+|             TOTAL 1e TIME      =     0.000134000(  0.04%)
+|             TOTAL 2e TIME      =     0.009777000(  2.98%)
+|             TOTAL EXC TIME     =     0.222666000( 67.79%)
+|       TOTAL DII TIME      =     0.000230000(  0.07%)
+|             TOTAL DIAG TIME    =     0.000149000(  0.05%)
+| TOTAL TIME          =     0.328443000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  0.4 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  0.3 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Mon Mar  2 15:06:08 2026
+| Normal Termination. Task Finished on: Fri May  1 14:31:20 2026
