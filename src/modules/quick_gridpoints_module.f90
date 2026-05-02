@@ -9,6 +9,14 @@
 !     J. Comput. Chem. 38, 869-882 (2017)                             !
 !     DOI: 10.1002/jcc.24761                                          !
 !                                                                     !
+! Updated by Yuting Duan on 02/27/2026                                !
+!   - Implemented SG-2 and SG-3 standard grids with pruning           !
+!   - Reference: Dasgupta, S. and Herbert, J. M.                      !
+!     "Standard grids for high-precision integration of modern        !
+!     density functionals: SG-2 and SG-3"                             !
+!     J. Comput. Chem. 38, 869-882 (2017)                             !
+!     DOI: 10.1002/jcc.24761                                          !
+!                                                                     !
 ! Previous contributors: Yipu Miao                                    !
 !                                                                     !
 ! Copyright (C) 2020-2021 Merz lab                                    !
@@ -270,23 +278,28 @@ module quick_gridpoints_module
     !Form the quadrature and store coordinates and other information
     !Measure the time to form grid
     !mark
-    select case (quick_method%iSG)
-    case (0)
-       xcg_tmp%rad_gps = 26
-       xcg_tmp%ang_gps = 194
-    case (1)
-       xcg_tmp%rad_gps = 50
-       xcg_tmp%ang_gps = 194
-    case (2)
-       xcg_tmp%rad_gps = 75
-       xcg_tmp%ang_gps = 302
-    case (3)
-       xcg_tmp%rad_gps = 99
-       xcg_tmp%ang_gps = 590
-    case default
-       xcg_tmp%rad_gps = 75
-       xcg_tmp%ang_gps = 302
-    end select
+   if (quick_method%useEML) then
+       xcg_tmp%rad_gps = quick_method%eml_radial
+       xcg_tmp%ang_gps = quick_method%eml_angular
+   else
+      select case (quick_method%iSG)
+      case (0)
+         xcg_tmp%rad_gps = 26
+         xcg_tmp%ang_gps = 194
+      case (1)
+         xcg_tmp%rad_gps = 50
+         xcg_tmp%ang_gps = 194
+      case (2)
+         xcg_tmp%rad_gps = 75
+         xcg_tmp%ang_gps = 302
+      case (3)
+         xcg_tmp%rad_gps = 99
+         xcg_tmp%ang_gps = 590
+      case default
+         xcg_tmp%rad_gps = 75
+         xcg_tmp%ang_gps = 302
+      end select
+   endif
 
     call alloc_xcg_tmp_variables(xcg_tmp)
     xcg_tmp%sswt = 0.0d0
@@ -301,7 +314,12 @@ module quick_gridpoints_module
 
     idx_grid = 0
     do Iatm=1,natom
-      if (quick_method%iSG == 1) then
+      if (quick_method%useEML) then
+         Iradtemp = quick_method%eml_radial
+         call gridformEML(Iradtemp)
+         call gridformLBDAngular(quick_method%eml_angular, iiang)
+         rad = radii(quick_molspec%iattype(iatm))
+      else if (quick_method%iSG == 1) then
          Iradtemp = 50
          call gridformEML(Iradtemp)
       else if (quick_method%iSG == 2) then
@@ -319,7 +337,10 @@ module quick_gridpoints_module
       endif
 
       do Irad = 1, Iradtemp
-            if(quick_method%iSG == 1)then
+            if(quick_method%useEML)then
+               ! Already computed outside loop, just use values
+               ! iiang already set
+            else if(quick_method%iSG == 1)then
                call gridformSG1Angular(iatm,RGRID(Irad),iiang)
                rad = radii(quick_molspec%iattype(iatm))
             else if(quick_method%iSG == 0)then
@@ -1454,7 +1475,7 @@ module quick_gridpoints_module
       prune_data = sg3_prune(atomic_number)
       if (Irad <= prune_data%n_shells(1)) then
          lebedev_type = prune_data%lebedev_type(1)
-      else if (Irad <= (prune_data%n_shells(1)+prune_data%n_shells(2))) then
+      else if  (Irad <= (prune_data%n_shells(1) + prune_data%n_shells(2))) then
          lebedev_type = prune_data%lebedev_type(2)
       else if  (Irad <= (prune_data%n_shells(1) + prune_data%n_shells(2) &
       + prune_data%n_shells(3))) then
@@ -1529,9 +1550,9 @@ module quick_gridpoints_module
    end subroutine gridformSG3Angular
 
 
-   subroutine gridformLBDAngular(iiang,eml_nradial)
+   subroutine gridformLBDAngular(eml_nangular, iiang)
       implicit none
-      integer, intent(in) :: eml_nradial
+      integer, intent(in) :: eml_nangular
       integer, intent(out) :: iiang
       integer :: I, N
 
@@ -1543,30 +1564,86 @@ module quick_gridpoints_module
       ! - 99 radial points → LD0590 (590 angular points)
       ! All shells get the same angular grid/no pruning
    
-      select case(eml_nradial)
-      
-         case(50)
-            ! unpruned SG-1 style: 194 angular points
-            CALL LD0194(XANG, YANG, ZANG, WTANG, N)
-            iiang = 194
-            
-         case(75)
-            ! unpruned SG-2 style: 302 angular points
-            CALL LD0302(XANG, YANG, ZANG, WTANG, N)
-            iiang = 302
-            
-         case(99)
-            ! unpruned SG-3 style: 590 angular points
-            CALL LD0590(XANG, YANG, ZANG, WTANG, N)
-            iiang = 590
-            
-         case default
-            ! Fallback: use 590 points (unpruned SG-3 default)
-            CALL LD0590(XANG, YANG, ZANG, WTANG, N)
-            iiang = 590
-            
-      end select
-   
+   select case(eml_nangular)
+      case(6)
+         call LD0006(XANG, YANG, ZANG, WTANG, N)
+         iiang = 6
+      case(14)
+         call LD0014(XANG, YANG, ZANG, WTANG, N)
+         iiang = 14
+      case(26)
+         call LD0026(XANG, YANG, ZANG, WTANG, N)
+         iiang = 26
+      case(38)
+         call LD0038(XANG, YANG, ZANG, WTANG, N)
+         iiang = 38
+      case(50)
+         call LD0050(XANG, YANG, ZANG, WTANG, N)
+         iiang = 50
+      case(74)
+         call LD0074(XANG, YANG, ZANG, WTANG, N)
+         iiang = 74
+      case(86)
+         call LD0086(XANG, YANG, ZANG, WTANG, N)
+         iiang = 86
+      case(110)
+         call LD0110(XANG, YANG, ZANG, WTANG, N)
+         iiang = 110
+      case(146)
+         call LD0146(XANG, YANG, ZANG, WTANG, N)
+         iiang = 146
+      case(170)
+         call LD0170(XANG, YANG, ZANG, WTANG, N)
+         iiang = 170
+      case(194)
+         call LD0194(XANG, YANG, ZANG, WTANG, N)
+         iiang = 194
+      case(230)
+         call LD0230(XANG, YANG, ZANG, WTANG, N)
+         iiang = 230
+      case(266)
+         call LD0266(XANG, YANG, ZANG, WTANG, N)
+         iiang = 266
+      case(302)
+         call LD0302(XANG, YANG, ZANG, WTANG, N)
+         iiang = 302
+      case(350)
+         call LD0350(XANG, YANG, ZANG, WTANG, N)
+         iiang = 350
+      case(434)
+         call LD0434(XANG, YANG, ZANG, WTANG, N)
+         iiang = 434
+      case(590)
+         call LD0590(XANG, YANG, ZANG, WTANG, N)
+         iiang = 590
+      case(770)
+         call LD0770(XANG, YANG, ZANG, WTANG, N)
+         iiang = 770
+      case(974)
+         call LD0974(XANG, YANG, ZANG, WTANG, N)
+         iiang = 974
+      case(1202)
+         call LD1202(XANG, YANG, ZANG, WTANG, N)
+         iiang = 1202
+      case(1454)
+         call LD1454(XANG, YANG, ZANG, WTANG, N)
+         iiang = 1454
+      case(1730)
+         call LD1730(XANG, YANG, ZANG, WTANG, N)
+         iiang = 1730
+      case(2030)
+         call LD2030(XANG, YANG, ZANG, WTANG, N)
+         iiang = 2030
+      case(2354)
+         call LD2354(XANG, YANG, ZANG, WTANG, N)
+         iiang = 2354
+      case(2702)
+         call LD2702(XANG, YANG, ZANG, WTANG, N)
+         iiang = 2702
+      case default
+         call LD0194(XANG, YANG, ZANG, WTANG, N)
+         iiang = 194
+   end select
    
       !  The Lebedev weights are returned normalized to 1.  
       !  Multiply them by 4Pi to get the correct value.
