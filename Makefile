@@ -93,6 +93,15 @@ noinstall: all
 	@echo  "Please find QUICK executables in $(exefolder)."
 
 serialinstall: serial
+	@if [ ! -d $(installfolder)/lib64 ]; then mkdir $(installfolder)/lib64; fi;
+	@if [ -e $(homefolder)/src/lapack/libblas.so ]; then \
+	mv $(homefolder)/src/lapack/libblas.so $(installfolder)/lib64/libblas.so.3.12; \
+	ln -s -T $(installfolder)/lib64/libblas.so.3.12 $(installfolder)/lib64/libblas.so.3; \
+	ln -s -T $(installfolder)/lib64/libblas.so.3 $(installfolder)/lib64/libblas.so; fi; \
+	if [ -e $(homefolder)/src/lapack/liblapack.so ]; then \
+	mv $(homefolder)/src/lapack/liblapack.so $(installfolder)/lib64/liblapack.so.3.12; \
+	ln -s -T $(installfolder)/lib64/liblapack.so.3.12 $(installfolder)/lib64/liblapack.so.3; \
+	ln -s -T $(installfolder)/lib64/liblapack.so.3 $(installfolder)/lib64/liblapack.so; fi;
 	@if [ -x $(exefolder)/quick ]; then cp -f $(exefolder)/quick $(installfolder)/bin; \
 	cp -f $(homefolder)/test/test-api $(installfolder)/test; \
 	else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
@@ -102,6 +111,15 @@ serialinstall: serial
 	@cp -f $(toolsfolder)/sadguess $(installfolder)/bin
 
 mpiinstall: mpi
+	@if [ ! -d $(installfolder)/lib64 ]; then mkdir $(installfolder)/lib64; fi;
+	@if [ -e $(homefolder)/src/lapack/libblas.so ]; then \
+	mv $(homefolder)/src/lapack/libblas.so $(installfolder)/lib64/libblas.so.3.12; \
+	ln -s -T $(installfolder)/lib64/libblas.so.3.12 $(installfolder)/lib64/libblas.so.3; \
+	ln -s -T $(installfolder)/lib64/libblas.so.3 $(installfolder)/lib64/libblas.so; fi; \
+	if [ -e $(homefolder)/src/lapack/liblapack.so ]; then \
+	mv $(homefolder)/src/lapack/liblapack.so $(installfolder)/lib64/liblapack.so.3.12; \
+	ln -s -T $(installfolder)/lib64/liblapack.so.3.12 $(installfolder)/lib64/liblapack.so.3; \
+	ln -s -T $(installfolder)/lib64/liblapack.so.3 $(installfolder)/lib64/liblapack.so; fi;
 	@if [ -x $(exefolder)/quick.MPI ]; then cp -f $(exefolder)/quick.MPI $(installfolder)/bin; \
 	cp -f $(homefolder)/test/test-api.MPI $(installfolder)/test; \
         else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
@@ -110,6 +128,15 @@ mpiinstall: mpi
 	@cp -f $(buildfolder)/lib/mpi/* $(installfolder)/lib/mpi
 
 cudainstall: cuda
+	@if [ ! -d $(installfolder)/lib64 ]; then mkdir $(installfolder)/lib64; fi;
+	@if [ -e $(homefolder)/src/lapack/libblas.so ]; then \
+	mv $(homefolder)/src/lapack/libblas.so $(installfolder)/lib64/libblas.so.3.12; \
+	ln -s -T $(installfolder)/lib64/libblas.so.3.12 $(installfolder)/lib64/libblas.so.3; \
+	ln -s -T $(installfolder)/lib64/libblas.so.3 $(installfolder)/lib64/libblas.so; fi; \
+	if [ -e $(homefolder)/src/lapack/liblapack.so ]; then \
+	mv $(homefolder)/src/lapack/liblapack.so $(installfolder)/lib64/liblapack.so.3.12; \
+	ln -s -T $(installfolder)/lib64/liblapack.so.3.12 $(installfolder)/lib64/liblapack.so.3; \
+	ln -s -T $(installfolder)/lib64/liblapack.so.3 $(installfolder)/lib64/liblapack.so; fi;
 	@if [ -x $(exefolder)/quick.cuda ]; then cp -f $(exefolder)/quick.cuda $(installfolder)/bin; \
 	cp -f $(homefolder)/test/test-api.cuda $(installfolder)/test; \
         else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
@@ -119,6 +146,15 @@ cudainstall: cuda
 	@cp -f $(buildfolder)/lib/cuda/* $(installfolder)/lib/cuda
 
 cudampiinstall: cudampi
+	@if [ ! -d $(installfolder)/lib64 ]; then mkdir $(installfolder)/lib64; fi;
+	@if [ -e $(homefolder)/src/lapack/libblas.so ]; then \
+	mv $(homefolder)/src/lapack/libblas.so $(installfolder)/lib64/libblas.so.3.12; \
+	ln -s -T $(installfolder)/lib64/libblas.so.3.12 $(installfolder)/lib64/libblas.so.3; \
+	ln -s -T $(installfolder)/lib64/libblas.so.3 $(installfolder)/lib64/libblas.so; fi; \
+	if [ -e $(homefolder)/src/lapack/liblapack.so ]; then \
+	mv $(homefolder)/src/lapack/liblapack.so $(installfolder)/lib64/liblapack.so.3.12; \
+	ln -s -T $(installfolder)/lib64/liblapack.so.3.12 $(installfolder)/lib64/liblapack.so.3; \
+	ln -s -T $(installfolder)/lib64/liblapack.so.3 $(installfolder)/lib64/liblapack.so; fi;
 	@if [ -x $(exefolder)/quick.cuda.MPI ]; then cp -f $(exefolder)/quick.cuda.MPI $(installfolder)/bin; \
 	cp -f $(homefolder)/test/test-api.cuda.MPI $(installfolder)/test; \
         else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
@@ -128,6 +164,15 @@ cudampiinstall: cudampi
 	@cp -f $(buildfolder)/lib/cudampi/* $(installfolder)/lib/cudampi
 
 hipinstall: hip
+	@if [ ! -d $(installfolder)/lib64 ]; then mkdir $(installfolder)/lib64; fi;
+	@if [ -e $(homefolder)/src/lapack/libblas.so ]; then \
+	mv $(homefolder)/src/lapack/libblas.so $(installfolder)/lib64/libblas.so.3.12; \
+	ln -s -T $(installfolder)/lib64/libblas.so.3.12 $(installfolder)/lib64/libblas.so.3; \
+	ln -s -T $(installfolder)/lib64/libblas.so.3 $(installfolder)/lib64/libblas.so; fi; \
+	if [ -e $(homefolder)/src/lapack/liblapack.so ]; then \
+	mv $(homefolder)/src/lapack/liblapack.so $(installfolder)/lib64/liblapack.so.3.12; \
+	ln -s -T $(installfolder)/lib64/liblapack.so.3.12 $(installfolder)/lib64/liblapack.so.3; \
+	ln -s -T $(installfolder)/lib64/liblapack.so.3 $(installfolder)/lib64/liblapack.so; fi;
 	@if [ -x $(exefolder)/quick.hip ]; then cp -f $(exefolder)/quick.hip $(installfolder)/bin; \
 	cp -f $(homefolder)/test/test-api.hip $(installfolder)/test; \
 	else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
@@ -137,6 +182,15 @@ hipinstall: hip
 	@cp -f $(buildfolder)/lib/hip/* $(installfolder)/lib/hip
 
 hipmpiinstall: hipmpi
+	@if [ ! -d $(installfolder)/lib64 ]; then mkdir $(installfolder)/lib64; fi;
+	@if [ -e $(homefolder)/src/lapack/libblas.so ]; then \
+	mv $(homefolder)/src/lapack/libblas.so $(installfolder)/lib64/libblas.so.3.12; \
+	ln -s -T $(installfolder)/lib64/libblas.so.3.12 $(installfolder)/lib64/libblas.so.3; \
+	ln -s -T $(installfolder)/lib64/libblas.so.3 $(installfolder)/lib64/libblas.so; fi; \
+	if [ -e $(homefolder)/src/lapack/liblapack.so ]; then \
+	mv $(homefolder)/src/lapack/liblapack.so $(installfolder)/lib64/liblapack.so.3.12; \
+	ln -s -T $(installfolder)/lib64/liblapack.so.3.12 $(installfolder)/lib64/liblapack.so.3; \
+	ln -s -T $(installfolder)/lib64/liblapack.so.3 $(installfolder)/lib64/liblapack.so; fi;
 	@if [ -x $(exefolder)/quick.hip.MPI ]; then cp -f $(exefolder)/quick.hip.MPI $(installfolder)/bin; \
 	cp -f $(homefolder)/test/test-api.hip.MPI $(installfolder)/test; \
 	else echo  "Error: Executable not found. You must run 'make' before running 'make install'."; \
@@ -146,13 +200,20 @@ hipmpiinstall: hipmpi
 	@cp -f $(buildfolder)/lib/hipmpi/* $(installfolder)/lib/hipmpi 
 
 aminstall: all
+	@if [ ! -d $(installfolder)/lib64 ]; then mkdir $(installfolder)/lib64; fi;
+	@if [ -e $(homefolder)/src/lapack/libblas.so ]; then \
+	mv $(homefolder)/src/lapack/libblas.so $(installfolder)/lib64/libblas.so.3.12; \
+	ln -s -T $(installfolder)/lib64/libblas.so.3.12 $(installfolder)/lib64/libblas.so.3; \
+	ln -s -T $(installfolder)/lib64/libblas.so.3 $(installfolder)/lib64/libblas.so; fi; \
+	if [ -e $(homefolder)/src/lapack/liblapack.so ]; then \
+	mv $(homefolder)/src/lapack/liblapack.so $(installfolder)/lib64/liblapack.so.3.12; \
+	ln -s -T $(installfolder)/lib64/liblapack.so.3.12 $(installfolder)/lib64/liblapack.so.3; \
+	ln -s -T $(installfolder)/lib64/liblapack.so.3 $(installfolder)/lib64/liblapack.so; fi;
 	@if [ -d $(installfolder)/lib ]; then \
 	if [ -e $(buildfolder)/lib/serial/libquick.$(libsuffix) ]; then mv $(buildfolder)/lib/serial/libquick.$(libsuffix) $(installfolder)/lib/libquick.$(libsuffix); \
 	mv $(buildfolder)/lib/serial/libxc.$(libsuffix) $(installfolder)/lib/libxc.$(libsuffix); fi; \
-	if [ -e $(buildfolder)/lib/serial/libblas-quick.$(libsuffix) ]; then mv $(buildfolder)/lib/serial/libblas-quick.$(libsuffix) $(installfolder)/lib/libblas-quick.$(libsuffix); fi; \
 	if [ -e $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) ]; then mv $(buildfolder)/lib/mpi/libquick-mpi.$(libsuffix) $(installfolder)/lib/libquick-mpi.$(libsuffix); \
 	mv $(buildfolder)/lib/mpi/libxc.$(libsuffix) $(installfolder)/lib/libxc.$(libsuffix); fi; \
-	if [ -e $(buildfolder)/lib/mpi/libblas-quick.$(libsuffix) ]; then mv $(buildfolder)/lib/mpi/libblas-quick.$(libsuffix) $(installfolder)/lib/libblas-quick.$(libsuffix); fi; \
 	if [ -e $(buildfolder)/lib/cuda/libquick-cuda.$(libsuffix) ]; then mv $(buildfolder)/lib/cuda/libquick-cuda.$(libsuffix) $(installfolder)/lib/libquick-cuda.$(libsuffix); \
 	mv $(buildfolder)/lib/cuda/libxc-cuda.$(libsuffix) $(installfolder)/lib/libxc-cuda.$(libsuffix); fi; \
 	if [ -e $(buildfolder)/lib/cudampi/libquick-cudampi.$(libsuffix) ]; then mv $(buildfolder)/lib/cudampi/libquick-cudampi.$(libsuffix) $(installfolder)/lib/libquick-cudampi.$(libsuffix); \
@@ -239,7 +300,6 @@ makeinclean:
 	@-rm -f $(subfolder)/make.in
 	@-rm -f $(modfolder)/make.in
 	@-rm -f $(octfolder)/make.in
-	@-rm -f $(blasfolder)/make.in
 	@-rm -f $(cudafolder)/make.in
 	@-rm -f $(hipfolder)/make.in
 
