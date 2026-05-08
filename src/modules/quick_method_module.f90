@@ -284,6 +284,12 @@ module quick_method_module
             call MPI_BCAST(self%MFCC,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%ifragbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%iSG,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+
+            ! Broadcast custom EML variables
+            call MPI_BCAST(self%useEML,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%eml_radial,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%eml_angular,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+
             call MPI_BCAST(self%iscf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%iscf_sad,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
             call MPI_BCAST(self%iopt,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
