@@ -83,10 +83,6 @@ ene_benzene_ub3lyp_aug-cc-pvdz          #C6H6: unrestricted DFT energy test: UB3
 ene_benzene_ub3lyp_aug-cc-pvdz_triplet  #C6H6: unrestricted DFT energy test for triplet: UB3LYP/aug-cc-pvtz near-linear dependency
 ene_caffeine_b3lyp_631+gd               #Caffeine: DFT energy test: B3LYP/631+gd near-linear dependency of basis sets
 ene_caffeine_ub3lyp_631+gd              #Caffeine: unrestricted DFT energy test: UB3LYP/631+gd near-linear dependency of basis sets
-ene_psb3_blyp_631g_sg2              
-ene_psb3_blyp_631g_sg3              
-ene_wat_blyp_631g_sg2               
-ene_wat_blyp_631g_sg3
 grad_AlH3_b3lyp_def2sv_p                #ALH3: DFT gradient test: DEF2-SV(P) basis set
 grad_BeH2_b3lyp_def2sv_p                #BeH2: DFT gradient test: DEF2-SV(P) basis set
 grad_CH4_b3lyp_def2sv_p                 #CH4: DFT gradient test: DEF2-SV(P) basis set
