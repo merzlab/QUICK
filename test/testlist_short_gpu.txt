@@ -11,9 +11,9 @@ ene_psb3_libxc_gga_631g             #PSB3: DFT energy test: s and p basis functi
 ene_psb3_libxc_hgga_631g            #PSB3: DFT energy test: s and p basis functions, libxc hybrid GGA functional
 ene_wat2_mp2_631g	            #Water-2 MP2 energy test: s and p basis functions
 ene_wat2_mp2_631gss	            #Water-2 MP2 energy test: s, p and d basis functions
-ene_wat_blyp_631g_sg2               
-ene_wat_blyp_631g_sg3
-ene_wat_blyp_631g_eml
+ene_wat_blyp_631g_sg2                   #H2O: DFT energy test: 6-31G basis set
+ene_wat_blyp_631g_sg3                   #H2O: DFT energy test: 6-31G basis set
+ene_wat_blyp_631g_eml                   #H2O: DFT energy test: 6-31G basis set
 grad_psb3_b3lyp_631g                #PSB3: DFT gradient test: s and p basis functions
 grad_psb3_b3lyp_631gss              #PSB3: DFT gradient test: s and p and d basis functions
 grad_ch3conhch3_b3lyp_ccpvdz        #CH3CONHCH3: DFT gradient test: s and p and d basis functions
