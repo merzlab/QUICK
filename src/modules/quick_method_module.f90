@@ -482,7 +482,7 @@ module quick_method_module
                 write(io,'(" CUSTOM EML GRID")')
                 write(io,'("  RADIAL POINTS  = ",I6)') self%eml_radial
                 write(io,'("  ANGULAR POINTS = ",I6)') self%eml_angular
-                write(io,'(" [REMINDER] Radial points and angular points choice may effect output accuracy.")')
+                write(io,'(" [REMINDER] Radial points and angular points choice may affect output accuracy.")')
             endif
 
            write(io,'(" Level shifting allowed after cycle ", I4)') self%LShift_cycle
