@@ -121,9 +121,9 @@ contains
                if(quick_method%isg.eq.1) then
                   call gridformEML(50) !changed from gridformsg1() to gridformEML()
                else if(quick_method%isg.eq.2) then
-                  call gridformDoubleExp(75, quick_molspec%iattype(iatm))
+                  call gridformDoubleExp(75, quick_molspec%iattype(1))
                else if(quick_method%isg.eq.3) then
-                  call gridformDoubleExp(99, quick_molspec%iattype(iatm))
+                  call gridformDoubleExp(99, quick_molspec%iattype(1))
                else
                   call gridformEML(50)
                endif
