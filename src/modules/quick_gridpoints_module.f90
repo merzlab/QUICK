@@ -1,15 +1,8 @@
 !---------------------------------------------------------------------!
 ! Updated by Madu Manathunga on 06/09/2020                            !
+!                                                                     !                                        !
 !                                                                     !
-! Updated by Yuting Duan on 02/27/2026                                !
-!   - Implemented SG-2 and SG-3 standard grids with pruning           !
-!   - Reference: Dasgupta, S. and Herbert, J. M.                      !
-!     "Standard grids for high-precision integration of modern        !
-!     density functionals: SG-2 and SG-3"                             !
-!     J. Comput. Chem. 38, 869-882 (2017)                             !
-!     DOI: 10.1002/jcc.24761                                          !
-!                                                                     !
-! Updated by Yuting Duan on 02/27/2026                                !
+! Updated by Yuting Duan on 05/08/2026                                !
 !   - Implemented SG-2 and SG-3 standard grids with pruning           !
 !   - Reference: Dasgupta, S. and Herbert, J. M.                      !
 !     "Standard grids for high-precision integration of modern        !
