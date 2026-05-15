@@ -1,5 +1,14 @@
 !---------------------------------------------------------------------!
 ! Updated by Madu Manathunga on 06/09/2020                            !
+!                                                                     !                                        !
+!                                                                     !
+! Updated by Yuting Duan on 05/08/2026                                !
+!   - Implemented SG-2 and SG-3 standard grids with pruning           !
+!   - Reference: Dasgupta, S. and Herbert, J. M.                      !
+!     "Standard grids for high-precision integration of modern        !
+!     density functionals: SG-2 and SG-3"                             !
+!     J. Comput. Chem. 38, 869-882 (2017)                             !
+!     DOI: 10.1002/jcc.24761                                          !
 !                                                                     !
 ! Previous contributors: Yipu Miao                                    !
 !                                                                     !
@@ -24,7 +33,109 @@ module quick_gridpoints_module
 
     use quick_size_module
     use quick_MPI_module
-    implicit double precision(a-h,o-z)
+    implicit none
+
+
+    type sg2_pruning_type
+        integer :: n_shells(5)
+        integer :: lebedev_type(5)
+    end type sg2_pruning_type
+
+    type sg3_pruning_type
+        integer :: n_shells(9)
+        integer :: lebedev_type(9)
+    end type sg3_pruning_type
+
+    !---------------------------------------------------------------------!
+    ! SG-2 PRUNING TABLE
+    !---------------------------------------------------------------------!
+    ! Defines angular quadrature rules for different radial shells in
+    ! SG-2 grids.
+    !
+    ! Structure:
+    !   n_shells(i)     - Number of radial points in shell i
+    !   lebedev_type(i) - Lebedev quadrature rule for shell i
+    !
+    ! Reference: Table 1 in Dasgupta & Herbert (2017)
+    !---------------------------------------------------------------------!
+    type(sg2_pruning_type), parameter :: sg2_prune(17) = (/ &
+        ! H - 1
+        sg2_pruning_type(n_shells=(/35, 12, 16, 7, 5/), lebedev_type=(/6, 110, 302, 86, 26/)), &
+        sg2_pruning_type(n_shells=(/0, 0, 0, 0, 0/), lebedev_type=(/0, 0, 0, 0, 0/)), &
+        ! Li - 3
+        sg2_pruning_type(n_shells=(/35, 12, 17, 7, 4/), lebedev_type=(/6, 110, 302, 86, 50/)), &
+        ! Be - 4
+        sg2_pruning_type(n_shells=(/35, 12, 17, 7, 4/), lebedev_type=(/6, 110, 302, 86, 50/)), &
+        ! B - 5
+        sg2_pruning_type(n_shells=(/35, 12, 17, 7, 4/), lebedev_type=(/6, 110, 302, 146, 26/)), &
+        ! C - 6
+        sg2_pruning_type(n_shells=(/35, 12, 17, 7, 4/), lebedev_type=(/6, 110, 302, 146, 26/)), &
+        ! N - 7
+        sg2_pruning_type(n_shells=(/35, 12, 17, 7, 4/), lebedev_type=(/6, 110, 302, 86, 26/)), &
+        ! O - 8
+        sg2_pruning_type(n_shells=(/30, 14, 18, 8, 5/), lebedev_type=(/6, 110, 302, 146, 50/)), &
+        ! F - 9
+        sg2_pruning_type(n_shells=(/26, 16, 19, 8, 6/), lebedev_type=(/6, 110, 302, 110, 50/)), &
+        sg2_pruning_type(n_shells=(/0, 0, 0, 0, 0/), lebedev_type=(/0, 0, 0, 0, 0/)), &
+        ! Na - 11
+        sg2_pruning_type(n_shells=(/35, 12, 17, 7, 4/), lebedev_type=(/6, 110, 302, 86, 50/)), &
+        ! Mg - 12
+        sg2_pruning_type(n_shells=(/35, 12, 17, 7, 4/), lebedev_type=(/6, 110, 302, 86, 50/)), &
+        ! Al - 13
+        sg2_pruning_type(n_shells=(/32, 15, 17, 7, 4/), lebedev_type=(/6, 110, 302, 146, 86/)), &
+        ! Si - 14
+        sg2_pruning_type(n_shells=(/32, 15, 17, 7, 4/), lebedev_type=(/6, 110, 302, 146, 50/)), &
+        ! P - 15
+        sg2_pruning_type(n_shells=(/30, 14, 17, 7, 7/), lebedev_type=(/6, 110, 302, 146, 38/)), &
+        ! S - 16
+        sg2_pruning_type(n_shells=(/30, 14, 17, 7, 7/), lebedev_type=(/6, 110, 302, 146, 38/)), &
+        ! Cl - 17
+        sg2_pruning_type(n_shells=(/26, 16, 19, 8, 6/), lebedev_type=(/6, 110, 302, 110, 50/)) &
+    /)
+
+    !---------------------------------------------------------------------!
+    ! SG-3 PRUNING TABLE
+    !---------------------------------------------------------------------!
+    ! Defines angular quadrature rules for different radial shells in
+    ! SG-3 grids.
+    !
+    ! Provides finer gradation than SG-2 for improved accuracy.
+    ! Reference: Table 1 in Dasgupta & Herbert (2017)
+    !---------------------------------------------------------------------!
+    type(sg3_pruning_type), parameter :: sg3_prune(17) = (/ &
+        ! H - 1
+        sg3_pruning_type(n_shells=(/45, 16, 21, 10, 7, 0, 0, 0, 0/), lebedev_type=(/6, 110, 590, 194, 50, 0, 0, 0, 0/)), &
+        sg3_pruning_type(n_shells=(/0, 0, 0, 0, 0, 0, 0, 0, 0/), lebedev_type=(/0, 0, 0, 0, 0, 0, 0, 0, 0/)), &
+        ! Li - 3
+        sg3_pruning_type(n_shells=(/46, 16, 22, 9, 6, 0, 0, 0, 0/), lebedev_type=(/6, 110, 590, 146, 50, 0, 0, 0, 0/)), &
+        ! Be - 4
+        sg3_pruning_type(n_shells=(/42, 6, 14, 22, 3, 6, 6, 0, 0/), lebedev_type=(/6, 86, 110, 590, 194, 146, 50, 0, 0/)), &
+        ! B - 5
+        sg3_pruning_type(n_shells=(/42, 6, 14, 22, 9, 6, 0, 0, 0/), lebedev_type=(/6, 86, 110, 590, 194, 50, 0, 0, 0/)), &
+        ! C - 6
+        sg3_pruning_type(n_shells=(/46, 16, 22, 1, 2, 6, 6, 0, 0/), lebedev_type=(/6, 146, 590, 302, 194, 146, 86, 0, 0/)), &
+        ! N - 7
+        sg3_pruning_type(n_shells=(/40, 18, 24, 11, 6, 0, 0, 0, 0/), lebedev_type=(/6, 110, 590, 146, 50, 0, 0, 0, 0/)), &
+        ! O - 8
+        sg3_pruning_type(n_shells=(/40, 14, 2, 2, 24, 1, 1, 8, 7/), lebedev_type=(/6, 110, 194, 302, 590, 302, 194, 146, 50/)), &
+        ! F - 9
+        sg3_pruning_type(n_shells=(/35, 17, 4, 25, 2, 8, 8, 0, 0/), lebedev_type=(/6, 110, 194, 590, 194, 110, 50, 0, 0/)), &
+        sg3_pruning_type(n_shells=(/0, 0, 0, 0, 0, 0, 0, 0, 0/), lebedev_type=(/0, 0, 0, 0, 0, 0, 0, 0, 0/)), &
+        ! Na - 11
+        sg3_pruning_type(n_shells=(/46, 16, 22, 9, 6, 0, 0, 0, 0/), lebedev_type=(/6, 110, 590, 146, 50, 0, 0, 0, 0/)), &
+        ! Mg - 12
+        sg3_pruning_type(n_shells=(/48, 15, 20, 7, 9, 0, 0, 0, 0/), lebedev_type=(/6, 110, 590, 146, 50, 0, 0, 0, 0/)), &
+        ! Al - 13
+        sg3_pruning_type(n_shells=(/42, 6, 14, 22, 3, 6, 6, 0, 0/), lebedev_type=(/6, 86, 110, 590, 194, 146, 50, 0, 0/)), &
+        ! Si - 14
+        sg3_pruning_type(n_shells=(/42, 6, 14, 22, 9, 6, 0, 0, 0/), lebedev_type=(/6, 86, 110, 590, 194, 50, 0, 0, 0/)), &
+        ! P - 15
+        sg3_pruning_type(n_shells=(/35, 1, 18, 4, 25, 2, 8, 6, 0/), lebedev_type=(/6, 86, 110, 194, 590, 194, 146, 50, 0/)), &
+        ! S - 16
+        sg3_pruning_type(n_shells=(/35, 1, 18, 4, 25, 2, 8, 6, 0/), lebedev_type=(/6, 86, 110, 194, 590, 194, 146, 50, 0/)), &
+        ! Cl - 17
+        sg3_pruning_type(n_shells=(/35, 17, 4, 25, 2, 8, 8, 0, 0/), lebedev_type=(/6, 110, 194, 590, 194, 110, 50, 0, 0/)) &
+    /)
 
     type quick_xc_grid_type
 
@@ -128,7 +239,6 @@ module quick_gridpoints_module
     double precision,  dimension(:), allocatable :: sigrad2
     integer :: iradial(0:10), iangular(10),iregion
 
-
     interface form_dft_grid
         module procedure form_xc_quadrature
     end interface form_dft_grid
@@ -148,16 +258,42 @@ module quick_gridpoints_module
     use quick_molspec_module, only: quick_molspec, xyz, natom
     use quick_basis_module
     use quick_timer_module
+    use quick_mpi_module, only: mpirank, bMPI
 
-    implicit double precision(a-h,o-z)
-    type(quick_xc_grid_type) self
-    type(quick_xcg_tmp_type) xcg_tmp
+    implicit none
+    type(quick_xc_grid_type), intent(inout) :: self
+    type(quick_xcg_tmp_type), intent(inout) :: xcg_tmp
     double precision :: t_octree, t_prscrn
+    integer :: Iatm, idx_grid, Irad, Iradtemp, iiang, Iang, idx, ist, iend
+    double precision :: rad, rad3
+    double precision, external :: SSW
 
     !Form the quadrature and store coordinates and other information
     !Measure the time to form grid
+    !mark
+   if (quick_method%useEML) then
+       xcg_tmp%rad_gps = quick_method%eml_radial
+       xcg_tmp%ang_gps = quick_method%eml_angular
+   else
+      select case (quick_method%iSG)
+      case (0)
+         xcg_tmp%rad_gps = 26
+         xcg_tmp%ang_gps = 194
+      case (1)
+         xcg_tmp%rad_gps = 50
+         xcg_tmp%ang_gps = 194
+      case (2)
+         xcg_tmp%rad_gps = 75
+         xcg_tmp%ang_gps = 302
+      case (3)
+         xcg_tmp%rad_gps = 99
+         xcg_tmp%ang_gps = 590
+      case default
+         xcg_tmp%rad_gps = 75
+         xcg_tmp%ang_gps = 302
+      end select
+   endif
 
-    
     call alloc_xcg_tmp_variables(xcg_tmp)
     xcg_tmp%sswt = 0.0d0
     xcg_tmp%weight = 0.0d0
@@ -165,44 +301,54 @@ module quick_gridpoints_module
 #ifdef MPIV
    if(master) then
 #endif
-   
-   if (quick_method%iSG.eq.1) call gridformSG1() 
-
-#ifdef MPIV
-  endif
-
-   call alloc_mpi_grid_variables(self)
-
-   call mpi_bcast_grid_vars()
-
-   if(master) then
-#endif
     RECORD_TIME(timer_begin%TDFTGrdGen)
 
-    ! form SG1 grid
-    !if(quick_method%iSG.eq.1) call gridformSG1()
+    ! form grid
 
     idx_grid = 0
     do Iatm=1,natom
-        if(quick_method%iSG.eq.1)then
-            Iradtemp=50
-        else
-            if(quick_molspec%iattype(iatm).le.10)then
-                Iradtemp=23
-            else
-                Iradtemp=26
+      if (quick_method%useEML) then
+         Iradtemp = quick_method%eml_radial
+         call gridformEML(Iradtemp)
+         call gridformLBDAngular(quick_method%eml_angular, iiang)
+         rad = radii(quick_molspec%iattype(iatm))
+      else if (quick_method%iSG == 1) then
+         Iradtemp = 50
+         call gridformEML(Iradtemp)
+      else if (quick_method%iSG == 2) then
+         Iradtemp = 75
+         call gridformDoubleExp(Iradtemp, quick_molspec%iattype(iatm))
+      else if (quick_method%iSG == 3) then
+         Iradtemp = 99
+         call gridformDoubleExp(Iradtemp, quick_molspec%iattype(iatm))
+      else if (quick_method%iSG == 0) then
+         if(quick_molspec%iattype(iatm).le.10)then
+               Iradtemp=23
+         else
+               Iradtemp=26
+         endif
+      endif
+
+      do Irad = 1, Iradtemp
+            if(quick_method%useEML)then
+               ! Already computed outside loop, just use values
+               ! iiang already set
+            else if(quick_method%iSG == 1)then
+               call gridformSG1Angular(iatm,RGRID(Irad),iiang)
+               rad = radii(quick_molspec%iattype(iatm))
+            else if(quick_method%iSG == 0)then
+               call gridformSG0(iatm,Iradtemp+1-Irad,iiang,RGRID,RWT)
+               rad = radii2(quick_molspec%iattype(iatm))
+            else if(quick_method%iSG == 2)then
+               call gridformSG2Angular(quick_molspec%iattype(iatm),Irad,iiang)
+               rad = radii(quick_molspec%iattype(iatm))
+            else if(quick_method%iSG == 3)then
+               call gridformSG3Angular(quick_molspec%iattype(iatm),Irad,iiang)
+               rad = radii(quick_molspec%iattype(iatm))
             endif
-        endif
-        do Irad = 1, Iradtemp
-            if(quick_method%iSG.eq.1)then
-                call gridformnew(iatm,RGRID(Irad),iiangt)
-                rad = radii(quick_molspec%iattype(iatm))
-            else
-                call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
-                rad = radii2(quick_molspec%iattype(iatm))
-            endif
-            rad3 = rad*rad*rad
-            do Iang=1,iiangt
+
+         rad3 = rad*rad*rad
+            do Iang=1,iiang
                 idx_grid=idx_grid+1
                 xcg_tmp%init_grid_ptx(idx_grid)=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
                 xcg_tmp%init_grid_pty(idx_grid)=xyz(2,Iatm)+rad*RGRID(Irad)*YANG(Iang)
@@ -213,7 +359,7 @@ module quick_gridpoints_module
                 xcg_tmp%arr_rad3(idx_grid) = rad3
             enddo
 
-        enddo
+      enddo
     enddo
 
     self%init_ngpts  = idx_grid
@@ -227,6 +373,9 @@ module quick_gridpoints_module
 
 #ifdef MPIV
    endif
+
+   call alloc_mpi_grid_variables(self)
+   call mpi_bcast_grid_vars()
 #endif
 
     ! allocate memory for data structures holding radius of significance, phi,
@@ -250,14 +399,14 @@ module quick_gridpoints_module
    if(bMPI) then
 
       call setup_ssw_mpi
-
+      
       ist=self%igridptll(mpirank+1)
       iend=self%igridptul(mpirank+1)
    else
       ist=1
       iend = idx_grid
    endif
-
+   
    do idx=ist, iend
 #else
    do idx=1, idx_grid
@@ -266,7 +415,7 @@ module quick_gridpoints_module
         xcg_tmp%init_grid_atm(idx))
         xcg_tmp%weight(idx)=xcg_tmp%sswt(idx)*xcg_tmp%arr_wtang(idx)*xcg_tmp%arr_rwt(idx)*xcg_tmp%arr_rad3(idx)
     enddo
-
+    
 #if defined(MPIV) && !defined(MPIV_GPU)
    if(bMPI) then
       call get_mpi_ssw
@@ -296,7 +445,6 @@ module quick_gridpoints_module
    if(master) then
 #endif
 
-      
     ! initialize cpp data structure for octree and grid point packing
     call gpack_initialize()
 
@@ -435,7 +583,7 @@ module quick_gridpoints_module
     subroutine allocate_sigrad_phi
 
         use quick_basis_module, only: nbasis, quick_basis, alloc
-        implicit double precision(a-h,o-z)
+        implicit none
         logical :: isDFT                 
 
         if (.not. allocated(sigrad2)) allocate(sigrad2(nbasis))
@@ -451,7 +599,7 @@ module quick_gridpoints_module
     subroutine deallocate_sigrad_phi
 
         use quick_basis_module, only: quick_basis, dealloc
-        implicit double precision(a-h,o-z)
+        implicit none
         logical :: isDFT
 
         if (allocated(sigrad2)) deallocate(sigrad2)
@@ -644,11 +792,17 @@ module quick_gridpoints_module
       ! -(1 + 2 L)/4   -(3 + 2 L)/4                           3
       !r^L E^-ar^2= 2               a           Sqrt[Pi] signif Sqrt[Gamma[- + L]]
       ! 2
-      use allmod
+      use quick_method_module
+      use quick_basis_module
+      use quick_MPI_module
+      use quick_files_module, only: iOutFile
 #ifdef MPIV
       use mpi
 #endif
-      implicit double precision(a-h,o-z)
+      implicit none
+      integer :: Ibas, Icon, i, L
+      double precision :: amin, gamma, gamma2pi, target, stepsize
+      double precision :: radial, current
    
 #ifdef MPIV
       if(master) then
@@ -724,10 +878,14 @@ module quick_gridpoints_module
    ! EL-SHERBINY A and POIRIER RA JCC 25,1378,2004
    
    subroutine gridformSG0(iitype,ILEB,iiang,RGRIDt,RWTt)
-      use allmod
-      implicit double precision(a-h,o-z)
-      parameter(MAXGNUMBER=30)
-      double precision RGRIDt(MAXGNUMBER),RWTt(MAXGNUMBER)
+      use quick_molspec_module
+      implicit none
+      integer, parameter :: MAXGNUMBER=30
+      integer, intent(in) :: iitype, ILEB
+      integer, intent(out) :: iiang
+      double precision, intent(out) :: RGRIDt(MAXGNUMBER), RWTt(MAXGNUMBER)
+      integer :: i, N
+      double precision :: aa46(46), aa52(52)
    
       !      double precision :: ratomic(18)
       !      data ratomic &
@@ -736,7 +894,6 @@ module quick_gridpoints_module
             !      &
             !      1.45d0,0.0d0/
    
-      double precision :: aa46(46),aa52(52)
       data aa46 &
             /0.001505892474584d0,0.19397997519818d0, &
             0.009949112846861d0,0.262363963659648d0, &
@@ -1120,13 +1277,18 @@ module quick_gridpoints_module
    
    end subroutine gridformSG0
    
+
+
    ! Xiao HE 1/9/07
    ! SG-1 standard grid Peter MWG, Benny GJ and Pople JA, CPL 209,506,1993,
-   subroutine gridformnew(iitype,distance,iiang)
-      use allmod
-      implicit double precision(a-h,o-z)
-   
-      double precision :: hpartpara(4),lpartpara(4),npartpara(4)
+   subroutine gridformSG1Angular(iitype,distance,iiang)
+      use quick_molspec_module
+      implicit none
+      integer, intent(in) :: iitype
+      double precision, intent(in) :: distance
+      integer, intent(out) :: iiang
+      integer :: N, I
+      double precision :: hpartpara(4), lpartpara(4), npartpara(4)
    
       data hpartpara /0.2500d0,0.5000d0,1.0000d0,4.5000d0/
       data lpartpara /0.1667d0,0.5000d0,0.9000d0,3.5000d0/
@@ -1202,19 +1364,375 @@ module quick_gridpoints_module
          wtang(I)=wtang(I)*12.56637061435917295385d0
       enddo
    
-   end subroutine gridformnew
+   end subroutine gridformSG1Angular
 
-   subroutine gridformSG1
-      use allmod
+
+   ! Yuting Duan 02/27/26
+   ! "Standard grids for high-precision integration of modern density functionals: SG-2 and SG-3"
+   ! J. Comput. Chem. 38, 869-882 (2017) 
+   subroutine gridformSG2Angular(atomic_number,Irad,iiang)
       implicit none
-      integer itemp,i
-      itemp=50
-      do I=1,itemp
-         RGRID(I)=(I**2.d0)/dble((itemp+1-I)*(itemp+1-I))
-         RWT(I)=2.d0*dble(itemp+1)*(dble(I)**5.d0) &
-               *dble(itemp+1-I)**(-7.d0)
+      integer, intent(in) :: atomic_number, Irad
+      integer, intent(out) :: iiang
+      integer :: lebedev_type, I, N
+      type(sg2_pruning_type) :: prune_data
+      
+      ! elements that not listed in table 1 use unpruned grids (75,302)
+      if (atomic_number == 2 .or. atomic_number == 10 .or. atomic_number > 17) then         
+         CALL LD0302(XANG, YANG, ZANG, WTANG, N)
+         iiang = 302
+         do I = 1, iiang
+            wtang(I) = wtang(I) * 12.56637061435917295385d0
+         enddo
+         return
+      endif
+
+      ! for elements that can be pruned, select appropriate Lebedev partitions
+      prune_data = sg2_prune(atomic_number)
+      if(Irad <= prune_data%n_shells(1)) then
+         lebedev_type = prune_data%lebedev_type(1)
+      else if(Irad <= (prune_data%n_shells(1)+prune_data%n_shells(2))) then
+         lebedev_type = prune_data%lebedev_type(2)
+      else if(Irad <= (prune_data%n_shells(1)+prune_data%n_shells(2)+prune_data%n_shells(3))) then
+         lebedev_type = prune_data%lebedev_type(3)
+      else if(Irad <= (prune_data%n_shells(1)+prune_data%n_shells(2)+prune_data%n_shells(3)+prune_data%n_shells(4))) then
+         lebedev_type = prune_data%lebedev_type(4)
+      else
+         lebedev_type = prune_data%lebedev_type(5)
+      endif
+
+      select case(lebedev_type)
+         case(6)
+            CALL LD0006(XANG, YANG, ZANG, WTANG, N)
+            iiang=6
+         case(26)
+            CALL LD0026(XANG, YANG, ZANG, WTANG, N)
+            iiang=26
+         case(38)
+            CALL LD0038(XANG, YANG, ZANG, WTANG, N)
+            iiang=38
+         case(50)
+            CALL LD0050(XANG, YANG, ZANG, WTANG, N)
+            iiang=50
+         case(74)
+            CALL LD0074(XANG, YANG, ZANG, WTANG, N)
+            iiang=74
+         case(86)
+            CALL LD0086(XANG, YANG, ZANG, WTANG, N)
+            iiang=86
+         case(110)
+            CALL LD0110(XANG, YANG, ZANG, WTANG, N)
+            iiang=110
+         case(146)
+            CALL LD0146(XANG, YANG, ZANG, WTANG, N)
+            iiang=146
+         case(170)
+            CALL LD0170(XANG, YANG, ZANG, WTANG, N)
+            iiang=170
+         case(194)
+            CALL LD0194(XANG, YANG, ZANG, WTANG, N)
+            iiang=194
+         case(302)
+            CALL LD0302(XANG, YANG, ZANG, WTANG, N)
+            iiang=302
+      end select
+
+      ! The Lebedev weights are returned normalized to 1.
+      ! Multiply them by 4π to get the correct value.
+      do I = 1, iiang
+         wtang(I) = wtang(I) * 12.56637061435917295385d0
       enddo
-   end subroutine gridformSG1
+   end subroutine gridformSG2Angular
+
+
+   ! Yuting Duan 02/27/26
+   ! "Standard grids for high-precision integration of modern density functionals: SG-2 and SG-3"
+   ! J. Comput. Chem. 38, 869-882 (2017) 
+   subroutine gridformSG3Angular(atomic_number,Irad,iiang)
+      implicit none
+      integer, intent(in) :: atomic_number, Irad
+      integer, intent(out) :: iiang
+      integer :: lebedev_type, I, N
+      type(sg3_pruning_type) :: prune_data
+
+      ! elements that not listed in table 1 use unpruned grids (99,590)
+      if (atomic_number == 2 .or. atomic_number == 10 .or. atomic_number > 17) then         
+         CALL LD0590(XANG, YANG, ZANG, WTANG, N)
+         iiang = 590
+         do I = 1, iiang
+            wtang(I) = wtang(I) * 12.56637061435917295385d0
+         enddo
+         return
+      endif
+
+      ! for elements that can be pruned, select appropriate Lebedev partitions
+      prune_data = sg3_prune(atomic_number)
+      if (Irad <= prune_data%n_shells(1)) then
+         lebedev_type = prune_data%lebedev_type(1)
+      else if  (Irad <= (prune_data%n_shells(1) + prune_data%n_shells(2))) then
+         lebedev_type = prune_data%lebedev_type(2)
+      else if  (Irad <= (prune_data%n_shells(1) + prune_data%n_shells(2) &
+      + prune_data%n_shells(3))) then
+         lebedev_type = prune_data%lebedev_type(3)
+      else if  (Irad <= (prune_data%n_shells(1) + prune_data%n_shells(2) &
+      + prune_data%n_shells(3) + prune_data%n_shells(4))) then
+         lebedev_type = prune_data%lebedev_type(4)
+      else if  (Irad <= (prune_data%n_shells(1) + prune_data%n_shells(2) &
+      + prune_data%n_shells(3) + prune_data%n_shells(4) + prune_data%n_shells(5))) then
+         lebedev_type = prune_data%lebedev_type(5)
+      else if  (Irad <= (prune_data%n_shells(1) + prune_data%n_shells(2) &
+      + prune_data%n_shells(3) + prune_data%n_shells(4) + prune_data%n_shells(5) &
+      + prune_data%n_shells(6))) then
+         lebedev_type = prune_data%lebedev_type(6)
+      else if  (Irad <= (prune_data%n_shells(1) + prune_data%n_shells(2) &
+      + prune_data%n_shells(3) + prune_data%n_shells(4) + prune_data%n_shells(5) &
+      + prune_data%n_shells(6) + prune_data%n_shells(7))) then
+         lebedev_type = prune_data%lebedev_type(7)
+      else if  (Irad <= (prune_data%n_shells(1) + prune_data%n_shells(2) &
+      + prune_data%n_shells(3) + prune_data%n_shells(4) + prune_data%n_shells(5) &
+      + prune_data%n_shells(6) + prune_data%n_shells(7) + prune_data%n_shells(8))) then
+         lebedev_type = prune_data%lebedev_type(8)
+      else
+         lebedev_type = prune_data%lebedev_type(9)
+      endif
+
+      select case(lebedev_type)
+         case(6)
+            CALL LD0006(XANG, YANG, ZANG, WTANG, N)
+            iiang=6
+         case(26)
+            CALL LD0026(XANG, YANG, ZANG, WTANG, N)
+            iiang=26
+         case(38)
+            CALL LD0038(XANG, YANG, ZANG, WTANG, N)
+            iiang=38
+         case(50)
+            CALL LD0050(XANG, YANG, ZANG, WTANG, N)
+            iiang=50
+         case(74)
+            CALL LD0074(XANG, YANG, ZANG, WTANG, N)
+            iiang=74
+         case(86)
+            CALL LD0086(XANG, YANG, ZANG, WTANG, N)
+            iiang=86
+         case(110)
+            CALL LD0110(XANG, YANG, ZANG, WTANG, N)
+            iiang=110
+         case(146)
+            CALL LD0146(XANG, YANG, ZANG, WTANG, N)
+            iiang=146
+         case(170)
+            CALL LD0170(XANG, YANG, ZANG, WTANG, N)
+            iiang=170
+         case(194)
+            CALL LD0194(XANG, YANG, ZANG, WTANG, N)
+            iiang=194
+         case(302)
+            CALL LD0302(XANG, YANG, ZANG, WTANG, N)
+            iiang=302
+         case(590)
+            CALL LD0590(XANG, YANG, ZANG, WTANG, N)
+            iiang = 590
+
+      end select
+
+      ! The Lebedev weights are returned normalized to 1.
+      ! Multiply them by 4π to get the correct value.
+      do I = 1, iiang
+         wtang(I) = wtang(I) * 12.56637061435917295385d0
+      enddo
+   end subroutine gridformSG3Angular
+
+
+   subroutine gridformLBDAngular(eml_nangular, iiang)
+      implicit none
+      integer, intent(in) :: eml_nangular
+      integer, intent(out) :: iiang
+      integer :: I, N
+
+      !  This subroutine calculates the angular and radial grid points
+      !  and weights.  The current implementation presupposes Lebedev angular
+      !  and Euler-Maclaurin radial grids.
+      ! - 50 radial points → LD0194 (194 angular points)
+      ! - 75 radial points → LD0302 (302 angular points)
+      ! - 99 radial points → LD0590 (590 angular points)
+      ! All shells get the same angular grid/no pruning
+   
+   select case(eml_nangular)
+      case(6)
+         call LD0006(XANG, YANG, ZANG, WTANG, N)
+         iiang = 6
+      case(14)
+         call LD0014(XANG, YANG, ZANG, WTANG, N)
+         iiang = 14
+      case(26)
+         call LD0026(XANG, YANG, ZANG, WTANG, N)
+         iiang = 26
+      case(38)
+         call LD0038(XANG, YANG, ZANG, WTANG, N)
+         iiang = 38
+      case(50)
+         call LD0050(XANG, YANG, ZANG, WTANG, N)
+         iiang = 50
+      case(74)
+         call LD0074(XANG, YANG, ZANG, WTANG, N)
+         iiang = 74
+      case(86)
+         call LD0086(XANG, YANG, ZANG, WTANG, N)
+         iiang = 86
+      case(110)
+         call LD0110(XANG, YANG, ZANG, WTANG, N)
+         iiang = 110
+      case(146)
+         call LD0146(XANG, YANG, ZANG, WTANG, N)
+         iiang = 146
+      case(170)
+         call LD0170(XANG, YANG, ZANG, WTANG, N)
+         iiang = 170
+      case(194)
+         call LD0194(XANG, YANG, ZANG, WTANG, N)
+         iiang = 194
+      case(230)
+         call LD0230(XANG, YANG, ZANG, WTANG, N)
+         iiang = 230
+      case(266)
+         call LD0266(XANG, YANG, ZANG, WTANG, N)
+         iiang = 266
+      case(302)
+         call LD0302(XANG, YANG, ZANG, WTANG, N)
+         iiang = 302
+      case(350)
+         call LD0350(XANG, YANG, ZANG, WTANG, N)
+         iiang = 350
+      case(434)
+         call LD0434(XANG, YANG, ZANG, WTANG, N)
+         iiang = 434
+      case(590)
+         call LD0590(XANG, YANG, ZANG, WTANG, N)
+         iiang = 590
+      case(770)
+         call LD0770(XANG, YANG, ZANG, WTANG, N)
+         iiang = 770
+      case(974)
+         call LD0974(XANG, YANG, ZANG, WTANG, N)
+         iiang = 974
+      case(1202)
+         call LD1202(XANG, YANG, ZANG, WTANG, N)
+         iiang = 1202
+      case(1454)
+         call LD1454(XANG, YANG, ZANG, WTANG, N)
+         iiang = 1454
+      case(1730)
+         call LD1730(XANG, YANG, ZANG, WTANG, N)
+         iiang = 1730
+      case(2030)
+         call LD2030(XANG, YANG, ZANG, WTANG, N)
+         iiang = 2030
+      case(2354)
+         call LD2354(XANG, YANG, ZANG, WTANG, N)
+         iiang = 2354
+      case(2702)
+         call LD2702(XANG, YANG, ZANG, WTANG, N)
+         iiang = 2702
+      case default
+         call LD0194(XANG, YANG, ZANG, WTANG, N)
+         iiang = 194
+   end select
+   
+      !  The Lebedev weights are returned normalized to 1.  
+      !  Multiply them by 4Pi to get the correct value.
+   
+      do I=1,iiang
+         wtang(I)=wtang(I)*12.56637061435917295385d0
+      enddo
+   
+   end subroutine gridformLBDAngular
+
+
+   subroutine gridformEML(ngrid)
+   
+      implicit none
+      integer, intent(in) :: ngrid 
+      integer i
+
+      do I = 1, ngrid
+         RGRID(I) = (I**2.d0)/dble((ngrid+1-I)*(ngrid+1-I))
+         RWT(I) = 2.d0*dble(ngrid+1)*(dble(I)**5.d0) &
+               *dble(ngrid+1-I)**(-7.d0)
+      enddo
+   
+   end subroutine gridformEML
+
+   ! Yuting Duan 02/27/26
+   ! "Standard grids for high-precision integration of modern density functionals: SG-2 and SG-3"
+   ! J. Comput. Chem. 38, 869-882 (2017) 
+   subroutine gridformDoubleExp(ngrid, atomic_number)
+   
+      implicit none
+      integer, intent(in) :: atomic_number, ngrid ! applicable for 75 ngrid for SG-2, 99 for SG-3
+      integer :: i
+      real*8 :: h, x_i, exp_term, alpha
+
+      ! alpha as the scaling factor that define sg-2 and 3 from table 1
+      if(ngrid == 75) then
+         select case(atomic_number)
+            case(1)  ! H
+               alpha = 2.6d0
+            case(3, 11)  ! Li, Na
+               alpha = 3.2d0
+            case (4, 5, 12) !Be, B, Mg
+               alpha = 2.4d0
+            case (6, 7, 8, 9) !C, N, O, F
+               alpha = 2.2d0
+            case (13, 15, 16, 17) !Al, P, S, Cl
+               alpha = 2.5d0
+            case (14) !Si
+               alpha = 2.3d0
+            case default  ! All other elements will use unpruned method (gridformEML)
+               alpha = -1
+         end select
+      else if(ngrid == 99) then
+         select case(atomic_number)
+            case(1)  ! H
+               alpha = 2.7d0
+            case(3) ! Li
+               alpha = 3.0d0
+            case(4, 5, 6, 7, 15, 16) ! Be, B, C, N, P, S
+               alpha = 2.4d0
+            case(8, 12, 13, 17) ! O, Mg, Al, Cl
+               alpha = 2.6d0
+            case(9) ! F
+               alpha = 2.1d0
+            case(11) ! Na
+               alpha = 3.2d0
+            case(14) ! Si
+               alpha = 2.8d0
+            case default  ! All other elements will use unpruned method (gridformEML)
+               alpha = -1
+         end select
+      endif
+
+      if(alpha == -1) then
+         call gridformEML(ngrid)
+         return
+      endif
+      
+      ! implement the double-exponential quadrature formula
+      ! h is the mapping transformation such that grid spacing in x-space: x ∈ [-1, 1]
+      ! refer Mitani and Yoshioka, Theor Chem Acc 131 (2012) 1169, doi: 10.1007/s00214-012-1169-z
+      h = 2.0d0 / dble(ngrid - 1)
+
+      do i = 1, ngrid
+         x_i = -1.0d0 + dble(i-1) * h
+         exp_term = exp(-x_i)
+
+         ! Radial point - Eq. 8
+         RGRID(i) = exp(alpha * x_i - exp_term)
+         ! Weight - Eq. 9
+         RWT(i) = h * (alpha + exp_term) * exp(3.0d0 * alpha * x_i - 3.0d0 * exp_term)
+      enddo
+      
+   end subroutine gridformDoubleExp
    
 #include "./include/labedev.fh"
    
