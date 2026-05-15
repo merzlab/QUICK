@@ -60,37 +60,37 @@ module quick_gridpoints_module
     !---------------------------------------------------------------------!
     type(sg2_pruning_type), parameter :: sg2_prune(17) = (/ &
         ! H - 1
-        sg2_pruning_type([35, 12, 16, 7, 5], [6, 110, 302, 86, 26]), &
-        sg2_pruning_type([0, 0, 0, 0, 0], [0, 0, 0, 0, 0]), &
+        sg2_pruning_type(n_shells=(/35, 12, 16, 7, 5/), lebedev_type=(/6, 110, 302, 86, 26/)), &
+        sg2_pruning_type(n_shells=(/0, 0, 0, 0, 0/), lebedev_type=(/0, 0, 0, 0, 0/)), &
         ! Li - 3
-        sg2_pruning_type([35, 12, 17, 7, 4], [6, 110, 302, 86, 50]), &
+        sg2_pruning_type(n_shells=(/35, 12, 17, 7, 4/), lebedev_type=(/6, 110, 302, 86, 50/)), &
         ! Be - 4
-        sg2_pruning_type([35, 12, 17, 7, 4], [6, 110, 302, 86, 50]), &
+        sg2_pruning_type(n_shells=(/35, 12, 17, 7, 4/), lebedev_type=(/6, 110, 302, 86, 50/)), &
         ! B - 5
-        sg2_pruning_type([35, 12, 17, 7, 4], [6, 110, 302, 146, 26]), &
+        sg2_pruning_type(n_shells=(/35, 12, 17, 7, 4/), lebedev_type=(/6, 110, 302, 146, 26/)), &
         ! C - 6
-        sg2_pruning_type([35, 12, 17, 7, 4], [6, 110, 302, 146, 26]), &
+        sg2_pruning_type(n_shells=(/35, 12, 17, 7, 4/), lebedev_type=(/6, 110, 302, 146, 26/)), &
         ! N - 7
-        sg2_pruning_type([35, 12, 17, 7, 4], [6, 110, 302, 86, 26]), &
+        sg2_pruning_type(n_shells=(/35, 12, 17, 7, 4/), lebedev_type=(/6, 110, 302, 86, 26/)), &
         ! O - 8
-        sg2_pruning_type([30, 14, 18, 8, 5], [6, 110, 302, 146, 50]), &
+        sg2_pruning_type(n_shells=(/30, 14, 18, 8, 5/), lebedev_type=(/6, 110, 302, 146, 50/)), &
         ! F - 9
-        sg2_pruning_type([26, 16, 19, 8, 6], [6, 110, 302, 110, 50]), &
-        sg2_pruning_type([0, 0, 0, 0, 0], [0, 0, 0, 0, 0]), &
+        sg2_pruning_type(n_shells=(/26, 16, 19, 8, 6/), lebedev_type=(/6, 110, 302, 110, 50/)), &
+        sg2_pruning_type(n_shells=(/0, 0, 0, 0, 0/), lebedev_type=(/0, 0, 0, 0, 0/)), &
         ! Na - 11
-        sg2_pruning_type([35, 12, 17, 7, 4], [6, 110, 302, 86, 50]), &
+        sg2_pruning_type(n_shells=(/35, 12, 17, 7, 4/), lebedev_type=(/6, 110, 302, 86, 50/)), &
         ! Mg - 12
-        sg2_pruning_type([35, 12, 17, 7, 4], [6, 110, 302, 86, 50]), &
+        sg2_pruning_type(n_shells=(/35, 12, 17, 7, 4/), lebedev_type=(/6, 110, 302, 86, 50/)), &
         ! Al - 13
-        sg2_pruning_type([32, 15, 17, 7, 4], [6, 110, 302, 146, 86]), &
+        sg2_pruning_type(n_shells=(/32, 15, 17, 7, 4/), lebedev_type=(/6, 110, 302, 146, 86/)), &
         ! Si - 14
-        sg2_pruning_type([32, 15, 17, 7, 4], [6, 110, 302, 146, 50]), &
+        sg2_pruning_type(n_shells=(/32, 15, 17, 7, 4/), lebedev_type=(/6, 110, 302, 146, 50/)), &
         ! P - 15
-        sg2_pruning_type([30, 14, 17, 7, 7], [6, 110, 302, 146, 38]), &
+        sg2_pruning_type(n_shells=(/30, 14, 17, 7, 7/), lebedev_type=(/6, 110, 302, 146, 38/)), &
         ! S - 16
-        sg2_pruning_type([30, 14, 17, 7, 7], [6, 110, 302, 146, 38]), &
+        sg2_pruning_type(n_shells=(/30, 14, 17, 7, 7/), lebedev_type=(/6, 110, 302, 146, 38/)), &
         ! Cl - 17
-        sg2_pruning_type([26, 16, 19, 8, 6], [6, 110, 302, 110, 50]) &
+        sg2_pruning_type(n_shells=(/26, 16, 19, 8, 6/), lebedev_type=(/6, 110, 302, 110, 50/)) &
     /)
 
     !---------------------------------------------------------------------!
@@ -104,37 +104,37 @@ module quick_gridpoints_module
     !---------------------------------------------------------------------!
     type(sg3_pruning_type), parameter :: sg3_prune(17) = (/ &
         ! H - 1
-        sg3_pruning_type([45, 16, 21, 10, 7, 0, 0, 0, 0], [6, 110, 590, 194, 50, 0, 0, 0, 0]), &
-        sg3_pruning_type([0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]), &
+        sg3_pruning_type(n_shells=(/45, 16, 21, 10, 7, 0, 0, 0, 0/), lebedev_type=(/6, 110, 590, 194, 50, 0, 0, 0, 0/)), &
+        sg3_pruning_type(n_shells=(/0, 0, 0, 0, 0, 0, 0, 0, 0/), lebedev_type=(/0, 0, 0, 0, 0, 0, 0, 0, 0/)), &
         ! Li - 3
-        sg3_pruning_type([46, 16, 22, 9, 6, 0, 0, 0, 0], [6, 110, 590, 146, 50, 0, 0, 0, 0]), &
+        sg3_pruning_type(n_shells=(/46, 16, 22, 9, 6, 0, 0, 0, 0/), lebedev_type=(/6, 110, 590, 146, 50, 0, 0, 0, 0/)), &
         ! Be - 4
-        sg3_pruning_type([42, 6, 14, 22, 3, 6, 6, 0, 0], [6, 86, 110, 590, 194, 146, 50, 0, 0]), &
+        sg3_pruning_type(n_shells=(/42, 6, 14, 22, 3, 6, 6, 0, 0/), lebedev_type=(/6, 86, 110, 590, 194, 146, 50, 0, 0/)), &
         ! B - 5
-        sg3_pruning_type([42, 6, 14, 22, 9, 6, 0, 0, 0], [6, 86, 110, 590, 194, 50, 0, 0, 0]), &
+        sg3_pruning_type(n_shells=(/42, 6, 14, 22, 9, 6, 0, 0, 0/), lebedev_type=(/6, 86, 110, 590, 194, 50, 0, 0, 0/)), &
         ! C - 6
-        sg3_pruning_type([46, 16, 22, 1, 2, 6, 6, 0, 0], [6, 146, 590, 302, 194, 146, 86, 0, 0]), &
+        sg3_pruning_type(n_shells=(/46, 16, 22, 1, 2, 6, 6, 0, 0/), lebedev_type=(/6, 146, 590, 302, 194, 146, 86, 0, 0/)), &
         ! N - 7
-        sg3_pruning_type([40, 18, 24, 11, 6, 0, 0, 0, 0], [6, 110, 590, 146, 50, 0, 0, 0, 0]), &
+        sg3_pruning_type(n_shells=(/40, 18, 24, 11, 6, 0, 0, 0, 0/), lebedev_type=(/6, 110, 590, 146, 50, 0, 0, 0, 0/)), &
         ! O - 8
-        sg3_pruning_type([40, 14, 2, 2, 24, 1, 1, 8, 7], [6, 110, 194, 302, 590, 302, 194, 146, 50]), &
+        sg3_pruning_type(n_shells=(/40, 14, 2, 2, 24, 1, 1, 8, 7/), lebedev_type=(/6, 110, 194, 302, 590, 302, 194, 146, 50/)), &
         ! F - 9
-        sg3_pruning_type([35, 17, 4, 25, 2, 8, 8, 0, 0], [6, 110, 194, 590, 194, 110, 50, 0, 0]), &
-        sg3_pruning_type([0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0]), &
+        sg3_pruning_type(n_shells=(/35, 17, 4, 25, 2, 8, 8, 0, 0/), lebedev_type=(/6, 110, 194, 590, 194, 110, 50, 0, 0/)), &
+        sg3_pruning_type(n_shells=(/0, 0, 0, 0, 0, 0, 0, 0, 0/), lebedev_type=(/0, 0, 0, 0, 0, 0, 0, 0, 0/)), &
         ! Na - 11
-        sg3_pruning_type([46, 16, 22, 9, 6, 0, 0, 0, 0], [6, 110, 590, 146, 50, 0, 0, 0, 0]), &
+        sg3_pruning_type(n_shells=(/46, 16, 22, 9, 6, 0, 0, 0, 0/), lebedev_type=(/6, 110, 590, 146, 50, 0, 0, 0, 0/)), &
         ! Mg - 12
-        sg3_pruning_type([48, 15, 20, 7, 9, 0, 0, 0, 0], [6, 110, 590, 146, 50, 0, 0, 0, 0]), &
+        sg3_pruning_type(n_shells=(/48, 15, 20, 7, 9, 0, 0, 0, 0/), lebedev_type=(/6, 110, 590, 146, 50, 0, 0, 0, 0/)), &
         ! Al - 13
-        sg3_pruning_type([42, 6, 14, 22, 3, 6, 6, 0, 0], [6, 86, 110, 590, 194, 146, 50, 0, 0]), &
+        sg3_pruning_type(n_shells=(/42, 6, 14, 22, 3, 6, 6, 0, 0/), lebedev_type=(/6, 86, 110, 590, 194, 146, 50, 0, 0/)), &
         ! Si - 14
-        sg3_pruning_type([42, 6, 14, 22, 9, 6, 0, 0, 0], [6, 86, 110, 590, 194, 50, 0, 0, 0]), &
+        sg3_pruning_type(n_shells=(/42, 6, 14, 22, 9, 6, 0, 0, 0/), lebedev_type=(/6, 86, 110, 590, 194, 50, 0, 0, 0/)), &
         ! P - 15
-        sg3_pruning_type([35, 1, 18, 4, 25, 2, 8, 6, 0], [6, 86, 110, 194, 590, 194, 146, 50, 0]), &
+        sg3_pruning_type(n_shells=(/35, 1, 18, 4, 25, 2, 8, 6, 0/), lebedev_type=(/6, 86, 110, 194, 590, 194, 146, 50, 0/)), &
         ! S - 16
-        sg3_pruning_type([35, 1, 18, 4, 25, 2, 8, 6, 0], [6, 86, 110, 194, 590, 194, 146, 50, 0]), &
+        sg3_pruning_type(n_shells=(/35, 1, 18, 4, 25, 2, 8, 6, 0/), lebedev_type=(/6, 86, 110, 194, 590, 194, 146, 50, 0/)), &
         ! Cl - 17
-        sg3_pruning_type([35, 17, 4, 25, 2, 8, 8, 0, 0], [6, 110, 194, 590, 194, 110, 50, 0, 0]) &
+        sg3_pruning_type(n_shells=(/35, 17, 4, 25, 2, 8, 8, 0, 0/), lebedev_type=(/6, 110, 194, 590, 194, 110, 50, 0, 0/)) &
     /)
 
     type quick_xc_grid_type
@@ -264,7 +264,7 @@ module quick_gridpoints_module
     type(quick_xc_grid_type), intent(inout) :: self
     type(quick_xcg_tmp_type), intent(inout) :: xcg_tmp
     double precision :: t_octree, t_prscrn
-    integer :: Iatm, ipt, idx_grid, Irad, Iradtemp, iiang, Iang, idx, ist, iend
+    integer :: Iatm, idx_grid, Irad, Iradtemp, iiang, Iang, idx, ist, iend
     double precision :: rad, rad3
     double precision, external :: SSW
 
@@ -795,11 +795,12 @@ module quick_gridpoints_module
       use quick_method_module
       use quick_basis_module
       use quick_MPI_module
+      use quick_files_module, only: iOutFile
 #ifdef MPIV
       use mpi
 #endif
       implicit none
-      integer :: Ibas, Icon, i, L, iOutFile
+      integer :: Ibas, Icon, i, L
       double precision :: amin, gamma, gamma2pi, target, stepsize
       double precision :: radial, current
    
