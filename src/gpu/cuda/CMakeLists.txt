@@ -40,3 +40,15 @@ set_property(TARGET cusolver_obj PROPERTY COMPILE_OPTIONS ${OPT_CFLAGS})
 set_property(TARGET cusolver_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 target_include_directories(cusolver_obj PUBLIC ${CUDA_INCLUDE_DIRS})
+
+# cuest
+# ------------------------------------------------------------------------------------------
+
+set(CUEST_SOURCES cuest/basis.c)
+
+add_library(cuest_obj OBJECT ${CUEST_SOURCES})
+set_property(TARGET cuest_obj PROPERTY COMPILE_OPTIONS ${OPT_CFLAGS})
+set_property(TARGET cuest_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+
+target_include_directories(cuest_obj PUBLIC ${CUDA_INCLUDE_DIRS},
+                                            ${CUEST_INSTALL_DIR}/include)

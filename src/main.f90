@@ -61,6 +61,10 @@
     use quick_mpi_module, only: mpisize, mgpu_id, mgpu_ids
 #endif
 
+    ! cuest
+    use, intrinsic::iso_c_binding, only: c_int64_t, c_double
+    use quick_cuest_module, only: cuest_init_basis
+
     implicit none
 
     integer :: fail
@@ -158,6 +162,23 @@
       call gpu_upload_xyz(xyz)
       call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
     endif
+#endif
+
+    ! initialize cuest basis
+#if defined CUDA
+    call cuest_init_basis(                                  &
+        int(natom, c_int64_t),                              &
+        int(nshell, c_int64_t),                             &
+        int(quick_basis%ncenter, c_int64_t),                &
+        int(quick_basis%first_basis_function, c_int64_t),   &
+        int(quick_basis%last_basis_function, c_int64_t),    &
+        int(quick_basis%katom, c_int64_t),                  &
+        int(quick_basis%ktype, c_int64_t),                  &
+        int(quick_basis%kprim, c_int64_t),                  &
+        real(quick_basis%gcexpo, c_double),                 &
+        real(quick_basis%gccoeff, c_double),                &
+        real(xyz, c_double)                                 &
+    )
 #endif
     
     ! Molden export
