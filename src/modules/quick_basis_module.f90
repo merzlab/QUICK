@@ -371,6 +371,7 @@ contains
         implicit none
         type(quick_basis_type) self
         integer iOutFile
+        integer :: inject_i, inject_j
 
         if (ioutfile.ne.0) then
             write (iOutFile,*)
@@ -379,6 +380,64 @@ contains
             write (iOutFile,'(" NSHELL = ",I4, " NPRIM  = ", I4)') nshell,nprim
             write (iOutFile,'(" JSHELL = ",I4, " JBASIS = " ,I4)') jshell,jbasis
             write (iOutFile,*)
+
+            write (iOutFile, '("~~~~~~~~ INJECT ~~~~~~~~")')
+            do inject_i=1, nbasis
+                write (iOutFile, '("ncontract(",I4,")=",I4)') inject_i,ncontract(inject_i)
+            end do
+            do inject_i=1, nbasis
+                write (iOutFile, '("quick_basis%ncenter(",I4,")=",I4)') inject_i,quick_basis%ncenter(inject_i)
+            end do
+            do inject_i=1, 3
+                write (iOutFile, '("quick_basis%first_basis_function(",I4,")=",I4)') inject_i,quick_basis%first_basis_function(inject_i)
+            end do
+            do inject_i=1, 3
+                write (iOutFile, '("quick_basis%last_basis_function(",I4,")=",I4)') inject_i,quick_basis%last_basis_function(inject_i)
+            end do
+            do inject_i=1, nshell
+                write (iOutFile, '("quick_basis%kstart(",I4,")=",I4)') inject_i,quick_basis%kstart(inject_i)
+            end do
+            do inject_i=1, nshell
+                write (iOutFile, '("quick_basis%katom(",I4,")=",I4)') inject_i,quick_basis%katom(inject_i)
+            end do
+            do inject_i=1, nshell
+                write (iOutFile, '("quick_basis%ktype(",I4,")=",I4)') inject_i,quick_basis%ktype(inject_i)
+            end do
+            do inject_i=1, nshell
+                write (iOutFile, '("quick_basis%kprim(",I4,")=",I4)') inject_i,quick_basis%kprim(inject_i)
+            end do
+            ! do inject_i=1, nshell
+            !     write (iOutFile, '("quick_basis%Qstart(",I4,")=",I4)') inject_i,quick_basis%Qstart(inject_i)
+            ! end do
+            ! do inject_i=1, nshell
+            !     write (iOutFile, '("quick_basis%Qfinal(",I4,")=",I4)') inject_i,quick_basis%Qfinal(inject_i)
+            ! end do
+            write (iOutFile, '("~ aexp ~")')
+            do inject_i=1, nbasis
+                do inject_j = 1, ncontract(inject_i)
+                    write (iOutFile, '("aexp(",I4,",",I4,")=",E20.10)') inject_j, inject_i, aexp(inject_j, inject_i)
+                end do
+            end do
+            write (iOutFile, '("~ dcoeff ~")')
+            do inject_i=1, nbasis
+                do inject_j = 1, ncontract(inject_i)
+                    write (iOutFile, '("dcoeff(",I4,",",I4,")=",E20.10)') inject_j, inject_i, dcoeff(inject_j, inject_i)
+                end do
+            end do
+            write (iOutFile, '("~ gcexpo ~")')
+            do inject_i=1, nbasis
+                do inject_j = 1, ncontract(inject_i)
+                    write (iOutFile, '("quick_basis%gcexpo(",I4,",",I4,")=",E20.10)') inject_j, inject_i, quick_basis%gcexpo(inject_j, inject_i)
+                end do
+            end do
+            write (iOutFile, '("~ gccoeff ~")')
+            do inject_i=1, nbasis
+                do inject_j = 1, ncontract(inject_i)
+                    write (iOutFile, '("quick_basis%gccoeff(",I4,",",I4,")=",E20.10)') inject_j, inject_i, quick_basis%gccoeff(inject_j, inject_i)
+                end do
+            end do
+            write (iOutFile, '("~ end col out ~")')
+            write (iOutFile, '("~~~~~~ END INJECT ~~~~~~")')
         endif
    end subroutine print_quick_basis
 
