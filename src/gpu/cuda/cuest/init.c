@@ -15,6 +15,8 @@
 void
 cuest_init (uint64_t natom, uint64_t nshell, uint64_t MAXPRIM, double *xyz)
 {
+    freopen ("cuest.log", "w", stdout);
+
     // =========== //
     // init handle //
     // =========== //

@@ -20,8 +20,6 @@ cuest_init_basis (uint64_t *ncenter, uint64_t *first_basis_function, uint64_t *l
                   uint64_t *katom_, uint64_t *ktype_, uint64_t *kprim_, double *gcexpo,
                   double *gccoeff)
 {
-    freopen ("cuest.log", "w", stdout);
-
     puts ("-------- DUMP --------");
 
     printf ("natom=%llu\n", quick_cuest_data.natom);

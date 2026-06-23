@@ -1,6 +1,8 @@
 module quick_cuest_module
-    use, intrinsic::iso_c_binding, only: c_int64_t, c_double
+    use, intrinsic::iso_c_binding, only: c_int64_t, c_ptr
     implicit none
+
+    ! unless commented otherwise, C will not modify the memory a pointer points to
     
     interface
         subroutine cuest_init_basis(ncenter, first_basis_function, last_basis_function, katom, &
@@ -14,19 +16,19 @@ module quick_cuest_module
             integer(c_int64_t), intent(in) :: katom(*)
             integer(c_int64_t), intent(in) :: ktype(*)
             integer(c_int64_t), intent(in) :: kprim(*)
-            real(kind=c_double), intent(in) :: gcexpo(*)
-            real(kind=c_double), intent(in) :: gccoeff(*)
+            real(c_double), intent(in) :: gcexpo(*)
+            real(c_double), intent(in) :: gccoeff(*)
         end subroutine cuest_init_basis
     end interface
 
     interface
         subroutine cuest_init(natom, nshell, MAXPRIM, xyz) bind(c, name="cuest_init")
-            use, intrinsic::iso_c_binding, only: c_int64_t, c_double
+            use, intrinsic::iso_c_binding, only: c_int64_t, c_ptr
             implicit none
             integer(c_int64_t), intent(in), value :: natom
             integer(c_int64_t), intent(in), value :: nshell
             integer(c_int64_t), intent(in), value :: MAXPRIM
-            real(kind=c_double), intent(in) :: xyz(*)
+            type(c_ptr), intent(in), value :: xyz ! double
         end subroutine cuest_init
     end interface 
 
@@ -37,15 +39,15 @@ module quick_cuest_module
 
     interface
         subroutine cuest_get_oei_S(o) bind(c, name="cuest_get_oei_S")
-            use, intrinsic::iso_c_binding, only: c_double
-            real(kind=c_double), intent(inout) :: o(*)
+            use, intrinsic::iso_c_binding, only: c_ptr
+            type(c_ptr), intent(in), value :: o ! double; modified
         end subroutine cuest_get_oei_S
     end interface
 
     interface
         subroutine cuest_get_oei_V(o) bind(c, name="cuest_get_oei_V")
-            use, intrinsic::iso_c_binding, only: c_double
-            real(kind=c_double), intent(inout) :: o(*)
+            use, intrinsic::iso_c_binding, only: c_ptr
+            type(c_ptr), intent(in), value :: o ! double; modified
         end subroutine cuest_get_oei_V
     end interface
 
