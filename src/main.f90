@@ -66,7 +66,7 @@
     use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_loc
     use quick_size_module, only: MAXPRIM
     use quick_cuest_module, only: cuest_init, cuest_deinit, cuest_init_oei_plan, cuest_init_basis, &
-                                  cuest_get_oei_S
+                                  cuest_get_oei_S, cuest_get_oei_T, cuest_get_oei_V
 #endif
 
     implicit none
@@ -174,11 +174,15 @@
 
 #if defined CUDA
     ! init cuest
-    call cuest_init(             &
-        int(natom, c_int64_t),   &
-        int(nshell, c_int64_t),  &
-        int(MAXPRIM, c_int64_t), &
-        c_loc(xyz)               &
+    call cuest_init(                            &
+        int(natom, c_int64_t),                  &
+        int(nshell, c_int64_t),                 &
+        int(MAXPRIM, c_int64_t),                &
+        c_loc(xyz),                             &
+        quick_molspec%chg,                      &
+        int(quick_molspec%nextatom, c_int64_t), &
+        quick_molspec%extxyz,                   &
+        quick_molspec%extchg                    &
     )
     ! for testing; the following cuest functions should not be called here
     ! init basis
@@ -189,14 +193,16 @@
         int(quick_basis%katom, c_int64_t),                &
         int(quick_basis%ktype, c_int64_t),                &
         int(quick_basis%kprim, c_int64_t),                &
-        real(quick_basis%gcexpo, c_double),               &
-        real(quick_basis%gccoeff, c_double)               &
+        quick_basis%gcexpo,                               &
+        quick_basis%gccoeff                               &
     )
     ! init one-electron integral plan
     ! TODO: pass pair list cutoff
     call cuest_init_oei_plan
     ! compute and print overlap integral
     call cuest_get_oei_S(c_loc(empty_arr_dp))
+    call cuest_get_oei_T(c_loc(empty_arr_dp))
+    call cuest_get_oei_V(c_loc(empty_arr_dp))
     call cuest_deinit
 #endif
     

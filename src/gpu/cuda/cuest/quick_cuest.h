@@ -26,22 +26,28 @@ typedef struct {
     uint64_t natom;
     uint64_t nshell;
     uint64_t MAXPRIM;
+    uint64_t ntotalatom;
     double  *xyz;
+    double  *allxyz_gpu;
+    double  *allchg_gpu;
+    uint64_t nao;
 } quick_cuest_data_t;
 
 extern quick_cuest_struct_t quick_cuest_struct;
 extern quick_cuest_data_t   quick_cuest_data;
 
-void cuest_init (uint64_t natom, uint64_t nshell, uint64_t MAXPRIM, double *xyz);
+void cuest_init (int64_t natom, int64_t nshell, int64_t MAXPRIM, double *xyz, double *chg,
+                 int64_t nextatom, double *extxyz, double *extchg);
 void cuest_deinit ();
 
-void cuest_init_basis (uint64_t *ncenter, uint64_t *first_basis_function,
-                       uint64_t *last_basis_function, uint64_t *katom_, uint64_t *ktype_,
-                       uint64_t *kprim_, double *gcexpo, double *gccoeff);
+void cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function,
+                       int64_t *last_basis_function, int64_t *katom_, int64_t *ktype_,
+                       int64_t *kprim_, double *gcexpo, double *gccoeff);
 
 void cuest_init_oei_plan ();
 
 void cuest_get_oei_S (double *o);
+void cuest_get_oei_T (double *o);
 void cuest_get_oei_V (double *o);
 
 #endif

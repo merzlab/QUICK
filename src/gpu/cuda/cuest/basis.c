@@ -16,8 +16,8 @@
 #include "quick_cuest.h"
 
 void
-cuest_init_basis (uint64_t *ncenter, uint64_t *first_basis_function, uint64_t *last_basis_function,
-                  uint64_t *katom_, uint64_t *ktype_, uint64_t *kprim_, double *gcexpo,
+cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last_basis_function,
+                  int64_t *katom_, int64_t *ktype_, int64_t *kprim_, double *gcexpo,
                   double *gccoeff)
 {
     puts ("-------- DUMP --------");
