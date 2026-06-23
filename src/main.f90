@@ -63,6 +63,7 @@
 
     ! cuest
     use, intrinsic::iso_c_binding, only: c_int64_t, c_double
+    use quick_size_module, only: MAXPRIM
     use quick_cuest_module, only: cuest_init_basis
 
     implicit none
@@ -164,8 +165,8 @@
     endif
 #endif
 
-    ! initialize cuest basis
 #if defined CUDA
+    ! initialize cuest basis
     call cuest_init_basis(                                  &
         int(natom, c_int64_t),                              &
         int(nshell, c_int64_t),                             &
@@ -177,7 +178,8 @@
         int(quick_basis%kprim, c_int64_t),                  &
         real(quick_basis%gcexpo, c_double),                 &
         real(quick_basis%gccoeff, c_double),                &
-        real(xyz, c_double)                                 &
+        real(xyz, c_double),                                &
+        int(MAXPRIM, c_int64_t)                             &
     )
 #endif
     

@@ -24,7 +24,7 @@ cuest_init_basis (uint64_t natom, uint64_t nshell, uint64_t *ncenter,
                   uint64_t *first_basis_function,
                   uint64_t *last_basis_function, uint64_t *katom_,
                   uint64_t *ktype_, uint64_t *kprim_, double *gcexpo,
-                  double *gccoeff, double *xyz)
+                  double *gccoeff, double *xyz, const uint64_t MAXPRIM)
 {
     freopen ("cuest.log", "w", stdout);
 
@@ -65,15 +65,15 @@ cuest_init_basis (uint64_t natom, uint64_t nshell, uint64_t *ncenter,
 
     puts ("gcexpo:");
     for (int i = 0; i < 7; ++i) {
-        for (int j = 0; j < 3; ++j)
-            printf ("%f ", get (gcexpo, i, j, 3));
+        for (int j = 0; j < MAXPRIM; ++j)
+            printf ("%f ", get (gcexpo, i, j, MAXPRIM));
         putchar ('\n');
     }
 
     puts ("gccoeff:");
     for (int i = 0; i < 7; ++i) {
-        for (int j = 0; j < 3; ++j)
-            printf ("%f ", get (gccoeff, i, j, 3));
+        for (int j = 0; j < MAXPRIM; ++j)
+            printf ("%f ", get (gccoeff, i, j, MAXPRIM));
         putchar ('\n');
     }
 
@@ -85,12 +85,12 @@ cuest_init_basis (uint64_t natom, uint64_t nshell, uint64_t *ncenter,
     }
 
     puts ("gcexpo flat:");
-    for (int i = 0; i < 7 * 3; ++i)
+    for (int i = 0; i < 7 * MAXPRIM; ++i)
         printf ("%f ", gcexpo[i]);
     putchar ('\n');
 
     puts ("gccoeff flat:");
-    for (int i = 0; i < 7 * 3; ++i)
+    for (int i = 0; i < 7 * MAXPRIM; ++i)
         printf ("%f ", gccoeff[i]);
     putchar ('\n');
 
@@ -100,8 +100,6 @@ cuest_init_basis (uint64_t natom, uint64_t nshell, uint64_t *ncenter,
     putchar ('\n');
 
     puts ("------ END DUMP ------");
-
-    return;
 
     // ============= //
     // set up handle //
@@ -188,10 +186,11 @@ cuest_init_basis (uint64_t natom, uint64_t nshell, uint64_t *ncenter,
         //     aexp[ifsh],
         //                         coeff, aoshell_params, &shells[i]));
 
-        checkCuestErrors (cuestAOShellCreate (
-            handle, 0, get_L (ktype[i]), kprim[i],
-            get_row_ptr (gcexpo, ifshell[i], 3),
-            get_row_ptr (gccoeff, ifshell[i], 3), aoshell_params, &shells[i]));
+        checkCuestErrors (
+            cuestAOShellCreate (handle, 0, get_L (ktype[i]), kprim[i],
+                                get_row_ptr (gcexpo, ifshell[i], MAXPRIM),
+                                get_row_ptr (gccoeff, ifshell[i], MAXPRIM),
+                                aoshell_params, &shells[i]));
     }
 
     // free (coeff);

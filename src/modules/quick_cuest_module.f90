@@ -3,8 +3,9 @@ module quick_cuest_module
     implicit none
     
     interface
-        subroutine cuest_init_basis(natom, nshell, ncenter, first_basis_function, &
-                                    last_basis_function, katom, ktype, kprim, gcexpo, gccoeff, xyz) &
+        subroutine cuest_init_basis(natom, nshell, ncenter, first_basis_function,               &
+                                    last_basis_function, katom, ktype, kprim, gcexpo, gccoeff,  &
+                                    xyz, MAXPRIM)                                               &
                                     bind(c, name="cuest_init_basis")
             use, intrinsic::iso_c_binding, only: c_int64_t, c_double
             implicit none
@@ -19,6 +20,7 @@ module quick_cuest_module
             real(kind=c_double), intent(in) :: gcexpo(*)
             real(kind=c_double), intent(in) :: gccoeff(*)
             real(kind=c_double), intent(in) :: xyz(*)
+            integer(c_int64_t), intent(in), value :: MAXPRIM
         end subroutine
     end interface
 
