@@ -79,8 +79,7 @@
     common /timer/ t1_t, t2_t
 
     ! cuest test
-    double precision, allocatable, target :: empty_arr_dp(:)
-    allocate(empty_arr_dp(0))
+    double precision, allocatable, target :: cuest_S(:,:), cuest_T(:,:), cuest_V(:,:)
 
     !------------------------------------------------------------------
     ! 1. The first thing that must be done is to initialize and prepare files
@@ -199,11 +198,20 @@
     ! init one-electron integral plan
     ! TODO: pass pair list cutoff
     call cuest_init_oei_plan
-    ! compute and print overlap integral
-    call cuest_get_oei_S(c_loc(empty_arr_dp))
-    call cuest_get_oei_T(c_loc(empty_arr_dp))
-    call cuest_get_oei_V(c_loc(empty_arr_dp))
+    ! compute and print one-electron integrals
+    allocate(cuest_S(nbasis, nbasis))
+    allocate(cuest_T(nbasis, nbasis))
+    allocate(cuest_V(nbasis, nbasis))
+
+    call cuest_get_oei_S(c_loc(cuest_S))
+    call cuest_get_oei_T(c_loc(cuest_T))
+    call cuest_get_oei_V(c_loc(cuest_V))
+
     call cuest_deinit
+
+    ! V is computed using positive test charge so we actually subtract
+    ! 6 is stdout (temporary)
+    call PriSym(6, nbasis, cuest_T - cuest_V, "F14.8")
 #endif
     
     ! Molden export

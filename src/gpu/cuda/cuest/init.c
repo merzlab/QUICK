@@ -58,17 +58,11 @@ cuest_init (int64_t natom, int64_t nshell, int64_t MAXPRIM, double *xyz, double 
 
     // xyz
 
-    puts ("a");
-    fflush (stdout);
-
     if (cudaMalloc ((void **)&quick_cuest_data.allxyz_gpu, xyz_gpu_siz + extxyz_gpu_siz)
         != cudaSuccess) {
         fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
-
-    puts ("a");
-    fflush (stdout);
 
     if (cudaMemcpy (quick_cuest_data.allxyz_gpu, xyz, xyz_gpu_siz, cudaMemcpyHostToDevice)
         != cudaSuccess) {
@@ -76,18 +70,12 @@ cuest_init (int64_t natom, int64_t nshell, int64_t MAXPRIM, double *xyz, double 
         exit (EXIT_FAILURE);
     }
 
-    puts ("a");
-    fflush (stdout);
-
     if (cudaMemcpy ((uint8_t *)quick_cuest_data.allxyz_gpu + xyz_gpu_siz, extxyz, extxyz_gpu_siz,
                     cudaMemcpyHostToDevice)
         != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
-
-    puts ("b");
-    fflush (stdout);
 
     // charges
 
@@ -97,17 +85,11 @@ cuest_init (int64_t natom, int64_t nshell, int64_t MAXPRIM, double *xyz, double 
         exit (EXIT_FAILURE);
     }
 
-    puts ("c");
-    fflush (stdout);
-
     if (cudaMemcpy (quick_cuest_data.allchg_gpu, chg, chg_gpu_siz, cudaMemcpyHostToDevice)
         != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
-
-    puts ("d");
-    fflush (stdout);
 
     if (cudaMemcpy ((uint8_t *)quick_cuest_data.allchg_gpu + chg_gpu_siz, extchg, extchg_gpu_siz,
                     cudaMemcpyHostToDevice)
@@ -115,9 +97,6 @@ cuest_init (int64_t natom, int64_t nshell, int64_t MAXPRIM, double *xyz, double 
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
-
-    puts ("e");
-    fflush (stdout);
 }
 
 void

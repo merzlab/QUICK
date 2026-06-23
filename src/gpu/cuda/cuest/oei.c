@@ -91,6 +91,9 @@ cuest_init_oei_plan ()
         }                                                                                          \
     } while (0);
 
+/**
+ * @param o should be `nao` x `nao`.
+ */
 void
 cuest_get_oei_S (double *o)
 {
@@ -122,13 +125,7 @@ cuest_get_oei_S (double *o)
     // print overlap matrix //
     // ==================== //
 
-    double *buf = malloc (quick_cuest_data.nao * quick_cuest_data.nao * sizeof (double));
-    if (!buf) {
-        fprintf (stderr, "malloc buf failed\n");
-        exit (EXIT_FAILURE);
-    }
-
-    if (cudaMemcpy (buf, d_S, d_S_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
+    if (cudaMemcpy (o, d_S, d_S_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
@@ -136,12 +133,10 @@ cuest_get_oei_S (double *o)
     puts ("-------- S --------");
     for (int i = 0; i < quick_cuest_data.nao; ++i) {
         for (int j = 0; j < quick_cuest_data.nao; ++j)
-            printf ("%16.10f", buf[i * quick_cuest_data.nao + j]);
+            printf ("%16.10f", o[i * quick_cuest_data.nao + j]);
         putchar ('\n');
     }
     puts ("------ END S ------");
-
-    free (buf);
 
     if (cudaFree (d_S) != cudaSuccess) {
         fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
@@ -180,13 +175,7 @@ cuest_get_oei_T (double *o)
     // print kinetic matrix //
     // ==================== //
 
-    double *buf = malloc (quick_cuest_data.nao * quick_cuest_data.nao * sizeof (double));
-    if (!buf) {
-        fprintf (stderr, "malloc buf failed\n");
-        exit (EXIT_FAILURE);
-    }
-
-    if (cudaMemcpy (buf, d_T, d_T_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
+    if (cudaMemcpy (o, d_T, d_T_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
@@ -194,12 +183,10 @@ cuest_get_oei_T (double *o)
     puts ("-------- T --------");
     for (int i = 0; i < quick_cuest_data.nao; ++i) {
         for (int j = 0; j < quick_cuest_data.nao; ++j)
-            printf ("%16.10f", buf[i * quick_cuest_data.nao + j]);
+            printf ("%16.10f", o[i * quick_cuest_data.nao + j]);
         putchar ('\n');
     }
     puts ("------ END T ------");
-
-    free (buf);
 
     if (cudaFree (d_T) != cudaSuccess) {
         fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
@@ -241,13 +228,7 @@ cuest_get_oei_V (double *o)
     // print potential matrix //
     // ====================== //
 
-    double *buf = malloc (quick_cuest_data.nao * quick_cuest_data.nao * sizeof (double));
-    if (!buf) {
-        fprintf (stderr, "malloc buf failed\n");
-        exit (EXIT_FAILURE);
-    }
-
-    if (cudaMemcpy (buf, d_V, d_V_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
+    if (cudaMemcpy (o, d_V, d_V_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
@@ -255,12 +236,10 @@ cuest_get_oei_V (double *o)
     puts ("-------- V --------");
     for (int i = 0; i < quick_cuest_data.nao; ++i) {
         for (int j = 0; j < quick_cuest_data.nao; ++j)
-            printf ("%16.10f", buf[i * quick_cuest_data.nao + j]);
+            printf ("%16.10f", o[i * quick_cuest_data.nao + j]);
         putchar ('\n');
     }
     puts ("------ END V ------");
-
-    free (buf);
 
     if (cudaFree (d_V) != cudaSuccess) {
         fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
