@@ -61,10 +61,13 @@
     use quick_mpi_module, only: mpisize, mgpu_id, mgpu_ids
 #endif
 
+#if defined CUDA
     ! cuest
     use, intrinsic::iso_c_binding, only: c_int64_t, c_double
     use quick_size_module, only: MAXPRIM
-    use quick_cuest_module, only: cuest_init_basis
+    use quick_cuest_module, only: cuest_init, cuest_deinit, cuest_init_oei_plan, cuest_init_basis, &
+                                  cuest_get_oei_S
+#endif
 
     implicit none
 
@@ -74,6 +77,10 @@
     integer :: i,j,k
     double precision :: t1_t, t2_t
     common /timer/ t1_t, t2_t
+
+    ! cuest test
+    double precision, allocatable :: empty_arr_dp(:)
+    allocate(empty_arr_dp(0))
 
     !------------------------------------------------------------------
     ! 1. The first thing that must be done is to initialize and prepare files
@@ -166,10 +173,16 @@
 #endif
 
 #if defined CUDA
-    ! initialize cuest basis
+    ! init cuest
+    call cuest_init(                &
+        int(natom, c_int64_t),      &
+        int(nshell, c_int64_t),     &
+        int(MAXPRIM, c_int64_t),    &
+        real(xyz, c_double)         &
+    )
+    ! for testing; the following cuest functions should not be called here
+    ! init basis
     call cuest_init_basis(                                  &
-        int(natom, c_int64_t),                              &
-        int(nshell, c_int64_t),                             &
         int(quick_basis%ncenter, c_int64_t),                &
         int(quick_basis%first_basis_function, c_int64_t),   &
         int(quick_basis%last_basis_function, c_int64_t),    &
@@ -177,10 +190,14 @@
         int(quick_basis%ktype, c_int64_t),                  &
         int(quick_basis%kprim, c_int64_t),                  &
         real(quick_basis%gcexpo, c_double),                 &
-        real(quick_basis%gccoeff, c_double),                &
-        real(xyz, c_double),                                &
-        int(MAXPRIM, c_int64_t)                             &
+        real(quick_basis%gccoeff, c_double)                 &
     )
+    ! init one-electron integral plan
+    ! TODO: pass pair list cutoff
+    call cuest_init_oei_plan
+    ! compute and print overlap integral
+    call cuest_get_oei_S(empty_arr_dp)
+    call cuest_deinit
 #endif
     
     ! Molden export

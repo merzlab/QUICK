@@ -5,6 +5,9 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#define get(arr, i, j, ncols)      arr[(j) + (i) * (ncols)]
+#define get_row_ptr(arr, i, ncols) (arr + (i) * (ncols))
+
 /**
  * `quick_type` should not be 4=sp
  */

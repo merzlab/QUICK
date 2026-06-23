@@ -117,6 +117,7 @@ subroutine get1e(deltaO)
 #if defined(GPU)
          if(.not. quick_method%hasF) then
            call gpu_get_oei(quick_qm_struct%o)
+           ! call cuest_get_oei_V(quick_qm_struct%o)
          else
 
            do IIsh=1,jshell
