@@ -21,12 +21,19 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
                   int64_t *katom_, int64_t *ktype_, int64_t *kprim_, double *gcexpo,
                   double *gccoeff, bool aux)
 {
-    uint64_t maxprim = aux ? quick_cuest_data.MAXPRIM_AUX : quick_cuest_data.MAXPRIM;
+    uint64_t maxprim, nshell;
+    if (aux) {
+        nshell  = quick_cuest_data.nauxshell;
+        maxprim = quick_cuest_data.MAXPRIM_AUX;
+    } else {
+        nshell  = quick_cuest_data.nshell;
+        maxprim = quick_cuest_data.MAXPRIM;
+    }
 
     puts ("-------- DUMP --------");
 
     printf ("natom=%llu\n", quick_cuest_data.natom);
-    printf ("natom=%llu\n", quick_cuest_data.nshell);
+    printf ("nshell=%llu\n", nshell);
 
     puts ("ncenter:");
     for (int i = 0; i < 7; ++i)
@@ -34,27 +41,27 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
     putchar ('\n');
 
     puts ("first_basis_function:");
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < quick_cuest_data.natom; ++i)
         printf ("%llu ", first_basis_function[i]);
     putchar ('\n');
 
     puts ("last_basis_function:");
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < quick_cuest_data.natom; ++i)
         printf ("%llu ", last_basis_function[i]);
     putchar ('\n');
 
     puts ("katom_:");
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < nshell; ++i)
         printf ("%llu ", katom_[i]);
     putchar ('\n');
 
     puts ("ktype_:");
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < nshell; ++i)
         printf ("%llu ", ktype_[i]);
     putchar ('\n');
 
     puts ("kprim_:");
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < nshell; ++i)
         printf ("%llu ", kprim_[i]);
     putchar ('\n');
 
@@ -73,7 +80,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
     }
 
     puts ("xyz:");
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < quick_cuest_data.natom; ++i) {
         for (int j = 0; j < 3; ++j)
             printf ("%f ", get (quick_cuest_data.xyz, i, j, 3));
         putchar ('\n');
@@ -90,11 +97,13 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
     putchar ('\n');
 
     puts ("xyz flat:");
-    for (int i = 0; i < 3 * 3; ++i)
+    for (int i = 0; i < quick_cuest_data.natom * 3; ++i)
         printf ("%f ", quick_cuest_data.xyz[i]);
     putchar ('\n');
 
     puts ("------ END DUMP ------");
+
+    fflush (stdout);
 
     // ================ //
     // set up AO shells //
@@ -103,26 +112,30 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
     // preprocess and correct for SP shells
 
     size_t nsp = 0;
-    for (int i = 0; i < quick_cuest_data.nshell; ++i)
+    for (int i = 0; i < nshell; ++i)
         nsp += (ktype_[i] == 4);
 
-    quick_cuest_data.nshell += nsp;
-    uint64_t *chk_katom_ktype_kprim = malloc (3 * quick_cuest_data.nshell * sizeof (uint64_t));
+    nshell += nsp;
+    if (aux)
+        quick_cuest_data.nauxshell += nsp;
+    else
+        quick_cuest_data.nshell += nsp;
+
+    uint64_t *chk_katom_ktype_kprim = malloc (3 * nshell * sizeof (uint64_t));
     // expanded arrays (SP -> S and P)
     uint64_t *katom = chk_katom_ktype_kprim;
-    uint64_t *ktype = chk_katom_ktype_kprim + quick_cuest_data.nshell;
-    uint64_t *kprim = chk_katom_ktype_kprim + (quick_cuest_data.nshell << 1);
+    uint64_t *ktype = chk_katom_ktype_kprim + nshell;
+    uint64_t *kprim = chk_katom_ktype_kprim + (nshell << 1);
 
     // needed for basis
 
     // first_basis_function but instead first_basis_shell
-    size_t *ifshell = malloc (quick_cuest_data.nshell * sizeof (size_t));
+    size_t *ifshell = malloc (nshell * sizeof (size_t));
     // nshells_per_atom[a] is number of shells atom `a` has.
     // This is the same as the number of times it appears in `katom`.
     uint64_t *nshells_per_atom = calloc (quick_cuest_data.natom, sizeof (uint64_t));
 
-    for (size_t i = 0, j = 0, jend = quick_cuest_data.nshell - nsp;
-         i < quick_cuest_data.nshell && j < jend; ++i, ++j) {
+    for (size_t i = 0, j = 0, jend = nshell - nsp; i < nshell && j < jend; ++i, ++j) {
         katom[i] = katom_[j];
         kprim[i] = kprim_[j];
 
@@ -137,15 +150,17 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
         }
     }
 
-    for (size_t i = 0; i < quick_cuest_data.nshell; ++i) {
+    for (size_t i = 0; i < nshell; ++i) {
         uint64_t a = katom[i] - 1;
         ifshell[i] = first_basis_function[a] + shell_offset_cart[nshells_per_atom[a]++] - 1;
-        // printf ("ifshell[%zu]=%zu\n", j, ifshell[i]);
+        printf ("ifshell[%zu]=%zu\n", i, ifshell[i]);
     }
+
+    fflush (stdout);
 
     // start making shells
 
-    cuestAOShell_t *shells = malloc (quick_cuest_data.nshell * sizeof (cuestAOShell_t));
+    cuestAOShell_t *shells = malloc (nshell * sizeof (cuestAOShell_t));
     if (!shells) {
         fprintf (stderr, "Failed to allocate AO shell array\n");
         checkCuestErrors (cuestDestroy (quick_cuest_struct.handle));
@@ -157,7 +172,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
 
     // double *coeff = malloc (3 * sizeof (double));
 
-    for (size_t i = 0; i < quick_cuest_data.nshell; ++i) {
+    for (size_t i = 0; i < nshell; ++i) {
         // // manual normalization, same as pulling from QUICK
         // size_t   ifsh = ifshell[i];
         // uint64_t L    = get_L (ktype[i]);
@@ -209,7 +224,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
     freeWorkspace (tmpBasisWorkspace);
     checkCuestErrors (cuestParametersDestroy (CUEST_AOBASIS_PARAMETERS, basis_params));
 
-    for (size_t i = 0; i < quick_cuest_data.nshell; ++i)
+    for (size_t i = 0; i < nshell; ++i)
         checkCuestErrors (cuestAOShellDestroy (shells[i]));
 
     free (shells);
@@ -244,8 +259,8 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
                                   CUEST_AOBASIS_IS_PURE, &query_is_pure, sizeof (int32_t)));
 
     printf ("AO Basis from handle:\n");
-    printf ("%-10s = %6llu\n", "quick_cuest_data.natom", query_natom);
-    printf ("%-10s = %6llu\n", "quick_cuest_data.nshell", query_nshell);
+    printf ("%-10s = %6llu\n", "natom", query_natom);
+    printf ("%-10s = %6llu\n", "nshell", query_nshell);
     printf ("%-10s = %6llu\n", "nao", query_nao);
     printf ("%-10s = %6llu\n", "ncart", query_ncart);
     printf ("%-10s = %6llu\n", "nprimitive", query_nprimitive);

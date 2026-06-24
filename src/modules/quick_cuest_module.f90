@@ -8,12 +8,13 @@ module quick_cuest_module
    ! unless commented otherwise, C will not modify the memory a pointer points to
 
    interface
-      subroutine cuest_init(natom, nshell, MAXPRIM, MAXPRIM_AUX, xyz, chg, nextatom, extxyz, extchg) &
+      subroutine cuest_init(natom, nshell, nauxshell, MAXPRIM, MAXPRIM_AUX, xyz, chg, nextatom, extxyz, extchg) &
                  bind(c, name="cuest_init")
          use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_ptr
          implicit none
          integer(c_int64_t), intent(in), value :: natom
          integer(c_int64_t), intent(in), value :: nshell
+         integer(c_int64_t), intent(in), value :: nauxshell
          integer(c_int64_t), intent(in), value :: MAXPRIM
          integer(c_int64_t), intent(in), value :: MAXPRIM_AUX
          type(c_ptr), intent(in), value :: xyz ! double

@@ -175,11 +175,16 @@
 #if defined CUDA
     ! read auxiliary basis
     call readauxbasis("./basis/DEF2-UNIVERSAL-JKFIT.BAS", natom, quick_molspec%iattype, ierr)
+    if (ierr /= 0) print *, "ERROR: readauxbasis failed with ierr ", ierr
+
+    print *, "nbasis: ", nbasis
+    print *, "quick_aux_basis%nbasis: ", quick_aux_basis%nbasis
 
     ! init cuest
     call cuest_init(                            &
         int(natom, c_int64_t),                  &
         int(nshell, c_int64_t),                 &
+        int(quick_aux_basis%nshell, c_int64_t), &
         int(MAXPRIM, c_int64_t),                &
         int(MAXPRIM_AUX, c_int64_t),            &
         c_loc(xyz),                             &

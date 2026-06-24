@@ -28,6 +28,7 @@ typedef struct {
 typedef struct {
     uint64_t natom;
     uint64_t nshell;
+    uint64_t nauxshell;
     uint64_t MAXPRIM;
     uint64_t MAXPRIM_AUX;
     uint64_t ntotalatom;
@@ -40,8 +41,9 @@ typedef struct {
 extern quick_cuest_struct_t quick_cuest_struct;
 extern quick_cuest_data_t   quick_cuest_data;
 
-void cuest_init (int64_t natom, int64_t nshell, int64_t MAXPRIM, int64_t MAXPRIM_AUX, double *xyz,
-                 double *chg, int64_t nextatom, double *extxyz, double *extchg);
+void cuest_init (int64_t natom, int64_t nshell, int64_t nauxshell, int64_t MAXPRIM,
+                 int64_t MAXPRIM_AUX, double *xyz, double *chg, int64_t nextatom, double *extxyz,
+                 double *extchg);
 void cuest_deinit ();
 
 void cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function,
