@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -18,7 +19,7 @@
 void
 cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last_basis_function,
                   int64_t *katom_, int64_t *ktype_, int64_t *kprim_, double *gcexpo,
-                  double *gccoeff)
+                  double *gccoeff, bool aux)
 {
     puts ("-------- DUMP --------");
 
@@ -155,7 +156,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
     // double *coeff = malloc (3 * sizeof (double));
 
     for (size_t i = 0; i < quick_cuest_data.nshell; ++i) {
-        // // manual normalization, same as pulling from QUEST
+        // // manual normalization, same as pulling from QUICK
         // size_t   ifsh = ifshell[i];
         // uint64_t L    = get_L (ktype[i]);
         // normalize_coeff (dcoeff[ifsh], aexp[ifsh], 3, L, 1.0, coeff);
@@ -189,15 +190,20 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
         quick_cuest_struct.handle, quick_cuest_data.natom, nshells_per_atom, shells, basis_params,
         quick_cuest_struct.persistWD, quick_cuest_struct.tmpWD, &basis));
 
-    cuestWorkspace_t *persistAOBasisWorkspace = allocateWorkspace (quick_cuest_struct.persistWD);
-    cuestWorkspace_t *tmpBasisWorkspace       = allocateWorkspace (quick_cuest_struct.tmpWD);
+    cuestWorkspace_t *persistBasisWorkspace = allocateWorkspace (quick_cuest_struct.persistWD);
+    cuestWorkspace_t *tmpBasisWorkspace     = allocateWorkspace (quick_cuest_struct.tmpWD);
 
     checkCuestErrors (cuestAOBasisCreate (quick_cuest_struct.handle, quick_cuest_data.natom,
                                           nshells_per_atom, shells, basis_params,
-                                          persistAOBasisWorkspace, tmpBasisWorkspace, &basis));
+                                          persistBasisWorkspace, tmpBasisWorkspace, &basis));
 
-    quick_cuest_struct.persistAOBasisWorkspace = persistAOBasisWorkspace;
-    quick_cuest_struct.basis                   = basis;
+    if (aux) {
+        quick_cuest_struct.persistAuxBasisWorkspace = persistBasisWorkspace;
+        quick_cuest_struct.auxBasis                 = basis;
+    } else {
+        quick_cuest_struct.persistAOBasisWorkspace = persistBasisWorkspace;
+        quick_cuest_struct.basis                   = basis;
+    }
 
     freeWorkspace (tmpBasisWorkspace);
     checkCuestErrors (cuestParametersDestroy (CUEST_AOBASIS_PARAMETERS, basis_params));

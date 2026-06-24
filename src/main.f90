@@ -63,10 +63,11 @@
 
 #if defined CUDA
     ! cuest
-    use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_loc
+    use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_loc, c_bool
     use quick_size_module, only: MAXPRIM
     use quick_cuest_module, only: cuest_init, cuest_deinit, cuest_init_oei_plan, cuest_init_basis, &
                                   cuest_get_oei_S, cuest_get_oei_T, cuest_get_oei_V
+    use quick_aux_basis_module, only: quick_aux_basis, readauxbasis
 #endif
 
     implicit none
@@ -172,6 +173,9 @@
 #endif
 
 #if defined CUDA
+    ! read auxiliary basis
+    call readauxbasis("./basis/DEF2-UNIVERSAL-JKFIT.BAS", natom, quick_molspec%iattype, ierr)
+
     ! init cuest
     call cuest_init(                            &
         int(natom, c_int64_t),                  &
@@ -193,7 +197,8 @@
         int(quick_basis%ktype, c_int64_t),                &
         int(quick_basis%kprim, c_int64_t),                &
         quick_basis%gcexpo,                               &
-        quick_basis%gccoeff                               &
+        quick_basis%gccoeff,                              &
+        logical(.false., c_bool)                          &
     )
     ! init one-electron integral plan
     ! TODO: is this the right cutoff?

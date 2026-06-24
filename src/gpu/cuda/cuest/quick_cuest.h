@@ -1,6 +1,7 @@
 #ifndef QUICK_CUEST_QUICK_CUEST_H
 #define QUICK_CUEST_QUICK_CUEST_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef LOCAL
@@ -16,6 +17,8 @@ typedef struct {
     cuestWorkspaceDescriptor_t *tmpWD;
     cuestWorkspace_t           *persistAOBasisWorkspace;
     cuestAOBasis_t              basis;
+    cuestWorkspace_t           *persistAuxBasisWorkspace;
+    cuestAOBasis_t              auxBasis;
     cuestWorkspace_t           *persistAOPairListWorkspace;
     cuestAOPairList_t           AOPairList;
     cuestWorkspace_t           *persistOEIntPlanWorkspace;
@@ -42,7 +45,7 @@ void cuest_deinit ();
 
 void cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function,
                        int64_t *last_basis_function, int64_t *katom_, int64_t *ktype_,
-                       int64_t *kprim_, double *gcexpo, double *gccoeff);
+                       int64_t *kprim_, double *gcexpo, double *gccoeff, bool aux);
 
 void cuest_init_oei_plan (double cutoff);
 
