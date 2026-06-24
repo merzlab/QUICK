@@ -16,14 +16,13 @@
 
 #include "quick_cuest.h"
 
-// TODO: pass pair list threshold
 /**
  * Initializes the one-electron integrals plan `OEIntPlan` in `quick_cuest_struct`
  *
  * `cuest_init` must have been called before calling `cuest_init_oei_plan`
  */
 void
-cuest_init_oei_plan ()
+cuest_init_oei_plan (double cutoff)
 {
     // ================ //
     // set up pair list //
@@ -44,7 +43,7 @@ cuest_init_oei_plan ()
     checkCuestErrors (cuestParametersCreate (CUEST_AOPAIRLIST_PARAMETERS, &pair_list_params));
     checkCuestErrors (cuestAOPairListCreateWorkspaceQuery (
         quick_cuest_struct.handle, quick_cuest_struct.basis, quick_cuest_data.natom,
-        quick_cuest_data.xyz, 1e-14, pair_list_params, quick_cuest_struct.persistWD,
+        quick_cuest_data.xyz, cutoff, pair_list_params, quick_cuest_struct.persistWD,
         quick_cuest_struct.tmpWD, &quick_cuest_struct.AOPairList));
 
     quick_cuest_struct.persistAOPairListWorkspace
@@ -53,7 +52,7 @@ cuest_init_oei_plan ()
 
     checkCuestErrors (
         cuestAOPairListCreate (quick_cuest_struct.handle, quick_cuest_struct.basis,
-                               quick_cuest_data.natom, quick_cuest_data.xyz, 1e-14,
+                               quick_cuest_data.natom, quick_cuest_data.xyz, cutoff,
                                pair_list_params, quick_cuest_struct.persistAOPairListWorkspace,
                                tmpAOPairListWorkspace, &quick_cuest_struct.AOPairList));
     checkCuestErrors (cuestParametersDestroy (CUEST_AOPAIRLIST_PARAMETERS, pair_list_params));

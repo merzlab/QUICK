@@ -196,8 +196,8 @@
         quick_basis%gccoeff                               &
     )
     ! init one-electron integral plan
-    ! TODO: pass pair list cutoff
-    call cuest_init_oei_plan
+    ! TODO: is this the right cutoff?
+    call cuest_init_oei_plan(quick_method%coreIntegralCutoff)
     ! compute and print one-electron integrals
     allocate(cuest_S(nbasis, nbasis))
     allocate(cuest_T(nbasis, nbasis))

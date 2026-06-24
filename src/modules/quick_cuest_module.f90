@@ -43,7 +43,10 @@ module quick_cuest_module
     end interface
 
     interface
-        subroutine cuest_init_oei_plan() bind(c, name="cuest_init_oei_plan")
+        subroutine cuest_init_oei_plan(cutoff) bind(c, name="cuest_init_oei_plan")
+            use, intrinsic::iso_c_binding, only: c_double
+            implicit none
+            real(c_double), intent(in), value :: cutoff
         end subroutine cuest_init_oei_plan
     end interface
 
