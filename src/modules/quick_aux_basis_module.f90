@@ -8,7 +8,7 @@
 !        This is a stripped-down version of readbasis() that keeps only what
 !        is needed to describe a fitting basis: nshell, nbasis, nprim,
 !        first_basis_function, last_basis_function, katom, ktype, kprim,
-!        gcexp, and gccoeff (plus unnormalized coefficients, kept since they
+!        gcexpo, and gccoeff (plus unnormalized coefficients, kept since they
 !        are cheap to carry and are often needed for re-fitting/printing).
 !
 !        Dropped relative to readbasis():
@@ -41,18 +41,18 @@ module quick_aux_basis_module
       integer, allocatable :: katom(:)   ! (nshell) atom center of each shell
       integer, allocatable :: ktype(:)   ! (nshell) # of basis functions in shell: 1=S,3=P,4=SP,6=D,10=F
       integer, allocatable :: kprim(:)   ! (nshell) # of primitives in shell
-      integer, allocatable :: kstart(:)  ! (nshell) index into gcexp/gccoeff primitive arrays where this shell's primitives start
+      integer, allocatable :: kstart(:)  ! (nshell) index into gcexpo/gccoeff primitive arrays where this shell's primitives start
 
       integer, allocatable :: first_basis_function(:)  ! (natom) first aux basis fn index on this atom
       integer, allocatable :: last_basis_function(:)   ! (natom) last aux basis fn index on this atom
 
       ! Primitive-level arrays, dimensioned (maxcontract, nbasis), matching the
       ! "old memory model" layout in readbasis() for easy reuse downstream.
-      double precision, allocatable :: gcexp(:, :)         ! (maxcontract,nbasis) primitive exponents
-      double precision, allocatable :: gccoeff(:, :)        ! (maxcontract,nbasis) normalized contraction coefficients
-      double precision, allocatable :: unnorm_gccoeff(:, :) ! (maxcontract,nbasis) raw (unnormalized) coefficients read from file
+      double precision, allocatable :: gcexpo(:, :)         ! (MAXPRIM_AUX,nbasis) primitive exponents
+      double precision, allocatable :: gccoeff(:, :)        ! (MAXPRIM_AUX,nbasis) normalized contraction coefficients
+      double precision, allocatable :: unnorm_gccoeff(:, :) ! (MAXPRIM_AUX,nbasis) raw (unnormalized) coefficients read from file
 
-      integer :: maxcontract = 1     ! largest kprim(:) value, i.e. leading dim of gcexp/gccoeff
+      integer :: maxcontract = 1     ! largest kprim(:) value, i.e. leading dim of gcexpo/gccoeff
    end type quick_aux_basis_type
 
    type(quick_aux_basis_type), save :: quick_aux_basis
@@ -76,6 +76,7 @@ contains
       !
       use quick_exception_module, only: RaiseException
       use quick_constants_module, only: symbol
+      use quick_size_module, only: MAXPRIM_AUX
 
       implicit none
       character(len=*), intent(in) :: aux_basisfilename
@@ -83,7 +84,6 @@ contains
       integer, intent(in) :: iattype(natomxiao)
       integer, intent(inout) :: ierr
 
-      integer, parameter :: MAXPRIM_AUX = 30   ! generous cap on primitives/shell for the scratch read buffer
       integer :: iauxbasisfile
 
       character(len=120) :: line
@@ -235,7 +235,7 @@ contains
       quick_aux_basis%kstart = 0
 
       ! ------------------------------------------------------------------
-      ! PASS 2: read again and actually fill gcexp/gccoeff (and the
+      ! PASS 2: read again and actually fill gcexpo/gccoeff (and the
       ! unnormalized copy), shell by shell, atom by atom -- same
       ! structure as the masterwork_readfile block in readbasis().
       ! ------------------------------------------------------------------
@@ -351,7 +351,7 @@ contains
          jshell = jshell - 1
          jbasis = jbasis - 1
 
-         ! maxcontract = largest kprim over all shells -> leading dim of gcexp/gccoeff
+         ! maxcontract = largest kprim over all shells -> leading dim of gcexpo/gccoeff
          quick_aux_basis%maxcontract = 1
          do i = 1, quick_aux_basis%nshell
             if (quick_aux_basis%kprim(i) > quick_aux_basis%maxcontract) &
@@ -374,18 +374,18 @@ contains
 #endif
 
          ! ------------------------------------------------------------------
-         ! Allocate the gcexp/gccoeff/unnorm_gccoeff arrays at (maxcontract,nbasis)
+         ! Allocate the gcexpo/gccoeff/unnorm_gccoeff arrays at (maxcontract,nbasis)
          ! and fill them shell by shell, applying primitive (xnorm) and
          ! contraction (xnewnorm) normalization the same way readbasis() does.
          ! ------------------------------------------------------------------
-         if (.not. allocated(quick_aux_basis%gcexp)) &
-            allocate (quick_aux_basis%gcexp(quick_aux_basis%maxcontract, quick_aux_basis%nbasis))
+         if (.not. allocated(quick_aux_basis%gcexpo)) &
+            allocate (quick_aux_basis%gcexpo(MAXPRIM_AUX, quick_aux_basis%nbasis))
          if (.not. allocated(quick_aux_basis%gccoeff)) &
-            allocate (quick_aux_basis%gccoeff(quick_aux_basis%maxcontract, quick_aux_basis%nbasis))
+            allocate (quick_aux_basis%gccoeff(MAXPRIM_AUX, quick_aux_basis%nbasis))
          if (.not. allocated(quick_aux_basis%unnorm_gccoeff)) &
-            allocate (quick_aux_basis%unnorm_gccoeff(quick_aux_basis%maxcontract, quick_aux_basis%nbasis))
+            allocate (quick_aux_basis%unnorm_gccoeff(MAXPRIM_AUX, quick_aux_basis%nbasis))
 
-         quick_aux_basis%gcexp = 0.0d0
+         quick_aux_basis%gcexpo = 0.0d0
          quick_aux_basis%gccoeff = 0.0d0
          quick_aux_basis%unnorm_gccoeff = 0.0d0
 
@@ -395,7 +395,7 @@ contains
 
                ll = 1
                do k = quick_aux_basis%kstart(i), (quick_aux_basis%kstart(i) + quick_aux_basis%kprim(i)) - 1
-                  quick_aux_basis%gcexp(ll, l) = aex(k)
+                  quick_aux_basis%gcexpo(ll, l) = aex(k)
 
                   if (quick_aux_basis%ktype(i) == 1) then
                      quick_aux_basis%unnorm_gccoeff(ll, l) = gcs(k)
@@ -455,33 +455,33 @@ contains
          do i = 1, quick_aux_basis%nshell
             if (quick_aux_basis%ktype(i) == 1) then
                quick_aux_basis%gccoeff(:, l) = xnewnorm(0, 0, 0, quick_aux_basis%kprim(i), &
-                                           quick_aux_basis%gccoeff(:, l), quick_aux_basis%gcexp(:, l))*quick_aux_basis%gccoeff(:, l)
+                                           quick_aux_basis%gccoeff(:, l), quick_aux_basis%gcexpo(:, l))*quick_aux_basis%gccoeff(:, l)
                l = l + 1
             elseif (quick_aux_basis%ktype(i) == 3) then
                xnewtemp = xnewnorm(1, 0, 0, quick_aux_basis%kprim(i), &
-                                   quick_aux_basis%gccoeff(:, l), quick_aux_basis%gcexp(:, l))
+                                   quick_aux_basis%gccoeff(:, l), quick_aux_basis%gcexpo(:, l))
                do j = l, l + 2
                   quick_aux_basis%gccoeff(:, j) = xnewtemp*quick_aux_basis%gccoeff(:, j)
                end do
                l = l + 3
             elseif (quick_aux_basis%ktype(i) == 4) then
                xnewtemp = xnewnorm(0, 0, 0, quick_aux_basis%kprim(i), &
-                                   quick_aux_basis%gccoeff(:, l), quick_aux_basis%gcexp(:, l))
+                                   quick_aux_basis%gccoeff(:, l), quick_aux_basis%gcexpo(:, l))
                quick_aux_basis%gccoeff(:, l) = xnewtemp*quick_aux_basis%gccoeff(:, l)
                xnewtemp = xnewnorm(1, 0, 0, quick_aux_basis%kprim(i), &
-                                   quick_aux_basis%gccoeff(:, l + 1), quick_aux_basis%gcexp(:, l + 1))
+                                   quick_aux_basis%gccoeff(:, l + 1), quick_aux_basis%gcexpo(:, l + 1))
                do j = l + 1, l + 3
                   quick_aux_basis%gccoeff(:, j) = xnewtemp*quick_aux_basis%gccoeff(:, j)
                end do
                l = l + 4
             elseif (quick_aux_basis%ktype(i) == 6) then
                xnewtemp = xnewnorm(2, 0, 0, quick_aux_basis%kprim(i), &
-                                   quick_aux_basis%gccoeff(:, l), quick_aux_basis%gcexp(:, l))
+                                   quick_aux_basis%gccoeff(:, l), quick_aux_basis%gcexpo(:, l))
                do j = l, l + 2
                   quick_aux_basis%gccoeff(:, j) = xnewtemp*quick_aux_basis%gccoeff(:, j)
                end do
                xnewtemp = xnewnorm(1, 1, 0, quick_aux_basis%kprim(i), &
-                                   quick_aux_basis%gccoeff(:, l + 3), quick_aux_basis%gcexp(:, l + 3))
+                                   quick_aux_basis%gccoeff(:, l + 3), quick_aux_basis%gcexpo(:, l + 3))
                do j = l + 3, l + 5
                   quick_aux_basis%gccoeff(:, j) = xnewtemp*quick_aux_basis%gccoeff(:, j)
                end do

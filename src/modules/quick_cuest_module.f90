@@ -1,17 +1,21 @@
 module quick_cuest_module
+   !
+   ! This module contains the fortran bindings for C functions that call cuEST
+   !
    use, intrinsic::iso_c_binding, only: c_int64_t, c_ptr
    implicit none
 
    ! unless commented otherwise, C will not modify the memory a pointer points to
 
    interface
-      subroutine cuest_init(natom, nshell, MAXPRIM, xyz, chg, nextatom, extxyz, extchg) &
-         bind(c, name="cuest_init")
+      subroutine cuest_init(natom, nshell, MAXPRIM, MAXPRIM_AUX, xyz, chg, nextatom, extxyz, extchg) &
+                 bind(c, name="cuest_init")
          use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_ptr
          implicit none
          integer(c_int64_t), intent(in), value :: natom
          integer(c_int64_t), intent(in), value :: nshell
          integer(c_int64_t), intent(in), value :: MAXPRIM
+         integer(c_int64_t), intent(in), value :: MAXPRIM_AUX
          type(c_ptr), intent(in), value :: xyz ! double
          real(c_double), intent(in) :: chg(*)
          integer(c_int64_t), intent(in), value :: nextatom
@@ -28,7 +32,7 @@ module quick_cuest_module
    interface
       subroutine cuest_init_basis(ncenter, first_basis_function, last_basis_function, katom, &
                                   ktype, kprim, gcexpo, gccoeff, aux) &
-         bind(c, name="cuest_init_basis")
+                 bind(c, name="cuest_init_basis")
          use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_bool
          implicit none
          integer(c_int64_t), intent(in) :: ncenter(*)

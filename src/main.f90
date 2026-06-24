@@ -64,7 +64,7 @@
 #if defined CUDA
     ! cuest
     use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_loc, c_bool
-    use quick_size_module, only: MAXPRIM
+    use quick_size_module, only: MAXPRIM, MAXPRIM_AUX
     use quick_cuest_module, only: cuest_init, cuest_deinit, cuest_init_oei_plan, cuest_init_basis, &
                                   cuest_get_oei_S, cuest_get_oei_T, cuest_get_oei_V
     use quick_aux_basis_module, only: quick_aux_basis, readauxbasis
@@ -181,6 +181,7 @@
         int(natom, c_int64_t),                  &
         int(nshell, c_int64_t),                 &
         int(MAXPRIM, c_int64_t),                &
+        int(MAXPRIM_AUX, c_int64_t),            &
         c_loc(xyz),                             &
         quick_molspec%chg,                      &
         int(quick_molspec%nextatom, c_int64_t), &
@@ -188,7 +189,7 @@
         quick_molspec%extchg                    &
     )
     ! for testing; the following cuest functions should not be called here
-    ! init basis
+    ! init both basis
     call cuest_init_basis(                                &
         int(quick_basis%ncenter, c_int64_t),              &
         int(quick_basis%first_basis_function, c_int64_t), &
@@ -199,6 +200,17 @@
         quick_basis%gcexpo,                               &
         quick_basis%gccoeff,                              &
         logical(.false., c_bool)                          &
+    )
+    call cuest_init_basis(                                    &
+        int(quick_basis%ncenter, c_int64_t),                  &
+        int(quick_aux_basis%first_basis_function, c_int64_t), &
+        int(quick_aux_basis%last_basis_function, c_int64_t),  &
+        int(quick_aux_basis%katom, c_int64_t),                &
+        int(quick_aux_basis%ktype, c_int64_t),                &
+        int(quick_aux_basis%kprim, c_int64_t),                &
+        quick_aux_basis%gcexpo,                               &
+        quick_aux_basis%gccoeff,                              &
+        logical(.true., c_bool)                               &
     )
     ! init one-electron integral plan
     ! TODO: is this the right cutoff?
