@@ -79,7 +79,7 @@ subroutine get1e(deltaO)
 
 #ifdef CUDA
    ! for cuest
-   use iso_c_binding, only: c_loc
+   use, intrinsic :: iso_c_binding, only: c_loc
    use quick_cuest_module, only: cuest_get_oei_T, cuest_get_oei_V
 #endif
    
