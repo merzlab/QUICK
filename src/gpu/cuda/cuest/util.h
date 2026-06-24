@@ -15,24 +15,23 @@ uint64_t
 get_L (uint64_t quick_ktype)
 {
     switch (quick_ktype) {
-        case 1:
+        case 1: // s
             return 0;
-        case 3:
+        case 3: // p
             return 1;
-        case 6:
+        case 6: // d
             return 2;
-        case 10:
+        case 10: // f
             return 3;
+        case 15: // g
+            return 4;
+        case 21: // h
+            return 5;
         default:
             fprintf (stderr, "get_L(%llu): quick_ktype parameter invalid\n", quick_ktype);
             return 0;
     }
 }
-
-// done up to row 4
-// 1s 2s 2p 3s 3p 4s 3d 4p
-uint64_t shell_offset_cart[] = { 0, 1, 2, 5, 6, 9, 10, 16, 19 };
-uint64_t shell_offset_sph[]  = { 0, 1, 2, 5, 6, 9, 10, 15, 18 };
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846

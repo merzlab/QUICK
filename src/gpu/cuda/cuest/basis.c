@@ -129,12 +129,6 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
 
     // needed for basis
 
-    // first_basis_function but instead first_basis_shell
-    size_t *ifshell = malloc (nshell * sizeof (size_t));
-    // nshells_per_atom[a] is number of shells atom `a` has.
-    // This is the same as the number of times it appears in `katom`.
-    uint64_t *nshells_per_atom = calloc (quick_cuest_data.natom, sizeof (uint64_t));
-
     for (size_t i = 0, j = 0, jend = nshell - nsp; i < nshell && j < jend; ++i, ++j) {
         katom[i] = katom_[j];
         kprim[i] = kprim_[j];
@@ -150,9 +144,21 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
         }
     }
 
+    // first_basis_function but instead first_basis_shell
+    size_t *ifshell = malloc (nshell * sizeof (size_t));
+    // nshells_per_atom[a] is number of shells atom `a` has.
+    // This is the same as the number of times it appears in `katom`.
+    uint64_t *nshells_per_atom = calloc (quick_cuest_data.natom, sizeof (uint64_t));
+
+    ifshell[0] = 0;
+
     for (size_t i = 0; i < nshell; ++i) {
         uint64_t a = katom[i] - 1;
-        ifshell[i] = first_basis_function[a] + shell_offset_cart[nshells_per_atom[a]++] - 1;
+        ++nshells_per_atom[a];
+        // ifshell[i] = first_basis_function[a] + shell_offset_cart[nshells_per_atom[a]++] - 1; //
+        // <-- wrong
+        if (i > 0)
+            ifshell[i] = ifshell[i - 1] + ktype[i - 1]; // ktype stores number of cartesian orbitals
         printf ("ifshell[%zu]=%zu\n", i, ifshell[i]);
     }
 
