@@ -76,10 +76,21 @@ subroutine get1e(deltaO)
 #ifdef MPIV
    use mpi
 #endif
+
+#ifdef CUDA
+   ! for cuest
+   use iso_c_binding, only: c_loc
+   use quick_cuest_module, only: cuest_get_oei_T, cuest_get_oei_V
+#endif
    
    implicit double precision(a-h,o-z)
    double precision :: temp2d(nbasis,nbasis)
    logical, intent(in) :: deltaO
+
+#ifdef CUDA
+   ! for cuest
+   double precision, target :: tmp_o_T(nbasis, nbasis), tmp_o_V(nbasis, nbasis)
+#endif
 
    !------------------------------------------------
    ! This subroutine is to obtain Hcore, and store it
@@ -116,8 +127,13 @@ subroutine get1e(deltaO)
 
 #if defined(GPU)
          if(.not. quick_method%hasF) then
+#ifdef CUDA
+           call cuest_get_oei_T(c_loc(tmp_o_T))
+           call cuest_get_oei_V(c_loc(tmp_o_V))
+           quick_qm_struct%o = tmp_o_T - tmp_o_V
+#else
            call gpu_get_oei(quick_qm_struct%o)
-           ! call cuest_get_oei_V(quick_qm_struct%o)
+#endif
          else
 
            do IIsh=1,jshell

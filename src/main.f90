@@ -207,11 +207,13 @@
     call cuest_get_oei_T(c_loc(cuest_T))
     call cuest_get_oei_V(c_loc(cuest_V))
 
-    call cuest_deinit
-
     ! V is computed using positive test charge so we actually subtract
     ! 6 is stdout (temporary)
     call PriSym(6, nbasis, cuest_T - cuest_V, "F14.8")
+
+    deallocate(cuest_S)
+    deallocate(cuest_T)
+    deallocate(cuest_V)
 #endif
     
     ! Molden export
@@ -414,6 +416,10 @@
 #if defined(GPU) || defined(MPIV_GPU)
     call delete(quick_method, ierr)
     call gpu_deallocate_scratch(quick_method%grad .or. quick_method%opt)
+#ifdef CUDA
+    ! for cuest
+    call cuest_deinit
+#endif
 #if defined(MPIV_GPU)
     SAFE_CALL(delete_mgpu_setup(ierr))
 #endif
