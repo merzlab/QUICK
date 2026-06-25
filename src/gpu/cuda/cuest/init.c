@@ -127,12 +127,12 @@ cuest_deinit ()
     free (quick_cuest_data.allchg);
 
     if (cudaFree (quick_cuest_data.allxyz_gpu) != cudaSuccess) {
-        fprintf (stderr, "cudaFree failed on line $d\n", __LINE__);
+        fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
 
     if (cudaFree (quick_cuest_data.allchg_gpu) != cudaSuccess) {
-        fprintf (stderr, "cudaFree failed on line $d\n", __LINE__);
+        fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
 }

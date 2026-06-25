@@ -10,7 +10,7 @@
 /**
  * `quick_type` should not be 4=sp
  */
-uint64_t
+static uint64_t
 get_L_cart (uint64_t quick_ktype)
 {
     switch (quick_ktype) {

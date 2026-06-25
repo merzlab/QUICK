@@ -52,6 +52,10 @@ contains
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      double precision tst, te, tred
+#ifdef CUDA
+    ! cuest debug
+    double precision, target :: tmp_debug_o(nbasis, nbasis)
+#endif
 #ifdef MPIV
      integer ierror
      double precision :: Eelsum, Excsum, aelec, belec
@@ -129,8 +133,18 @@ contains
 #if defined(GPU) || defined(MPIV_GPU)
         if (quick_method%bGPU) then          
 #ifdef CUDA
+           print *, "======== quick density matrix ========"
+           call PriSym(6, nbasis, quick_qm_struct%dense, "F12.8")
+           print *, "====== end quick density matrix ======"
+
            ! cuest
-           call cuest_get_eri_J(c_loc(quick_qm_struct%o), quick_qm_struct%dense)
+           call cuest_get_eri_J(c_loc(tmp_debug_o), quick_qm_struct%dense)
+           tmp_debug_o = quick_qm_struct%o
+
+           call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
+           print *, "======== gpu_get_cshell_eri ========"
+           call PriSym(6, nbasis, quick_qm_struct%o - tmp_debug_o, "F14.8")
+           print *, "====== end gpu_get_cshell_eri ======"
 #else
            call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
         else                                  

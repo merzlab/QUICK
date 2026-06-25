@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #ifdef LOCAL
+#include "/Users/msun/rehs2026/cuest/fake_cuda_headers/cuda_runtime.h"
 #include "/Users/msun/rehs2026/cuest/libcuest-linux-sbsa-0.1.1.1_cuda13-archive/include/cuest.h"
 #else
 #include <cuest.h>
@@ -273,4 +274,99 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
     printf ("%-10s = %6llu\n", "nprimitive", query_nprimitive);
     printf ("%-10s = %6llu\n", "max_L", query_max_L);
     printf ("%-10s = %6s\n", "is_pure", query_is_pure ? "true" : "false");
+
+    // for debugging auxiliary basis
+    if (aux) {
+        cuestAOPairList_t           pair_list;
+        cuestAOPairListParameters_t pair_list_params;
+        checkCuestErrors (cuestParametersCreate (CUEST_AOPAIRLIST_PARAMETERS, &pair_list_params));
+        checkCuestErrors (cuestAOPairListCreateWorkspaceQuery (
+            quick_cuest_struct.handle, quick_cuest_struct.auxBasis, quick_cuest_data.natom,
+            quick_cuest_data.xyz, 1e-12, pair_list_params, quick_cuest_struct.persistWD,
+            quick_cuest_struct.tmpWD, &pair_list));
+
+        cuestWorkspace_t *pair_list_wksp         = allocateWorkspace (quick_cuest_struct.persistWD);
+        cuestWorkspace_t *tmpAOPairListWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
+
+        checkCuestErrors (cuestAOPairListCreate (
+            quick_cuest_struct.handle, quick_cuest_struct.auxBasis, quick_cuest_data.natom,
+            quick_cuest_data.xyz, 1e-12, pair_list_params, pair_list_wksp, tmpAOPairListWorkspace,
+            &pair_list));
+        checkCuestErrors (cuestParametersDestroy (CUEST_AOPAIRLIST_PARAMETERS, pair_list_params));
+        freeWorkspace (tmpAOPairListWorkspace);
+        // free (xyz_flat);
+
+        // ========================== //
+        // one-electron integral plan //
+        // ========================== //
+
+        cuestOEIntPlan_t           oeint_plan;
+        cuestOEIntPlanParameters_t oeint_plan_params;
+        checkCuestErrors (cuestParametersCreate (CUEST_OEINTPLAN_PARAMETERS, &oeint_plan_params));
+        checkCuestErrors (cuestOEIntPlanCreateWorkspaceQuery (
+            quick_cuest_struct.handle, quick_cuest_struct.auxBasis, pair_list, oeint_plan_params,
+            quick_cuest_struct.persistWD, quick_cuest_struct.tmpWD, &oeint_plan));
+
+        cuestWorkspace_t *oeint_plan_wksp       = allocateWorkspace (quick_cuest_struct.persistWD);
+        cuestWorkspace_t *tmpOEIntPlanWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
+        checkCuestErrors (cuestOEIntPlanCreate (
+            quick_cuest_struct.handle, quick_cuest_struct.auxBasis, pair_list, oeint_plan_params,
+            oeint_plan_wksp, tmpOEIntPlanWorkspace, &oeint_plan));
+
+        checkCuestErrors (cuestParametersDestroy (CUEST_OEINTPLAN_PARAMETERS, oeint_plan_params));
+        freeWorkspace (tmpOEIntPlanWorkspace);
+
+        double *d_S;
+        size_t  d_S_siz = 113 * 113 * sizeof (double);
+        if (cudaMalloc ((void **)&d_S, d_S_siz) != cudaSuccess) {
+            fprintf (stderr, "Failed to allocate device buffer\n");
+            exit (EXIT_FAILURE);
+        }
+
+        cuestOverlapComputeParameters_t overlap_compute_params;
+        checkCuestErrors (
+            cuestParametersCreate (CUEST_OVERLAPCOMPUTE_PARAMETERS, &overlap_compute_params));
+        checkCuestErrors (cuestOverlapComputeWorkspaceQuery (quick_cuest_struct.handle, oeint_plan,
+                                                             overlap_compute_params,
+                                                             quick_cuest_struct.tmpWD, d_S));
+
+        cuestWorkspace_t *tmpSWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
+        printf ("oeint_plan: %p\noverlap_compute_params: %p\ntmpSWorkspace: %p\nd_S: %p\n",
+                oeint_plan, overlap_compute_params, tmpSWorkspace, d_S);
+        checkCuestErrors (cuestOverlapCompute (quick_cuest_struct.handle, oeint_plan,
+                                               overlap_compute_params, tmpSWorkspace, d_S));
+
+        freeWorkspace (tmpSWorkspace);
+        checkCuestErrors (
+            cuestParametersDestroy (CUEST_OVERLAPCOMPUTE_PARAMETERS, overlap_compute_params));
+
+        // ==================== //
+        // print overlap matrix //
+        // ==================== //
+
+        double *buf = malloc (d_S_siz);
+        if (cudaMemcpy (buf, d_S, d_S_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
+            fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
+            exit (EXIT_FAILURE);
+        }
+
+        puts ("-------- DEBUG AUX S --------");
+        for (int i = 0; i < 10; ++i) {
+            for (int j = 0; j < 10; ++j)
+                printf ("%16.10f", buf[i * 113 + j]);
+            putchar ('\n');
+        }
+        puts ("------ END DEBUG AUX S ------");
+
+        if (cudaFree (d_S) != cudaSuccess) {
+            fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
+            exit (EXIT_FAILURE);
+        }
+
+        free (buf);
+        checkCuestErrors (cuestOEIntPlanDestroy (oeint_plan));
+        freeWorkspace (oeint_plan_wksp);
+        checkCuestErrors (cuestAOPairListDestroy (pair_list));
+        freeWorkspace (pair_list_wksp);
+    }
 }

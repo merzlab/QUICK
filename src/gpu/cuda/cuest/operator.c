@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "util.h"
 
 #ifdef LOCAL
 #include "/Users/msun/rehs2026/cuest/fake_cuda_headers/cuda_runtime.h"
@@ -251,11 +252,6 @@ cuest_get_eri_J (double *o, double *D)
 {
     query_nao ();
 
-    uint64_t nocc = 0;
-    for (size_t i = 0; i < quick_cuest_data.natom; ++i)
-        nocc += quick_cuest_data.allchg[i];
-    nocc >>= 1;
-
     double *d_J;
     size_t  d_J_siz = quick_cuest_data.nao * quick_cuest_data.nao * sizeof (double);
     if (cudaMalloc ((void **)&d_J, d_J_siz) != cudaSuccess) {
@@ -275,6 +271,14 @@ cuest_get_eri_J (double *o, double *D)
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
+
+    puts ("-------- CUEST DENSITY MATRIX --------");
+    for (int i = 0; i < quick_cuest_data.nao; ++i) {
+        for (int j = 0; j < quick_cuest_data.nao; ++j)
+            printf ("%f ", get (D, i, j, quick_cuest_data.nao));
+        putchar ('\n');
+    }
+    puts ("------ END CUEST DENSITY MATRIX ------");
 
     cuestDFCoulombComputeParameters_t dfj_compute_params;
     checkCuestErrors (
