@@ -219,7 +219,13 @@ subroutine get1e(deltaO)
 
 #if defined(MPIV_GPU)
       if(.not. quick_method%hasF) then
+#ifdef CUDA
+        call cuest_get_oei_T(c_loc(tmp_o_T))
+        call cuest_get_oei_V(c_loc(tmp_o_V))
+        quick_qm_struct%o = tmp_o_T - tmp_o_V
+#else
         call gpu_get_oei(quick_qm_struct%o)
+#endif
       else
         do i=1,mpi_jshelln(mpirank)
            IIsh=mpi_jshell(mpirank,i)
