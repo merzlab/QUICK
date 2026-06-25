@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef LOCAL
 #include "/Users/msun/rehs2026/cuest/fake_cuda_headers/cuda_runtime.h"
@@ -49,14 +50,24 @@ cuest_init (int64_t natom, int64_t nshell, int64_t nauxshell, int64_t MAXPRIM, i
     quick_cuest_data.xyz         = xyz;
     quick_cuest_data.nao         = 0;
 
-    // ============= //
-    // init GPU data //
-    // ============= //
+    // =========== //
+    // init arrays //
+    // =========== //
 
-    size_t chg_gpu_siz    = natom * sizeof (double);
-    size_t extchg_gpu_siz = nextatom * sizeof (double);
-    size_t xyz_gpu_siz    = 3 * chg_gpu_siz;
-    size_t extxyz_gpu_siz = 3 * extchg_gpu_siz;
+    size_t chg_siz        = natom * sizeof (double);
+    size_t extchg_siz     = nextatom * sizeof (double);
+    size_t xyz_gpu_siz    = 3 * chg_siz;
+    size_t extxyz_gpu_siz = 3 * extchg_siz;
+
+    // charges on CPU
+
+    if ((quick_cuest_data.allchg = malloc (chg_siz + extchg_siz)) == NULL) {
+        fprintf (stderr, "malloc failed on line %d\n", __LINE__);
+        exit (EXIT_FAILURE);
+    }
+
+    memcpy (quick_cuest_data.allchg, chg, chg_siz);
+    memcpy (quick_cuest_data.allchg + natom, extchg, extchg_siz);
 
     // xyz
 
@@ -81,19 +92,18 @@ cuest_init (int64_t natom, int64_t nshell, int64_t nauxshell, int64_t MAXPRIM, i
 
     // charges
 
-    if (cudaMalloc ((void **)&quick_cuest_data.allchg_gpu, chg_gpu_siz + extchg_gpu_siz)
-        != cudaSuccess) {
+    if (cudaMalloc ((void **)&quick_cuest_data.allchg_gpu, chg_siz + extchg_siz) != cudaSuccess) {
         fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
 
-    if (cudaMemcpy (quick_cuest_data.allchg_gpu, chg, chg_gpu_siz, cudaMemcpyHostToDevice)
+    if (cudaMemcpy (quick_cuest_data.allchg_gpu, chg, chg_siz, cudaMemcpyHostToDevice)
         != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
 
-    if (cudaMemcpy ((uint8_t *)quick_cuest_data.allchg_gpu + chg_gpu_siz, extchg, extchg_gpu_siz,
+    if (cudaMemcpy ((uint8_t *)quick_cuest_data.allchg_gpu + chg_siz, extchg, extchg_siz,
                     cudaMemcpyHostToDevice)
         != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
@@ -113,6 +123,8 @@ cuest_deinit ()
     free (quick_cuest_struct.persistWD);
     free (quick_cuest_struct.tmpWD);
     checkCuestErrors (cuestDestroy (quick_cuest_struct.handle));
+
+    free (quick_cuest_data.allchg);
 
     if (cudaFree (quick_cuest_data.allxyz_gpu) != cudaSuccess) {
         fprintf (stderr, "cudaFree failed on line $d\n", __LINE__);

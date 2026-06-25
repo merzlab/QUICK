@@ -1,0 +1,34 @@
+#ifdef LOCAL
+#include "/Users/msun/rehs2026/cuest/fake_cuda_headers/cuda_runtime.h"
+#include "/Users/msun/rehs2026/cuest/libcuest-linux-sbsa-0.1.1.1_cuda13-archive/include/cuest.h"
+#else
+#include <cuda_runtime.h>
+#include <cuest.h>
+#endif
+
+#include "helper_status.h"
+#include "helper_workspace.h"
+
+#include "quick_cuest.h"
+
+void
+cuest_init_dfint_plan ()
+{
+    cuestDFIntPlanParameters_t dfint_plan_parameters;
+    checkCuestErrors (cuestParametersCreate (CUEST_DFINTPLAN_PARAMETERS, &dfint_plan_parameters));
+    checkCuestErrors (cuestDFIntPlanCreateWorkspaceQuery (
+        quick_cuest_struct.handle, quick_cuest_struct.basis, quick_cuest_struct.auxBasis,
+        quick_cuest_struct.AOPairList, dfint_plan_parameters, quick_cuest_struct.persistWD,
+        quick_cuest_struct.tmpWD, &quick_cuest_struct.DFIntPlan));
+
+    quick_cuest_struct.persistDFIntPlanWorkspace = allocateWorkspace (quick_cuest_struct.persistWD);
+    cuestWorkspace_t *tmpDFIntPlanWorkspace      = allocateWorkspace (quick_cuest_struct.tmpWD);
+    checkCuestErrors (cuestDFIntPlanCreate (quick_cuest_struct.handle, quick_cuest_struct.basis,
+                                            quick_cuest_struct.auxBasis,
+                                            quick_cuest_struct.AOPairList, dfint_plan_parameters,
+                                            quick_cuest_struct.persistDFIntPlanWorkspace,
+                                            tmpDFIntPlanWorkspace, &quick_cuest_struct.DFIntPlan));
+
+    checkCuestErrors (cuestParametersDestroy (CUEST_DFINTPLAN_PARAMETERS, dfint_plan_parameters));
+    freeWorkspace (tmpDFIntPlanWorkspace);
+}

@@ -57,6 +57,11 @@ module quick_cuest_module
    end interface
 
    interface
+      subroutine cuest_init_dfint_plan() bind(c, name="cuest_init_dfint_plan")
+      end subroutine cuest_init_dfint_plan
+   end interface
+
+   interface
       subroutine cuest_get_oei_S(o) bind(c, name="cuest_get_oei_S")
          use, intrinsic::iso_c_binding, only: c_ptr
          type(c_ptr), intent(in), value :: o ! double; modified
@@ -76,4 +81,13 @@ module quick_cuest_module
          type(c_ptr), intent(in), value :: o ! double; modified
       end subroutine cuest_get_oei_V
    end interface
+
+   interface
+      subroutine cuest_get_eri_J(o, dense) bind(c, name="cuest_get_eri_J")
+         use, intrinsic::iso_c_binding, only: c_ptr, c_double
+         type(c_ptr), intent(in), value :: o ! double; modified
+         real(c_double), intent(in) :: dense(*)
+      end subroutine cuest_get_eri_J
+   end interface
+
 end module quick_cuest_module

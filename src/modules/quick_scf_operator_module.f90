@@ -40,6 +40,11 @@ contains
 #ifdef MPIV
      use mpi
 #endif
+#ifdef CUDA
+    ! cuest
+    use, intrinsic :: iso_c_binding, only: c_loc
+    use quick_cuest_module, only: cuest_get_eri_J
+#endif
   
      implicit none
   !   double precision oneElecO(nbasis,nbasis)
@@ -123,8 +128,13 @@ contains
 
 #if defined(GPU) || defined(MPIV_GPU)
         if (quick_method%bGPU) then          
+#ifdef CUDA
+           ! cuest
+           call cuest_get_eri_J(c_loc(quick_qm_struct%o), quick_qm_struct%dense)
+#else
            call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
         else                                  
+#endif
 #endif
   !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
   !  Reference: Strout DL and Scuseria JCP 102(1995),8448.

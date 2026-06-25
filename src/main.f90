@@ -66,7 +66,7 @@
     use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_loc, c_bool
     use quick_size_module, only: MAXPRIM, MAXPRIM_AUX
     use quick_cuest_module, only: cuest_init, cuest_deinit, cuest_init_oei_plan, cuest_init_basis, &
-                                  cuest_get_oei_S, cuest_get_oei_T, cuest_get_oei_V
+                                  cuest_get_oei_S, cuest_get_oei_T, cuest_get_oei_V, cuest_init_dfint_plan
     use quick_aux_basis_module, only: quick_aux_basis, readauxbasis
 #endif
 
@@ -236,6 +236,9 @@
     deallocate(cuest_S)
     deallocate(cuest_T)
     deallocate(cuest_V)
+
+    ! init 2 electron integral plan
+    call cuest_init_dfint_plan
 #endif
     
     ! Molden export

@@ -23,6 +23,8 @@ typedef struct {
     cuestAOPairList_t           AOPairList;
     cuestWorkspace_t           *persistOEIntPlanWorkspace;
     cuestOEIntPlan_t            OEIntPlan;
+    cuestWorkspace_t           *persistDFIntPlanWorkspace;
+    cuestDFIntPlan_t            DFIntPlan;
 } quick_cuest_struct_t;
 
 typedef struct {
@@ -34,6 +36,7 @@ typedef struct {
     uint64_t ntotalatom;
     double  *xyz;
     double  *allxyz_gpu;
+    double  *allchg;
     double  *allchg_gpu;
     uint64_t nao;
 } quick_cuest_data_t;
@@ -51,9 +54,11 @@ void cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function,
                        int64_t *kprim_, double *gcexpo, double *gccoeff, bool aux);
 
 void cuest_init_oei_plan (double cutoff);
+void cuest_init_dfint_plan ();
 
 void cuest_get_oei_S (double *o);
 void cuest_get_oei_T (double *o);
 void cuest_get_oei_V (double *o);
+void cuest_get_eri_J (double *o, double *D);
 
 #endif

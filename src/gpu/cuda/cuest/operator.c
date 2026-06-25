@@ -247,9 +247,14 @@ cuest_get_oei_V (double *o)
 }
 
 void
-cuest_get_oei_J (double *o)
+cuest_get_eri_J (double *o, double *D)
 {
     query_nao ();
+
+    uint64_t nocc = 0;
+    for (size_t i = 0; i < quick_cuest_data.natom; ++i)
+        nocc += quick_cuest_data.allchg[i];
+    nocc >>= 1;
 
     double *d_J;
     size_t  d_J_siz = quick_cuest_data.nao * quick_cuest_data.nao * sizeof (double);
@@ -258,40 +263,51 @@ cuest_get_oei_J (double *o)
         exit (EXIT_FAILURE);
     }
 
-    cuestPotentialComputeParameters_t potential_compute_params;
-    checkCuestErrors (
-        cuestParametersCreate (CUEST_POTENTIALCOMPUTE_PARAMETERS, &potential_compute_params));
-    checkCuestErrors (cuestPotentialComputeWorkspaceQuery (
-        quick_cuest_struct.handle, quick_cuest_struct.OEIntPlan, potential_compute_params,
-        quick_cuest_struct.tmpWD, quick_cuest_data.ntotalatom, quick_cuest_data.allxyz_gpu,
-        quick_cuest_data.allchg_gpu, d_J));
+    // density matrix
+    double *d_D;
+    size_t  d_D_siz = d_J_siz;
+    if (cudaMalloc ((void **)&d_D, d_D_siz)) {
+        fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
+        exit (EXIT_FAILURE);
+    }
 
-    cuestWorkspace_t *tmpVWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
-    checkCuestErrors (
-        cuestPotentialCompute (quick_cuest_struct.handle, quick_cuest_struct.OEIntPlan,
-                               potential_compute_params, tmpVWorkspace, quick_cuest_data.ntotalatom,
-                               quick_cuest_data.allxyz_gpu, quick_cuest_data.allchg_gpu, d_J));
+    if (cudaMemcpy (d_D, D, d_D_siz, cudaMemcpyHostToDevice) != cudaSuccess) {
+        fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
+        exit (EXIT_FAILURE);
+    }
 
-    freeWorkspace (tmpVWorkspace);
+    cuestDFCoulombComputeParameters_t dfj_compute_params;
     checkCuestErrors (
-        cuestParametersDestroy (CUEST_POTENTIALCOMPUTE_PARAMETERS, potential_compute_params));
+        cuestParametersCreate (CUEST_DFCOULOMBCOMPUTE_PARAMETERS, dfj_compute_params));
+    checkCuestErrors (cuestDFCoulombComputeWorkspaceQuery (
+        quick_cuest_struct.handle, quick_cuest_struct.DFIntPlan, dfj_compute_params,
+        quick_cuest_struct.tmpWD, d_D, d_J));
 
-    // ====================== //
-    // print potential matrix //
-    // ====================== //
+    cuestWorkspace_t *tmpDFJWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
+    checkCuestErrors (cuestDFCoulombCompute (quick_cuest_struct.handle,
+                                             quick_cuest_struct.DFIntPlan, dfj_compute_params,
+                                             tmpDFJWorkspace, d_D, d_J));
+
+    freeWorkspace (tmpDFJWorkspace);
+    checkCuestErrors (
+        cuestParametersDestroy (CUEST_DFCOULOMBCOMPUTE_PARAMETERS, dfj_compute_params));
+
+    // ==================== //
+    // print coulomb matrix //
+    // ==================== //
 
     if (cudaMemcpy (o, d_J, d_J_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
 
-    puts ("-------- V --------");
+    puts ("-------- J --------");
     for (int i = 0; i < quick_cuest_data.nao; ++i) {
         for (int j = 0; j < quick_cuest_data.nao; ++j)
             printf ("%16.10f", o[i * quick_cuest_data.nao + j]);
         putchar ('\n');
     }
-    puts ("------ END V ------");
+    puts ("------ END J ------");
 
     if (cudaFree (d_J) != cudaSuccess) {
         fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
