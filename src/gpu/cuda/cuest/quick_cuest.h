@@ -60,5 +60,6 @@ void cuest_get_oei_S (double *o);
 void cuest_get_oei_T (double *o);
 void cuest_get_oei_V (double *o);
 void cuest_get_eri_J (double *o, double *D);
+void cuest_get_eri_K (double *o, double *C, int64_t NBSuse);
 
 #endif

@@ -42,8 +42,8 @@ contains
 #endif
 #ifdef CUDA
     ! cuest
-    use, intrinsic :: iso_c_binding, only: c_loc
-    use quick_cuest_module, only: cuest_get_eri_J
+    use, intrinsic :: iso_c_binding, only: c_loc, c_int64_t
+    use quick_cuest_module, only: cuest_get_eri_J, cuest_get_eri_K
 #endif
   
      implicit none
@@ -54,7 +54,7 @@ contains
      double precision tst, te, tred
 #ifdef CUDA
     ! cuest debug
-    double precision, target :: tmp_debug_o(nbasis, nbasis)
+    double precision, target :: tmp_debug_J(nbasis, nbasis), tmp_debug_K(NBSuse, nbasis)
 #endif
 #ifdef MPIV
      integer ierror
@@ -133,17 +133,23 @@ contains
 #if defined(GPU) || defined(MPIV_GPU)
         if (quick_method%bGPU) then          
 #ifdef CUDA
-           print *, "======== quick density matrix ========"
-           call PriSym(6, nbasis, quick_qm_struct%dense, "F12.8")
-           print *, "====== end quick density matrix ======"
+           ! print *, "======== quick density matrix ========"
+           ! call PriSym(6, nbasis, quick_qm_struct%dense, "F12.8")
+           ! print *, "====== end quick density matrix ======"
 
            ! cuest
-           call cuest_get_eri_J(c_loc(tmp_debug_o), quick_qm_struct%dense)
-           tmp_debug_o = quick_qm_struct%o
+           call cuest_get_eri_J(c_loc(tmp_debug_J), quick_qm_struct%dense)
+           call cuest_get_eri_K(c_loc(tmp_debug_K), quick_qm_struct%co, int(NBSuse, c_int64_t))
+            
+           print *, "======== cuEST J-K ========"
+           call PriSym(6, nbasis, tmp_debug_J - tmp_debug_K, "F12.8")
+           print *, "====== end cuEST J-K ======"
+
+           tmp_debug_J = quick_qm_struct%o
 
            call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
            print *, "======== gpu_get_cshell_eri ========"
-           call PriSym(6, nbasis, quick_qm_struct%o - tmp_debug_o, "F14.8")
+           call PriSym(6, nbasis, quick_qm_struct%o - tmp_debug_J, "F14.8")
            print *, "====== end gpu_get_cshell_eri ======"
 #else
            call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  

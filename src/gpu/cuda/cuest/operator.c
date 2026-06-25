@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "util.h"
 
 #ifdef LOCAL
 #include "/Users/msun/rehs2026/cuest/fake_cuda_headers/cuda_runtime.h"
@@ -14,6 +13,7 @@
 
 #include "helper_status.h"
 #include "helper_workspace.h"
+#include "util.h"
 
 #include "quick_cuest.h"
 
@@ -248,7 +248,7 @@ cuest_get_oei_V (double *o)
 }
 
 void
-cuest_get_eri_J (double *o, double *D)
+cuest_get_eri_J (double *o, double *P)
 {
     query_nao ();
 
@@ -260,37 +260,37 @@ cuest_get_eri_J (double *o, double *D)
     }
 
     // density matrix
-    double *d_D;
-    size_t  d_D_siz = d_J_siz;
-    if (cudaMalloc ((void **)&d_D, d_D_siz)) {
+    double *d_P;
+    size_t  d_P_siz = d_J_siz;
+    if (cudaMalloc ((void **)&d_P, d_P_siz)) {
         fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
 
-    if (cudaMemcpy (d_D, D, d_D_siz, cudaMemcpyHostToDevice) != cudaSuccess) {
+    if (cudaMemcpy (d_P, P, d_P_siz, cudaMemcpyHostToDevice) != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
-
-    puts ("-------- CUEST DENSITY MATRIX --------");
-    for (int i = 0; i < quick_cuest_data.nao; ++i) {
-        for (int j = 0; j < quick_cuest_data.nao; ++j)
-            printf ("%f ", get (D, i, j, quick_cuest_data.nao));
-        putchar ('\n');
-    }
-    puts ("------ END CUEST DENSITY MATRIX ------");
+    //
+    // puts ("-------- CUEST DENSITY MATRIX --------");
+    // for (int i = 0; i < quick_cuest_data.nao; ++i) {
+    //     for (int j = 0; j < quick_cuest_data.nao; ++j)
+    //         printf ("%f ", get (P, i, j, quick_cuest_data.nao));
+    //     putchar ('\n');
+    // }
+    // puts ("------ END CUEST DENSITY MATRIX ------");
 
     cuestDFCoulombComputeParameters_t dfj_compute_params;
     checkCuestErrors (
         cuestParametersCreate (CUEST_DFCOULOMBCOMPUTE_PARAMETERS, &dfj_compute_params));
     checkCuestErrors (cuestDFCoulombComputeWorkspaceQuery (
         quick_cuest_struct.handle, quick_cuest_struct.DFIntPlan, dfj_compute_params,
-        quick_cuest_struct.tmpWD, d_D, d_J));
+        quick_cuest_struct.tmpWD, d_P, d_J));
 
     cuestWorkspace_t *tmpDFJWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
     checkCuestErrors (cuestDFCoulombCompute (quick_cuest_struct.handle,
                                              quick_cuest_struct.DFIntPlan, dfj_compute_params,
-                                             tmpDFJWorkspace, d_D, d_J));
+                                             tmpDFJWorkspace, d_P, d_J));
 
     freeWorkspace (tmpDFJWorkspace);
     checkCuestErrors (
@@ -314,6 +314,75 @@ cuest_get_eri_J (double *o, double *D)
     puts ("------ END J ------");
 
     if (cudaFree (d_J) != cudaSuccess) {
+        fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
+        exit (EXIT_FAILURE);
+    }
+}
+
+void
+cuest_get_eri_K (double *o, double *C, int64_t NBSuse)
+{
+    query_nao ();
+
+    double *d_K;
+    size_t  d_K_siz = quick_cuest_data.nao * quick_cuest_data.nao * sizeof (double);
+    if (cudaMalloc ((void **)&d_K, d_K_siz) != cudaSuccess) {
+        fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
+        exit (EXIT_FAILURE);
+    }
+
+    // coefficient matrix
+    double *d_C;
+    size_t  d_C_siz = NBSuse * quick_cuest_data.nao * sizeof (double);
+    if (cudaMalloc ((void **)&d_C, d_C_siz)) {
+        fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
+        exit (EXIT_FAILURE);
+    }
+
+    if (cudaMemcpy (d_C, C, d_C_siz, cudaMemcpyHostToDevice) != cudaSuccess) {
+        fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
+        exit (EXIT_FAILURE);
+    }
+
+    cuestDFSymmetricExchangeComputeParameters_t dfk_compute_params;
+    checkCuestErrors (
+        cuestParametersCreate (CUEST_DFSYMMETRICEXCHANGECOMPUTE_PARAMETERS, &dfk_compute_params));
+
+    cuestWorkspaceDescriptor_t *varBufSiz = malloc (sizeof (cuestWorkspaceDescriptor_t));
+    varBufSiz->hostBufferSizeInBytes      = 0;
+    varBufSiz->deviceBufferSizeInBytes    = 2e9; // TODO(michaelyxsun): adapt this. 2 GB right now
+    checkCuestErrors (cuestDFSymmetricExchangeComputeWorkspaceQuery (
+        quick_cuest_struct.handle, quick_cuest_struct.DFIntPlan, dfk_compute_params, varBufSiz,
+        quick_cuest_struct.tmpWD, NBSuse, d_C, d_K));
+
+    cuestWorkspace_t *tmpDFKWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
+    checkCuestErrors (cuestDFSymmetricExchangeCompute (
+        quick_cuest_struct.handle, quick_cuest_struct.DFIntPlan, dfk_compute_params, varBufSiz,
+        tmpDFKWorkspace, NBSuse, d_C, d_K));
+
+    free (varBufSiz);
+    freeWorkspace (tmpDFKWorkspace);
+    checkCuestErrors (
+        cuestParametersDestroy (CUEST_DFSYMMETRICEXCHANGECOMPUTE_PARAMETERS, dfk_compute_params));
+
+    // ===================== //
+    // print exchange matrix //
+    // ===================== //
+
+    if (cudaMemcpy (o, d_K, d_K_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
+        fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
+        exit (EXIT_FAILURE);
+    }
+
+    puts ("-------- K --------");
+    for (int i = 0; i < quick_cuest_data.nao; ++i) {
+        for (int j = 0; j < quick_cuest_data.nao; ++j)
+            printf ("%16.10f", o[i * quick_cuest_data.nao + j]);
+        putchar ('\n');
+    }
+    puts ("------ END K ------");
+
+    if (cudaFree (d_K) != cudaSuccess) {
         fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
