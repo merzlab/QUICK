@@ -135,7 +135,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
         katom[i] = katom_[j];
         kprim[i] = kprim_[j];
 
-        if (ktype_[i] == 4) {
+        if (ktype_[j] == 4) {
             ktype[i] = 1;
             ++i;
             ktype[i] = 3;
@@ -145,6 +145,20 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
             ktype[i] = ktype_[j];
         }
     }
+
+    puts ("new katom:");
+    for (int i = 0; i < nshell; ++i)
+        printf ("%llu ", katom[i]);
+    putchar ('\n');
+    puts ("new ktype:");
+    for (int i = 0; i < nshell; ++i)
+        printf ("%llu ", ktype[i]);
+    putchar ('\n');
+    puts ("new kprim:");
+    for (int i = 0; i < nshell; ++i)
+        printf ("%llu ", kprim[i]);
+    putchar ('\n');
+    fflush (stdout);
 
     // first_basis_function but instead first_basis_shell
     size_t *ifshell = malloc (nshell * sizeof (size_t));
@@ -317,7 +331,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
         freeWorkspace (tmpOEIntPlanWorkspace);
 
         double *d_S;
-        size_t  d_S_siz = 113 * 113 * sizeof (double);
+        size_t  d_S_siz = query_nao * query_nao * sizeof (double);
         if (cudaMalloc ((void **)&d_S, d_S_siz) != cudaSuccess) {
             fprintf (stderr, "Failed to allocate device buffer\n");
             exit (EXIT_FAILURE);
