@@ -320,7 +320,7 @@ cuest_get_eri_J (double *o, double *P)
 }
 
 void
-cuest_get_eri_K (double *o, double *C, int64_t NBSuse)
+cuest_get_eri_K (double *o, double *C, int64_t nocc)
 {
     query_nao ();
 
@@ -328,17 +328,17 @@ cuest_get_eri_K (double *o, double *C, int64_t NBSuse)
     // debug //
     // ===== //
 
-    printf ("NBSuse=%llu\n", NBSuse);
-
-    uint64_t nocc = 0;
-    for (size_t i = 0; i < quick_cuest_data.ntotalatom; i++)
-        nocc += (uint64_t)(quick_cuest_data.allchg[i]);
-    nocc >>= 1;
-
     printf ("nocc=%llu\n", nocc);
 
+    // uint64_t nocc = 0;
+    // for (size_t i = 0; i < quick_cuest_data.ntotalatom; i++)
+    //     nocc += (uint64_t)(quick_cuest_data.allchg[i]);
+    // nocc >>= 1;
+    //
+    // printf ("nocc=%llu\n", nocc);
+
     puts ("-------- C --------");
-    for (int i = 0; i < NBSuse; ++i) {
+    for (int i = 0; i < nocc; ++i) {
         for (int j = 0; j < quick_cuest_data.nao; ++j)
             printf ("%16.10f", get (C, i, j, quick_cuest_data.nao));
         putchar ('\n');
@@ -358,7 +358,7 @@ cuest_get_eri_K (double *o, double *C, int64_t NBSuse)
 
     // coefficient matrix
     double *d_C;
-    size_t  d_C_siz = NBSuse * quick_cuest_data.nao * sizeof (double);
+    size_t  d_C_siz = nocc * quick_cuest_data.nao * sizeof (double);
     if (cudaMalloc ((void **)&d_C, d_C_siz)) {
         fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
@@ -378,12 +378,12 @@ cuest_get_eri_K (double *o, double *C, int64_t NBSuse)
     varBufSiz->deviceBufferSizeInBytes    = 2e9; // TODO(michaelyxsun): adapt this. 2 GB right now
     checkCuestErrors (cuestDFSymmetricExchangeComputeWorkspaceQuery (
         quick_cuest_struct.handle, quick_cuest_struct.DFIntPlan, dfk_compute_params, varBufSiz,
-        quick_cuest_struct.tmpWD, NBSuse, d_C, d_K));
+        quick_cuest_struct.tmpWD, nocc, d_C, d_K));
 
     cuestWorkspace_t *tmpDFKWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
     checkCuestErrors (cuestDFSymmetricExchangeCompute (
         quick_cuest_struct.handle, quick_cuest_struct.DFIntPlan, dfk_compute_params, varBufSiz,
-        tmpDFKWorkspace, NBSuse, d_C, d_K));
+        tmpDFKWorkspace, nocc, d_C, d_K));
 
     free (varBufSiz);
     freeWorkspace (tmpDFKWorkspace);

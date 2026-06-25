@@ -54,7 +54,7 @@ contains
      double precision tst, te, tred
 #ifdef CUDA
     ! cuest debug
-    double precision, target :: tmp_debug_J(nbasis, nbasis), tmp_debug_K(NBSuse, nbasis)
+    double precision, target :: tmp_debug_J(nbasis, nbasis), tmp_debug_K(nbasis, nbasis)
 #endif
 #ifdef MPIV
      integer ierror
@@ -133,13 +133,17 @@ contains
 #if defined(GPU) || defined(MPIV_GPU)
         if (quick_method%bGPU) then          
 #ifdef CUDA
-           ! print *, "======== quick density matrix ========"
-           ! call PriSym(6, nbasis, quick_qm_struct%dense, "F12.8")
-           ! print *, "====== end quick density matrix ======"
+           print *, "======== quick_qm_struct%o ========"
+           call PriSym(6, nbasis, quick_qm_struct%o, "F12.8")
+           print *, "====== end quick_qm_struct%o ======"
+           print *, "======== quick density matrix ========"
+           call PriSym(6, nbasis, quick_qm_struct%dense, "F12.8")
+           print *, "====== end quick density matrix ======"
 
            ! cuest
+           ! TODO: add check to not use cuEST on first iteration because quick_qm_struct%co will be all 0
            call cuest_get_eri_J(c_loc(tmp_debug_J), quick_qm_struct%dense)
-           call cuest_get_eri_K(c_loc(tmp_debug_K), quick_qm_struct%co, int(NBSuse, c_int64_t))
+           call cuest_get_eri_K(c_loc(tmp_debug_K), quick_qm_struct%co, int(quick_molspec%nelec / 2, c_int64_t))
             
            print *, "======== cuEST J-K ========"
            call PriSym(6, nbasis, tmp_debug_J - tmp_debug_K, "F12.8")

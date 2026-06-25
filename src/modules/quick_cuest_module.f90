@@ -91,11 +91,11 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_get_eri_K(o, C, NBSuse) bind(c, name="cuest_get_eri_K")
+      subroutine cuest_get_eri_K(o, C, nocc) bind(c, name="cuest_get_eri_K")
          use, intrinsic::iso_c_binding, only: c_ptr, c_double, c_int64_t
          type(c_ptr), intent(in), value :: o ! double; modified
          real(c_double), intent(in) :: C(*)
-         integer(c_int64_t), intent(in), value :: NBSuse
+         integer(c_int64_t), intent(in), value :: nocc
       end subroutine cuest_get_eri_K
    end interface
 
