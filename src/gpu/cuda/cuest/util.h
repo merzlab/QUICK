@@ -1,7 +1,6 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -12,7 +11,7 @@
  * `quick_type` should not be 4=sp
  */
 uint64_t
-get_L (uint64_t quick_ktype)
+get_L_cart (uint64_t quick_ktype)
 {
     switch (quick_ktype) {
         case 1: // s
@@ -28,10 +27,15 @@ get_L (uint64_t quick_ktype)
         case 21: // h
             return 5;
         default:
-            fprintf (stderr, "get_L(%llu): quick_ktype parameter invalid\n", quick_ktype);
+            fprintf (stderr, "get_L_cart(%llu): quick_ktype parameter invalid\n", quick_ktype);
             return 0;
     }
 }
+
+/**
+ * `quick_type` should not be 4=sp
+ */
+#define get_L_sph(quick_ktype) (((quick_ktype) - 1) >> 1)
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846

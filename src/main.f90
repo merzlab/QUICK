@@ -67,7 +67,8 @@
     use quick_size_module, only: MAXPRIM, MAXPRIM_AUX
     use quick_cuest_module, only: cuest_init, cuest_deinit, cuest_init_oei_plan, cuest_init_basis, &
                                   cuest_get_oei_S, cuest_get_oei_T, cuest_get_oei_V, cuest_init_dfint_plan
-    use quick_aux_basis_module, only: quick_aux_basis, readauxbasis
+    ! use quick_aux_basis_module, only: quick_aux_basis, readauxbasis
+    use quick_aux_basis_sph_module, only: quick_aux_basis_sph, read_aux_basis_sph
 #endif
 
     implicit none
@@ -174,27 +175,27 @@
 
 #if defined CUDA
     ! read auxiliary basis
-    call readauxbasis("./basis/DEF2-UNIVERSAL-JKFIT.BAS", natom, quick_molspec%iattype, ierr)
-    if (ierr /= 0) print *, "ERROR: readauxbasis failed with ierr ", ierr
+    call read_aux_basis_sph("./basis/DEF2-UNIVERSAL-JKFIT.BAS", natom, quick_molspec%iattype, ierr)
+    if (ierr /= 0) print *, "ERROR: read_aux_basis_sph failed with ierr ", ierr
 
     print *, "nbasis: ", nbasis
-    print *, "quick_aux_basis%nbasis: ", quick_aux_basis%nbasis
+    print *, "quick_aux_basis_sph%nbasis: ", quick_aux_basis_sph%nbasis
 
     ! init cuest
-    call cuest_init(                            &
-        int(natom, c_int64_t),                  &
-        int(nshell, c_int64_t),                 &
-        int(quick_aux_basis%nshell, c_int64_t), &
-        int(MAXPRIM, c_int64_t),                &
-        int(MAXPRIM_AUX, c_int64_t),            &
-        c_loc(xyz),                             &
-        quick_molspec%chg,                      &
-        int(quick_molspec%nextatom, c_int64_t), &
-        quick_molspec%extxyz,                   &
-        quick_molspec%extchg                    &
+    call cuest_init(                                &
+        int(natom, c_int64_t),                      &
+        int(nshell, c_int64_t),                     &
+        int(quick_aux_basis_sph%nshell, c_int64_t), &
+        int(MAXPRIM, c_int64_t),                    &
+        int(MAXPRIM_AUX, c_int64_t),                &
+        c_loc(xyz),                                 &
+        quick_molspec%chg,                          &
+        int(quick_molspec%nextatom, c_int64_t),     &
+        quick_molspec%extxyz,                       &
+        quick_molspec%extchg                        &
     )
     ! for testing; the following cuest functions should not be called here
-    ! init both basis
+    ! init primary (cartesian) basis
     call cuest_init_basis(                                &
         int(quick_basis%ncenter, c_int64_t),              &
         int(quick_basis%first_basis_function, c_int64_t), &
@@ -206,17 +207,20 @@
         quick_basis%gccoeff,                              &
         logical(.false., c_bool)                          &
     )
-    call cuest_init_basis(                                    &
-        int(quick_basis%ncenter, c_int64_t),                  &
-        int(quick_aux_basis%first_basis_function, c_int64_t), &
-        int(quick_aux_basis%last_basis_function, c_int64_t),  &
-        int(quick_aux_basis%katom, c_int64_t),                &
-        int(quick_aux_basis%ktype, c_int64_t),                &
-        int(quick_aux_basis%kprim, c_int64_t),                &
-        quick_aux_basis%gcexpo,                               &
-        quick_aux_basis%gccoeff,                              &
-        logical(.true., c_bool)                               &
+
+    ! init auxiliary (spherical) basis
+    call cuest_init_basis(                                        &
+        int(quick_basis%ncenter, c_int64_t),                      &
+        int(quick_aux_basis_sph%first_basis_function, c_int64_t), &
+        int(quick_aux_basis_sph%last_basis_function, c_int64_t),  &
+        int(quick_aux_basis_sph%katom, c_int64_t),                &
+        int(quick_aux_basis_sph%ktype, c_int64_t),                &
+        int(quick_aux_basis_sph%kprim, c_int64_t),                &
+        quick_aux_basis_sph%gcexpo,                               &
+        quick_aux_basis_sph%gccoeff,                              &
+        logical(.true., c_bool)                                   &
     )
+
     ! init one-electron integral plan
     ! TODO: is this the right cutoff?
     call cuest_init_oei_plan(quick_method%coreIntegralCutoff)

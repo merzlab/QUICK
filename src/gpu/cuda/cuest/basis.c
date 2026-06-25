@@ -16,6 +16,7 @@
 
 #include "quick_cuest.h"
 
+// TODO: get rid of first_basis_function and last_basis_function
 void
 cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last_basis_function,
                   int64_t *katom_, int64_t *ktype_, int64_t *kprim_, double *gcexpo,
@@ -188,10 +189,10 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
         //     aexp[ifsh],
         //                         coeff, aoshell_params, &shells[i]));
 
-        checkCuestErrors (cuestAOShellCreate (quick_cuest_struct.handle, 0, get_L (ktype[i]),
-                                              kprim[i], get_row_ptr (gcexpo, ifshell[i], maxprim),
-                                              get_row_ptr (gccoeff, ifshell[i], maxprim),
-                                              aoshell_params, &shells[i]));
+        checkCuestErrors (cuestAOShellCreate (
+            quick_cuest_struct.handle, aux, aux ? get_L_sph (ktype[i]) : get_L_cart (ktype[i]),
+            kprim[i], get_row_ptr (gcexpo, ifshell[i], maxprim),
+            get_row_ptr (gccoeff, ifshell[i], maxprim), aoshell_params, &shells[i]));
     }
 
     // free (coeff);

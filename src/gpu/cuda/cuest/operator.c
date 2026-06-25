@@ -278,7 +278,7 @@ cuest_get_eri_J (double *o, double *D)
 
     cuestDFCoulombComputeParameters_t dfj_compute_params;
     checkCuestErrors (
-        cuestParametersCreate (CUEST_DFCOULOMBCOMPUTE_PARAMETERS, dfj_compute_params));
+        cuestParametersCreate (CUEST_DFCOULOMBCOMPUTE_PARAMETERS, &dfj_compute_params));
     checkCuestErrors (cuestDFCoulombComputeWorkspaceQuery (
         quick_cuest_struct.handle, quick_cuest_struct.DFIntPlan, dfj_compute_params,
         quick_cuest_struct.tmpWD, d_D, d_J));
