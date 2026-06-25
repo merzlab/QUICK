@@ -324,6 +324,31 @@ cuest_get_eri_K (double *o, double *C, int64_t NBSuse)
 {
     query_nao ();
 
+    // ===== //
+    // debug //
+    // ===== //
+
+    printf ("NBSuse=%llu\n", NBSuse);
+
+    uint64_t nocc = 0;
+    for (size_t i = 0; i < quick_cuest_data.ntotalatom; i++)
+        nocc += (uint64_t)(quick_cuest_data.allchg[i]);
+    nocc >>= 1;
+
+    printf ("nocc=%llu\n", nocc);
+
+    puts ("-------- C --------");
+    for (int i = 0; i < NBSuse; ++i) {
+        for (int j = 0; j < quick_cuest_data.nao; ++j)
+            printf ("%16.10f", get (C, i, j, quick_cuest_data.nao));
+        putchar ('\n');
+    }
+    puts ("------ END C ------");
+
+    // ========= //
+    // end debug //
+    // ========= //
+
     double *d_K;
     size_t  d_K_siz = quick_cuest_data.nao * quick_cuest_data.nao * sizeof (double);
     if (cudaMalloc ((void **)&d_K, d_K_siz) != cudaSuccess) {
