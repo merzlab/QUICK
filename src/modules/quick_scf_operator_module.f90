@@ -136,40 +136,38 @@ contains
            if (quick_qm_struct%co(1, 1) == 0) then
               call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
            else
-              print *, "======== quick_qm_struct%o ========"
-              call PriSym(6, nbasis, quick_qm_struct%o, "F12.8")
-              print *, "====== end quick_qm_struct%o ======"
-              print *, "======== quick_qm_struct%oSave ========"
-              call PriSym(6, nbasis, quick_qm_struct%oSave, "F12.8")
-              print *, "====== end quick_qm_struct%oSave ======"
-
               ! cuest
               if (deltaO) then
                  call cuest_get_eri_J(c_loc(cuest_J), quick_qm_struct%dense + quick_qm_struct%denseOld)
               else
                  call cuest_get_eri_J(c_loc(cuest_J), quick_qm_struct%dense)
               endif
+
               call cuest_get_eri_K(c_loc(cuest_K), quick_qm_struct%co, int(quick_molspec%nelec / 2, c_int64_t))
                
-              print *, "======== cuEST J-K ========"
-              call PriSym(6, nbasis, cuest_J - cuest_K, "F12.8")
-              print *, "====== end cuEST J-K ======"
-               
-              print *, "======== cuEST %o contribution ========"
-              if (deltaO) then
-                 call PriSym(6, nbasis, cuest_J - cuest_K - quick_qm_struct%cuest_prev_JmK, "F12.8")
-              else
-                 call PriSym(6, nbasis, cuest_J - cuest_K, "F12.8")
-              endif
-              print *, "====== end cuEST %o contribution ======"
+              ! print *, "======== cuEST J-K ========"
+              ! call PriSym(6, nbasis, cuest_J - cuest_K, "F12.8")
+              ! print *, "====== end cuEST J-K ======"
+              ! 
+              ! print *, "======== cuEST %o contribution ========"
+              ! if (deltaO) then
+              !    call PriSym(6, nbasis, cuest_J - cuest_K - quick_qm_struct%cuest_prev_JmK, "F12.8")
+              ! else
+              !    call PriSym(6, nbasis, cuest_J - cuest_K, "F12.8")
+              ! endif
+              ! print *, "====== end cuEST %o contribution ======"
+
+              quick_qm_struct%o = quick_qm_struct%o + cuest_J - cuest_K
+              if (deltaO) quick_qm_struct%o = quick_qm_struct%o - quick_qm_struct%cuest_prev_JmK
 
               quick_qm_struct%cuest_prev_JmK = cuest_J - cuest_K
-              cuest_J = quick_qm_struct%o ! use cuest_J as temporary buffer
 
-              call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
-              print *, "======== gpu_get_cshell_eri ========"
-              call PriSym(6, nbasis, quick_qm_struct%o - cuest_J, "F14.8")
-              print *, "====== end gpu_get_cshell_eri ======"
+              ! cuest_J = quick_qm_struct%o ! use cuest_J as temporary buffer
+              !
+              ! call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
+              ! print *, "======== gpu_get_cshell_eri ========"
+              ! call PriSym(6, nbasis, quick_qm_struct%o - cuest_J, "F14.8")
+              ! print *, "====== end gpu_get_cshell_eri ======"
            endif
 #else
            call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
