@@ -1,3 +1,4 @@
+
 # recurse to subdirs
 # --------------------------------------------------------------------
 add_subdirectory(libxc)
@@ -242,6 +243,11 @@ if(CUDA)
 
 		install_libraries(libquick_${QUICK_GPU_TARGET_NAME} EXPORT QUICK)
 	endif()
+
+  if(CUEST)
+    # debug
+    target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE CUESTDEBUG)
+  endif()
 endif()
 
 if(MPI AND CUDA)
@@ -378,6 +384,11 @@ if(CUDA)
 
 	install(TARGETS quick.${QUICK_GPU_TARGET_NAME} DESTINATION ${BINDIR} EXPORT QUICK)
 	install(TARGETS test-api.${QUICK_GPU_TARGET_NAME} DESTINATION ${BINDIR} EXPORT QUICK)
+
+    if(CUEST)
+        # debug
+        target_compile_definitions(quick.${QUICK_GPU_TARGET_NAME} PRIVATE CUESTDEBUG)
+    endif()
 endif()
 
 if(CUDA AND MPI)

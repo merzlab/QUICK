@@ -178,8 +178,10 @@
     call read_aux_basis_sph("./basis/DEF2-UNIVERSAL-JKFIT.BAS", natom, quick_molspec%iattype, ierr)
     if (ierr /= 0) print *, "ERROR: read_aux_basis_sph failed with ierr ", ierr
 
+#ifdef CUESTDEBUG
     print *, "nbasis: ", nbasis
     print *, "quick_aux_basis_sph%nbasis: ", quick_aux_basis_sph%nbasis
+#endif
 
     ! init cuest
     call cuest_init(                                &
@@ -224,6 +226,7 @@
     ! init one-electron integral plan
     ! TODO: is this the right cutoff?
     call cuest_init_oei_plan(quick_method%coreIntegralCutoff)
+#ifdef CUESTDEBUG
     ! compute and print one-electron integrals
     allocate(cuest_S(nbasis, nbasis))
     allocate(cuest_T(nbasis, nbasis))
@@ -240,6 +243,7 @@
     deallocate(cuest_S)
     deallocate(cuest_T)
     deallocate(cuest_V)
+#endif
 
     ! init 2 electron integral plan
     call cuest_init_dfint_plan

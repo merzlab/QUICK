@@ -121,15 +121,16 @@ cuest_get_oei_S (double *o)
     checkCuestErrors (
         cuestParametersDestroy (CUEST_OVERLAPCOMPUTE_PARAMETERS, overlap_compute_params));
 
-    // ==================== //
-    // print overlap matrix //
-    // ==================== //
+    // ======================== //
+    // copy overlap matrix to o //
+    // ======================== //
 
     if (cudaMemcpy (o, d_S, d_S_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
 
+#ifdef CUESTDEBUG
     puts ("-------- S --------");
     for (int i = 0; i < quick_cuest_data.nao; ++i) {
         for (int j = 0; j < quick_cuest_data.nao; ++j)
@@ -137,6 +138,7 @@ cuest_get_oei_S (double *o)
         putchar ('\n');
     }
     puts ("------ END S ------");
+#endif
 
     if (cudaFree (d_S) != cudaSuccess) {
         fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
@@ -171,15 +173,16 @@ cuest_get_oei_T (double *o)
     checkCuestErrors (
         cuestParametersDestroy (CUEST_KINETICCOMPUTE_PARAMETERS, kinetic_compute_params));
 
-    // ==================== //
-    // print kinetic matrix //
-    // ==================== //
+    // ======================== //
+    // copy kinetic matrix to o //
+    // ======================== //
 
     if (cudaMemcpy (o, d_T, d_T_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
 
+#ifdef CUDADEBUG
     puts ("-------- T --------");
     for (int i = 0; i < quick_cuest_data.nao; ++i) {
         for (int j = 0; j < quick_cuest_data.nao; ++j)
@@ -187,6 +190,7 @@ cuest_get_oei_T (double *o)
         putchar ('\n');
     }
     puts ("------ END T ------");
+#endif
 
     if (cudaFree (d_T) != cudaSuccess) {
         fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
@@ -224,15 +228,16 @@ cuest_get_oei_V (double *o)
     checkCuestErrors (
         cuestParametersDestroy (CUEST_POTENTIALCOMPUTE_PARAMETERS, potential_compute_params));
 
-    // ====================== //
-    // print potential matrix //
-    // ====================== //
+    // ========================== //
+    // copy potential matrix to o //
+    // ========================== //
 
     if (cudaMemcpy (o, d_V, d_V_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
 
+#ifdef CUDADEBUG
     puts ("-------- V --------");
     for (int i = 0; i < quick_cuest_data.nao; ++i) {
         for (int j = 0; j < quick_cuest_data.nao; ++j)
@@ -240,6 +245,7 @@ cuest_get_oei_V (double *o)
         putchar ('\n');
     }
     puts ("------ END V ------");
+#endif
 
     if (cudaFree (d_V) != cudaSuccess) {
         fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
@@ -271,7 +277,7 @@ cuest_get_eri_J (double *o, double *P)
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
-    //
+
     // puts ("-------- CUEST DENSITY MATRIX --------");
     // for (int i = 0; i < quick_cuest_data.nao; ++i) {
     //     for (int j = 0; j < quick_cuest_data.nao; ++j)
@@ -296,15 +302,16 @@ cuest_get_eri_J (double *o, double *P)
     checkCuestErrors (
         cuestParametersDestroy (CUEST_DFCOULOMBCOMPUTE_PARAMETERS, dfj_compute_params));
 
-    // ==================== //
-    // print coulomb matrix //
-    // ==================== //
+    // ======================== //
+    // copy coulomb matrix to o //
+    // ======================== //
 
     if (cudaMemcpy (o, d_J, d_J_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
 
+#ifdef CUESTDEBUG
     puts ("-------- J --------");
     for (int i = 0; i < quick_cuest_data.nao; ++i) {
         for (int j = 0; j < quick_cuest_data.nao; ++j)
@@ -312,6 +319,7 @@ cuest_get_eri_J (double *o, double *P)
         putchar ('\n');
     }
     puts ("------ END J ------");
+#endif
 
     if (cudaFree (d_J) != cudaSuccess) {
         fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
@@ -323,31 +331,6 @@ void
 cuest_get_eri_K (double *o, double *C, int64_t nocc)
 {
     query_nao ();
-
-    // ===== //
-    // debug //
-    // ===== //
-
-    printf ("nocc=%llu\n", nocc);
-
-    // uint64_t nocc = 0;
-    // for (size_t i = 0; i < quick_cuest_data.ntotalatom; i++)
-    //     nocc += (uint64_t)(quick_cuest_data.allchg[i]);
-    // nocc >>= 1;
-    //
-    // printf ("nocc=%llu\n", nocc);
-
-    puts ("-------- C --------");
-    for (int i = 0; i < nocc; ++i) {
-        for (int j = 0; j < quick_cuest_data.nao; ++j)
-            printf ("%16.10f", get (C, i, j, quick_cuest_data.nao));
-        putchar ('\n');
-    }
-    puts ("------ END C ------");
-
-    // ========= //
-    // end debug //
-    // ========= //
 
     double *d_K;
     size_t  d_K_siz = quick_cuest_data.nao * quick_cuest_data.nao * sizeof (double);
@@ -390,15 +373,16 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
     checkCuestErrors (
         cuestParametersDestroy (CUEST_DFSYMMETRICEXCHANGECOMPUTE_PARAMETERS, dfk_compute_params));
 
-    // ===================== //
-    // print exchange matrix //
-    // ===================== //
+    // ========================= //
+    // copy exchange matrix to o //
+    // ========================= //
 
     if (cudaMemcpy (o, d_K, d_K_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
 
+#ifdef CUESTDEBUG
     puts ("-------- K --------");
     for (int i = 0; i < quick_cuest_data.nao; ++i) {
         for (int j = 0; j < quick_cuest_data.nao; ++j)
@@ -406,6 +390,7 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
         putchar ('\n');
     }
     puts ("------ END K ------");
+#endif
 
     if (cudaFree (d_K) != cudaSuccess) {
         fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);

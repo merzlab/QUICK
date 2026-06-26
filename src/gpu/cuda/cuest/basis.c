@@ -32,6 +32,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
         maxprim = quick_cuest_data.MAXPRIM;
     }
 
+#ifdef CUESTDEBUG
     puts ("-------- DUMP --------");
 
     printf ("natom=%llu\n", quick_cuest_data.natom);
@@ -106,6 +107,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
     puts ("------ END DUMP ------");
 
     fflush (stdout);
+#endif
 
     // ================ //
     // set up AO shells //
@@ -146,6 +148,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
         }
     }
 
+#ifdef CUESTDEBUG
     puts ("new katom:");
     for (int i = 0; i < nshell; ++i)
         printf ("%llu ", katom[i]);
@@ -159,6 +162,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
         printf ("%llu ", kprim[i]);
     putchar ('\n');
     fflush (stdout);
+#endif
 
     // first_basis_function but instead first_basis_shell
     size_t *ifshell = malloc (nshell * sizeof (size_t));
@@ -175,10 +179,10 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
         // <-- wrong
         if (i > 0)
             ifshell[i] = ifshell[i - 1] + ktype[i - 1]; // ktype stores number of cartesian orbitals
-        printf ("ifshell[%zu]=%zu\n", i, ifshell[i]);
+        // printf ("ifshell[%zu]=%zu\n", i, ifshell[i]);
     }
 
-    fflush (stdout);
+    // fflush (stdout);
 
     // start making shells
 
@@ -252,6 +256,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
     free (shells);
     free (nshells_per_atom);
 
+#ifdef CUESTDEBUG
     // ================= //
     // query information //
     // ================= //
@@ -383,4 +388,5 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
         checkCuestErrors (cuestAOPairListDestroy (pair_list));
         freeWorkspace (pair_list_wksp);
     }
+#endif
 }
