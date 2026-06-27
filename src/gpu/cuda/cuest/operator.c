@@ -182,7 +182,7 @@ cuest_get_oei_T (double *o)
         exit (EXIT_FAILURE);
     }
 
-#ifdef CUDADEBUG
+#ifdef CUESTDEBUG
     puts ("-------- T --------");
     for (int i = 0; i < quick_cuest_data.nao; ++i) {
         for (int j = 0; j < quick_cuest_data.nao; ++j)
@@ -237,7 +237,7 @@ cuest_get_oei_V (double *o)
         exit (EXIT_FAILURE);
     }
 
-#ifdef CUDADEBUG
+#ifdef CUESTDEBUG
     puts ("-------- V --------");
     for (int i = 0; i < quick_cuest_data.nao; ++i) {
         for (int j = 0; j < quick_cuest_data.nao; ++j)

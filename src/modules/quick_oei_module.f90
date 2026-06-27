@@ -125,7 +125,7 @@ subroutine get1e(deltaO)
 
 #if defined(GPU)
          if(.not. quick_method%hasF) then
-#ifdef CUDA
+#if defined(CUDA) && defined(CUEST)
            call cuest_get_oei_T(c_loc(tmp_o_T))
            call cuest_get_oei_V(c_loc(tmp_o_V))
            quick_qm_struct%o = tmp_o_T - tmp_o_V
@@ -224,11 +224,11 @@ subroutine get1e(deltaO)
 
 #if defined(MPIV_GPU)
       if(.not. quick_method%hasF) then
-#ifdef CUDA
+#if defined(CUDA) && defined(CUEST)
         ! call cuest_get_oei_T(c_loc(tmp_o_T))
         ! call cuest_get_oei_V(c_loc(tmp_o_V))
         ! quick_qm_struct%o = tmp_o_T - tmp_o_V
-        print *, "called commented out one"
+        print *, "QUICK called second branch"
         call gpu_get_oei(quick_qm_struct%o)
 #else
         call gpu_get_oei(quick_qm_struct%o)
