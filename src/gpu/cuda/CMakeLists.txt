@@ -55,6 +55,7 @@ if(CUEST)
     target_include_directories(cuest_obj PUBLIC ${CUDA_INCLUDE_DIRS},
                                                 ${CUEST_INSTALL_DIR}/include)
 
-    # if debug
-    target_compile_definitions(cuest_obj PRIVATE CUESTDEBUG)
+    if(CUEST_DEBUG)
+        target_compile_definitions(cuest_obj PRIVATE CUESTDEBUG)
+    endif()
 endif()

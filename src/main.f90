@@ -61,8 +61,7 @@
     use quick_mpi_module, only: mpisize, mgpu_id, mgpu_ids
 #endif
 
-#if defined CUDA
-    ! cuest
+#if defined(CUDA) && defined(CUEST)
     use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_loc, c_bool
     use quick_size_module, only: MAXPRIM, MAXPRIM_AUX
     use quick_cuest_module, only: cuest_init, cuest_deinit, cuest_init_oei_plan, cuest_init_basis, &
@@ -80,8 +79,9 @@
     double precision :: t1_t, t2_t
     common /timer/ t1_t, t2_t
 
-    ! cuest test
+#if defined(CUDA) && defined(CUEST)
     double precision, allocatable, target :: cuest_S(:,:), cuest_T(:,:), cuest_V(:,:)
+#endif
 
     !------------------------------------------------------------------
     ! 1. The first thing that must be done is to initialize and prepare files
@@ -173,7 +173,7 @@
     endif
 #endif
 
-#if defined CUDA
+#if defined(CUDA) && defined(CUEST)
     ! read auxiliary basis
     call read_aux_basis_sph("./basis/DEF2-UNIVERSAL-JKFIT.BAS", natom, quick_molspec%iattype, ierr)
     if (ierr /= 0) print *, "ERROR: read_aux_basis_sph failed with ierr ", ierr
@@ -449,8 +449,7 @@
 #if defined(GPU) || defined(MPIV_GPU)
     call delete(quick_method, ierr)
     call gpu_deallocate_scratch(quick_method%grad .or. quick_method%opt)
-#ifdef CUDA
-    ! for cuest
+#if defined(CUDA) && defined(CUEST)
     call cuest_deinit
 #endif
 #if defined(MPIV_GPU)

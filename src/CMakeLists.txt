@@ -1,4 +1,3 @@
-
 # recurse to subdirs
 # --------------------------------------------------------------------
 add_subdirectory(libxc)
@@ -226,8 +225,13 @@ if(CUDA)
 
 		install_libraries(libquick_${QUICK_GPU_TARGET_NAME} EXPORT QUICK)
 	else()
-		copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
-            $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> $<TARGET_OBJECTS:cuest_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+        if (CUEST)
+            copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
+                $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> $<TARGET_OBJECTS:cuest_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+        else()
+            copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
+                $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+        endif()
 		target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE GPU ${QUICK_GPU_PLATFORM})
 		set_target_properties(libquick_${QUICK_GPU_TARGET_NAME} PROPERTIES OUTPUT_NAME quick_${QUICK_GPU_TARGET_NAME})
 
@@ -235,7 +239,11 @@ if(CUDA)
 		remove_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} xc octree)
 
 		target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu octree_gpu
-            quick_${QUICK_GPU_TARGET_NAME}_kernels cublas cusolver ${CUEST_LIB})
+            quick_${QUICK_GPU_TARGET_NAME}_kernels cublas cusolver)
+
+        if(CUEST)
+            target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE ${CUEST_LIB})
+        endif()
 
 		# INSIDE_AMBER: libcew link library copied from libquick target
 
@@ -244,10 +252,12 @@ if(CUDA)
 		install_libraries(libquick_${QUICK_GPU_TARGET_NAME} EXPORT QUICK)
 	endif()
 
-  if(CUEST)
-    # debug
-    target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE CUESTDEBUG)
-  endif()
+    if(CUEST)
+        target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE CUEST)
+        if(CUEST_DEBUG)
+        target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE CUESTDEBUG)
+        endif()
+    endif()
 endif()
 
 if(MPI AND CUDA)
@@ -288,15 +298,24 @@ if(MPI AND CUDA)
 
 		install_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} EXPORT QUICK)
 	else()
-		copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
-            $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> $<TARGET_OBJECTS:cuest_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+        if (CUEST)
+            copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
+                $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> $<TARGET_OBJECTS:cuest_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+        else()
+            copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
+                $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> $<TARGET_OBJECTS:cuest_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+        endif()
 		target_compile_definitions(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE MPIV_GPU ${QUICK_GPU_PLATFORM}_MPIV)
 		set_target_properties(libquick_mpi_${QUICK_GPU_TARGET_NAME} PROPERTIES OUTPUT_NAME quick_mpi_${QUICK_GPU_TARGET_NAME})
 
 		remove_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} octree_mpi xc)
 
 		target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu xc_${QUICK_GPU_TARGET_NAME} octree_gpu
-            quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi cublas cusolver ${CUEST_LIB})
+            quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi cublas cusolver)
+
+        if(CUEST)
+            target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE ${CUEST_LIB})
+        endif()
 
 		# INSIDE_AMBER: libcew_mpi link library copied from libquick target
 
@@ -386,8 +405,10 @@ if(CUDA)
 	install(TARGETS test-api.${QUICK_GPU_TARGET_NAME} DESTINATION ${BINDIR} EXPORT QUICK)
 
     if(CUEST)
-        # debug
-        target_compile_definitions(quick.${QUICK_GPU_TARGET_NAME} PRIVATE CUESTDEBUG)
+        target_compile_definitions(quick.${QUICK_GPU_TARGET_NAME} PRIVATE CUEST)
+        if(CUEST_DEBUG)
+            target_compile_definitions(quick.${QUICK_GPU_TARGET_NAME} PRIVATE CUESTDEBUG)
+        endif()
     endif()
 endif()
 

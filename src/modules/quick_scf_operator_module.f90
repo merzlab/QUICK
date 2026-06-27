@@ -39,8 +39,7 @@ contains
 #ifdef MPIV
      use mpi
 #endif
-#ifdef CUDA
-    ! cuest
+#if defined(CUDA) && defined(CUEST)
     use, intrinsic :: iso_c_binding, only: c_loc, c_int64_t
     use quick_cuest_module, only: cuest_get_eri_J, cuest_get_eri_K
 #endif
@@ -51,8 +50,7 @@ contains
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      double precision tst, te, tred
-#ifdef CUDA
-    ! cuest
+#if defined(CUDA) && defined(CUEST)
     double precision, target :: cuest_J(nbasis, nbasis), cuest_K(nbasis, nbasis)
 #endif
 #ifdef MPIV
@@ -131,7 +129,7 @@ contains
 
 #if defined(GPU) || defined(MPIV_GPU)
         if (quick_method%bGPU) then          
-#ifdef CUDA
+#if defined(CUDA) && defined(CUEST)
            ! don't use cuEST on first iteration because quick_qm_struct%co will be all 0
            if (quick_qm_struct%co(1, 1) == 0) then
               call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
