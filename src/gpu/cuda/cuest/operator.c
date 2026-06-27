@@ -82,25 +82,14 @@ cuest_init_oei_plan (double cutoff)
     freeWorkspace (tmpOEIntPlanWorkspace);
 }
 
-#define query_nao()                                                                                \
-    do {                                                                                           \
-        if (quick_cuest_data.nao == 0) {                                                           \
-            checkCuestErrors (cuestQuery (quick_cuest_struct.handle, CUEST_AOBASIS,                \
-                                          quick_cuest_struct.basis, CUEST_AOBASIS_NUM_AO,          \
-                                          &quick_cuest_data.nao, sizeof (uint64_t)));              \
-        }                                                                                          \
-    } while (0);
-
 /**
  * @param o should be `nao` x `nao`.
  */
 void
 cuest_get_oei_S (double *o)
 {
-    query_nao ();
-
     double *d_S;
-    size_t  d_S_siz = quick_cuest_data.nao * quick_cuest_data.nao * sizeof (double);
+    size_t  d_S_siz = quick_cuest_data.nbasis * quick_cuest_data.nbasis * sizeof (double);
     if (cudaMalloc ((void **)&d_S, d_S_siz)) {
         fprintf (stderr, "Failed to allocate device buffer\n");
         exit (EXIT_FAILURE);
@@ -132,9 +121,9 @@ cuest_get_oei_S (double *o)
 
 #ifdef CUESTDEBUG
     puts ("-------- S --------");
-    for (int i = 0; i < quick_cuest_data.nao; ++i) {
-        for (int j = 0; j < quick_cuest_data.nao; ++j)
-            printf ("%16.10f", o[i * quick_cuest_data.nao + j]);
+    for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
+        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
+            printf ("%16.10f", o[i * quick_cuest_data.nbasis + j]);
         putchar ('\n');
     }
     puts ("------ END S ------");
@@ -149,10 +138,8 @@ cuest_get_oei_S (double *o)
 void
 cuest_get_oei_T (double *o)
 {
-    query_nao ();
-
     double *d_T;
-    size_t  d_T_siz = quick_cuest_data.nao * quick_cuest_data.nao * sizeof (double);
+    size_t  d_T_siz = quick_cuest_data.nbasis * quick_cuest_data.nbasis * sizeof (double);
     if (cudaMalloc ((void **)&d_T, d_T_siz) != cudaSuccess) {
         fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
@@ -184,9 +171,9 @@ cuest_get_oei_T (double *o)
 
 #ifdef CUESTDEBUG
     puts ("-------- T --------");
-    for (int i = 0; i < quick_cuest_data.nao; ++i) {
-        for (int j = 0; j < quick_cuest_data.nao; ++j)
-            printf ("%16.10f", o[i * quick_cuest_data.nao + j]);
+    for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
+        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
+            printf ("%16.10f", o[i * quick_cuest_data.nbasis + j]);
         putchar ('\n');
     }
     puts ("------ END T ------");
@@ -201,10 +188,8 @@ cuest_get_oei_T (double *o)
 void
 cuest_get_oei_V (double *o)
 {
-    query_nao ();
-
     double *d_V;
-    size_t  d_V_siz = quick_cuest_data.nao * quick_cuest_data.nao * sizeof (double);
+    size_t  d_V_siz = quick_cuest_data.nbasis * quick_cuest_data.nbasis * sizeof (double);
     if (cudaMalloc ((void **)&d_V, d_V_siz) != cudaSuccess) {
         fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
@@ -239,9 +224,9 @@ cuest_get_oei_V (double *o)
 
 #ifdef CUESTDEBUG
     puts ("-------- V --------");
-    for (int i = 0; i < quick_cuest_data.nao; ++i) {
-        for (int j = 0; j < quick_cuest_data.nao; ++j)
-            printf ("%16.10f", o[i * quick_cuest_data.nao + j]);
+    for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
+        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
+            printf ("%16.10f", o[i * quick_cuest_data.nbasis + j]);
         putchar ('\n');
     }
     puts ("------ END V ------");
@@ -256,10 +241,8 @@ cuest_get_oei_V (double *o)
 void
 cuest_get_eri_J (double *o, double *P)
 {
-    query_nao ();
-
     double *d_J;
-    size_t  d_J_siz = quick_cuest_data.nao * quick_cuest_data.nao * sizeof (double);
+    size_t  d_J_siz = quick_cuest_data.nbasis * quick_cuest_data.nbasis * sizeof (double);
     if (cudaMalloc ((void **)&d_J, d_J_siz) != cudaSuccess) {
         fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
@@ -279,9 +262,9 @@ cuest_get_eri_J (double *o, double *P)
     }
 
     // puts ("-------- CUEST DENSITY MATRIX --------");
-    // for (int i = 0; i < quick_cuest_data.nao; ++i) {
-    //     for (int j = 0; j < quick_cuest_data.nao; ++j)
-    //         printf ("%f ", get (P, i, j, quick_cuest_data.nao));
+    // for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
+    //     for (int j = 0; j < quick_cuest_data.nbasis; ++j)
+    //         printf ("%f ", get (P, i, j, quick_cuest_data.nbasis));
     //     putchar ('\n');
     // }
     // puts ("------ END CUEST DENSITY MATRIX ------");
@@ -313,9 +296,9 @@ cuest_get_eri_J (double *o, double *P)
 
 #ifdef CUESTDEBUG
     puts ("-------- J --------");
-    for (int i = 0; i < quick_cuest_data.nao; ++i) {
-        for (int j = 0; j < quick_cuest_data.nao; ++j)
-            printf ("%16.10f", o[i * quick_cuest_data.nao + j]);
+    for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
+        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
+            printf ("%16.10f", o[i * quick_cuest_data.nbasis + j]);
         putchar ('\n');
     }
     puts ("------ END J ------");
@@ -330,10 +313,8 @@ cuest_get_eri_J (double *o, double *P)
 void
 cuest_get_eri_K (double *o, double *C, int64_t nocc)
 {
-    query_nao ();
-
     double *d_K;
-    size_t  d_K_siz = quick_cuest_data.nao * quick_cuest_data.nao * sizeof (double);
+    size_t  d_K_siz = quick_cuest_data.nbasis * quick_cuest_data.nbasis * sizeof (double);
     if (cudaMalloc ((void **)&d_K, d_K_siz) != cudaSuccess) {
         fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
@@ -341,7 +322,7 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
 
     // coefficient matrix
     double *d_C;
-    size_t  d_C_siz = nocc * quick_cuest_data.nao * sizeof (double);
+    size_t  d_C_siz = nocc * quick_cuest_data.nbasis * sizeof (double);
     if (cudaMalloc ((void **)&d_C, d_C_siz)) {
         fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
@@ -384,9 +365,9 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
 
 #ifdef CUESTDEBUG
     puts ("-------- K --------");
-    for (int i = 0; i < quick_cuest_data.nao; ++i) {
-        for (int j = 0; j < quick_cuest_data.nao; ++j)
-            printf ("%16.10f", o[i * quick_cuest_data.nao + j]);
+    for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
+        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
+            printf ("%16.10f", o[i * quick_cuest_data.nbasis + j]);
         putchar ('\n');
     }
     puts ("------ END K ------");

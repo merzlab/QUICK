@@ -16,8 +16,9 @@
 #include "quick_cuest.h"
 
 void
-cuest_init (int64_t natom, int64_t nshell, int64_t nauxshell, int64_t MAXPRIM, int64_t MAXPRIM_AUX,
-            double *xyz, double *chg, int64_t nextatom, double *extxyz, double *extchg)
+cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nauxshell, int64_t MAXPRIM,
+            int64_t MAXPRIM_AUX, double *xyz, double *chg, int64_t nextatom, double *extxyz,
+            double *extchg)
 {
     freopen ("cuest.log", "w", stdout);
 
@@ -48,7 +49,7 @@ cuest_init (int64_t natom, int64_t nshell, int64_t nauxshell, int64_t MAXPRIM, i
     quick_cuest_data.MAXPRIM     = MAXPRIM;
     quick_cuest_data.MAXPRIM_AUX = MAXPRIM_AUX;
     quick_cuest_data.xyz         = xyz;
-    quick_cuest_data.nao         = 0;
+    quick_cuest_data.nbasis      = nbasis;
 
     // =========== //
     // init arrays //

@@ -235,13 +235,13 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
         double *a = get_row_ptr (aexp, ifshell[i], maxprim);
         double *c = get_row_ptr (dcoeff, ifshell[i], maxprim);
 
-        if (ktype[i] == KTYPE_CART_D) {
-            reorder_d (a);
-            reorder_d (c);
-        } else if (ktype[i] == KTYPE_CART_F) {
-            reorder_f (a);
-            reorder_d (c);
-        }
+        // if (!aux && ktype[i] == KTYPE_CART_D) {
+        //     reorder_d (a);
+        //     reorder_d (c);
+        // } else if (!aux && ktype[i] == KTYPE_CART_F) {
+        //     reorder_f (a);
+        //     reorder_f (c);
+        // }
 
         checkCuestErrors (cuestAOShellCreate (quick_cuest_struct.handle, aux,
                                               aux ? get_L_sph (ktype[i]) : get_L_cart (ktype[i]),

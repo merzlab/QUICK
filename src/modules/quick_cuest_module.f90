@@ -8,15 +8,16 @@ module quick_cuest_module
    ! unless commented otherwise, C will not modify the memory a pointer points to
 
    interface
-      subroutine cuest_init(natom, nshell, nauxshell, MAXPRIM, MAXPRIM_AUX, xyz, chg, nextatom, extxyz, extchg) &
-                 bind(c, name="cuest_init")
+      subroutine cuest_init(natom, nshell, nbasis, nauxshell, maxcontract, maxcontract_aux, xyz, chg, nextatom, extxyz, extchg) &
+         bind(c, name="cuest_init")
          use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_ptr
          implicit none
          integer(c_int64_t), intent(in), value :: natom
          integer(c_int64_t), intent(in), value :: nshell
+         integer(c_int64_t), intent(in), value :: nbasis
          integer(c_int64_t), intent(in), value :: nauxshell
-         integer(c_int64_t), intent(in), value :: MAXPRIM
-         integer(c_int64_t), intent(in), value :: MAXPRIM_AUX
+         integer(c_int64_t), intent(in), value :: maxcontract
+         integer(c_int64_t), intent(in), value :: maxcontract_aux
          type(c_ptr), intent(in), value :: xyz ! double
          real(c_double), intent(in) :: chg(*)
          integer(c_int64_t), intent(in), value :: nextatom
@@ -32,7 +33,7 @@ module quick_cuest_module
 
    interface
       subroutine cuest_init_basis(ncenter, katom, ktype, kprim, gcexpo, gccoeff, aux) &
-                 bind(c, name="cuest_init_basis")
+         bind(c, name="cuest_init_basis")
          use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_bool
          implicit none
          integer(c_int64_t), intent(in) :: ncenter(*)
@@ -96,4 +97,49 @@ module quick_cuest_module
       end subroutine cuest_get_eri_K
    end interface
 
+contains
+
+   subroutine unify_cart_norm(coeff)
+      !
+      ! Undoes extra normalization for cartesian d and f orbitals
+      !     d_xy  type has extra 1/sqrt(3)
+      !     f_xxy type has extra 1/sqrt(5)
+      !     f_xyz type has extra 1/sqrt(15)
+      !
+      use quick_basis_module, only: itype, ncontract, nbasis
+      implicit none
+
+      double precision, intent(inout) :: coeff(:, :)
+      ! counters
+      integer :: Ibas, Icon
+      ! itype stuff
+      integer :: l1, l2, l3, lsum, lmax
+      double precision :: k
+
+      do Ibas = 1, nbasis
+         l1 = itype(1, Ibas)
+         l2 = itype(2, Ibas)
+         l3 = itype(3, Ibas)
+         lsum = l1 + l2 + l3
+
+         k = 1.0d0 ! factor
+
+         if (lsum == 2 .and. max(l1, max(l2, l3)) == 1) then ! D and off diagonal
+            k = dsqrt(3.0d0)
+         else if (lsum == 3) then ! F
+            lmax = max(l1, max(l2, l3))
+            if (lmax == 1) then ! xyz
+               k = dsqrt(15.0d0)
+            else if (lmax == 2) then ! xxy type
+               k = dsqrt(5.0d0)
+            end if
+         end if
+
+         if (k /= 1.0d0) then
+            do Icon = 1, ncontract(Ibas)
+               coeff(Icon, Ibas) = k*coeff(Icon, Ibas)
+            end do
+         end if
+      end do
+   end subroutine unify_cart_norm
 end module quick_cuest_module

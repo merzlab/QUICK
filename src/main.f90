@@ -64,7 +64,8 @@
 #if defined(CUDA) && defined(CUEST)
     use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_loc, c_bool
     use quick_cuest_module, only: cuest_init, cuest_deinit, cuest_init_oei_plan, cuest_init_basis, &
-                                  cuest_get_oei_S, cuest_get_oei_T, cuest_get_oei_V, cuest_init_dfint_plan
+                                  cuest_get_oei_S, cuest_get_oei_T, cuest_get_oei_V, cuest_init_dfint_plan, &
+                                  unify_cart_norm
     ! use quick_aux_basis_module, only: quick_aux_basis, readauxbasis
     use quick_aux_basis_sph_module, only: quick_aux_basis_sph, read_aux_basis_sph
 #endif
@@ -79,6 +80,7 @@
     common /timer/ t1_t, t2_t
 
 #if defined(CUDA) && defined(CUEST)
+    double precision, allocatable :: dcoeff_uni(:, :) ! dcoeff fixed with unify_cart_norm
     double precision, allocatable, target :: cuest_S(:,:), cuest_T(:,:), cuest_V(:,:)
 #endif
 
@@ -186,6 +188,7 @@
     call cuest_init(                                     &
         int(natom, c_int64_t),                           &
         int(nshell, c_int64_t),                          &
+        int(nbasis, c_int64_t),                          &
         int(quick_aux_basis_sph%nshell, c_int64_t),      &
         int(maxcontract, c_int64_t),                     &
         int(quick_aux_basis_sph%maxcontract, c_int64_t), &
@@ -197,13 +200,16 @@
     )
     ! for testing; the following cuest functions should not be called here
     ! init primary (cartesian) basis
+    if(.not. allocated(dcoeff_uni)) allocate(dcoeff_uni(maxcontract, nbasis))
+    dcoeff_uni = dcoeff
+    call unify_cart_norm(dcoeff_uni)
     call cuest_init_basis(                                &
         int(quick_basis%ncenter, c_int64_t),              &
         int(quick_basis%katom, c_int64_t),                &
         int(quick_basis%ktype, c_int64_t),                &
         int(quick_basis%kprim, c_int64_t),                &
         aexp,                                             &
-        dcoeff,                                           &
+        dcoeff_uni,                                       &
         logical(.false., c_bool)                          &
     )
 
@@ -446,6 +452,7 @@
     call gpu_deallocate_scratch(quick_method%grad .or. quick_method%opt)
 #if defined(CUDA) && defined(CUEST)
     call cuest_deinit
+    if(allocated(dcoeff_uni)) deallocate(dcoeff_uni)
 #endif
 #if defined(MPIV_GPU)
     SAFE_CALL(delete_mgpu_setup(ierr))

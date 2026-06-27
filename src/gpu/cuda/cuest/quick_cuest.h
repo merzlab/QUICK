@@ -44,13 +44,13 @@ typedef struct {
     double  *allxyz_gpu;
     double  *allchg;
     double  *allchg_gpu;
-    uint64_t nao;
+    uint64_t nbasis;
 } quick_cuest_data_t;
 
 extern quick_cuest_struct_t quick_cuest_struct;
 extern quick_cuest_data_t   quick_cuest_data;
 
-void cuest_init (int64_t natom, int64_t nshell, int64_t nauxshell, int64_t MAXPRIM,
+void cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nauxshell, int64_t MAXPRIM,
                  int64_t MAXPRIM_AUX, double *xyz, double *chg, int64_t nextatom, double *extxyz,
                  double *extchg);
 void cuest_deinit ();
