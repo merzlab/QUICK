@@ -178,7 +178,7 @@ subroutine get1e(deltaO)
 
          quick_qm_struct%oneElecO(:,:) = quick_qm_struct%o(:,:)
 
-         if (quick_method%debug.or..true.) then
+         if (quick_method%debug) then
                 write(iOutFile,*) "ONE ELECTRON MATRIX"
                 call PriSym(iOutFile,nbasis,quick_qm_struct%oneElecO,'f14.8')
          endif

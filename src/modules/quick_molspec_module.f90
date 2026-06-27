@@ -834,7 +834,7 @@ contains
        
       integer, intent(inout) :: ierr
       integer io,i,j
-      integer :: inject_i, inject_j
+      ! integer :: inject_i, inject_j
       type(quick_molspec_type), intent(in) :: self
       if (io.ne.0) then
          write(io,'(/," =========== Molecule Input ==========")')
@@ -859,9 +859,9 @@ contains
             Write (io,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
                   symbol(self%iattype(I)),(self%xyz(j,I)*BOHRS_TO_A,j=1,3)
 
-            do inject_j=1, 3
-                write (io, '("xyz(",I4,I4,")=",F8.4)') inject_j,I,self%xyz(inject_j,I)
-            end do
+            ! do inject_j=1, 3
+            !     write (io, '("xyz(",I4,I4,")=",F8.4)') inject_j,I,self%xyz(inject_j,I)
+            ! end do
          end do
 
          if(self%nextatom.gt.0 )then

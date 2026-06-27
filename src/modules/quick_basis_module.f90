@@ -371,7 +371,9 @@ contains
         implicit none
         type(quick_basis_type) self
         integer iOutFile
+#ifdef CUESTDEBUG
         integer :: inject_i, inject_j
+#endif
 
         if (ioutfile.ne.0) then
             write (iOutFile,*)
@@ -381,6 +383,7 @@ contains
             write (iOutFile,'(" JSHELL = ",I4, " JBASIS = " ,I4)') jshell,jbasis
             write (iOutFile,*)
 
+#ifdef CUESTDEBUG
             write (iOutFile, '("~~~~~~~~ INJECT ~~~~~~~~")')
             do inject_i=1, nbasis
                 write (iOutFile, '("ncontract(",I4,")=",I4)') inject_i,ncontract(inject_i)
@@ -438,6 +441,7 @@ contains
             end do
             write (iOutFile, '("~ end col out ~")')
             write (iOutFile, '("~~~~~~ END INJECT ~~~~~~")')
+#endif
         endif
    end subroutine print_quick_basis
 
