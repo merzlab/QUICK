@@ -129,13 +129,18 @@ subroutine get1e(deltaO)
            call cuest_get_oei_T(c_loc(tmp_o_T))
            call cuest_get_oei_V(c_loc(tmp_o_V))
            quick_qm_struct%o = tmp_o_T - tmp_o_V
-           ! print *, "======== cuEST T+V ========"
-           ! call PriSym(6, nbasis, tmp_o_T - tmp_o_V, "F12.8")
-           ! print *, "====== end cuEST T+V ======"
-           ! call gpu_get_oei(quick_qm_struct%o)
-           ! print *, "======== quick T+V ========"
-           ! call PriSym(6, nbasis, tmp_o_T - tmp_o_V, "F12.8")
-           ! print *, "====== end quick T+V ======"
+
+#ifdef CUESTDEBUG
+           print *, "======== cuEST T+V ========"
+           call PriSym(6, nbasis, tmp_o_T - tmp_o_V, "F12.7")
+           print *, "====== end cuEST T+V ======"
+
+           tmp_o_T = 0.0d0
+           call gpu_get_oei(tmp_o_T)
+           print *, "======== quick T+V ========"
+           call PriSym(6, nbasis, tmp_o_T, "F12.7")
+           print *, "====== end quick T+V ======"
+#endif
 #else
            call gpu_get_oei(quick_qm_struct%o)
 #endif

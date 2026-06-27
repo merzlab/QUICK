@@ -144,15 +144,16 @@ contains
               call cuest_get_eri_K(c_loc(cuest_K), quick_qm_struct%co, int(quick_molspec%nelec / 2, c_int64_t))
                
               ! print *, "======== cuEST J-K ========"
-              ! call PriSym(6, nbasis, cuest_J - cuest_K, "F12.8")
+              ! call PriSym(6, nbasis, cuest_J - cuest_K, "F12.7")
               ! print *, "====== end cuEST J-K ======"
                
 #ifdef CUESTDEBUG
+              print *, "deltaO=", deltaO
               print *, "======== cuEST %o contribution ========"
               if (deltaO) then
-                 call PriSym(6, nbasis, cuest_J - cuest_K - quick_qm_struct%cuest_prev_JmK, "F12.8")
+                 call PriSym(6, nbasis, cuest_J - cuest_K - quick_qm_struct%cuest_prev_JmK, "F12.7")
               else
-                 call PriSym(6, nbasis, cuest_J - cuest_K, "F12.8")
+                 call PriSym(6, nbasis, cuest_J - cuest_K, "F12.7")
               endif
               print *, "====== end cuEST %o contribution ======"
 #endif
@@ -175,16 +176,16 @@ contains
               ! print *, "====== end gpu_get_cshell_eri ======"
 
 #ifdef CUESTDEBUG
-              ! still call QUICK for debug info
+              ! call QUICK for debug info
               cuest_J = 0.0d0
 
               call gpu_get_cshell_eri(deltaO, cuest_J)
               print *, "======== gpu_get_cshell_eri ========"
-              call PriSym(6, nbasis, cuest_J, "F12.8")
+              call PriSym(6, nbasis, cuest_J, "F12.7")
               print *, "====== end gpu_get_cshell_eri ======"
 
               print *, "======== cuEST %o final ========"
-              call PriSym(6, nbasis, quick_qm_struct%o, "F12.8")
+              call PriSym(6, nbasis, quick_qm_struct%o, "F12.7")
               print *, "====== end cuEST %o final ======"
 #endif
            endif
