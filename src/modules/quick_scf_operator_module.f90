@@ -155,9 +155,9 @@ contains
                  call PriSym(6, nbasis, cuest_J - cuest_K, "F12.8")
               endif
               print *, "====== end cuEST %o contribution ======"
+#endif
 
               cuest_J = cuest_J - cuest_K
-#endif
 
               if (deltaO) then
                  quick_qm_struct%o = quick_qm_struct%o + cuest_J - quick_qm_struct%cuest_prev_JmK
