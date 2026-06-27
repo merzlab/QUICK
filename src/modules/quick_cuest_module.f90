@@ -31,14 +31,11 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_init_basis(ncenter, first_basis_function, last_basis_function, katom, &
-                                  ktype, kprim, gcexpo, gccoeff, aux) &
+      subroutine cuest_init_basis(ncenter, katom, ktype, kprim, gcexpo, gccoeff, aux) &
                  bind(c, name="cuest_init_basis")
          use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_bool
          implicit none
          integer(c_int64_t), intent(in) :: ncenter(*)
-         integer(c_int64_t), intent(in) :: first_basis_function(*)
-         integer(c_int64_t), intent(in) :: last_basis_function(*)
          integer(c_int64_t), intent(in) :: katom(*)
          integer(c_int64_t), intent(in) :: ktype(*)
          integer(c_int64_t), intent(in) :: kprim(*)

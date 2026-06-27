@@ -364,8 +364,7 @@ subroutine fullx
    ! Now calculate X.
    ! Xij = Sum(k=1,m) Transpose(U)kj * s^(-.5)kk * Transpose(U)ki
 
-   if (quick_method%debug) call debugFullX
-   call debugBasis
+   if (quick_method%debug.or..true.) call debugFullX
 
    ! At this point we have the transformation matrix (X) which is necessary
    ! to orthogonalize the operator matrix, and the overlap matrix (S) which

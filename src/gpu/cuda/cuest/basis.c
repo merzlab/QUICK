@@ -17,11 +17,51 @@
 
 #include "quick_cuest.h"
 
-// TODO: get rid of first_basis_function and last_basis_function
+/**
+ * `quick_type` should not be 4=sp
+ */
+static uint64_t
+get_L_cart (uint64_t quick_ktype)
+{
+    switch (quick_ktype) {
+        case KTYPE_CART_S:
+            return 0;
+        case KTYPE_CART_P:
+            return 1;
+        case KTYPE_CART_D:
+            return 2;
+        case KTYPE_CART_F:
+            return 3;
+        default:
+            fprintf (stderr, "get_L_cart(%llu): quick_ktype parameter invalid\n", quick_ktype);
+            return 0;
+    }
+}
+
+/**
+ * `quick_type` should not be 4=sp
+ */
+#define get_L_sph(quick_ktype) (((quick_ktype) - 1) >> 1)
+
+static void
+reorder_d (double *a)
+{
+    SWAP (a[2], a[3], double);
+}
+
+static void
+reorder_f (double *a)
+{
+    SWAP (a[2], a[4], double);
+    SWAP (a[3], a[4], double);
+    SWAP (a[4], a[5], double);
+    SWAP (a[5], a[7], double);
+    SWAP (a[6], a[7], double);
+}
+
 void
-cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last_basis_function,
-                  int64_t *katom_, int64_t *ktype_, int64_t *kprim_, double *aexp, double *dcoeff,
-                  bool aux)
+cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *kprim_, double *aexp,
+                  double *dcoeff, bool aux)
 {
     uint64_t maxprim, nshell;
     if (aux) {
@@ -41,16 +81,6 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
     puts ("ncenter:");
     for (int i = 0; i < 7; ++i)
         printf ("%llu ", ncenter[i]);
-    putchar ('\n');
-
-    puts ("first_basis_function:");
-    for (int i = 0; i < quick_cuest_data.natom; ++i)
-        printf ("%llu ", first_basis_function[i]);
-    putchar ('\n');
-
-    puts ("last_basis_function:");
-    for (int i = 0; i < quick_cuest_data.natom; ++i)
-        printf ("%llu ", last_basis_function[i]);
     putchar ('\n');
 
     puts ("katom_:");
@@ -113,7 +143,9 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
     // set up AO shells //
     // ================ //
 
-    // preprocess and correct for SP shells
+    // --------------------------------------- //
+    // 1. preprocess and correct for SP shells //
+    // --------------------------------------- //
 
     size_t nsp = 0;
     for (int i = 0; i < nshell; ++i)
@@ -137,10 +169,10 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
         katom[i] = katom_[j];
         kprim[i] = kprim_[j];
 
-        if (ktype_[j] == 4) {
-            ktype[i] = 1;
+        if (ktype_[j] == KTYPE_CART_SP) {
+            ktype[i] = KTYPE_CART_S;
             ++i;
-            ktype[i] = 3;
+            ktype[i] = KTYPE_CART_P;
             katom[i] = katom_[j];
             kprim[i] = kprim_[j];
         } else {
@@ -175,8 +207,6 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
     for (size_t i = 0; i < nshell; ++i) {
         uint64_t a = katom[i] - 1;
         ++nshells_per_atom[a];
-        // ifshell[i] = first_basis_function[a] + shell_offset_cart[nshells_per_atom[a]++] - 1; //
-        // <-- wrong
         if (i > 0)
             ifshell[i] = ifshell[i - 1] + ktype[i - 1]; // ktype stores number of cartesian orbitals
         // printf ("ifshell[%zu]=%zu\n", i, ifshell[i]);
@@ -184,7 +214,9 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
 
     // fflush (stdout);
 
-    // start making shells
+    // -------------------- //
+    // 2. make cuest shells //
+    // -------------------- //
 
     cuestAOShell_t *shells = malloc (nshell * sizeof (cuestAOShell_t));
     if (!shells) {
@@ -199,19 +231,21 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
     // double *coeff = malloc (3 * sizeof (double));
 
     for (size_t i = 0; i < nshell; ++i) {
-        // // manual normalization, same as pulling from QUICK
-        // size_t   ifsh = ifshell[i];
-        // uint64_t L    = get_L (ktype[i]);
-        // normalize_coeff (dcoeff[ifsh], aexp[ifsh], 3, L, 1.0, coeff);
-        // checkCuestErrors (
-        //     cuestAOShellCreate (handle, 0, L, kprim[i],
-        //     aexp[ifsh],
-        //                         coeff, aoshell_params, &shells[i]));
+        // convert QUICK ordering to CCA lexical (cuEST) ordering
+        double *a = get_row_ptr (aexp, ifshell[i], maxprim);
+        double *c = get_row_ptr (dcoeff, ifshell[i], maxprim);
 
-        checkCuestErrors (cuestAOShellCreate (
-            quick_cuest_struct.handle, aux, aux ? get_L_sph (ktype[i]) : get_L_cart (ktype[i]),
-            kprim[i], get_row_ptr (aexp, ifshell[i], maxprim),
-            get_row_ptr (dcoeff, ifshell[i], maxprim), aoshell_params, &shells[i]));
+        if (ktype[i] == KTYPE_CART_D) {
+            reorder_d (a);
+            reorder_d (c);
+        } else if (ktype[i] == KTYPE_CART_F) {
+            reorder_f (a);
+            reorder_d (c);
+        }
+
+        checkCuestErrors (cuestAOShellCreate (quick_cuest_struct.handle, aux,
+                                              aux ? get_L_sph (ktype[i]) : get_L_cart (ktype[i]),
+                                              kprim[i], a, c, aoshell_params, &shells[i]));
     }
 
     // free (coeff);
@@ -390,3 +424,5 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
     }
 #endif
 }
+
+#undef get_L_sph

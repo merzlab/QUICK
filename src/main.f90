@@ -199,8 +199,6 @@
     ! init primary (cartesian) basis
     call cuest_init_basis(                                &
         int(quick_basis%ncenter, c_int64_t),              &
-        int(quick_basis%first_basis_function, c_int64_t), &
-        int(quick_basis%last_basis_function, c_int64_t),  &
         int(quick_basis%katom, c_int64_t),                &
         int(quick_basis%ktype, c_int64_t),                &
         int(quick_basis%kprim, c_int64_t),                &
@@ -212,8 +210,6 @@
     ! init auxiliary (spherical) basis
     call cuest_init_basis(                                        &
         int(quick_basis%ncenter, c_int64_t),                      &
-        int(quick_aux_basis_sph%first_basis_function, c_int64_t), &
-        int(quick_aux_basis_sph%last_basis_function, c_int64_t),  &
         int(quick_aux_basis_sph%katom, c_int64_t),                &
         int(quick_aux_basis_sph%ktype, c_int64_t),                &
         int(quick_aux_basis_sph%kprim, c_int64_t),                &

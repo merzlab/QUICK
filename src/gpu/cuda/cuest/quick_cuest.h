@@ -11,6 +11,12 @@
 #include <cuest.h>
 #endif
 
+#define KTYPE_CART_S  1
+#define KTYPE_CART_P  3
+#define KTYPE_CART_SP 4
+#define KTYPE_CART_D  6
+#define KTYPE_CART_F  10
+
 typedef struct {
     cuestHandle_t               handle;
     cuestWorkspaceDescriptor_t *persistWD;
@@ -49,9 +55,8 @@ void cuest_init (int64_t natom, int64_t nshell, int64_t nauxshell, int64_t MAXPR
                  double *extchg);
 void cuest_deinit ();
 
-void cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function,
-                       int64_t *last_basis_function, int64_t *katom_, int64_t *ktype_,
-                       int64_t *kprim_, double *aexp, double *dcoeff, bool aux);
+void cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *kprim_,
+                       double *aexp, double *dcoeff, bool aux);
 
 void cuest_init_oei_plan (double cutoff);
 void cuest_init_dfint_plan ();
