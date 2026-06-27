@@ -20,8 +20,8 @@
 // TODO: get rid of first_basis_function and last_basis_function
 void
 cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last_basis_function,
-                  int64_t *katom_, int64_t *ktype_, int64_t *kprim_, double *gcexpo,
-                  double *gccoeff, bool aux)
+                  int64_t *katom_, int64_t *ktype_, int64_t *kprim_, double *aexp, double *dcoeff,
+                  bool aux)
 {
     uint64_t maxprim, nshell;
     if (aux) {
@@ -68,17 +68,17 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
         printf ("%llu ", kprim_[i]);
     putchar ('\n');
 
-    puts ("gcexpo:");
+    puts ("aexp:");
     for (int i = 0; i < 7; ++i) {
         for (int j = 0; j < maxprim; ++j)
-            printf ("%f ", get (gcexpo, i, j, maxprim));
+            printf ("%f ", get (aexp, i, j, maxprim));
         putchar ('\n');
     }
 
-    puts ("gccoeff:");
+    puts ("dcoeff:");
     for (int i = 0; i < 7; ++i) {
         for (int j = 0; j < maxprim; ++j)
-            printf ("%f ", get (gccoeff, i, j, maxprim));
+            printf ("%f ", get (dcoeff, i, j, maxprim));
         putchar ('\n');
     }
 
@@ -89,14 +89,14 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
         putchar ('\n');
     }
 
-    puts ("gcexpo flat:");
+    puts ("aexp flat:");
     for (int i = 0; i < 7 * maxprim; ++i)
-        printf ("%f ", gcexpo[i]);
+        printf ("%f ", aexp[i]);
     putchar ('\n');
 
-    puts ("gccoeff flat:");
+    puts ("dcoeff flat:");
     for (int i = 0; i < 7 * maxprim; ++i)
-        printf ("%f ", gccoeff[i]);
+        printf ("%f ", dcoeff[i]);
     putchar ('\n');
 
     puts ("xyz flat:");
@@ -210,8 +210,8 @@ cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function, int64_t *last
 
         checkCuestErrors (cuestAOShellCreate (
             quick_cuest_struct.handle, aux, aux ? get_L_sph (ktype[i]) : get_L_cart (ktype[i]),
-            kprim[i], get_row_ptr (gcexpo, ifshell[i], maxprim),
-            get_row_ptr (gccoeff, ifshell[i], maxprim), aoshell_params, &shells[i]));
+            kprim[i], get_row_ptr (aexp, ifshell[i], maxprim),
+            get_row_ptr (dcoeff, ifshell[i], maxprim), aoshell_params, &shells[i]));
     }
 
     // free (coeff);

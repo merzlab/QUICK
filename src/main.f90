@@ -63,7 +63,6 @@
 
 #if defined(CUDA) && defined(CUEST)
     use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_loc, c_bool
-    use quick_size_module, only: MAXPRIM, MAXPRIM_AUX
     use quick_cuest_module, only: cuest_init, cuest_deinit, cuest_init_oei_plan, cuest_init_basis, &
                                   cuest_get_oei_S, cuest_get_oei_T, cuest_get_oei_V, cuest_init_dfint_plan
     ! use quick_aux_basis_module, only: quick_aux_basis, readauxbasis
@@ -184,17 +183,17 @@
 #endif
 
     ! init cuest
-    call cuest_init(                                &
-        int(natom, c_int64_t),                      &
-        int(nshell, c_int64_t),                     &
-        int(quick_aux_basis_sph%nshell, c_int64_t), &
-        int(MAXPRIM, c_int64_t),                    &
-        int(MAXPRIM_AUX, c_int64_t),                &
-        c_loc(xyz),                                 &
-        quick_molspec%chg,                          &
-        int(quick_molspec%nextatom, c_int64_t),     &
-        quick_molspec%extxyz,                       &
-        quick_molspec%extchg                        &
+    call cuest_init(                                     &
+        int(natom, c_int64_t),                           &
+        int(nshell, c_int64_t),                          &
+        int(quick_aux_basis_sph%nshell, c_int64_t),      &
+        int(maxcontract, c_int64_t),                     &
+        int(quick_aux_basis_sph%maxcontract, c_int64_t), &
+        c_loc(xyz),                                      &
+        quick_molspec%chg,                               &
+        int(quick_molspec%nextatom, c_int64_t),          &
+        quick_molspec%extxyz,                            &
+        quick_molspec%extchg                             &
     )
     ! for testing; the following cuest functions should not be called here
     ! init primary (cartesian) basis
@@ -205,8 +204,8 @@
         int(quick_basis%katom, c_int64_t),                &
         int(quick_basis%ktype, c_int64_t),                &
         int(quick_basis%kprim, c_int64_t),                &
-        quick_basis%gcexpo,                               &
-        quick_basis%gccoeff,                              &
+        aexp,                                             &
+        dcoeff,                                           &
         logical(.false., c_bool)                          &
     )
 

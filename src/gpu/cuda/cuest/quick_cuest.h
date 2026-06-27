@@ -51,7 +51,7 @@ void cuest_deinit ();
 
 void cuest_init_basis (int64_t *ncenter, int64_t *first_basis_function,
                        int64_t *last_basis_function, int64_t *katom_, int64_t *ktype_,
-                       int64_t *kprim_, double *gcexpo, double *gccoeff, bool aux);
+                       int64_t *kprim_, double *aexp, double *dcoeff, bool aux);
 
 void cuest_init_oei_plan (double cutoff);
 void cuest_init_dfint_plan ();

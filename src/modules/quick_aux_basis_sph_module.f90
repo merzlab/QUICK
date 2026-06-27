@@ -97,9 +97,9 @@ module quick_aux_basis_sph_module
 
       ! Primitive-level arrays, dimensioned (maxcontract, nbasis), matching the
       ! "old memory model" layout in readbasis() for easy reuse downstream.
-      double precision, allocatable :: gcexpo(:, :)         ! (MAXPRIM_AUX,nbasis) primitive exponents
-      double precision, allocatable :: gccoeff(:, :)        ! (MAXPRIM_AUX,nbasis) normalized contraction coefficients
-      double precision, allocatable :: unnorm_gccoeff(:, :) ! (MAXPRIM_AUX,nbasis) raw (unnormalized) coefficients read from file
+      double precision, allocatable :: gcexpo(:, :)         ! (maxcontract,nbasis) primitive exponents
+      double precision, allocatable :: gccoeff(:, :)        ! (maxcontract,nbasis) normalized contraction coefficients
+      double precision, allocatable :: unnorm_gccoeff(:, :) ! (maxcontract,nbasis) raw (unnormalized) coefficients read from file
 
       integer :: maxcontract = 1     ! largest kprim(:) value, i.e. leading dim of gcexpo/gccoeff
    end type quick_aux_basis_sph_type
@@ -431,6 +431,12 @@ contains
             quick_aux_basis_sph%maxcontract = quick_aux_basis_sph%kprim(i)
       end do
 
+      if (quick_aux_basis_sph%maxcontract > MAXPRIM_AUX) then
+         ierr = 37
+         print *, "quick_aux_basis_sph%maxcontract > MAXPRIM_AUX. aborting read_aux_basis_sph."
+         return
+      endif
+
       ! ------------------------------------------------------------------
       ! Note on MPI: if this routine is only called on the master rank,
       ! broadcast quick_aux_basis_sph%nshell/nbasis/nprim/maxcontract and the
@@ -440,7 +446,7 @@ contains
       ! ------------------------------------------------------------------
 
       ! ------------------------------------------------------------------
-      ! Allocate the gcexpo/gccoeff/unnorm_gccoeff arrays at (MAXPRIM_AUX,nbasis)
+      ! Allocate the gcexpo/gccoeff/unnorm_gccoeff arrays at (maxcontract,nbasis)
       ! and fill them shell by shell, applying SPHERICAL-HARMONIC primitive
       ! normalization (sph_prim_norm) and contraction normalization
       ! (sph_contraction_norm), both defined at the bottom of this module.
@@ -451,11 +457,11 @@ contains
       ! the Cartesian version needed (select case(j) -> xnorm(lx,ly,lz)).
       ! ------------------------------------------------------------------
       if (.not. allocated(quick_aux_basis_sph%gcexpo)) &
-         allocate (quick_aux_basis_sph%gcexpo(MAXPRIM_AUX, quick_aux_basis_sph%nbasis))
+         allocate (quick_aux_basis_sph%gcexpo(quick_aux_basis_sph%maxcontract, quick_aux_basis_sph%nbasis))
       if (.not. allocated(quick_aux_basis_sph%gccoeff)) &
-         allocate (quick_aux_basis_sph%gccoeff(MAXPRIM_AUX, quick_aux_basis_sph%nbasis))
+         allocate (quick_aux_basis_sph%gccoeff(quick_aux_basis_sph%maxcontract, quick_aux_basis_sph%nbasis))
       if (.not. allocated(quick_aux_basis_sph%unnorm_gccoeff)) &
-         allocate (quick_aux_basis_sph%unnorm_gccoeff(MAXPRIM_AUX, quick_aux_basis_sph%nbasis))
+         allocate (quick_aux_basis_sph%unnorm_gccoeff(quick_aux_basis_sph%maxcontract, quick_aux_basis_sph%nbasis))
 
       quick_aux_basis_sph%gcexpo = 0.0d0
       quick_aux_basis_sph%gccoeff = 0.0d0
