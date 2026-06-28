@@ -172,8 +172,64 @@
       call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
     endif
 #endif
+    
+    ! Molden export
+    ! initialize exporting
+    if(write_molden .and. master) then
+       call initializeExport(quick_molden, ierr)
+    endif
+    
+    !------------------------------------------------------------------
+    ! 4. SCF single point calculation. DFT if wanted. If it is OPT job
+    !    ignore this part and go to opt part. We will get variationally determined Energy.
+    !-----------------------------------------------------------------
 
+    ! if it is div&con method, begin fragmetation step, initial and setup
+    ! div&con variables
+    !if (quick_method%DIVCON) call inidivcon(quick_molspec%natom)
+
+    ! if it is not opt job, begin single point calculation
+    if(.not.quick_method%opt)then
+!      if(.NOT.PBSOL)then
+!        call getEnergy(failed)
+!      else
+!        HF=.true.
+!        DFT=.false.
+!        call getEnergy(failed)
+!      endif
+!   else
+        call getEriPrecomputables   ! pre-calculate 2 indices coeffecient to save time
+        call schwarzoff ! pre-calculate schwarz cutoff criteria
+    endif
+
+#if defined(GPU) || defined(MPIV_GPU)
+    if (.not.quick_method%opt) then
+      call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
+        ncontract, itype, aexp, dcoeff, &
+        quick_basis%first_basis_function, quick_basis%last_basis_function, &
+        quick_basis%first_shell_basis_function, quick_basis%last_shell_basis_function, &
+        quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &
+        quick_basis%ktype, quick_basis%kprim, quick_basis%kshell,quick_basis%Ksumtype, &
+        quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal, quick_basis%Qsbasis, quick_basis%Qfbasis, &
+        quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
+      call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
+      call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
+    endif
+#endif
+
+#if defined(MPIV_GPU)
+    timer_begin%T2elb = timer_end%T2elb
+    call mgpu_get_2elb_time(timer_end%T2elb)
+    timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
+#endif
+
+    RECORD_TIME(timer_end%TIniGuess)
+    timer_cumer%TIniGuess=timer_cumer%TIniGuess+timer_end%TIniGuess-timer_begin%TIniGuess &
+                          -(timer_end%T2elb-timer_begin%T2elb)
+    
+    ! cuEST initialize
 #if defined(CUDA) && defined(CUEST)
+    RECORD_TIME(timer_begin%TIniCuest)
     ! read auxiliary basis
     call read_aux_basis_sph("./basis/DEF2-UNIVERSAL-JKFIT.BAS", natom, quick_molspec%iattype, ierr)
     if (ierr /= 0) print *, "ERROR: read_aux_basis_sph failed with ierr ", ierr
@@ -247,61 +303,11 @@
 
     ! init 2 electron integral plan
     call cuest_init_dfint_plan
-#endif
-    
-    ! Molden export
-    ! initialize exporting
-    if(write_molden .and. master) then
-       call initializeExport(quick_molden, ierr)
-    endif
-    
-    !------------------------------------------------------------------
-    ! 4. SCF single point calculation. DFT if wanted. If it is OPT job
-    !    ignore this part and go to opt part. We will get variationally determined Energy.
-    !-----------------------------------------------------------------
 
-    ! if it is div&con method, begin fragmetation step, initial and setup
-    ! div&con variables
-    !if (quick_method%DIVCON) call inidivcon(quick_molspec%natom)
-
-    ! if it is not opt job, begin single point calculation
-    if(.not.quick_method%opt)then
-!      if(.NOT.PBSOL)then
-!        call getEnergy(failed)
-!      else
-!        HF=.true.
-!        DFT=.false.
-!        call getEnergy(failed)
-!      endif
-!   else
-        call getEriPrecomputables   ! pre-calculate 2 indices coeffecient to save time
-        call schwarzoff ! pre-calculate schwarz cutoff criteria
-    endif
-
-#if defined(GPU) || defined(MPIV_GPU)
-    if (.not.quick_method%opt) then
-      call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
-        ncontract, itype, aexp, dcoeff, &
-        quick_basis%first_basis_function, quick_basis%last_basis_function, &
-        quick_basis%first_shell_basis_function, quick_basis%last_shell_basis_function, &
-        quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &
-        quick_basis%ktype, quick_basis%kprim, quick_basis%kshell,quick_basis%Ksumtype, &
-        quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal, quick_basis%Qsbasis, quick_basis%Qfbasis, &
-        quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
-      call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
-      call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
-    endif
-#endif
-
-#if defined(MPIV_GPU)
-    timer_begin%T2elb = timer_end%T2elb
-    call mgpu_get_2elb_time(timer_end%T2elb)
-    timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
-#endif
-
-    RECORD_TIME(timer_end%TIniGuess)
-    timer_cumer%TIniGuess=timer_cumer%TIniGuess+timer_end%TIniGuess-timer_begin%TIniGuess &
+    RECORD_TIME(timer_end%TIniCuest)
+    timer_cumer%TIniCuest=timer_cumer%TIniCuest+timer_end%TIniCuest-timer_begin%TIniCuest &
                           -(timer_end%T2elb-timer_begin%T2elb)
+#endif
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         SAFE_CALL(getEnergy(.false.,ierr))

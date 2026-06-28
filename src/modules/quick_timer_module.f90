@@ -63,6 +63,9 @@ module quick_timer_module
         double precision:: TEFIELDGrid=0.0d0 ! Time for computing EFIELD on grid
         double precision:: TESPSurface=0.0d0    ! Time for creating vanderwaals surface for ESP charge calculation
         double precision:: TESPCharge=0.0d0    ! Time for computing ESP charge using points on the surface
+#if defined(CUDA) && defined(CUEST)
+        double precision:: TIniCuest=0.0d0
+#endif
     end type quick_timer
 
     type quick_timer_cumer
@@ -112,6 +115,9 @@ module quick_timer_module
         double precision:: TEFIELDGrid=0.0d0      ! Time for computing EFEILD on grid
         double precision:: TESPSurface=0.0d0    ! Time for creating vanderwaals surface for ESP charge calculation
         double precision:: TESPCharge=0.0d0    ! Time for computing ESP charge using points on the surface
+#if defined(CUDA) && defined(CUEST)
+        double precision:: TIniCuest=0.0d0
+#endif
 
     end type quick_timer_cumer
 
@@ -158,6 +164,10 @@ module quick_timer_module
 #ifdef DEBUGTIME
             write (io,'("| INITIALIZATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TInitialize, &
                 timer_cumer%TInitialize/(timer_end%TTotal-timer_begin%TTotal)*100
+#endif
+#if defined(DEBUGTIME) && defined(CUDA) && defined(CUEST)
+            write (io,'("| CUEST INITIALIZATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TIniCuest, &
+                timer_cumer%TIniCuest/(timer_end%TTotal-timer_begin%TTotal)*100
 #endif
             write (io,'("| INITIAL GUESS TIME  =",F16.9,"( ",F5.2,"%)")') timer_cumer%TIniGuess, &
                 timer_cumer%TIniGuess/(timer_end%TTotal-timer_begin%TTotal)*100
