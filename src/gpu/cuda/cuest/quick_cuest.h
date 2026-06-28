@@ -53,12 +53,14 @@ extern quick_cuest_data_t   quick_cuest_data;
 void cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nauxshell,
                  int64_t maxcontract, int64_t maxcontract_aux, double *xyz, double *chg,
                  int64_t nextatom, double *extxyz, double *extchg);
+void cuest_deinit_oei_plan ();
 void cuest_deinit ();
 
 void cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *kprim_,
                        double *aexp, double *dcoeff, bool aux);
 
-void cuest_init_oei_plan (double cutoff);
+void cuest_init_pair_list (double cutoff);
+void cuest_init_oei_plan ();
 void cuest_init_dfint_plan ();
 
 void cuest_get_oei_S (double *o);

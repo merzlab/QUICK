@@ -23,49 +23,8 @@
  * `cuest_init` must have been called before calling `cuest_init_oei_plan`
  */
 void
-cuest_init_oei_plan (double cutoff)
+cuest_init_oei_plan ()
 {
-    // ================ //
-    // set up pair list //
-    // ================ //
-
-    // xyz is flat already
-    //
-    // double *xyz_flat = malloc (quick_cuest_data.natom * 3 * sizeof (double));
-    //
-    // for (size_t i = 0; i < quick_cuest_data.natom; ++i) {
-    //     size_t i3        = 3 * i;
-    //     xyz_flat[i3]     = xyz[i][0];
-    //     xyz_flat[i3 + 1] = xyz[i][1];
-    //     xyz_flat[i3 + 2] = xyz[i][2];
-    // }
-
-    cuestAOPairListParameters_t pair_list_params;
-    checkCuestErrors (cuestParametersCreate (CUEST_AOPAIRLIST_PARAMETERS, &pair_list_params));
-    checkCuestErrors (cuestAOPairListCreateWorkspaceQuery (
-        quick_cuest_struct.handle, quick_cuest_struct.basis, quick_cuest_data.natom,
-        quick_cuest_data.xyz, cutoff, pair_list_params, quick_cuest_struct.persistWD,
-        quick_cuest_struct.tmpWD, &quick_cuest_struct.AOPairList));
-
-#ifdef CUESTDEBUG
-    printf ("%s: pair list persistWD allocation size:\t%zu\n", __func__,
-            quick_cuest_struct.persistWD->deviceBufferSizeInBytes);
-    printf ("%s: pair list tmpWD allocation size:\t%zu\n", __func__,
-            quick_cuest_struct.tmpWD->deviceBufferSizeInBytes);
-#endif
-    quick_cuest_struct.persistAOPairListWorkspace
-        = allocateWorkspace (quick_cuest_struct.persistWD);
-    cuestWorkspace_t *tmpAOPairListWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
-
-    checkCuestErrors (
-        cuestAOPairListCreate (quick_cuest_struct.handle, quick_cuest_struct.basis,
-                               quick_cuest_data.natom, quick_cuest_data.xyz, cutoff,
-                               pair_list_params, quick_cuest_struct.persistAOPairListWorkspace,
-                               tmpAOPairListWorkspace, &quick_cuest_struct.AOPairList));
-    checkCuestErrors (cuestParametersDestroy (CUEST_AOPAIRLIST_PARAMETERS, pair_list_params));
-    freeWorkspace (tmpAOPairListWorkspace);
-    // free (xyz_flat);
-
     // ========================== //
     // one-electron integral plan //
     // ========================== //

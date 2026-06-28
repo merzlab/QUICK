@@ -63,8 +63,8 @@
 
 #if defined(CUDA) && defined(CUEST)
     use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_loc, c_bool
-    use quick_cuest_module, only: cuest_init, cuest_deinit, cuest_init_oei_plan, cuest_init_basis, &
-                                  cuest_get_oei_S, cuest_get_oei_T, cuest_get_oei_V, cuest_init_dfint_plan
+    use quick_cuest_module, only: cuest_init, cuest_deinit, cuest_init_basis, &
+                                  cuest_init_dfint_plan, cuest_init_pair_list
     ! use quick_aux_basis_module, only: quick_aux_basis, readauxbasis
     use quick_aux_basis_sph_module, only: quick_aux_basis_sph, read_aux_basis_sph
 #endif
@@ -77,11 +77,6 @@
     integer :: i,j,k
     double precision :: t1_t, t2_t
     common /timer/ t1_t, t2_t
-
-#if defined(CUDA) && defined(CUEST)
-    ! double precision, allocatable :: dcoeff_uni(:, :) ! dcoeff fixed with unify_cart_norm
-    double precision, allocatable, target :: cuest_S(:,:), cuest_T(:,:), cuest_V(:,:)
-#endif
 
     !------------------------------------------------------------------
     ! 1. The first thing that must be done is to initialize and prepare files
@@ -255,9 +250,6 @@
     )
     ! for testing; the following cuest functions should not be called here
     ! init primary (cartesian) basis
-    ! if(.not. allocated(dcoeff_uni)) allocate(dcoeff_uni(maxcontract, nbasis))
-    ! dcoeff_uni = dcoeff
-    ! call unify_cart_norm(dcoeff_uni)
     call cuest_init_basis(                                &
         int(quick_basis%ncenter, c_int64_t),              &
         int(quick_basis%katom, c_int64_t),                &
@@ -279,27 +271,9 @@
         logical(.true., c_bool)                                   &
     )
 
-    ! init one-electron integral plan
+    ! init pair list
     ! TODO: is this the right cutoff?
-    call cuest_init_oei_plan(quick_method%coreIntegralCutoff)
-#ifdef CUESTDEBUG
-    ! compute and print one-electron integrals
-    allocate(cuest_S(nbasis, nbasis))
-    allocate(cuest_T(nbasis, nbasis))
-    allocate(cuest_V(nbasis, nbasis))
-
-    call cuest_get_oei_S(c_loc(cuest_S))
-    call cuest_get_oei_T(c_loc(cuest_T))
-    call cuest_get_oei_V(c_loc(cuest_V))
-
-    ! V is computed using positive test charge so we actually subtract
-    ! 6 is stdout (temporary)
-    call PriSym(6, nbasis, cuest_T - cuest_V, "F14.8")
-
-    deallocate(cuest_S)
-    deallocate(cuest_T)
-    deallocate(cuest_V)
-#endif
+    call cuest_init_pair_list(quick_method%coreIntegralCutoff)
 
     ! init 2 electron integral plan
     call cuest_init_dfint_plan
@@ -457,7 +431,6 @@
     call gpu_deallocate_scratch(quick_method%grad .or. quick_method%opt)
 #if defined(CUDA) && defined(CUEST)
     call cuest_deinit
-    ! if(allocated(dcoeff_uni)) deallocate(dcoeff_uni)
 #endif
 #if defined(MPIV_GPU)
     SAFE_CALL(delete_mgpu_setup(ierr))

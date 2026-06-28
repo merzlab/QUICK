@@ -79,7 +79,7 @@ subroutine get1e(deltaO)
 
 #if defined(CUDA) && defined(CUEST)
    use, intrinsic :: iso_c_binding, only: c_loc
-   use quick_cuest_module, only: cuest_get_oei_T, cuest_get_oei_V
+   use quick_cuest_module, only: cuest_deinit_oei_plan, cuest_get_oei_T, cuest_get_oei_V
 #endif
    
    implicit double precision(a-h,o-z)
@@ -126,11 +126,12 @@ subroutine get1e(deltaO)
 #if defined(GPU)
          if(.not. quick_method%hasF) then
 #if defined(CUDA) && defined(CUEST)
-           call cuest_get_oei_T(c_loc(tmp_o_T))
+           ! compute V integral
            call cuest_get_oei_V(c_loc(tmp_o_V))
-           quick_qm_struct%o = tmp_o_T - tmp_o_V
+           quick_qm_struct%o = quick_qm_struct%o - tmp_o_V
 
 #ifdef CUESTDEBUG
+           call cuest_get_oei_T(c_loc(tmp_o_T))
            print *, "======== cuEST T+V ========"
            call PriSym(6, nbasis, tmp_o_T - tmp_o_V, "F12.7")
            print *, "====== end cuEST T+V ======"
@@ -141,6 +142,7 @@ subroutine get1e(deltaO)
            call PriSym(6, nbasis, tmp_o_T, "F12.7")
            print *, "====== end quick T+V ======"
 #endif
+           call cuest_deinit_oei_plan()
 #else
            call gpu_get_oei(quick_qm_struct%o)
 #endif

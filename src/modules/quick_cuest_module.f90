@@ -27,6 +27,11 @@ module quick_cuest_module
    end interface
 
    interface
+      subroutine cuest_deinit_oei_plan() bind(c, name="cuest_deinit_oei_plan")
+      end subroutine
+   end interface
+
+   interface
       subroutine cuest_deinit() bind(c, name="cuest_deinit")
       end subroutine
    end interface
@@ -47,11 +52,16 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_init_oei_plan(cutoff) bind(c, name="cuest_init_oei_plan")
+      subroutine cuest_init_oei_plan() bind(c, name="cuest_init_oei_plan")
+      end subroutine cuest_init_oei_plan
+   end interface
+
+   interface
+      subroutine cuest_init_pair_list(cutoff) bind(c, name="cuest_init_pair_list")
          use, intrinsic::iso_c_binding, only: c_double
          implicit none
          real(c_double), intent(in), value :: cutoff
-      end subroutine cuest_init_oei_plan
+      end subroutine cuest_init_pair_list
    end interface
 
    interface

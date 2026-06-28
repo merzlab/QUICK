@@ -177,7 +177,7 @@ subroutine fullx
 #if defined(CUDA) && defined(CUEST)
    ! TODO: probably remove this. using GPU is probably slower
    use, intrinsic :: iso_c_binding, only: c_loc
-   use quick_cuest_module, only: cuest_get_oei_S
+   use quick_cuest_module, only: cuest_init_oei_plan, cuest_get_oei_S
 #endif
 
    implicit none
@@ -189,6 +189,12 @@ subroutine fullx
    double precision a,b,Ax,Ay,Az,Bx,By,Bz
 #if defined(CUDA) && defined(CUEST)
    double precision, target :: tmp2d(nbasis, nbasis)
+#endif
+
+#if defined(CUDA) && defined(CUEST)
+   ! initialize oei plan (since overlap is computed before T and V)
+   ! will be deinit after computing T and V
+   call cuest_init_oei_plan()
 #endif
 
    RECORD_TIME(timer_begin%T1eS)
