@@ -63,13 +63,13 @@ void
 cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *kprim_, double *aexp,
                   double *dcoeff, bool aux)
 {
-    uint64_t maxprim, nshell;
+    uint64_t maxcontract, nshell;
     if (aux) {
-        nshell  = quick_cuest_data.nauxshell;
-        maxprim = quick_cuest_data.MAXPRIM_AUX;
+        nshell      = quick_cuest_data.nauxshell;
+        maxcontract = quick_cuest_data.maxcontract_aux;
     } else {
-        nshell  = quick_cuest_data.nshell;
-        maxprim = quick_cuest_data.MAXPRIM;
+        nshell      = quick_cuest_data.nshell;
+        maxcontract = quick_cuest_data.maxcontract;
     }
 
 #ifdef CUESTDEBUG
@@ -100,15 +100,15 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
 
     puts ("aexp:");
     for (int i = 0; i < 7; ++i) {
-        for (int j = 0; j < maxprim; ++j)
-            printf ("%f ", get (aexp, i, j, maxprim));
+        for (int j = 0; j < maxcontract; ++j)
+            printf ("%f ", get (aexp, i, j, maxcontract));
         putchar ('\n');
     }
 
     puts ("dcoeff:");
     for (int i = 0; i < 7; ++i) {
-        for (int j = 0; j < maxprim; ++j)
-            printf ("%f ", get (dcoeff, i, j, maxprim));
+        for (int j = 0; j < maxcontract; ++j)
+            printf ("%f ", get (dcoeff, i, j, maxcontract));
         putchar ('\n');
     }
 
@@ -120,12 +120,12 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
     }
 
     puts ("aexp flat:");
-    for (int i = 0; i < 7 * maxprim; ++i)
+    for (int i = 0; i < 7 * maxcontract; ++i)
         printf ("%f ", aexp[i]);
     putchar ('\n');
 
     puts ("dcoeff flat:");
-    for (int i = 0; i < 7 * maxprim; ++i)
+    for (int i = 0; i < 7 * maxcontract; ++i)
         printf ("%f ", dcoeff[i]);
     putchar ('\n');
 
@@ -232,8 +232,8 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
 
     for (size_t i = 0; i < nshell; ++i) {
         // convert QUICK ordering to CCA lexical (cuEST) ordering
-        double *a = get_row_ptr (aexp, ifshell[i], maxprim);
-        double *c = get_row_ptr (dcoeff, ifshell[i], maxprim);
+        double *a = get_row_ptr (aexp, ifshell[i], maxcontract);
+        double *c = get_row_ptr (dcoeff, ifshell[i], maxcontract);
 
         // if (!aux && ktype[i] == KTYPE_CART_D) {
         //     reorder_d (a);
@@ -403,13 +403,13 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
             exit (EXIT_FAILURE);
         }
 
-        puts ("-------- DEBUG AUX S --------");
+        puts ("-------- DEBUG aux S --------");
         for (int i = 0; i < 10; ++i) {
             for (int j = 0; j < 10; ++j)
                 printf ("%16.10f", buf[i * 113 + j]);
             putchar ('\n');
         }
-        puts ("------ END DEBUG AUX S ------");
+        puts ("------ END DEBUG aux S ------");
 
         if (cudaFree (d_S) != cudaSuccess) {
             fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);

@@ -80,7 +80,7 @@
     common /timer/ t1_t, t2_t
 
 #if defined(CUDA) && defined(CUEST)
-    double precision, allocatable :: dcoeff_uni(:, :) ! dcoeff fixed with unify_cart_norm
+    ! double precision, allocatable :: dcoeff_uni(:, :) ! dcoeff fixed with unify_cart_norm
     double precision, allocatable, target :: cuest_S(:,:), cuest_T(:,:), cuest_V(:,:)
 #endif
 
@@ -200,16 +200,16 @@
     )
     ! for testing; the following cuest functions should not be called here
     ! init primary (cartesian) basis
-    if(.not. allocated(dcoeff_uni)) allocate(dcoeff_uni(maxcontract, nbasis))
-    dcoeff_uni = dcoeff
-    call unify_cart_norm(dcoeff_uni)
+    ! if(.not. allocated(dcoeff_uni)) allocate(dcoeff_uni(maxcontract, nbasis))
+    ! dcoeff_uni = dcoeff
+    ! call unify_cart_norm(dcoeff_uni)
     call cuest_init_basis(                                &
         int(quick_basis%ncenter, c_int64_t),              &
         int(quick_basis%katom, c_int64_t),                &
         int(quick_basis%ktype, c_int64_t),                &
         int(quick_basis%kprim, c_int64_t),                &
         aexp,                                             &
-        dcoeff_uni,                                       &
+        dcoeff,                                           &
         logical(.false., c_bool)                          &
     )
 
@@ -452,7 +452,7 @@
     call gpu_deallocate_scratch(quick_method%grad .or. quick_method%opt)
 #if defined(CUDA) && defined(CUEST)
     call cuest_deinit
-    if(allocated(dcoeff_uni)) deallocate(dcoeff_uni)
+    ! if(allocated(dcoeff_uni)) deallocate(dcoeff_uni)
 #endif
 #if defined(MPIV_GPU)
     SAFE_CALL(delete_mgpu_setup(ierr))

@@ -36,23 +36,23 @@ typedef struct {
 typedef struct {
     uint64_t natom;
     uint64_t nshell;
+    uint64_t nbasis;
     uint64_t nauxshell;
-    uint64_t MAXPRIM;
-    uint64_t MAXPRIM_AUX;
+    uint64_t maxcontract;
+    uint64_t maxcontract_aux;
     uint64_t ntotalatom;
     double  *xyz;
     double  *allxyz_gpu;
     double  *allchg;
     double  *allchg_gpu;
-    uint64_t nbasis;
 } quick_cuest_data_t;
 
 extern quick_cuest_struct_t quick_cuest_struct;
 extern quick_cuest_data_t   quick_cuest_data;
 
-void cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nauxshell, int64_t MAXPRIM,
-                 int64_t MAXPRIM_AUX, double *xyz, double *chg, int64_t nextatom, double *extxyz,
-                 double *extchg);
+void cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nauxshell,
+                 int64_t maxcontract, int64_t maxcontract_aux, double *xyz, double *chg,
+                 int64_t nextatom, double *extxyz, double *extchg);
 void cuest_deinit ();
 
 void cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *kprim_,
