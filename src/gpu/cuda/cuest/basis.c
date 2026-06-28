@@ -266,6 +266,12 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
         quick_cuest_struct.handle, quick_cuest_data.natom, nshells_per_atom, shells, basis_params,
         quick_cuest_struct.persistWD, quick_cuest_struct.tmpWD, &basis));
 
+#ifdef CUESTDEBUG
+    printf ("%s: basis persistWD allocation size:\t%zu\n", __func__,
+            quick_cuest_struct.persistWD->deviceBufferSizeInBytes);
+    printf ("%s: basis tmpWD allocation size:\t%zu\n", __func__,
+            quick_cuest_struct.tmpWD->deviceBufferSizeInBytes);
+#endif
     cuestWorkspace_t *persistBasisWorkspace = allocateWorkspace (quick_cuest_struct.persistWD);
     cuestWorkspace_t *tmpBasisWorkspace     = allocateWorkspace (quick_cuest_struct.tmpWD);
 

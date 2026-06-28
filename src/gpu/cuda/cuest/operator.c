@@ -47,6 +47,12 @@ cuest_init_oei_plan (double cutoff)
         quick_cuest_data.xyz, cutoff, pair_list_params, quick_cuest_struct.persistWD,
         quick_cuest_struct.tmpWD, &quick_cuest_struct.AOPairList));
 
+#ifdef CUESTDEBUG
+    printf ("%s: pair list persistWD allocation size:\t%zu\n", __func__,
+            quick_cuest_struct.persistWD->deviceBufferSizeInBytes);
+    printf ("%s: pair list tmpWD allocation size:\t%zu\n", __func__,
+            quick_cuest_struct.tmpWD->deviceBufferSizeInBytes);
+#endif
     quick_cuest_struct.persistAOPairListWorkspace
         = allocateWorkspace (quick_cuest_struct.persistWD);
     cuestWorkspace_t *tmpAOPairListWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
@@ -71,6 +77,12 @@ cuest_init_oei_plan (double cutoff)
         oeint_plan_params, quick_cuest_struct.persistWD, quick_cuest_struct.tmpWD,
         &quick_cuest_struct.OEIntPlan));
 
+#ifdef CUESTDEBUG
+    printf ("%s: oei plan persistWD allocation size:\t%zu\n", __func__,
+            quick_cuest_struct.persistWD->deviceBufferSizeInBytes);
+    printf ("%s: oei plan tmpWD allocation size:\t%zu\n", __func__,
+            quick_cuest_struct.tmpWD->deviceBufferSizeInBytes);
+#endif
     quick_cuest_struct.persistOEIntPlanWorkspace = allocateWorkspace (quick_cuest_struct.persistWD);
     cuestWorkspace_t *tmpOEIntPlanWorkspace      = allocateWorkspace (quick_cuest_struct.tmpWD);
     checkCuestErrors (cuestOEIntPlanCreate (quick_cuest_struct.handle, quick_cuest_struct.basis,
@@ -102,6 +114,10 @@ cuest_get_oei_S (double *o)
         cuestOverlapComputeWorkspaceQuery (quick_cuest_struct.handle, quick_cuest_struct.OEIntPlan,
                                            overlap_compute_params, quick_cuest_struct.tmpWD, d_S));
 
+#ifdef CUESTDEBUG
+    printf ("%s: overlap tmpWD allocation size:\t%zu\n", __func__,
+            quick_cuest_struct.tmpWD->deviceBufferSizeInBytes);
+#endif
     cuestWorkspace_t *tmpSWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
     checkCuestErrors (cuestOverlapCompute (quick_cuest_struct.handle, quick_cuest_struct.OEIntPlan,
                                            overlap_compute_params, tmpSWorkspace, d_S));
@@ -152,6 +168,10 @@ cuest_get_oei_T (double *o)
         cuestKineticComputeWorkspaceQuery (quick_cuest_struct.handle, quick_cuest_struct.OEIntPlan,
                                            kinetic_compute_params, quick_cuest_struct.tmpWD, d_T));
 
+#ifdef CUESTDEBUG
+    printf ("%s: kinetic tmpWD allocation size:\t%zu\n", __func__,
+            quick_cuest_struct.tmpWD->deviceBufferSizeInBytes);
+#endif
     cuestWorkspace_t *tmpTWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
     checkCuestErrors (cuestKineticCompute (quick_cuest_struct.handle, quick_cuest_struct.OEIntPlan,
                                            kinetic_compute_params, tmpTWorkspace, d_T));
@@ -203,6 +223,10 @@ cuest_get_oei_V (double *o)
         quick_cuest_struct.tmpWD, quick_cuest_data.ntotalatom, quick_cuest_data.allxyz_gpu,
         quick_cuest_data.allchg_gpu, d_V));
 
+#ifdef CUESTDEBUG
+    printf ("%s: potential tmpWD allocation size:\t%zu\n", __func__,
+            quick_cuest_struct.tmpWD->deviceBufferSizeInBytes);
+#endif
     cuestWorkspace_t *tmpVWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
     checkCuestErrors (
         cuestPotentialCompute (quick_cuest_struct.handle, quick_cuest_struct.OEIntPlan,
@@ -276,6 +300,10 @@ cuest_get_eri_J (double *o, double *P)
         quick_cuest_struct.handle, quick_cuest_struct.DFIntPlan, dfj_compute_params,
         quick_cuest_struct.tmpWD, d_P, d_J));
 
+#ifdef CUESTDEBUG
+    printf ("%s: coulomb tmpWD allocation size:\t%zu\n", __func__,
+            quick_cuest_struct.tmpWD->deviceBufferSizeInBytes);
+#endif
     cuestWorkspace_t *tmpDFJWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
     checkCuestErrors (cuestDFCoulombCompute (quick_cuest_struct.handle,
                                              quick_cuest_struct.DFIntPlan, dfj_compute_params,
@@ -344,6 +372,10 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
         quick_cuest_struct.handle, quick_cuest_struct.DFIntPlan, dfk_compute_params, varBufSiz,
         quick_cuest_struct.tmpWD, nocc, d_C, d_K));
 
+#ifdef CUESTDEBUG
+    printf ("%s: exchange tmpWD allocation size:\t%zu\n", __func__,
+            quick_cuest_struct.tmpWD->deviceBufferSizeInBytes);
+#endif
     cuestWorkspace_t *tmpDFKWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
     checkCuestErrors (cuestDFSymmetricExchangeCompute (
         quick_cuest_struct.handle, quick_cuest_struct.DFIntPlan, dfk_compute_params, varBufSiz,
