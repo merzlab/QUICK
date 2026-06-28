@@ -64,8 +64,7 @@
 #if defined(CUDA) && defined(CUEST)
     use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_loc, c_bool
     use quick_cuest_module, only: cuest_init, cuest_deinit, cuest_init_oei_plan, cuest_init_basis, &
-                                  cuest_get_oei_S, cuest_get_oei_T, cuest_get_oei_V, cuest_init_dfint_plan, &
-                                  unify_cart_norm
+                                  cuest_get_oei_S, cuest_get_oei_T, cuest_get_oei_V, cuest_init_dfint_plan
     ! use quick_aux_basis_module, only: quick_aux_basis, readauxbasis
     use quick_aux_basis_sph_module, only: quick_aux_basis_sph, read_aux_basis_sph
 #endif

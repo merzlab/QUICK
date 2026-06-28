@@ -40,7 +40,7 @@ set(QUICK_MODULES_SOURCES
         quick_cew_module.f90 quick_lri_module.f90 quick_lri_grad_module.f90
 	quick_eri_oshell_module.f90 quick_eri_grad_oshell_module.f90 quick_molsurface_module.f90
 	quick_grad_oshell_module.f90 quick_dftd3_module.f90 quick_molden_module.f90 quick_oeproperties_module.f90
-	quick_io_module.f90 quick_aux_basis_module.f90 quick_aux_basis_sph_module.f90 quick_cuest_module.f90)
+	quick_io_module.f90 quick_aux_basis_sph_module.f90 quick_cuest_module.f90)
 
 set(QUICK_SUBS_FORTRAN_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	degen.f90 denspt.f90 dipole.f90 EffChar.f90
