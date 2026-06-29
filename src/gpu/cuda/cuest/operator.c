@@ -148,6 +148,8 @@ cuest_get_oei_T (double *o)
         exit (EXIT_FAILURE);
     }
 
+    correct_o (o);
+
 #ifdef CUESTDEBUG
     puts ("-------- T --------");
     for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
@@ -204,6 +206,8 @@ cuest_get_oei_V (double *o)
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
+
+    correct_o (o);
 
 #ifdef CUESTDEBUG
     puts ("-------- V --------");
