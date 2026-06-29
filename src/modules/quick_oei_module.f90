@@ -79,7 +79,7 @@ subroutine get1e(deltaO)
 
 #if defined(CUDA) && defined(CUEST)
    use, intrinsic :: iso_c_binding, only: c_loc
-   use quick_cuest_module, only: cuest_deinit_oei_plan, cuest_get_oei_T, cuest_get_oei_V
+   use quick_cuest_module, only: cuest_deinit_oei_plan, cuest_get_oei_T, cuest_get_oei_V, correct_sym_o
 #endif
    
    implicit double precision(a-h,o-z)
@@ -131,9 +131,9 @@ subroutine get1e(deltaO)
 
 #ifdef CUESTDEBUG
            call cuest_get_oei_T(c_loc(tmp_o_T))
-           print *, "======== cuEST T+V ========"
+           print *, "======== uncorrected cuEST T+V ========"
            call PriSym(6, nbasis, tmp_o_T - tmp_o_V, "F12.7")
-           print *, "====== end cuEST T+V ======"
+           print *, "====== end uncorrected cuEST T+V ======"
 
            tmp_o_T = quick_qm_struct%o
            call gpu_get_oei(tmp_o_T)
@@ -182,6 +182,14 @@ subroutine get1e(deltaO)
 #endif
          
          call copySym(quick_qm_struct%o,nbasis)
+#if defined(CUDA) && defined (CUEST)
+         call correct_sym_o(quick_qm_struct%o)
+#ifdef CUESTDEBUG
+         print *, "======== corrected cuEST T+V ========"
+         call PriSym(6, nbasis, quick_qm_struct%o, "F12.7")
+         print *, "====== end corrected cuEST T+V ======"
+#endif
+#endif
 
          quick_qm_struct%oneElecO(:,:) = quick_qm_struct%o(:,:)
 

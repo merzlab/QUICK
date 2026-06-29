@@ -109,47 +109,121 @@ module quick_cuest_module
 
 contains
 
-   ! subroutine unify_cart_norm(coeff)
-   !    !
-   !    ! Undoes extra normalization for cartesian d and f orbitals
-   !    !     d_xy  type has extra 1/sqrt(3)
-   !    !     f_xxy type has extra 1/sqrt(5)
-   !    !     f_xyz type has extra 1/sqrt(15)
-   !    !
-   !    use quick_basis_module, only: itype, ncontract, nbasis
-   !    implicit none
-   !
-   !    double precision, intent(inout) :: coeff(:, :)
-   !    ! counters
-   !    integer :: Ibas, Icon
-   !    ! itype stuff
-   !    integer :: l1, l2, l3, lsum, lmax
-   !    double precision :: k
-   !
-   !    do Ibas = 1, nbasis
-   !       l1 = itype(1, Ibas)
-   !       l2 = itype(2, Ibas)
-   !       l3 = itype(3, Ibas)
-   !       lsum = l1 + l2 + l3
-   !
-   !       k = 1.0d0 ! factor
-   !
-   !       if (lsum == 2 .and. max(l1, max(l2, l3)) == 1) then ! D and off diagonal
-   !          k = dsqrt(3.0d0)
-   !       else if (lsum == 3) then ! F
-   !          lmax = max(l1, max(l2, l3))
-   !          if (lmax == 1) then ! xyz
-   !             k = dsqrt(15.0d0)
-   !          else if (lmax == 2) then ! xxy type
-   !             k = dsqrt(5.0d0)
-   !          end if
-   !       end if
-   !
-   !       if (k /= 1.0d0) then
-   !          do Icon = 1, ncontract(Ibas)
-   !             coeff(Icon, Ibas) = k*coeff(Icon, Ibas)
-   !          end do
-   !       end if
-   !    end do
-   ! end subroutine unify_cart_norm
+   subroutine correct_sym_o(m)
+      !
+      ! Corrects matrix m by fixing the order of d and f orbitals and their normalization
+      !     d_xy  type has extra 1/sqrt(3)
+      !     f_xxy type has extra 1/sqrt(5)
+      !     f_xyz type has extra 1/sqrt(15)
+      !
+      ! QUICK
+      !        1   2   3   4   5   6
+      !     d: xx  xy  yy  xz  yz  zz
+      !     f: xxx xxy xyy yyy xxz xyz yyz xzz yzz zzz
+      !
+      ! cuEST
+      !        1   2   3   4   5   6   7   8   9   10
+      !     d: xx  xy  xz  yy  yz  zz
+      !     f: xxx xxy xxz xyy xyz xzz yyy yyz yzz zzz
+      !
+      use quick_basis_module, only: itype, ncontract, nbasis
+      implicit none
+
+      double precision, intent(inout) :: m(:, :)
+      ! counters
+      integer :: Ibas, Jbas, Icon, Itmp
+      ! itype stuff
+      integer :: l1, l2, l3, lsum, lmax
+      double precision :: sqrt3 = dsqrt(3.0d0)
+      double precision :: sqrt5 = dsqrt(5.0d0)
+      double precision :: sqrt15 = dsqrt(15.0d0)
+
+      integer :: firstdf(nbasis)
+      integer :: ifdf = 0
+
+      double precision :: swaptmp
+      double precision :: swaptmp_arr(nbasis)
+
+#define SLICE_SWAP(i, j)               \
+      swaptmp_arr = m(:, Ibas + i); \
+      m(:, Ibas + i) = m(:, Ibas + j); \
+      m(:, Ibas + j) = swaptmp_arr
+
+      ! first swap columns
+      Ibas = 1
+      do while (Ibas <= nbasis)
+         l1 = itype(1, Ibas)
+         l2 = itype(2, Ibas)
+         l3 = itype(3, Ibas)
+         lsum = l1 + l2 + l3
+
+         if (lsum == 2) then ! d orbital
+            ! swaptmp_arr = m(:, Ibas + 2)
+            ! m(:, Ibas + 2) = m(:, Ibas + 3)
+            ! m(:, Ibas + 3) = swaptmp_arr
+            SLICE_SWAP(2, 3)
+            m(:, Ibas + 1) = m(:, Ibas + 1)*sqrt3
+            m(:, Ibas + 3) = m(:, Ibas + 3)*sqrt3
+            m(:, Ibas + 4) = m(:, Ibas + 4)*sqrt3
+            Ibas = Ibas + 6
+         else if (lsum == 3) then
+            SLICE_SWAP(2, 4)
+            SLICE_SWAP(3, 4)
+            SLICE_SWAP(4, 5)
+            SLICE_SWAP(5, 7)
+            SLICE_SWAP(6, 7)
+            m(:, Ibas + 1) = m(:, Ibas + 1)*sqrt5
+            m(:, Ibas + 2) = m(:, Ibas + 2)*sqrt5
+            m(:, Ibas + 4) = m(:, Ibas + 4)*sqrt5
+            m(:, Ibas + 5) = m(:, Ibas + 5)*sqrt15
+            m(:, Ibas + 6) = m(:, Ibas + 6)*sqrt5
+            m(:, Ibas + 7) = m(:, Ibas + 7)*sqrt5
+            m(:, Ibas + 8) = m(:, Ibas + 8)*sqrt5
+            Ibas = Ibas + 10
+         else
+            Ibas = Ibas + 1
+         end if
+      end do
+
+#define SCALAR_SWAP(i, j) \
+      swaptmp = m(Jbas + i, Ibas); \
+      m(Jbas + i, Ibas) = m(Jbas + j, Ibas); \
+      m(Jbas + j, Ibas) = swaptmp
+
+      do Ibas = 1, nbasis
+         Jbas = 1
+         do while (Jbas <= nbasis)
+            l1 = itype(1, Ibas)
+            l2 = itype(2, Ibas)
+            l3 = itype(3, Ibas)
+            lsum = l1 + l2 + l3
+
+            if (lsum == 2) then
+               SCALAR_SWAP(2, 3)
+               m(Jbas + 1, Ibas) = m(Jbas + 1, Ibas)*sqrt3
+               m(Jbas + 3, Ibas) = m(Jbas + 3, Ibas)*sqrt3
+               m(Jbas + 4, Ibas) = m(Jbas + 4, Ibas)*sqrt3
+               Jbas = Jbas + 6
+            else if (lsum == 3) then
+               SCALAR_SWAP(2, 4)
+               SCALAR_SWAP(3, 4)
+               SCALAR_SWAP(4, 5)
+               SCALAR_SWAP(5, 7)
+               SCALAR_SWAP(6, 7)
+               m(Jbas + 1, Ibas) = m(Jbas + 1, Ibas)*sqrt5
+               m(Jbas + 2, Ibas) = m(Jbas + 2, Ibas)*sqrt5
+               m(Jbas + 4, Ibas) = m(Jbas + 4, Ibas)*sqrt5
+               m(Jbas + 5, Ibas) = m(Jbas + 5, Ibas)*sqrt15
+               m(Jbas + 6, Ibas) = m(Jbas + 6, Ibas)*sqrt5
+               m(Jbas + 7, Ibas) = m(Jbas + 7, Ibas)*sqrt5
+               m(Jbas + 8, Ibas) = m(Jbas + 8, Ibas)*sqrt5
+               Jbas = Jbas + 10
+            else
+               Jbas = Jbas + 1
+            end if
+         end do
+      end do
+   end subroutine correct_sym_o
+#undef SCALAR_SWAP
+#undef SLICE_SWAP
 end module quick_cuest_module
