@@ -67,7 +67,6 @@
                                   cuest_init_dfint_plan, cuest_init_pair_list
     ! use quick_aux_basis_module, only: quick_aux_basis, readauxbasis
     use quick_aux_basis_sph_module, only: quick_aux_basis_sph, read_aux_basis_sph
-    use quick_files_module, only: basisSetName, basisDir
 #endif
 
     implicit none
@@ -77,9 +76,6 @@
     integer :: ierr                     ! return error info
     integer :: i,j,k
     double precision :: t1_t, t2_t
-#if defined(CUDA) && defined(CUEST)
-    character(len=80) :: aux_basis_file
-#endif
 
     common /timer/ t1_t, t2_t
 
@@ -232,19 +228,7 @@
     RECORD_TIME(timer_begin%TIniCuest)
 
     ! read auxiliary basis
-    select case (trim(basisSetName))
-    case ("CC-PVTZ")
-        aux_basis_file = "CC-PVTZ-JKFIT.BAS"
-    case ("DEF2-SVP")
-        aux_basis_file = "DEF2-SVP-JKFIT.BAS"
-    case default
-        aux_basis_file = "DEF2-UNIVERSAL-JKFIT.BAS"
-    end select
-
-    aux_basis_file = trim(basisDir) // "/" // trim(aux_basis_file)
-    print *, "Auxiliary DF Basis File: ", trim(aux_basis_file)
-
-    call read_aux_basis_sph(trim(aux_basis_file), natom, quick_molspec%iattype, ierr)
+    call read_aux_basis_sph(natom, quick_molspec%iattype, ierr)
     if (ierr /= 0) print *, "ERROR: read_aux_basis_sph failed with ierr ", ierr
 
 #ifdef CUESTDEBUG

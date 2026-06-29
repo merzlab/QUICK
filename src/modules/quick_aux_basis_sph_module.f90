@@ -108,7 +108,7 @@ module quick_aux_basis_sph_module
 
 contains
 
-   subroutine read_aux_basis_sph(aux_basisfilename, natomxiao, iattype, ierr)
+   subroutine read_aux_basis_sph(natomxiao, iattype, ierr)
       !
       ! Read a Gaussian94-format auxiliary basis file and fill quick_aux_basis_sph,
       ! storing basis functions as SPHERICAL HARMONICS (pure functions), not
@@ -127,13 +127,14 @@ contains
       use quick_exception_module, only: RaiseException
       use quick_constants_module, only: symbol
       use quick_size_module, only: MAXPRIM_AUX
+      use quick_files_module, only: basisSetName, basisDir
 
       implicit none
-      character(len=*), intent(in) :: aux_basisfilename
       integer, intent(in) :: natomxiao
       integer, intent(in) :: iattype(natomxiao)
       integer, intent(inout) :: ierr
 
+      character(len=80) :: aux_basis_file
       integer :: iauxbasisfile
 
       character(len=120) :: line
@@ -158,7 +159,20 @@ contains
       ! per element, exactly as readbasis() does for the primary basis.
       ! nbasis here counts SPHERICAL (2L+1) functions, not Cartesian ones.
       ! ------------------------------------------------------------------
-      open (newunit=iauxbasisfile, file=aux_basisfilename, status='old', action='read', iostat=ierr)
+
+      select case (trim(basisSetName))
+      case ("CC-PVTZ")
+          aux_basis_file = "CC-PVTZ-JKFIT.BAS"
+      case ("DEF2-SVP")
+          aux_basis_file = "DEF2-SVP-JKFIT.BAS"
+      case default
+          aux_basis_file = "DEF2-UNIVERSAL-JKFIT.BAS"
+      end select
+
+      aux_basis_file = trim(basisDir) // "/" // trim(aux_basis_file)
+      print *, "Auxiliary DF Basis File: ", trim(aux_basis_file)
+
+      open (newunit=iauxbasisfile, file=trim(aux_basis_file), status='old', action='read', iostat=ierr)
       if (ierr /= 0) call RaiseException(ierr)
 
       iofile = 0
