@@ -128,7 +128,6 @@ subroutine get1e(deltaO)
 #if defined(CUDA) && defined(CUEST)
            ! compute V integral
            call cuest_get_oei_V(c_loc(tmp_o_V))
-           quick_qm_struct%o = quick_qm_struct%o - tmp_o_V
 
 #ifdef CUESTDEBUG
            call cuest_get_oei_T(c_loc(tmp_o_T))
@@ -136,12 +135,13 @@ subroutine get1e(deltaO)
            call PriSym(6, nbasis, tmp_o_T - tmp_o_V, "F12.7")
            print *, "====== end cuEST T+V ======"
 
-           tmp_o_T = 0.0d0
+           tmp_o_T = quick_qm_struct%o
            call gpu_get_oei(tmp_o_T)
            print *, "======== quick T+V ========"
            call PriSym(6, nbasis, tmp_o_T, "F12.7")
            print *, "====== end quick T+V ======"
 #endif
+           quick_qm_struct%o = quick_qm_struct%o - tmp_o_V
            call cuest_deinit_oei_plan()
 #else
            call gpu_get_oei(quick_qm_struct%o)
