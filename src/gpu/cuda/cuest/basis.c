@@ -43,22 +43,6 @@ get_L_cart (uint64_t quick_ktype)
  */
 #define get_L_sph(quick_ktype) (((quick_ktype) - 1) >> 1)
 
-static void
-reorder_d (double *a)
-{
-    SWAP (a[2], a[3], double);
-}
-
-static void
-reorder_f (double *a)
-{
-    SWAP (a[2], a[4], double);
-    SWAP (a[3], a[4], double);
-    SWAP (a[4], a[5], double);
-    SWAP (a[5], a[7], double);
-    SWAP (a[6], a[7], double);
-}
-
 void
 cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *kprim_, double *aexp,
                   double *dcoeff, bool aux)
@@ -158,10 +142,12 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
         quick_cuest_data.nshell += nsp;
 
     uint64_t *chk_katom_ktype_kprim = malloc (3 * nshell * sizeof (uint64_t));
+    if (!aux)
+        quick_cuest_data.chk_katom_ktype_kprim = chk_katom_ktype_kprim;
     // expanded arrays (SP -> S and P)
     uint64_t *katom = chk_katom_ktype_kprim;
-    uint64_t *ktype = chk_katom_ktype_kprim + nshell;
-    uint64_t *kprim = chk_katom_ktype_kprim + (nshell << 1);
+    uint64_t *ktype = katom + nshell;
+    uint64_t *kprim = ktype + nshell;
 
     // needed for basis
 
@@ -198,6 +184,8 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
 
     // first_basis_function but instead first_basis_shell
     size_t *ifshell = malloc (nshell * sizeof (size_t));
+    if (!aux)
+        quick_cuest_data.ifshell = ifshell;
     // nshells_per_atom[a] is number of shells atom `a` has.
     // This is the same as the number of times it appears in `katom`.
     uint64_t *nshells_per_atom = calloc (quick_cuest_data.natom, sizeof (uint64_t));
@@ -208,7 +196,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
         uint64_t a = katom[i] - 1;
         ++nshells_per_atom[a];
         if (i > 0)
-            ifshell[i] = ifshell[i - 1] + ktype[i - 1]; // ktype stores number of cartesian orbitals
+            ifshell[i] = ifshell[i - 1] + ktype[i - 1];
         // printf ("ifshell[%zu]=%zu\n", i, ifshell[i]);
     }
 
@@ -249,8 +237,10 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
     }
 
     // free (coeff);
-    free (ifshell);
-    free (chk_katom_ktype_kprim);
+    if (aux) {
+        free (ifshell);
+        free (chk_katom_ktype_kprim);
+    }
 
     checkCuestErrors (cuestParametersDestroy (CUEST_AOSHELL_PARAMETERS, aoshell_params));
 

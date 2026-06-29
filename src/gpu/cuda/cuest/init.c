@@ -176,6 +176,8 @@ cuest_deinit ()
     checkCuestErrors (cuestDestroy (quick_cuest_struct.handle));
 
     free (quick_cuest_data.allchg);
+    free (quick_cuest_data.ifshell);
+    free (quick_cuest_data.chk_katom_ktype_kprim);
 
     if (cudaFree (quick_cuest_data.allxyz_gpu) != cudaSuccess) {
         fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);

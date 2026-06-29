@@ -34,17 +34,19 @@ typedef struct {
 } quick_cuest_struct_t;
 
 typedef struct {
-    uint64_t natom;
-    uint64_t nshell;
-    uint64_t nbasis;
-    uint64_t nauxshell;
-    uint64_t maxcontract;
-    uint64_t maxcontract_aux;
-    uint64_t ntotalatom;
-    double  *xyz;
-    double  *allxyz_gpu;
-    double  *allchg;
-    double  *allchg_gpu;
+    uint64_t  natom;
+    uint64_t  nshell;
+    uint64_t  nbasis;
+    uint64_t  nauxshell;
+    uint64_t  maxcontract;
+    uint64_t  maxcontract_aux;
+    uint64_t  ntotalatom;
+    double   *xyz;
+    double   *allxyz_gpu;
+    double   *allchg;
+    double   *allchg_gpu;
+    size_t   *ifshell;
+    uint64_t *chk_katom_ktype_kprim;
 } quick_cuest_data_t;
 
 extern quick_cuest_struct_t quick_cuest_struct;
