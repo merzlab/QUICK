@@ -16,50 +16,53 @@ init_correct ()
     uint64_t  nshell = quick_cuest_data.nshell;
     uint64_t *ktype  = quick_cuest_memchk.chk_katom_ktype_kprim + nshell;
 
-    double *tmpbuf_dp        = malloc (nbasis * sizeof (double));
-    void   *chk_firstdf_mark = malloc (nbasis * (sizeof (size_t) + sizeof (bool)));
-    size_t *firstdf          = chk_firstdf_mark;
-    bool   *mark             = (bool *)((size_t *)chk_firstdf_mark + nbasis);
-    size_t  ifdf             = 0;
+    double *tmpbuf_dp         = malloc (nbasis * sizeof (double));
+    void   *chk_firstd_firstf = malloc ((nbasis + 1) * sizeof (size_t));
+
+    // all have length ceil(nbasis/2)
+    const size_t len    = ((nbasis + 1) >> 1);
+    size_t      *firstd = chk_firstd_firstf;
+    size_t      *firstf = firstd + +len;
+    size_t       ifd = 0, iff = 0;
 
     // get index of d and f orbitals
-    for (size_t i = 0; i < nshell; ++i)
-        if (ktype[i] == KTYPE_CART_D || ktype[i] == KTYPE_CART_F) {
-            firstdf[ifdf] = quick_cuest_data.ifshell[i];
-            mark[ifdf]    = ktype[i] == KTYPE_CART_D;
-            ++ifdf;
-        }
+    for (size_t i = 0; i < nshell; ++i) {
+        if (ktype[i] == KTYPE_CART_D)
+            firstd[ifd++] = quick_cuest_data.ifshell[i];
+        else if (ktype[i] == KTYPE_CART_D)
+            firstf[iff++] = quick_cuest_data.ifshell[i];
+    }
 
-    quick_cuest_memchk.tmpbuf_dp        = tmpbuf_dp;
-    quick_cuest_memchk.chk_firstdf_mark = chk_firstdf_mark;
-    quick_cuest_memchk.ifdf             = ifdf;
-
-#ifdef CUESTDEBUG
-    printf ("ifdf=%zu\n", ifdf);
-    for (size_t i = 0; i < ifdf; ++i)
-        printf ("firstdf[%zu]=%zu\tmark[%zu]=%s\n", i, firstdf[i], i, mark[i] ? "T" : "F");
-#endif
+    quick_cuest_memchk.tmpbuf_dp         = tmpbuf_dp;
+    quick_cuest_memchk.chk_firstd_firstf = chk_firstd_firstf;
+    quick_cuest_memchk.ifd               = ifd;
+    quick_cuest_memchk.iff               = iff;
 }
 
 void
 deinit_correct ()
 {
-    free (quick_cuest_memchk.chk_firstdf_mark);
+    free (quick_cuest_memchk.chk_firstd_firstf);
     free (quick_cuest_memchk.tmpbuf_dp);
 }
 
-#define MEMSWP_IND(ii, jj)                                                                         \
+#define APPLY_NORM_ROW(basei, ii, normfac)                                                         \
     do {                                                                                           \
-        memcpy (tmpbuf, get_row_ptr (o, firstdf[i] + (ii), nbasis), rowsiz);                       \
-        memcpy (get_row_ptr (o, firstdf[i] + (ii), nbasis),                                        \
-                get_row_ptr (o, firstdf[i] + (jj), nbasis), rowsiz);                               \
-        memcpy (get_row_ptr (o, firstdf[i] + (jj), nbasis), tmpbuf, rowsiz);                       \
+        for (int jjj = 0; jjj < nbasis; ++jjj)                                                     \
+            get (o, basei + (ii), jjj, nbasis) *= (normfac);                                       \
+    } while (0);
+
+#define MEMSWP_IND(basei, ii, jj)                                                                  \
+    do {                                                                                           \
+        memcpy (tmpbuf, get_row_ptr (o, (basei) + (ii), nbasis), rowsiz);                          \
+        memcpy (get_row_ptr (o, (basei) + (ii), nbasis), get_row_ptr (o, (basei) + (jj), nbasis),  \
+                rowsiz);                                                                           \
+        memcpy (get_row_ptr (o, (basei) + (jj), nbasis), tmpbuf, rowsiz);                          \
     } while (0)
 
-#define SWP_IND(ii, jj)                                                                            \
+#define SWP_IND(basei, ii, jj)                                                                     \
     do {                                                                                           \
-        SWAP (get (o, i, firstdf[j] + (ii), nbasis), get (o, i, firstdf[j] + (jj), nbasis),        \
-              double);                                                                             \
+        SWAP (get (o, i, (basei) + (ii), nbasis), get (o, i, (basei) + (jj), nbasis), double);     \
     } while (0)
 
 /**
@@ -89,9 +92,10 @@ correct_o (double *o, uint8_t qspec)
     uint64_t nbasis = quick_cuest_data.nbasis;
     uint64_t nshell = quick_cuest_data.nshell;
 
-    size_t *firstdf = quick_cuest_memchk.chk_firstdf_mark;
-    bool   *mark    = (bool *)((size_t *)quick_cuest_memchk.chk_firstdf_mark + nbasis);
-    size_t  ifdf    = quick_cuest_memchk.ifdf;
+    size_t *firstd = quick_cuest_memchk.chk_firstd_firstf;
+    size_t *firstf = firstd + ((nbasis + 1) >> 1);
+    size_t  ifd    = quick_cuest_memchk.ifd;
+    size_t  iff    = quick_cuest_memchk.iff;
 
     double *tmpbuf = quick_cuest_memchk.tmpbuf_dp;
 
@@ -102,116 +106,124 @@ correct_o (double *o, uint8_t qspec)
     if (reorder) {
         // copy row col intersections to other side of diagonal
         // right now only i>=j is filled
-        for (size_t i = 0; i < ifdf; ++i)
+        for (size_t i = 0; i < ifd; ++i)
             for (size_t j = 0; j < i; ++j)
-                get (o, firstdf[j], firstdf[i], nbasis) = get (o, firstdf[i], firstdf[j], nbasis);
+                get (o, firstd[j], firstd[i], nbasis) = get (o, firstd[i], firstd[j], nbasis);
+
+        for (size_t i = 0; i < iff; ++i)
+            for (size_t j = 0; j < i; ++j)
+                get (o, firstf[j], firstf[i], nbasis) = get (o, firstf[i], firstf[j], nbasis);
     }
 
     const size_t rowsiz = nbasis * sizeof (double);
 
-#define APPLY_NORM_ROW(ii, norm)                                                                   \
-    do {                                                                                           \
-        for (int j = 0; j < nbasis; ++j)                                                           \
-            get (o, firstdf[i] + (ii), j, nbasis) *= (norm);                                       \
-    } while (0);
-
     // normalize then reorder so normalize doesn't depend on if we reorder
-    for (int i = 0; i < ifdf; ++i) {
-        if (mark[i]) {
-            if (norm) {
-                if (normfromquick) {
-                    APPLY_NORM_ROW (1, SQRT_3);
-                    APPLY_NORM_ROW (3, SQRT_3);
-                    APPLY_NORM_ROW (4, SQRT_3);
-                } else {
-                    APPLY_NORM_ROW (1, SQRT_3);
-                    APPLY_NORM_ROW (2, SQRT_3);
-                    APPLY_NORM_ROW (4, SQRT_3);
-                }
+    if (norm) {
+        if (normfromquick) {
+            // row normalization
+            for (int i = 0; i < ifd; ++i) {
+                APPLY_NORM_ROW (firstd[i], 1, SQRT_3);
+                APPLY_NORM_ROW (firstd[i], 3, SQRT_3);
+                APPLY_NORM_ROW (firstd[i], 4, SQRT_3);
             }
 
-            if (reorder)
-                MEMSWP_IND (2, 3);
+            for (int i = 0; i < iff; ++i) {
+                APPLY_NORM_ROW (firstf[i], 1, SQRT_5);
+                APPLY_NORM_ROW (firstf[i], 2, SQRT_5);
+                APPLY_NORM_ROW (firstf[i], 4, SQRT_5);
+                APPLY_NORM_ROW (firstf[i], 5, SQRT_15);
+                APPLY_NORM_ROW (firstf[i], 6, SQRT_5);
+                APPLY_NORM_ROW (firstf[i], 7, SQRT_5);
+                APPLY_NORM_ROW (firstf[i], 8, SQRT_5);
+            }
+
+            // column normalization
+            for (int i = 0; i < nbasis; ++i) {
+                for (int j = 0; j < ifd; ++j) {
+                    get (o, i, firstd[j] + 1, nbasis) *= SQRT_3;
+                    get (o, i, firstd[j] + 3, nbasis) *= SQRT_3;
+                    get (o, i, firstd[j] + 4, nbasis) *= SQRT_3;
+                }
+
+                for (int j = 0; j < iff; ++j) {
+                    get (o, i, firstf[j] + 1, nbasis) *= SQRT_5;
+                    get (o, i, firstf[j] + 2, nbasis) *= SQRT_5;
+                    get (o, i, firstf[j] + 4, nbasis) *= SQRT_5;
+                    get (o, i, firstf[j] + 5, nbasis) *= SQRT_15;
+                    get (o, i, firstf[j] + 6, nbasis) *= SQRT_5;
+                    get (o, i, firstf[j] + 7, nbasis) *= SQRT_5;
+                    get (o, i, firstf[j] + 8, nbasis) *= SQRT_5;
+                }
+            }
         } else {
-            if (norm) {
-                if (normfromquick) {
-                    APPLY_NORM_ROW (1, SQRT_5);
-                    APPLY_NORM_ROW (2, SQRT_5);
-                    APPLY_NORM_ROW (4, SQRT_5);
-                    APPLY_NORM_ROW (5, SQRT_15);
-                    APPLY_NORM_ROW (6, SQRT_5);
-                    APPLY_NORM_ROW (7, SQRT_5);
-                    APPLY_NORM_ROW (8, SQRT_5);
-                } else {
-                    APPLY_NORM_ROW (1, SQRT_5);
-                    APPLY_NORM_ROW (2, SQRT_5);
-                    APPLY_NORM_ROW (3, SQRT_5);
-                    APPLY_NORM_ROW (4, SQRT_15);
-                    APPLY_NORM_ROW (5, SQRT_5);
-                    APPLY_NORM_ROW (7, SQRT_5);
-                    APPLY_NORM_ROW (8, SQRT_5);
-                }
+            // row normalization
+            for (int i = 0; i < ifd; ++i) {
+                APPLY_NORM_ROW (firstd[i], 1, SQRT_3);
+                APPLY_NORM_ROW (firstd[i], 2, SQRT_3);
+                APPLY_NORM_ROW (firstd[i], 4, SQRT_3);
             }
 
-            if (reorder) {
-                MEMSWP_IND (2, 4);
-                MEMSWP_IND (3, 4);
-                MEMSWP_IND (4, 5);
-                MEMSWP_IND (5, 7);
-                MEMSWP_IND (6, 7);
+            for (int i = 0; i < iff; ++i) {
+                APPLY_NORM_ROW (firstf[i], 1, SQRT_5);
+                APPLY_NORM_ROW (firstf[i], 2, SQRT_5);
+                APPLY_NORM_ROW (firstf[i], 3, SQRT_5);
+                APPLY_NORM_ROW (firstf[i], 4, SQRT_15);
+                APPLY_NORM_ROW (firstf[i], 5, SQRT_5);
+                APPLY_NORM_ROW (firstf[i], 7, SQRT_5);
+                APPLY_NORM_ROW (firstf[i], 8, SQRT_5);
+            }
+
+            // column normalization
+            for (int i = 0; i < nbasis; ++i) {
+                for (int j = 0; j < ifd; ++j) {
+                    get (o, i, firstd[j] + 1, nbasis) *= SQRT_3;
+                    get (o, i, firstd[j] + 2, nbasis) *= SQRT_3;
+                    get (o, i, firstd[j] + 4, nbasis) *= SQRT_3;
+                }
+
+                for (int j = 0; j < iff; ++j) {
+                    get (o, i, firstf[j] + 1, nbasis) *= SQRT_5;
+                    get (o, i, firstf[j] + 2, nbasis) *= SQRT_5;
+                    get (o, i, firstf[j] + 3, nbasis) *= SQRT_5;
+                    get (o, i, firstf[j] + 4, nbasis) *= SQRT_15;
+                    get (o, i, firstf[j] + 5, nbasis) *= SQRT_5;
+                    get (o, i, firstf[j] + 7, nbasis) *= SQRT_5;
+                    get (o, i, firstf[j] + 8, nbasis) *= SQRT_5;
+                }
             }
         }
     }
-#undef APPLY_NORM_ROW
 
-    for (int i = 0; i < nbasis; ++i)
-        for (int j = 0; j < ifdf; ++j) {
-            if (mark[j]) {
-                if (norm) {
-                    if (normfromquick) {
-                        get (o, i, firstdf[j] + 1, nbasis) *= SQRT_3;
-                        get (o, i, firstdf[j] + 3, nbasis) *= SQRT_3;
-                        get (o, i, firstdf[j] + 4, nbasis) *= SQRT_3;
-                    } else {
-                        get (o, i, firstdf[j] + 1, nbasis) *= SQRT_3;
-                        get (o, i, firstdf[j] + 2, nbasis) *= SQRT_3;
-                        get (o, i, firstdf[j] + 4, nbasis) *= SQRT_3;
-                    }
-                }
+    if (reorder) {
+        for (int i = 0; i < ifd; ++i)
+            MEMSWP_IND (firstd[i], 2, 3);
 
-                if (reorder)
-                    SWP_IND (2, 3);
-            } else {
-                if (norm) {
-                    if (normfromquick) {
-                        get (o, i, firstdf[j] + 1, nbasis) *= SQRT_5;
-                        get (o, i, firstdf[j] + 2, nbasis) *= SQRT_5;
-                        get (o, i, firstdf[j] + 4, nbasis) *= SQRT_5;
-                        get (o, i, firstdf[j] + 5, nbasis) *= SQRT_15;
-                        get (o, i, firstdf[j] + 6, nbasis) *= SQRT_5;
-                        get (o, i, firstdf[j] + 7, nbasis) *= SQRT_5;
-                        get (o, i, firstdf[j] + 8, nbasis) *= SQRT_5;
-                    } else {
-                        get (o, i, firstdf[j] + 1, nbasis) *= SQRT_5;
-                        get (o, i, firstdf[j] + 2, nbasis) *= SQRT_5;
-                        get (o, i, firstdf[j] + 3, nbasis) *= SQRT_5;
-                        get (o, i, firstdf[j] + 4, nbasis) *= SQRT_15;
-                        get (o, i, firstdf[j] + 5, nbasis) *= SQRT_5;
-                        get (o, i, firstdf[j] + 7, nbasis) *= SQRT_5;
-                        get (o, i, firstdf[j] + 8, nbasis) *= SQRT_5;
-                    }
-                }
+        for (int i = 0; i < iff; ++i) {
+            MEMSWP_IND (firstf[i], 2, 4);
+            MEMSWP_IND (firstf[i], 3, 4);
+            MEMSWP_IND (firstf[i], 4, 5);
+            MEMSWP_IND (firstf[i], 5, 7);
+            MEMSWP_IND (firstf[i], 6, 7);
+        }
 
-                if (reorder) {
-                    SWP_IND (2, 4);
-                    SWP_IND (3, 4);
-                    SWP_IND (4, 5);
-                    SWP_IND (5, 7);
-                    SWP_IND (6, 7);
-                }
+        for (int i = 0; i < nbasis; ++i) {
+            for (int j = 0; j < ifd; ++j)
+                SWP_IND (firstd[j], 2, 3);
+
+            for (int j = 0; j < iff; ++j) {
+                SWP_IND (firstf[j], 2, 4);
+                SWP_IND (firstf[j], 3, 4);
+                SWP_IND (firstf[j], 4, 5);
+                SWP_IND (firstf[j], 5, 7);
+                SWP_IND (firstf[j], 6, 7);
             }
         }
+    }
 }
+
+#undef APPLY_NORM_ROW
+#undef MEMSWP_IND
+#undef SWP_IND
 
 void
 correct_C (double *C, size_t nocc, uint8_t qspec)
@@ -219,9 +231,10 @@ correct_C (double *C, size_t nocc, uint8_t qspec)
     uint64_t nbasis = quick_cuest_data.nbasis;
     uint64_t nshell = quick_cuest_data.nshell;
 
-    size_t *firstdf = quick_cuest_memchk.chk_firstdf_mark;
-    bool   *mark    = (bool *)((size_t *)quick_cuest_memchk.chk_firstdf_mark + nbasis);
-    size_t  ifdf    = quick_cuest_memchk.ifdf;
+    size_t *firstd = quick_cuest_memchk.chk_firstd_firstf;
+    size_t *firstf = firstd + ((nbasis + 1) >> 1);
+    size_t  ifd    = quick_cuest_memchk.ifd;
+    size_t  iff    = quick_cuest_memchk.iff;
 
     bool reorder       = qspec & CORRECT_REORDER;
     bool norm          = qspec & CORRECT_NORM_;
@@ -237,48 +250,57 @@ correct_C (double *C, size_t nocc, uint8_t qspec)
     puts ("====== end C from QUICK ======");
 #endif
 
-    for (size_t i = 0, end = nocc * quick_cuest_data.nbasis; i < end; i += quick_cuest_data.nbasis)
-        for (size_t j = 0; j < ifdf; ++j) {
-            if (mark[j]) {
-                if (norm) {
-                    if (normfromquick) {
-                        C[firstdf[j] + i + 1] *= SQRT_3;
-                        C[firstdf[j] + i + 3] *= SQRT_3;
-                        C[firstdf[j] + i + 4] *= SQRT_3;
-                    } else {
-                        C[firstdf[j] + i + 1] *= SQRT_3;
-                        C[firstdf[j] + i + 2] *= SQRT_3;
-                        C[firstdf[j] + i + 4] *= SQRT_3;
-                    }
+    const size_t endi = nocc * nbasis;
+
+    if (norm) {
+        if (normfromquick) {
+            for (size_t i = 0; i < endi; i += nbasis) {
+                for (size_t j = 0; j < ifd; ++j) {
+                    C[firstd[j] + i + 1] *= SQRT_3;
+                    C[firstd[j] + i + 3] *= SQRT_3;
+                    C[firstd[j] + i + 4] *= SQRT_3;
                 }
 
-                if (reorder)
-                    reorder_d (C + firstdf[j] + i);
-            } else {
-                if (norm) {
-                    if (normfromquick) {
-                        C[firstdf[j] + i + 1] *= SQRT_5;
-                        C[firstdf[j] + i + 2] *= SQRT_5;
-                        C[firstdf[j] + i + 4] *= SQRT_5;
-                        C[firstdf[j] + i + 5] *= SQRT_15;
-                        C[firstdf[j] + i + 6] *= SQRT_5;
-                        C[firstdf[j] + i + 7] *= SQRT_5;
-                        C[firstdf[j] + i + 8] *= SQRT_5;
-                    } else {
-                        C[firstdf[j] + i + 1] *= SQRT_5;
-                        C[firstdf[j] + i + 2] *= SQRT_5;
-                        C[firstdf[j] + i + 3] *= SQRT_5;
-                        C[firstdf[j] + i + 4] *= SQRT_15;
-                        C[firstdf[j] + i + 5] *= SQRT_5;
-                        C[firstdf[j] + i + 7] *= SQRT_5;
-                        C[firstdf[j] + i + 8] *= SQRT_5;
-                    }
+                for (size_t j = 0; j < iff; ++j) {
+                    C[firstf[j] + i + 1] *= SQRT_5;
+                    C[firstf[j] + i + 2] *= SQRT_5;
+                    C[firstf[j] + i + 4] *= SQRT_5;
+                    C[firstf[j] + i + 5] *= SQRT_15;
+                    C[firstf[j] + i + 6] *= SQRT_5;
+                    C[firstf[j] + i + 7] *= SQRT_5;
+                    C[firstf[j] + i + 8] *= SQRT_5;
+                }
+            }
+        } else {
+            for (size_t i = 0; i < endi; i += nbasis) {
+                for (size_t j = 0; j < ifd; ++j) {
+                    C[firstd[j] + i + 1] *= SQRT_3;
+                    C[firstd[j] + i + 2] *= SQRT_3;
+                    C[firstd[j] + i + 4] *= SQRT_3;
                 }
 
-                if (reorder)
-                    reorder_f (C + firstdf[j] + i);
+                for (size_t j = 0; j < iff; ++j) {
+                    C[firstf[j] + i + 1] *= SQRT_5;
+                    C[firstf[j] + i + 2] *= SQRT_5;
+                    C[firstf[j] + i + 3] *= SQRT_5;
+                    C[firstf[j] + i + 4] *= SQRT_15;
+                    C[firstf[j] + i + 5] *= SQRT_5;
+                    C[firstf[j] + i + 7] *= SQRT_5;
+                    C[firstf[j] + i + 8] *= SQRT_5;
+                }
             }
         }
+    }
+
+    if (reorder) {
+        for (size_t i = 0; i < endi; i += nbasis) {
+            for (size_t j = 0; j < ifd; ++j)
+                reorder_d (C + firstd[j] + i);
+
+            for (size_t j = 0; j < iff; ++j)
+                reorder_f (C + firstf[j] + i);
+        }
+    }
 
 #ifdef CUESTDEBUG
     puts ("======== C reordered ========");
@@ -290,6 +312,3 @@ correct_C (double *C, size_t nocc, uint8_t qspec)
     puts ("====== end C reordered ======");
 #endif
 }
-
-#undef MEMSWP_IND
-#undef SWP_IND

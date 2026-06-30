@@ -26,10 +26,9 @@ cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nauxshell, in
     // init handle //
     // =========== //
 
-    cuestHandle_t           handle = quick_cuest_struct.handle;
     cuestHandleParameters_t handle_params;
     checkCuestErrors (cuestParametersCreate (CUEST_HANDLE_PARAMETERS, &handle_params));
-    checkCuestErrors (cuestCreate (handle_params, &handle));
+    checkCuestErrors (cuestCreate (handle_params, &quick_cuest_struct.handle));
     checkCuestErrors (cuestParametersDestroy (CUEST_HANDLE_PARAMETERS, handle_params));
 
     // ========================== //
