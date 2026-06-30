@@ -94,6 +94,8 @@ cuest_get_oei_S (double *o)
         exit (EXIT_FAILURE);
     }
 
+    correct_o (o);
+
 #ifdef CUESTDEBUG
     puts ("-------- S --------");
     for (int i = 0; i < quick_cuest_data.nbasis; ++i) {

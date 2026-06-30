@@ -31,6 +31,8 @@ cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nauxshell, in
     checkCuestErrors (cuestCreate (handle_params, &quick_cuest_struct.handle));
     checkCuestErrors (cuestParametersDestroy (CUEST_HANDLE_PARAMETERS, handle_params));
 
+    cuestSetMathMode (quick_cuest_struct.handle, CUEST_NATIVE_FP64_MATH_MODE);
+
     // ========================== //
     // init workspace descriptors //
     // ========================== //
