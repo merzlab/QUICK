@@ -247,7 +247,7 @@ cuest_get_eri_J (double *o, double *P)
     puts ("------ END uncorrected cuEST DENSITY MATRIX ------");
 #endif
 
-    correct_o (P, CORRECT_REORDER);
+    correct_o (P, CORRECT_REORDER_AND_NORM);
 
 #ifdef CUESTDEBUG
     puts ("-------- uncorrected cuEST DENSITY MATRIX --------");
@@ -272,7 +272,7 @@ cuest_get_eri_J (double *o, double *P)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (P, CORRECT_REORDER);
+    correct_o (P, CORRECT_REORDER_AND_NORM);
 
     cuestDFCoulombComputeParameters_t dfj_compute_params;
     checkCuestErrors (
@@ -331,7 +331,7 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
         exit (EXIT_FAILURE);
     }
 
-    reorder_PC (C, nocc);
+    correct_C (C, nocc, CORRECT_REORDER_AND_NORM);
 
     double *d_C;
     size_t  d_C_siz = nocc * quick_cuest_data.nbasis * sizeof (double);
@@ -345,7 +345,7 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
         exit (EXIT_FAILURE);
     }
 
-    reorder_PC (C, nocc);
+    correct_C (C, nocc, CORRECT_REORDER_AND_NORM);
 
     cuestDFSymmetricExchangeComputeParameters_t dfk_compute_params;
     checkCuestErrors (

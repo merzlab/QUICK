@@ -10,6 +10,6 @@
 #define CORRECT_REORDER_AND_NORM 3 // 0b11
 
 void correct_o (double *o, uint8_t qspec);
-void reorder_PC (double *C, size_t nocc);
+void correct_C (double *C, size_t nocc, uint8_t qspec);
 
 #endif

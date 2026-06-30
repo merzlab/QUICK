@@ -181,7 +181,7 @@ correct_o (double *o, uint8_t qspec)
 }
 
 void
-reorder_PC (double *C, size_t nocc)
+correct_C (double *C, size_t nocc, uint8_t qspec)
 {
     uint64_t nbasis = quick_cuest_data.nbasis;
     uint64_t nshell = quick_cuest_data.nshell;
@@ -189,6 +189,9 @@ reorder_PC (double *C, size_t nocc)
     size_t *firstdf = quick_cuest_memchk.chk_firstdf_mark;
     bool   *mark    = (bool *)((size_t *)quick_cuest_memchk.chk_firstdf_mark + nbasis);
     size_t  ifdf    = quick_cuest_memchk.ifdf;
+
+    bool reorder = qspec & CORRECT_REORDER;
+    bool norm    = qspec & CORRECT_NORM;
 
 #ifdef CUESTDEBUG
     puts ("======== C from QUICK ========");
@@ -202,10 +205,27 @@ reorder_PC (double *C, size_t nocc)
 
     for (size_t i = 0, end = nocc * quick_cuest_data.nbasis; i < end; i += quick_cuest_data.nbasis)
         for (size_t j = 0; j < ifdf; ++j) {
-            if (mark[j])
-                reorder_d (C + firstdf[j] + i);
-            else
-                reorder_f (C + firstdf[j] + i);
+            if (mark[j]) {
+                if (norm) {
+                    C[firstdf[j] + i + 1] *= SQRT_3;
+                    C[firstdf[j] + i + 2] *= SQRT_3;
+                    C[firstdf[j] + i + 4] *= SQRT_3;
+                }
+
+                if (reorder)
+                    reorder_d (C + firstdf[j] + i);
+            } else {
+                C[firstdf[j] + i + 1] *= SQRT_5;
+                C[firstdf[j] + i + 2] *= SQRT_5;
+                C[firstdf[j] + i + 3] *= SQRT_5;
+                C[firstdf[j] + i + 4] *= SQRT_15;
+                C[firstdf[j] + i + 5] *= SQRT_5;
+                C[firstdf[j] + i + 7] *= SQRT_5;
+                C[firstdf[j] + i + 8] *= SQRT_5;
+
+                if (reorder)
+                    reorder_f (C + firstdf[j] + i);
+            }
         }
 
 #ifdef CUESTDEBUG
