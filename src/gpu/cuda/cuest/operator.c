@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef LOCAL
 #include "/Users/msun/rehs2026/cuest/fake_cuda_headers/cuda_runtime.h"
@@ -247,16 +248,18 @@ cuest_get_eri_J (double *o, double *P)
     puts ("------ END uncorrected cuEST DENSITY MATRIX ------");
 #endif
 
-    correct_o (P, CORRECT_REORDER_AND_NORM);
+    memcpy (quick_cuest_memchk.tmp_o, P,
+            quick_cuest_data.nbasis * quick_cuest_data.nbasis * sizeof (double));
+    correct_o (quick_cuest_memchk.tmp_o, CORRECT_REORDER_AND_NORM);
 
 #ifdef CUESTDEBUG
-    puts ("-------- uncorrected cuEST DENSITY MATRIX --------");
+    puts ("-------- corrected cuEST DENSITY MATRIX --------");
     for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
         for (int j = 0; j < quick_cuest_data.nbasis; ++j)
-            printf ("%f ", get (P, i, j, quick_cuest_data.nbasis));
+            printf ("%f ", get (quick_cuest_memchk.tmp_o, i, j, quick_cuest_data.nbasis));
         putchar ('\n');
     }
-    puts ("------ END uncorrected cuEST DENSITY MATRIX ------");
+    puts ("------ END corrected cuEST DENSITY MATRIX ------");
 #endif
 
     // density matrix
@@ -267,12 +270,11 @@ cuest_get_eri_J (double *o, double *P)
         exit (EXIT_FAILURE);
     }
 
-    if (cudaMemcpy (d_P, P, d_P_siz, cudaMemcpyHostToDevice) != cudaSuccess) {
+    if (cudaMemcpy (d_P, quick_cuest_memchk.tmp_o, d_P_siz, cudaMemcpyHostToDevice)
+        != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
-
-    correct_o (P, CORRECT_REORDER_AND_NORM);
 
     cuestDFCoulombComputeParameters_t dfj_compute_params;
     checkCuestErrors (
@@ -324,14 +326,13 @@ cuest_get_eri_J (double *o, double *P)
 void
 cuest_get_eri_K (double *o, double *C, int64_t nocc)
 {
+
     double *d_K;
     size_t  d_K_siz = quick_cuest_data.nbasis * quick_cuest_data.nbasis * sizeof (double);
     if (cudaMalloc ((void **)&d_K, d_K_siz) != cudaSuccess) {
         fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
-
-    correct_C (C, nocc, CORRECT_REORDER_AND_NORM);
 
     double *d_C;
     size_t  d_C_siz = nocc * quick_cuest_data.nbasis * sizeof (double);
@@ -340,12 +341,17 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
         exit (EXIT_FAILURE);
     }
 
-    if (cudaMemcpy (d_C, C, d_C_siz, cudaMemcpyHostToDevice) != cudaSuccess) {
+    if (quick_cuest_memchk.tmp_C == NULL)
+        quick_cuest_memchk.tmp_C = malloc (d_C_siz);
+
+    memcpy (quick_cuest_memchk.tmp_C, C, d_C_siz);
+    correct_C (quick_cuest_memchk.tmp_C, nocc, CORRECT_REORDER_AND_NORM);
+
+    if (cudaMemcpy (d_C, quick_cuest_memchk.tmp_C, d_C_siz, cudaMemcpyHostToDevice)
+        != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
-
-    correct_C (C, nocc, CORRECT_REORDER_AND_NORM);
 
     cuestDFSymmetricExchangeComputeParameters_t dfk_compute_params;
     checkCuestErrors (

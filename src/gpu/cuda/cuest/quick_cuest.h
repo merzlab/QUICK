@@ -49,7 +49,9 @@ typedef struct {
 } quick_cuest_data_t;
 
 typedef struct {
-    uint64_t *chk_katom_ktype_kprim;
+    double   *tmp_o;                 // initialized to nbasis x nbasis by cuest_init
+    double   *tmp_C;                 // initialized to NULL, must be manually malloced
+    uint64_t *chk_katom_ktype_kprim; // initialized in cuest_init
     void     *chk_firstdf_mark; // used for reordering density matrix and molecular coefficients
     size_t    ifdf;             // ^^ also
     double   *tmpbuf_dp;        // ^^ also

@@ -57,6 +57,9 @@ cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nauxshell, in
     // init arrays //
     // =========== //
 
+    quick_cuest_memchk.tmp_o = malloc (nbasis * nbasis * sizeof (double));
+    quick_cuest_memchk.tmp_C = NULL;
+
     size_t chg_siz        = natom * sizeof (double);
     size_t extchg_siz     = nextatom * sizeof (double);
     size_t xyz_gpu_siz    = 3 * chg_siz;
@@ -182,6 +185,7 @@ cuest_deinit ()
     free (quick_cuest_data.allchg);
     free (quick_cuest_data.ifshell);
     free (quick_cuest_memchk.chk_katom_ktype_kprim);
+    free (quick_cuest_memchk.tmp_o);
 
     if (cudaFree (quick_cuest_data.allxyz_gpu) != cudaSuccess) {
         fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
