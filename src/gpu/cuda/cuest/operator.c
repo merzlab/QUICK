@@ -26,6 +26,11 @@
 void
 cuest_init_oei_plan ()
 {
+    cuestHandle_t               handle    = quick_cuest_struct.handle;
+    cuestWorkspaceDescriptor_t *tmpWD     = quick_cuest_struct.tmpWD;
+    cuestWorkspaceDescriptor_t *persistWD = quick_cuest_struct.persistWD;
+    cuestAOBasis_t              basis     = quick_cuest_struct.basis;
+
     // ========================== //
     // one-electron integral plan //
     // ========================== //
@@ -33,20 +38,18 @@ cuest_init_oei_plan ()
     cuestOEIntPlanParameters_t oeint_plan_params;
     checkCuestErrors (cuestParametersCreate (CUEST_OEINTPLAN_PARAMETERS, &oeint_plan_params));
     checkCuestErrors (cuestOEIntPlanCreateWorkspaceQuery (
-        quick_cuest_struct.handle, quick_cuest_struct.basis, quick_cuest_struct.AOPairList,
-        oeint_plan_params, quick_cuest_struct.persistWD, quick_cuest_struct.tmpWD,
+        handle, basis, quick_cuest_struct.AOPairList, oeint_plan_params, persistWD, tmpWD,
         &quick_cuest_struct.OEIntPlan));
 
 #ifdef CUESTDEBUG
     printf ("%s: oei plan persistWD allocation size:\t%zu\n", __func__,
-            quick_cuest_struct.persistWD->deviceBufferSizeInBytes);
-    printf ("%s: oei plan tmpWD allocation size:\t%zu\n", __func__,
-            quick_cuest_struct.tmpWD->deviceBufferSizeInBytes);
+            persistWD->deviceBufferSizeInBytes);
+    printf ("%s: oei plan tmpWD allocation size:\t%zu\n", __func__, tmpWD->deviceBufferSizeInBytes);
 #endif
-    quick_cuest_struct.persistOEIntPlanWorkspace = allocateWorkspace (quick_cuest_struct.persistWD);
-    cuestWorkspace_t *tmpOEIntPlanWorkspace      = allocateWorkspace (quick_cuest_struct.tmpWD);
-    checkCuestErrors (cuestOEIntPlanCreate (quick_cuest_struct.handle, quick_cuest_struct.basis,
-                                            quick_cuest_struct.AOPairList, oeint_plan_params,
+    quick_cuest_struct.persistOEIntPlanWorkspace = allocateWorkspace (persistWD);
+    cuestWorkspace_t *tmpOEIntPlanWorkspace      = allocateWorkspace (tmpWD);
+    checkCuestErrors (cuestOEIntPlanCreate (handle, basis, quick_cuest_struct.AOPairList,
+                                            oeint_plan_params,
                                             quick_cuest_struct.persistOEIntPlanWorkspace,
                                             tmpOEIntPlanWorkspace, &quick_cuest_struct.OEIntPlan));
 
@@ -60,8 +63,14 @@ cuest_init_oei_plan ()
 void
 cuest_get_oei_S (double *o)
 {
+    cuestHandle_t               handle = quick_cuest_struct.handle;
+    cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
+    cuestAOBasis_t              basis  = quick_cuest_struct.basis;
+
+    uint64_t nbasis = quick_cuest_data.nbasis;
+
     double *d_S;
-    size_t  d_S_siz = quick_cuest_data.nbasis * quick_cuest_data.nbasis * sizeof (double);
+    size_t  d_S_siz = nbasis * nbasis * sizeof (double);
     if (cudaMalloc ((void **)&d_S, d_S_siz)) {
         fprintf (stderr, "Failed to allocate device buffer\n");
         exit (EXIT_FAILURE);
@@ -70,16 +79,14 @@ cuest_get_oei_S (double *o)
     cuestOverlapComputeParameters_t overlap_compute_params;
     checkCuestErrors (
         cuestParametersCreate (CUEST_OVERLAPCOMPUTE_PARAMETERS, &overlap_compute_params));
-    checkCuestErrors (
-        cuestOverlapComputeWorkspaceQuery (quick_cuest_struct.handle, quick_cuest_struct.OEIntPlan,
-                                           overlap_compute_params, quick_cuest_struct.tmpWD, d_S));
+    checkCuestErrors (cuestOverlapComputeWorkspaceQuery (handle, quick_cuest_struct.OEIntPlan,
+                                                         overlap_compute_params, tmpWD, d_S));
 
 #ifdef CUESTDEBUG
-    printf ("%s: overlap tmpWD allocation size:\t%zu\n", __func__,
-            quick_cuest_struct.tmpWD->deviceBufferSizeInBytes);
+    printf ("%s: overlap tmpWD allocation size:\t%zu\n", __func__, tmpWD->deviceBufferSizeInBytes);
 #endif
-    cuestWorkspace_t *tmpSWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
-    checkCuestErrors (cuestOverlapCompute (quick_cuest_struct.handle, quick_cuest_struct.OEIntPlan,
+    cuestWorkspace_t *tmpSWorkspace = allocateWorkspace (tmpWD);
+    checkCuestErrors (cuestOverlapCompute (handle, quick_cuest_struct.OEIntPlan,
                                            overlap_compute_params, tmpSWorkspace, d_S));
 
     freeWorkspace (tmpSWorkspace);
@@ -99,9 +106,9 @@ cuest_get_oei_S (double *o)
 
 #ifdef CUESTDEBUG
     puts ("-------- S --------");
-    for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
-        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
-            printf ("%16.10f", o[i * quick_cuest_data.nbasis + j]);
+    for (int i = 0; i < nbasis; ++i) {
+        for (int j = 0; j < nbasis; ++j)
+            printf ("%16.10f", o[i * nbasis + j]);
         putchar ('\n');
     }
     puts ("------ END S ------");
@@ -116,8 +123,14 @@ cuest_get_oei_S (double *o)
 void
 cuest_get_oei_T (double *o)
 {
+    cuestHandle_t               handle = quick_cuest_struct.handle;
+    cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
+    cuestAOBasis_t              basis  = quick_cuest_struct.basis;
+
+    uint64_t nbasis = quick_cuest_data.nbasis;
+
     double *d_T;
-    size_t  d_T_siz = quick_cuest_data.nbasis * quick_cuest_data.nbasis * sizeof (double);
+    size_t  d_T_siz = nbasis * nbasis * sizeof (double);
     if (cudaMalloc ((void **)&d_T, d_T_siz) != cudaSuccess) {
         fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
@@ -126,16 +139,14 @@ cuest_get_oei_T (double *o)
     cuestKineticComputeParameters_t kinetic_compute_params;
     checkCuestErrors (
         cuestParametersCreate (CUEST_KINETICCOMPUTE_PARAMETERS, &kinetic_compute_params));
-    checkCuestErrors (
-        cuestKineticComputeWorkspaceQuery (quick_cuest_struct.handle, quick_cuest_struct.OEIntPlan,
-                                           kinetic_compute_params, quick_cuest_struct.tmpWD, d_T));
+    checkCuestErrors (cuestKineticComputeWorkspaceQuery (handle, quick_cuest_struct.OEIntPlan,
+                                                         kinetic_compute_params, tmpWD, d_T));
 
 #ifdef CUESTDEBUG
-    printf ("%s: kinetic tmpWD allocation size:\t%zu\n", __func__,
-            quick_cuest_struct.tmpWD->deviceBufferSizeInBytes);
+    printf ("%s: kinetic tmpWD allocation size:\t%zu\n", __func__, tmpWD->deviceBufferSizeInBytes);
 #endif
-    cuestWorkspace_t *tmpTWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
-    checkCuestErrors (cuestKineticCompute (quick_cuest_struct.handle, quick_cuest_struct.OEIntPlan,
+    cuestWorkspace_t *tmpTWorkspace = allocateWorkspace (tmpWD);
+    checkCuestErrors (cuestKineticCompute (handle, quick_cuest_struct.OEIntPlan,
                                            kinetic_compute_params, tmpTWorkspace, d_T));
 
     freeWorkspace (tmpTWorkspace);
@@ -155,9 +166,9 @@ cuest_get_oei_T (double *o)
 
 #ifdef CUESTDEBUG
     puts ("-------- T --------");
-    for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
-        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
-            printf ("%16.10f", o[i * quick_cuest_data.nbasis + j]);
+    for (int i = 0; i < nbasis; ++i) {
+        for (int j = 0; j < nbasis; ++j)
+            printf ("%16.10f", o[i * nbasis + j]);
         putchar ('\n');
     }
     puts ("------ END T ------");
@@ -172,8 +183,14 @@ cuest_get_oei_T (double *o)
 void
 cuest_get_oei_V (double *o)
 {
+    cuestHandle_t               handle = quick_cuest_struct.handle;
+    cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
+    cuestAOBasis_t              basis  = quick_cuest_struct.basis;
+
+    uint64_t nbasis = quick_cuest_data.nbasis;
+
     double *d_V;
-    size_t  d_V_siz = quick_cuest_data.nbasis * quick_cuest_data.nbasis * sizeof (double);
+    size_t  d_V_siz = nbasis * nbasis * sizeof (double);
     if (cudaMalloc ((void **)&d_V, d_V_siz) != cudaSuccess) {
         fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
@@ -183,18 +200,18 @@ cuest_get_oei_V (double *o)
     checkCuestErrors (
         cuestParametersCreate (CUEST_POTENTIALCOMPUTE_PARAMETERS, &potential_compute_params));
     checkCuestErrors (cuestPotentialComputeWorkspaceQuery (
-        quick_cuest_struct.handle, quick_cuest_struct.OEIntPlan, potential_compute_params,
-        quick_cuest_struct.tmpWD, quick_cuest_data.ntotalatom, quick_cuest_data.allxyz_gpu,
-        quick_cuest_data.allchg_gpu, d_V));
+        handle, quick_cuest_struct.OEIntPlan, potential_compute_params, tmpWD,
+        quick_cuest_data.ntotalatom, quick_cuest_data.allxyz_gpu, quick_cuest_data.allchg_gpu,
+        d_V));
 
 #ifdef CUESTDEBUG
     printf ("%s: potential tmpWD allocation size:\t%zu\n", __func__,
-            quick_cuest_struct.tmpWD->deviceBufferSizeInBytes);
+            tmpWD->deviceBufferSizeInBytes);
 #endif
-    cuestWorkspace_t *tmpVWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
+    cuestWorkspace_t *tmpVWorkspace = allocateWorkspace (tmpWD);
     checkCuestErrors (
-        cuestPotentialCompute (quick_cuest_struct.handle, quick_cuest_struct.OEIntPlan,
-                               potential_compute_params, tmpVWorkspace, quick_cuest_data.ntotalatom,
+        cuestPotentialCompute (handle, quick_cuest_struct.OEIntPlan, potential_compute_params,
+                               tmpVWorkspace, quick_cuest_data.ntotalatom,
                                quick_cuest_data.allxyz_gpu, quick_cuest_data.allchg_gpu, d_V));
 
     freeWorkspace (tmpVWorkspace);
@@ -214,9 +231,9 @@ cuest_get_oei_V (double *o)
 
 #ifdef CUESTDEBUG
     puts ("-------- V --------");
-    for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
-        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
-            printf ("%16.10f", o[i * quick_cuest_data.nbasis + j]);
+    for (int i = 0; i < nbasis; ++i) {
+        for (int j = 0; j < nbasis; ++j)
+            printf ("%16.10f", o[i * nbasis + j]);
         putchar ('\n');
     }
     puts ("------ END V ------");
@@ -231,8 +248,15 @@ cuest_get_oei_V (double *o)
 void
 cuest_get_eri_J (double *o, double *P)
 {
+    cuestHandle_t               handle = quick_cuest_struct.handle;
+    cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
+    cuestAOBasis_t              basis  = quick_cuest_struct.basis;
+
+    uint64_t nbasis = quick_cuest_data.nbasis;
+    double  *tmp_o  = quick_cuest_memchk.tmp_o;
+
     double *d_J;
-    size_t  d_J_siz = quick_cuest_data.nbasis * quick_cuest_data.nbasis * sizeof (double);
+    size_t  d_J_siz = nbasis * nbasis * sizeof (double);
     if (cudaMalloc ((void **)&d_J, d_J_siz) != cudaSuccess) {
         fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
@@ -240,23 +264,22 @@ cuest_get_eri_J (double *o, double *P)
 
 #ifdef CUESTDEBUG
     puts ("-------- uncorrected cuEST DENSITY MATRIX --------");
-    for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
-        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
-            printf ("%f ", get (P, i, j, quick_cuest_data.nbasis));
+    for (int i = 0; i < nbasis; ++i) {
+        for (int j = 0; j < nbasis; ++j)
+            printf ("%f ", get (P, i, j, nbasis));
         putchar ('\n');
     }
     puts ("------ END uncorrected cuEST DENSITY MATRIX ------");
 #endif
 
-    memcpy (quick_cuest_memchk.tmp_o, P,
-            quick_cuest_data.nbasis * quick_cuest_data.nbasis * sizeof (double));
-    correct_o (quick_cuest_memchk.tmp_o, CORRECT_REORDER | CORRECT_NORM_QUICK_TO_CUEST);
+    memcpy (tmp_o, P, nbasis * nbasis * sizeof (double));
+    correct_o (tmp_o, CORRECT_REORDER | CORRECT_NORM_QUICK_TO_CUEST);
 
 #ifdef CUESTDEBUG
     puts ("-------- corrected cuEST DENSITY MATRIX --------");
-    for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
-        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
-            printf ("%f ", get (quick_cuest_memchk.tmp_o, i, j, quick_cuest_data.nbasis));
+    for (int i = 0; i < nbasis; ++i) {
+        for (int j = 0; j < nbasis; ++j)
+            printf ("%f ", get (tmp_o, i, j, nbasis));
         putchar ('\n');
     }
     puts ("------ END corrected cuEST DENSITY MATRIX ------");
@@ -270,8 +293,7 @@ cuest_get_eri_J (double *o, double *P)
         exit (EXIT_FAILURE);
     }
 
-    if (cudaMemcpy (d_P, quick_cuest_memchk.tmp_o, d_P_siz, cudaMemcpyHostToDevice)
-        != cudaSuccess) {
+    if (cudaMemcpy (d_P, tmp_o, d_P_siz, cudaMemcpyHostToDevice) != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
@@ -279,18 +301,15 @@ cuest_get_eri_J (double *o, double *P)
     cuestDFCoulombComputeParameters_t dfj_compute_params;
     checkCuestErrors (
         cuestParametersCreate (CUEST_DFCOULOMBCOMPUTE_PARAMETERS, &dfj_compute_params));
-    checkCuestErrors (cuestDFCoulombComputeWorkspaceQuery (
-        quick_cuest_struct.handle, quick_cuest_struct.DFIntPlan, dfj_compute_params,
-        quick_cuest_struct.tmpWD, d_P, d_J));
+    checkCuestErrors (cuestDFCoulombComputeWorkspaceQuery (handle, quick_cuest_struct.DFIntPlan,
+                                                           dfj_compute_params, tmpWD, d_P, d_J));
 
 #ifdef CUESTDEBUG
-    printf ("%s: coulomb tmpWD allocation size:\t%zu\n", __func__,
-            quick_cuest_struct.tmpWD->deviceBufferSizeInBytes);
+    printf ("%s: coulomb tmpWD allocation size:\t%zu\n", __func__, tmpWD->deviceBufferSizeInBytes);
 #endif
-    cuestWorkspace_t *tmpDFJWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
-    checkCuestErrors (cuestDFCoulombCompute (quick_cuest_struct.handle,
-                                             quick_cuest_struct.DFIntPlan, dfj_compute_params,
-                                             tmpDFJWorkspace, d_P, d_J));
+    cuestWorkspace_t *tmpDFJWorkspace = allocateWorkspace (tmpWD);
+    checkCuestErrors (cuestDFCoulombCompute (handle, quick_cuest_struct.DFIntPlan,
+                                             dfj_compute_params, tmpDFJWorkspace, d_P, d_J));
 
     freeWorkspace (tmpDFJWorkspace);
     checkCuestErrors (
@@ -309,9 +328,9 @@ cuest_get_eri_J (double *o, double *P)
 
 #ifdef CUESTDEBUG
     puts ("-------- J --------");
-    for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
-        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
-            printf ("%16.10f", o[i * quick_cuest_data.nbasis + j]);
+    for (int i = 0; i < nbasis; ++i) {
+        for (int j = 0; j < nbasis; ++j)
+            printf ("%16.10f", o[i * nbasis + j]);
         putchar ('\n');
     }
     puts ("------ END J ------");
@@ -326,29 +345,34 @@ cuest_get_eri_J (double *o, double *P)
 void
 cuest_get_eri_K (double *o, double *C, int64_t nocc)
 {
+    cuestHandle_t               handle = quick_cuest_struct.handle;
+    cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
+    cuestAOBasis_t              basis  = quick_cuest_struct.basis;
+
+    uint64_t nbasis = quick_cuest_data.nbasis;
+    double  *tmp_C  = quick_cuest_memchk.tmp_C;
 
     double *d_K;
-    size_t  d_K_siz = quick_cuest_data.nbasis * quick_cuest_data.nbasis * sizeof (double);
+    size_t  d_K_siz = nbasis * nbasis * sizeof (double);
     if (cudaMalloc ((void **)&d_K, d_K_siz) != cudaSuccess) {
         fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
 
     double *d_C;
-    size_t  d_C_siz = nocc * quick_cuest_data.nbasis * sizeof (double);
+    size_t  d_C_siz = nocc * nbasis * sizeof (double);
     if (cudaMalloc ((void **)&d_C, d_C_siz)) {
         fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
 
-    if (quick_cuest_memchk.tmp_C == NULL)
-        quick_cuest_memchk.tmp_C = malloc (d_C_siz);
+    if (tmp_C == NULL)
+        tmp_C = malloc (d_C_siz);
 
-    memcpy (quick_cuest_memchk.tmp_C, C, d_C_siz);
-    correct_C (quick_cuest_memchk.tmp_C, nocc, CORRECT_REORDER | CORRECT_NORM_QUICK_TO_CUEST);
+    memcpy (tmp_C, C, d_C_siz);
+    correct_C (tmp_C, nocc, CORRECT_REORDER | CORRECT_NORM_QUICK_TO_CUEST);
 
-    if (cudaMemcpy (d_C, quick_cuest_memchk.tmp_C, d_C_siz, cudaMemcpyHostToDevice)
-        != cudaSuccess) {
+    if (cudaMemcpy (d_C, tmp_C, d_C_siz, cudaMemcpyHostToDevice) != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
@@ -361,17 +385,16 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
     varBufSiz->hostBufferSizeInBytes      = 0;
     varBufSiz->deviceBufferSizeInBytes    = 2e9; // TODO(michaelyxsun): adapt this. 2 GB right now
     checkCuestErrors (cuestDFSymmetricExchangeComputeWorkspaceQuery (
-        quick_cuest_struct.handle, quick_cuest_struct.DFIntPlan, dfk_compute_params, varBufSiz,
-        quick_cuest_struct.tmpWD, nocc, d_C, d_K));
+        handle, quick_cuest_struct.DFIntPlan, dfk_compute_params, varBufSiz, tmpWD, nocc, d_C,
+        d_K));
 
 #ifdef CUESTDEBUG
-    printf ("%s: exchange tmpWD allocation size:\t%zu\n", __func__,
-            quick_cuest_struct.tmpWD->deviceBufferSizeInBytes);
+    printf ("%s: exchange tmpWD allocation size:\t%zu\n", __func__, tmpWD->deviceBufferSizeInBytes);
 #endif
-    cuestWorkspace_t *tmpDFKWorkspace = allocateWorkspace (quick_cuest_struct.tmpWD);
-    checkCuestErrors (cuestDFSymmetricExchangeCompute (
-        quick_cuest_struct.handle, quick_cuest_struct.DFIntPlan, dfk_compute_params, varBufSiz,
-        tmpDFKWorkspace, nocc, d_C, d_K));
+    cuestWorkspace_t *tmpDFKWorkspace = allocateWorkspace (tmpWD);
+    checkCuestErrors (cuestDFSymmetricExchangeCompute (handle, quick_cuest_struct.DFIntPlan,
+                                                       dfk_compute_params, varBufSiz,
+                                                       tmpDFKWorkspace, nocc, d_C, d_K));
 
     free (varBufSiz);
     freeWorkspace (tmpDFKWorkspace);
@@ -391,9 +414,9 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
 
 #ifdef CUESTDEBUG
     puts ("-------- K --------");
-    for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
-        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
-            printf ("%16.10f", o[i * quick_cuest_data.nbasis + j]);
+    for (int i = 0; i < nbasis; ++i) {
+        for (int j = 0; j < nbasis; ++j)
+            printf ("%16.10f", o[i * nbasis + j]);
         putchar ('\n');
     }
     puts ("------ END K ------");

@@ -47,6 +47,8 @@ void
 cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *kprim_, double *aexp,
                   double *dcoeff, bool aux)
 {
+    uint64_t natom = quick_cuest_data.natom;
+
     uint64_t maxcontract, nshell;
     if (aux) {
         nshell      = quick_cuest_data.nauxshell;
@@ -59,7 +61,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
 #ifdef CUESTDEBUG
     puts ("-------- DUMP --------");
 
-    printf ("natom=%llu\n", quick_cuest_data.natom);
+    printf ("natom=%llu\n", natom);
     printf ("nshell=%llu\n", nshell);
 
     puts ("ncenter:");
@@ -97,7 +99,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
     }
 
     puts ("xyz:");
-    for (int i = 0; i < quick_cuest_data.natom; ++i) {
+    for (int i = 0; i < natom; ++i) {
         for (int j = 0; j < 3; ++j)
             printf ("%f ", get (quick_cuest_data.xyz, i, j, 3));
         putchar ('\n');
@@ -114,7 +116,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
     putchar ('\n');
 
     puts ("xyz flat:");
-    for (int i = 0; i < quick_cuest_data.natom * 3; ++i)
+    for (int i = 0; i < natom * 3; ++i)
         printf ("%f ", quick_cuest_data.xyz[i]);
     putchar ('\n');
 
@@ -122,6 +124,10 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
 
     fflush (stdout);
 #endif
+
+    cuestHandle_t               handle    = quick_cuest_struct.handle;
+    cuestWorkspaceDescriptor_t *tmpWD     = quick_cuest_struct.tmpWD;
+    cuestWorkspaceDescriptor_t *persistWD = quick_cuest_struct.persistWD;
 
     // ================ //
     // set up AO shells //
@@ -188,7 +194,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
         quick_cuest_data.ifshell = ifshell;
     // nshells_per_atom[a] is number of shells atom `a` has.
     // This is the same as the number of times it appears in `katom`.
-    uint64_t *nshells_per_atom = calloc (quick_cuest_data.natom, sizeof (uint64_t));
+    uint64_t *nshells_per_atom = calloc (natom, sizeof (uint64_t));
 
     ifshell[0] = 0;
 
@@ -209,7 +215,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
     cuestAOShell_t *shells = malloc (nshell * sizeof (cuestAOShell_t));
     if (!shells) {
         fprintf (stderr, "Failed to allocate AO shell array\n");
-        checkCuestErrors (cuestDestroy (quick_cuest_struct.handle));
+        checkCuestErrors (cuestDestroy (handle));
         exit (EXIT_FAILURE);
     }
 
@@ -231,7 +237,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
         //     reorder_f (c);
         // }
 
-        checkCuestErrors (cuestAOShellCreate (quick_cuest_struct.handle, aux,
+        checkCuestErrors (cuestAOShellCreate (handle, aux,
                                               aux ? get_L_sph (ktype[i]) : get_L_cart (ktype[i]),
                                               kprim[i], a, c, aoshell_params, &shells[i]));
     }
@@ -252,21 +258,18 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
     cuestAOBasisParameters_t basis_params;
     checkCuestErrors (cuestParametersCreate (CUEST_AOBASIS_PARAMETERS, &basis_params));
 
-    checkCuestErrors (cuestAOBasisCreateWorkspaceQuery (
-        quick_cuest_struct.handle, quick_cuest_data.natom, nshells_per_atom, shells, basis_params,
-        quick_cuest_struct.persistWD, quick_cuest_struct.tmpWD, &basis));
+    checkCuestErrors (cuestAOBasisCreateWorkspaceQuery (handle, natom, nshells_per_atom, shells,
+                                                        basis_params, persistWD, tmpWD, &basis));
 
 #ifdef CUESTDEBUG
     printf ("%s: basis persistWD allocation size:\t%zu\n", __func__,
-            quick_cuest_struct.persistWD->deviceBufferSizeInBytes);
-    printf ("%s: basis tmpWD allocation size:\t%zu\n", __func__,
-            quick_cuest_struct.tmpWD->deviceBufferSizeInBytes);
+            persistWD->deviceBufferSizeInBytes);
+    printf ("%s: basis tmpWD allocation size:\t%zu\n", __func__, tmpWD->deviceBufferSizeInBytes);
 #endif
-    cuestWorkspace_t *persistBasisWorkspace = allocateWorkspace (quick_cuest_struct.persistWD);
-    cuestWorkspace_t *tmpBasisWorkspace     = allocateWorkspace (quick_cuest_struct.tmpWD);
+    cuestWorkspace_t *persistBasisWorkspace = allocateWorkspace (persistWD);
+    cuestWorkspace_t *tmpBasisWorkspace     = allocateWorkspace (tmpWD);
 
-    checkCuestErrors (cuestAOBasisCreate (quick_cuest_struct.handle, quick_cuest_data.natom,
-                                          nshells_per_atom, shells, basis_params,
+    checkCuestErrors (cuestAOBasisCreate (handle, natom, nshells_per_atom, shells, basis_params,
                                           persistBasisWorkspace, tmpBasisWorkspace, &basis));
 
     if (aux) {
@@ -299,21 +302,20 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
     uint64_t query_max_L      = 0;
     int32_t  query_is_pure    = 0;
 
-    checkCuestErrors (cuestQuery (quick_cuest_struct.handle, CUEST_AOBASIS, basis,
-                                  CUEST_AOBASIS_NUM_ATOM, &query_natom, sizeof (uint64_t)));
-    checkCuestErrors (cuestQuery (quick_cuest_struct.handle, CUEST_AOBASIS, basis,
-                                  CUEST_AOBASIS_NUM_SHELL, &query_nshell, sizeof (uint64_t)));
-    checkCuestErrors (cuestQuery (quick_cuest_struct.handle, CUEST_AOBASIS, basis,
-                                  CUEST_AOBASIS_NUM_AO, &query_nao, sizeof (uint64_t)));
-    checkCuestErrors (cuestQuery (quick_cuest_struct.handle, CUEST_AOBASIS, basis,
-                                  CUEST_AOBASIS_NUM_CART, &query_ncart, sizeof (uint64_t)));
-    checkCuestErrors (cuestQuery (quick_cuest_struct.handle, CUEST_AOBASIS, basis,
-                                  CUEST_AOBASIS_NUM_PRIMITIVE, &query_nprimitive,
+    checkCuestErrors (cuestQuery (handle, CUEST_AOBASIS, basis, CUEST_AOBASIS_NUM_ATOM,
+                                  &query_natom, sizeof (uint64_t)));
+    checkCuestErrors (cuestQuery (handle, CUEST_AOBASIS, basis, CUEST_AOBASIS_NUM_SHELL,
+                                  &query_nshell, sizeof (uint64_t)));
+    checkCuestErrors (cuestQuery (handle, CUEST_AOBASIS, basis, CUEST_AOBASIS_NUM_AO, &query_nao,
                                   sizeof (uint64_t)));
-    checkCuestErrors (cuestQuery (quick_cuest_struct.handle, CUEST_AOBASIS, basis,
-                                  CUEST_AOBASIS_MAX_L, &query_max_L, sizeof (uint64_t)));
-    checkCuestErrors (cuestQuery (quick_cuest_struct.handle, CUEST_AOBASIS, basis,
-                                  CUEST_AOBASIS_IS_PURE, &query_is_pure, sizeof (int32_t)));
+    checkCuestErrors (cuestQuery (handle, CUEST_AOBASIS, basis, CUEST_AOBASIS_NUM_CART,
+                                  &query_ncart, sizeof (uint64_t)));
+    checkCuestErrors (cuestQuery (handle, CUEST_AOBASIS, basis, CUEST_AOBASIS_NUM_PRIMITIVE,
+                                  &query_nprimitive, sizeof (uint64_t)));
+    checkCuestErrors (cuestQuery (handle, CUEST_AOBASIS, basis, CUEST_AOBASIS_MAX_L, &query_max_L,
+                                  sizeof (uint64_t)));
+    checkCuestErrors (cuestQuery (handle, CUEST_AOBASIS, basis, CUEST_AOBASIS_IS_PURE,
+                                  &query_is_pure, sizeof (int32_t)));
 
     printf ("AO Basis from handle:\n");
     printf ("%-10s = %6llu\n", "natom", query_natom);
