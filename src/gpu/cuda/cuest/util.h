@@ -37,6 +37,4 @@ reorder_f (double *a)
     SWAP (a[6], a[7], double);
 }
 
-void correct_o (double *o);
-
 #endif

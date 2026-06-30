@@ -34,35 +34,49 @@ typedef struct {
 } quick_cuest_struct_t;
 
 typedef struct {
-    uint64_t  natom;
-    uint64_t  nshell;
-    uint64_t  nbasis;
-    uint64_t  nauxshell;
-    uint64_t  maxcontract;
-    uint64_t  maxcontract_aux;
-    uint64_t  ntotalatom;
-    double   *xyz;
-    double   *allxyz_gpu;
-    double   *allchg;
-    double   *allchg_gpu;
-    size_t   *ifshell;
-    uint64_t *chk_katom_ktype_kprim;
+    uint64_t natom;
+    uint64_t nshell;
+    uint64_t nbasis;
+    uint64_t nauxshell;
+    uint64_t maxcontract;
+    uint64_t maxcontract_aux;
+    uint64_t ntotalatom;
+    double  *xyz;
+    double  *allxyz_gpu;
+    double  *allchg;
+    double  *allchg_gpu;
+    size_t  *ifshell;
 } quick_cuest_data_t;
+
+typedef struct {
+    uint64_t *chk_katom_ktype_kprim;
+    void     *chk_firstdf_mark; // used for reordering density matrix and molecular coefficients
+    size_t    ifdf;             // ^^ also
+    double   *tmpbuf_dp;        // ^^ also
+} quick_cuest_memchk_t;
 
 extern quick_cuest_struct_t quick_cuest_struct;
 extern quick_cuest_data_t   quick_cuest_data;
+extern quick_cuest_memchk_t quick_cuest_memchk;
 
 void cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nauxshell,
                  int64_t maxcontract, int64_t maxcontract_aux, double *xyz, double *chg,
                  int64_t nextatom, double *extxyz, double *extchg);
-void cuest_deinit_oei_plan ();
+/** Deinitializes the basis set, pair list, and DF integral plan */
 void cuest_deinit ();
+
+/** Must be called after initializing main basis set */
+void init_correct ();
+void deinit_correct ();
 
 void cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *kprim_,
                        double *aexp, double *dcoeff, bool aux);
 
 void cuest_init_pair_list (double cutoff);
+
 void cuest_init_oei_plan ();
+void cuest_deinit_oei_plan ();
+
 void cuest_init_dfint_plan ();
 
 void cuest_get_oei_S (double *o);

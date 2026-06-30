@@ -11,11 +11,11 @@
 #include <cuest.h>
 #endif
 
+#include "correction.h"
 #include "helper_status.h"
 #include "helper_workspace.h"
-#include "util.h"
-
 #include "quick_cuest.h"
+#include "util.h"
 
 /**
  * Initializes the one-electron integrals plan `OEIntPlan` in `quick_cuest_struct`
@@ -94,7 +94,7 @@ cuest_get_oei_S (double *o)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o);
+    correct_o (o, true);
 
 #ifdef CUESTDEBUG
     puts ("-------- S --------");
@@ -150,7 +150,7 @@ cuest_get_oei_T (double *o)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o);
+    correct_o (o, true);
 
 #ifdef CUESTDEBUG
     puts ("-------- T --------");
@@ -209,7 +209,7 @@ cuest_get_oei_V (double *o)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o);
+    correct_o (o, true);
 
 #ifdef CUESTDEBUG
     puts ("-------- V --------");
@@ -237,6 +237,28 @@ cuest_get_eri_J (double *o, double *P)
         exit (EXIT_FAILURE);
     }
 
+#ifdef CUESTDEBUG
+    puts ("-------- uncorrected cuEST DENSITY MATRIX --------");
+    for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
+        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
+            printf ("%f ", get (P, i, j, quick_cuest_data.nbasis));
+        putchar ('\n');
+    }
+    puts ("------ END uncorrected cuEST DENSITY MATRIX ------");
+#endif
+
+    correct_o (P, false);
+
+#ifdef CUESTDEBUG
+    puts ("-------- uncorrected cuEST DENSITY MATRIX --------");
+    for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
+        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
+            printf ("%f ", get (P, i, j, quick_cuest_data.nbasis));
+        putchar ('\n');
+    }
+    puts ("------ END uncorrected cuEST DENSITY MATRIX ------");
+#endif
+
     // density matrix
     double *d_P;
     size_t  d_P_siz = d_J_siz;
@@ -250,13 +272,7 @@ cuest_get_eri_J (double *o, double *P)
         exit (EXIT_FAILURE);
     }
 
-    // puts ("-------- CUEST DENSITY MATRIX --------");
-    // for (int i = 0; i < quick_cuest_data.nbasis; ++i) {
-    //     for (int j = 0; j < quick_cuest_data.nbasis; ++j)
-    //         printf ("%f ", get (P, i, j, quick_cuest_data.nbasis));
-    //     putchar ('\n');
-    // }
-    // puts ("------ END CUEST DENSITY MATRIX ------");
+    correct_o (P, false);
 
     cuestDFCoulombComputeParameters_t dfj_compute_params;
     checkCuestErrors (
@@ -303,65 +319,6 @@ cuest_get_eri_J (double *o, double *P)
     }
 }
 
-/**
- * Call once with setup=true. Subsequent calls should have setup=false.
- * At the end, call once with cleanup=true; C and nocc can be anything.
- */
-static void
-reorder_C (double *C, size_t nocc, bool setup, bool cleanup)
-{
-    static void  *chk_firstdf_mark;
-    static size_t ifdf;
-
-    if (cleanup) {
-        free (chk_firstdf_mark);
-        return;
-    }
-
-    if (setup)
-        chk_firstdf_mark = malloc (quick_cuest_data.nbasis * (sizeof (size_t) + sizeof (bool)));
-
-#ifdef CUESTDEBUG
-    puts ("======== C from QUICK ========");
-    for (int i = 0; i < nocc; ++i) {
-        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
-            printf ("%f ", get (C, i, j, quick_cuest_data.nbasis));
-        putchar ('\n');
-    }
-    puts ("====== end C from QUICK ======");
-#endif
-
-    ifdf              = 0;
-    uint64_t *ktype   = quick_cuest_data.chk_katom_ktype_kprim + quick_cuest_data.nshell;
-    size_t   *firstdf = chk_firstdf_mark;
-    bool     *mark    = (bool *)((size_t *)chk_firstdf_mark + quick_cuest_data.nbasis);
-
-    for (size_t i = 0; i < quick_cuest_data.nshell; ++i)
-        if (ktype[i] == KTYPE_CART_D || ktype[i] == KTYPE_CART_F) {
-            firstdf[ifdf] = quick_cuest_data.ifshell[i];
-            mark[ifdf]    = ktype[i] == KTYPE_CART_D;
-            ++ifdf;
-        }
-
-    for (size_t i = 0, end = nocc * quick_cuest_data.nbasis; i < end; i += quick_cuest_data.nbasis)
-        for (size_t j = 0; j < ifdf; ++j) {
-            if (mark)
-                reorder_d (C + firstdf[j] + i);
-            else
-                reorder_f (C + firstdf[j] + i);
-        }
-
-#ifdef CUESTDEBUG
-    puts ("======== C reordered ========");
-    for (int i = 0; i < nocc; ++i) {
-        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
-            printf ("%f ", get (C, i, j, quick_cuest_data.nbasis));
-        putchar ('\n');
-    }
-    puts ("====== end C reordered ======");
-#endif
-}
-
 void
 cuest_get_eri_K (double *o, double *C, int64_t nocc)
 {
@@ -372,7 +329,7 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
         exit (EXIT_FAILURE);
     }
 
-    reorder_C (C, nocc, true, false);
+    reorder_PC (C, nocc);
 
     double *d_C;
     size_t  d_C_siz = nocc * quick_cuest_data.nbasis * sizeof (double);
@@ -386,8 +343,7 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
         exit (EXIT_FAILURE);
     }
 
-    reorder_C (C, nocc, false, false);
-    reorder_C (NULL, 0, false, true);
+    reorder_PC (C, nocc);
 
     cuestDFSymmetricExchangeComputeParameters_t dfk_compute_params;
     checkCuestErrors (

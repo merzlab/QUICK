@@ -64,7 +64,8 @@
 #if defined(CUDA) && defined(CUEST)
     use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_loc, c_bool
     use quick_cuest_module, only: cuest_init, cuest_deinit, cuest_init_basis, &
-                                  cuest_init_dfint_plan, cuest_init_pair_list
+                                  cuest_init_dfint_plan, cuest_init_pair_list, cuest_init_correct, &
+                                  cuest_deinit_correct
     ! use quick_aux_basis_module, only: quick_aux_basis, readauxbasis
     use quick_aux_basis_sph_module, only: quick_aux_basis_sph, read_aux_basis_sph
 #endif
@@ -273,6 +274,8 @@
         logical(.true., c_bool)                                   &
     )
 
+    call cuest_init_correct
+
     ! init pair list
     ! TODO: is this the right cutoff?
     call cuest_init_pair_list(quick_method%coreIntegralCutoff)
@@ -432,6 +435,7 @@
     call delete(quick_method, ierr)
     call gpu_deallocate_scratch(quick_method%grad .or. quick_method%opt)
 #if defined(CUDA) && defined(CUEST)
+    call cuest_deinit_correct
     call cuest_deinit
 #endif
 #if defined(MPIV_GPU)

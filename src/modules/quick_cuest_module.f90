@@ -27,6 +27,16 @@ module quick_cuest_module
    end interface
 
    interface
+      subroutine cuest_init_correct() bind (c, name="init_correct")
+      end subroutine
+   end interface
+
+   interface
+      subroutine cuest_deinit_correct() bind (c, name="deinit_correct")
+      end subroutine
+   end interface
+
+   interface
       subroutine cuest_deinit_oei_plan() bind(c, name="cuest_deinit_oei_plan")
       end subroutine
    end interface
