@@ -64,6 +64,8 @@ deinit_correct ()
 
 /**
  * Corrects matrix m by fixing the order of d and f orbitals and optionally their normalization
+ * Normalization is applied according to cuEST ordering.
+ *
  *     d_xy  type has extra 1/sqrt(3)
  *     f_xxy type has extra 1/sqrt(5)
  *     f_xyz type has extra 1/sqrt(15)
@@ -79,8 +81,11 @@ deinit_correct ()
  *     f: xxx xxy xxz xyy xyz xzz yyy yyz yzz zzz
  */
 void
-correct_o (double *o, bool norm)
+correct_o (double *o, uint8_t qspec)
 {
+    if (qspec == 0 || qspec > CORRECT_REORDER_AND_NORM)
+        return;
+
     uint64_t nbasis = quick_cuest_data.nbasis;
     uint64_t nshell = quick_cuest_data.nshell;
 
@@ -90,11 +95,16 @@ correct_o (double *o, bool norm)
 
     double *tmpbuf = quick_cuest_memchk.tmpbuf_dp;
 
-    // copy row col intersections to other side of diagonal
-    // right now only i>=j is filled
-    for (size_t i = 0; i < ifdf; ++i)
-        for (size_t j = 0; j < i; ++j)
-            get (o, firstdf[j], firstdf[i], nbasis) = get (o, firstdf[i], firstdf[j], nbasis);
+    bool reorder = qspec & CORRECT_REORDER;
+    bool norm    = qspec & CORRECT_NORM;
+
+    if (reorder) {
+        // copy row col intersections to other side of diagonal
+        // right now only i>=j is filled
+        for (size_t i = 0; i < ifdf; ++i)
+            for (size_t j = 0; j < i; ++j)
+                get (o, firstdf[j], firstdf[i], nbasis) = get (o, firstdf[i], firstdf[j], nbasis);
+    }
 
     const size_t rowsiz = nbasis * sizeof (double);
 
@@ -104,30 +114,34 @@ correct_o (double *o, bool norm)
             get (o, firstdf[i] + (ii), j, nbasis) *= (norm);                                       \
     } while (0);
 
+    // normalize then reorder so normalize doesn't depend on if we reorder
     for (int i = 0; i < ifdf; ++i) {
         if (mark[i]) {
-            MEMSWP_IND (2, 3);
-
             if (norm) {
                 APPLY_NORM_ROW (1, SQRT_3);
-                APPLY_NORM_ROW (3, SQRT_3);
+                APPLY_NORM_ROW (2, SQRT_3);
                 APPLY_NORM_ROW (4, SQRT_3);
             }
-        } else {
-            MEMSWP_IND (2, 4);
-            MEMSWP_IND (3, 4);
-            MEMSWP_IND (4, 5);
-            MEMSWP_IND (5, 7);
-            MEMSWP_IND (6, 7);
 
+            if (reorder)
+                MEMSWP_IND (2, 3);
+        } else {
             if (norm) {
                 APPLY_NORM_ROW (1, SQRT_5);
                 APPLY_NORM_ROW (2, SQRT_5);
-                APPLY_NORM_ROW (4, SQRT_5);
-                APPLY_NORM_ROW (5, SQRT_15);
-                APPLY_NORM_ROW (6, SQRT_5);
+                APPLY_NORM_ROW (3, SQRT_5);
+                APPLY_NORM_ROW (4, SQRT_15);
+                APPLY_NORM_ROW (5, SQRT_5);
                 APPLY_NORM_ROW (7, SQRT_5);
                 APPLY_NORM_ROW (8, SQRT_5);
+            }
+
+            if (reorder) {
+                MEMSWP_IND (2, 4);
+                MEMSWP_IND (3, 4);
+                MEMSWP_IND (4, 5);
+                MEMSWP_IND (5, 7);
+                MEMSWP_IND (6, 7);
             }
         }
     }
@@ -136,28 +150,31 @@ correct_o (double *o, bool norm)
     for (int i = 0; i < nbasis; ++i)
         for (int j = 0; j < ifdf; ++j) {
             if (mark[j]) {
-                SWP_IND (2, 3);
-
                 if (norm) {
                     get (o, i, firstdf[j] + 1, nbasis) *= SQRT_3;
-                    get (o, i, firstdf[j] + 3, nbasis) *= SQRT_3;
+                    get (o, i, firstdf[j] + 2, nbasis) *= SQRT_3;
                     get (o, i, firstdf[j] + 4, nbasis) *= SQRT_3;
                 }
-            } else {
-                SWP_IND (2, 4);
-                SWP_IND (3, 4);
-                SWP_IND (4, 5);
-                SWP_IND (5, 7);
-                SWP_IND (6, 7);
 
+                if (reorder)
+                    SWP_IND (2, 3);
+            } else {
                 if (norm) {
                     get (o, i, firstdf[j] + 1, nbasis) *= SQRT_5;
                     get (o, i, firstdf[j] + 2, nbasis) *= SQRT_5;
-                    get (o, i, firstdf[j] + 4, nbasis) *= SQRT_5;
-                    get (o, i, firstdf[j] + 5, nbasis) *= SQRT_15;
-                    get (o, i, firstdf[j] + 6, nbasis) *= SQRT_5;
+                    get (o, i, firstdf[j] + 3, nbasis) *= SQRT_5;
+                    get (o, i, firstdf[j] + 4, nbasis) *= SQRT_15;
+                    get (o, i, firstdf[j] + 5, nbasis) *= SQRT_5;
                     get (o, i, firstdf[j] + 7, nbasis) *= SQRT_5;
                     get (o, i, firstdf[j] + 8, nbasis) *= SQRT_5;
+                }
+
+                if (reorder) {
+                    SWP_IND (2, 4);
+                    SWP_IND (3, 4);
+                    SWP_IND (4, 5);
+                    SWP_IND (5, 7);
+                    SWP_IND (6, 7);
                 }
             }
         }

@@ -94,7 +94,7 @@ cuest_get_oei_S (double *o)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, true);
+    correct_o (o, CORRECT_REORDER_AND_NORM);
 
 #ifdef CUESTDEBUG
     puts ("-------- S --------");
@@ -150,7 +150,7 @@ cuest_get_oei_T (double *o)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, true);
+    correct_o (o, CORRECT_REORDER_AND_NORM);
 
 #ifdef CUESTDEBUG
     puts ("-------- T --------");
@@ -209,7 +209,7 @@ cuest_get_oei_V (double *o)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, true);
+    correct_o (o, CORRECT_REORDER_AND_NORM);
 
 #ifdef CUESTDEBUG
     puts ("-------- V --------");
@@ -247,7 +247,7 @@ cuest_get_eri_J (double *o, double *P)
     puts ("------ END uncorrected cuEST DENSITY MATRIX ------");
 #endif
 
-    correct_o (P, false);
+    correct_o (P, CORRECT_REORDER);
 
 #ifdef CUESTDEBUG
     puts ("-------- uncorrected cuEST DENSITY MATRIX --------");
@@ -272,7 +272,7 @@ cuest_get_eri_J (double *o, double *P)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (P, false);
+    correct_o (P, CORRECT_REORDER);
 
     cuestDFCoulombComputeParameters_t dfj_compute_params;
     checkCuestErrors (
@@ -302,6 +302,8 @@ cuest_get_eri_J (double *o, double *P)
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
+
+    correct_o (o, CORRECT_REORDER_AND_NORM);
 
 #ifdef CUESTDEBUG
     puts ("-------- J --------");
@@ -378,6 +380,8 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
+
+    correct_o (o, CORRECT_REORDER_AND_NORM);
 
 #ifdef CUESTDEBUG
     puts ("-------- K --------");
