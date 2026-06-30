@@ -95,7 +95,7 @@ cuest_get_oei_S (double *o)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, CORRECT_REORDER_AND_NORM);
+    correct_o (o, CORRECT_REORDER | CORRECT_NORM_CUEST_TO_QUICK);
 
 #ifdef CUESTDEBUG
     puts ("-------- S --------");
@@ -151,7 +151,7 @@ cuest_get_oei_T (double *o)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, CORRECT_REORDER_AND_NORM);
+    correct_o (o, CORRECT_REORDER | CORRECT_NORM_CUEST_TO_QUICK);
 
 #ifdef CUESTDEBUG
     puts ("-------- T --------");
@@ -210,7 +210,7 @@ cuest_get_oei_V (double *o)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, CORRECT_REORDER_AND_NORM);
+    correct_o (o, CORRECT_REORDER | CORRECT_NORM_CUEST_TO_QUICK);
 
 #ifdef CUESTDEBUG
     puts ("-------- V --------");
@@ -250,7 +250,7 @@ cuest_get_eri_J (double *o, double *P)
 
     memcpy (quick_cuest_memchk.tmp_o, P,
             quick_cuest_data.nbasis * quick_cuest_data.nbasis * sizeof (double));
-    correct_o (quick_cuest_memchk.tmp_o, CORRECT_REORDER_AND_NORM);
+    correct_o (quick_cuest_memchk.tmp_o, CORRECT_REORDER | CORRECT_NORM_QUICK_TO_CUEST);
 
 #ifdef CUESTDEBUG
     puts ("-------- corrected cuEST DENSITY MATRIX --------");
@@ -305,7 +305,7 @@ cuest_get_eri_J (double *o, double *P)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, CORRECT_REORDER_AND_NORM);
+    correct_o (o, CORRECT_REORDER | CORRECT_NORM_CUEST_TO_QUICK);
 
 #ifdef CUESTDEBUG
     puts ("-------- J --------");
@@ -345,7 +345,7 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
         quick_cuest_memchk.tmp_C = malloc (d_C_siz);
 
     memcpy (quick_cuest_memchk.tmp_C, C, d_C_siz);
-    correct_C (quick_cuest_memchk.tmp_C, nocc, CORRECT_REORDER_AND_NORM);
+    correct_C (quick_cuest_memchk.tmp_C, nocc, CORRECT_REORDER | CORRECT_NORM_QUICK_TO_CUEST);
 
     if (cudaMemcpy (d_C, quick_cuest_memchk.tmp_C, d_C_siz, cudaMemcpyHostToDevice)
         != cudaSuccess) {
@@ -387,7 +387,7 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, CORRECT_REORDER_AND_NORM);
+    correct_o (o, CORRECT_REORDER | CORRECT_NORM_CUEST_TO_QUICK);
 
 #ifdef CUESTDEBUG
     puts ("-------- K --------");

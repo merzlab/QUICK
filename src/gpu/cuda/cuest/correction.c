@@ -83,7 +83,7 @@ deinit_correct ()
 void
 correct_o (double *o, uint8_t qspec)
 {
-    if (qspec == 0 || qspec > CORRECT_REORDER_AND_NORM)
+    if (qspec == 0 || qspec > 7)
         return;
 
     uint64_t nbasis = quick_cuest_data.nbasis;
@@ -95,8 +95,9 @@ correct_o (double *o, uint8_t qspec)
 
     double *tmpbuf = quick_cuest_memchk.tmpbuf_dp;
 
-    bool reorder = qspec & CORRECT_REORDER;
-    bool norm    = qspec & CORRECT_NORM;
+    bool reorder       = qspec & CORRECT_REORDER;
+    bool norm          = qspec & CORRECT_NORM_;
+    bool normfromquick = qspec & CORRECT_FROMQUICK_;
 
     if (reorder) {
         // copy row col intersections to other side of diagonal
@@ -118,22 +119,38 @@ correct_o (double *o, uint8_t qspec)
     for (int i = 0; i < ifdf; ++i) {
         if (mark[i]) {
             if (norm) {
-                APPLY_NORM_ROW (1, SQRT_3);
-                APPLY_NORM_ROW (2, SQRT_3);
-                APPLY_NORM_ROW (4, SQRT_3);
+                if (normfromquick) {
+                    APPLY_NORM_ROW (1, SQRT_3);
+                    APPLY_NORM_ROW (3, SQRT_3);
+                    APPLY_NORM_ROW (4, SQRT_3);
+                } else {
+                    APPLY_NORM_ROW (1, SQRT_3);
+                    APPLY_NORM_ROW (2, SQRT_3);
+                    APPLY_NORM_ROW (4, SQRT_3);
+                }
             }
 
             if (reorder)
                 MEMSWP_IND (2, 3);
         } else {
             if (norm) {
-                APPLY_NORM_ROW (1, SQRT_5);
-                APPLY_NORM_ROW (2, SQRT_5);
-                APPLY_NORM_ROW (3, SQRT_5);
-                APPLY_NORM_ROW (4, SQRT_15);
-                APPLY_NORM_ROW (5, SQRT_5);
-                APPLY_NORM_ROW (7, SQRT_5);
-                APPLY_NORM_ROW (8, SQRT_5);
+                if (normfromquick) {
+                    APPLY_NORM_ROW (1, SQRT_5);
+                    APPLY_NORM_ROW (2, SQRT_5);
+                    APPLY_NORM_ROW (4, SQRT_5);
+                    APPLY_NORM_ROW (5, SQRT_15);
+                    APPLY_NORM_ROW (6, SQRT_5);
+                    APPLY_NORM_ROW (7, SQRT_5);
+                    APPLY_NORM_ROW (8, SQRT_5);
+                } else {
+                    APPLY_NORM_ROW (1, SQRT_5);
+                    APPLY_NORM_ROW (2, SQRT_5);
+                    APPLY_NORM_ROW (3, SQRT_5);
+                    APPLY_NORM_ROW (4, SQRT_15);
+                    APPLY_NORM_ROW (5, SQRT_5);
+                    APPLY_NORM_ROW (7, SQRT_5);
+                    APPLY_NORM_ROW (8, SQRT_5);
+                }
             }
 
             if (reorder) {
@@ -151,22 +168,38 @@ correct_o (double *o, uint8_t qspec)
         for (int j = 0; j < ifdf; ++j) {
             if (mark[j]) {
                 if (norm) {
-                    get (o, i, firstdf[j] + 1, nbasis) *= SQRT_3;
-                    get (o, i, firstdf[j] + 2, nbasis) *= SQRT_3;
-                    get (o, i, firstdf[j] + 4, nbasis) *= SQRT_3;
+                    if (normfromquick) {
+                        get (o, i, firstdf[j] + 1, nbasis) *= SQRT_3;
+                        get (o, i, firstdf[j] + 3, nbasis) *= SQRT_3;
+                        get (o, i, firstdf[j] + 4, nbasis) *= SQRT_3;
+                    } else {
+                        get (o, i, firstdf[j] + 1, nbasis) *= SQRT_3;
+                        get (o, i, firstdf[j] + 2, nbasis) *= SQRT_3;
+                        get (o, i, firstdf[j] + 4, nbasis) *= SQRT_3;
+                    }
                 }
 
                 if (reorder)
                     SWP_IND (2, 3);
             } else {
                 if (norm) {
-                    get (o, i, firstdf[j] + 1, nbasis) *= SQRT_5;
-                    get (o, i, firstdf[j] + 2, nbasis) *= SQRT_5;
-                    get (o, i, firstdf[j] + 3, nbasis) *= SQRT_5;
-                    get (o, i, firstdf[j] + 4, nbasis) *= SQRT_15;
-                    get (o, i, firstdf[j] + 5, nbasis) *= SQRT_5;
-                    get (o, i, firstdf[j] + 7, nbasis) *= SQRT_5;
-                    get (o, i, firstdf[j] + 8, nbasis) *= SQRT_5;
+                    if (normfromquick) {
+                        get (o, i, firstdf[j] + 1, nbasis) *= SQRT_5;
+                        get (o, i, firstdf[j] + 2, nbasis) *= SQRT_5;
+                        get (o, i, firstdf[j] + 4, nbasis) *= SQRT_5;
+                        get (o, i, firstdf[j] + 5, nbasis) *= SQRT_15;
+                        get (o, i, firstdf[j] + 6, nbasis) *= SQRT_5;
+                        get (o, i, firstdf[j] + 7, nbasis) *= SQRT_5;
+                        get (o, i, firstdf[j] + 8, nbasis) *= SQRT_5;
+                    } else {
+                        get (o, i, firstdf[j] + 1, nbasis) *= SQRT_5;
+                        get (o, i, firstdf[j] + 2, nbasis) *= SQRT_5;
+                        get (o, i, firstdf[j] + 3, nbasis) *= SQRT_5;
+                        get (o, i, firstdf[j] + 4, nbasis) *= SQRT_15;
+                        get (o, i, firstdf[j] + 5, nbasis) *= SQRT_5;
+                        get (o, i, firstdf[j] + 7, nbasis) *= SQRT_5;
+                        get (o, i, firstdf[j] + 8, nbasis) *= SQRT_5;
+                    }
                 }
 
                 if (reorder) {
@@ -190,8 +223,9 @@ correct_C (double *C, size_t nocc, uint8_t qspec)
     bool   *mark    = (bool *)((size_t *)quick_cuest_memchk.chk_firstdf_mark + nbasis);
     size_t  ifdf    = quick_cuest_memchk.ifdf;
 
-    bool reorder = qspec & CORRECT_REORDER;
-    bool norm    = qspec & CORRECT_NORM;
+    bool reorder       = qspec & CORRECT_REORDER;
+    bool norm          = qspec & CORRECT_NORM_;
+    bool normfromquick = qspec & CORRECT_FROMQUICK_;
 
 #ifdef CUESTDEBUG
     puts ("======== C from QUICK ========");
@@ -207,21 +241,39 @@ correct_C (double *C, size_t nocc, uint8_t qspec)
         for (size_t j = 0; j < ifdf; ++j) {
             if (mark[j]) {
                 if (norm) {
-                    C[firstdf[j] + i + 1] *= SQRT_3;
-                    C[firstdf[j] + i + 2] *= SQRT_3;
-                    C[firstdf[j] + i + 4] *= SQRT_3;
+                    if (normfromquick) {
+                        C[firstdf[j] + i + 1] *= SQRT_3;
+                        C[firstdf[j] + i + 3] *= SQRT_3;
+                        C[firstdf[j] + i + 4] *= SQRT_3;
+                    } else {
+                        C[firstdf[j] + i + 1] *= SQRT_3;
+                        C[firstdf[j] + i + 2] *= SQRT_3;
+                        C[firstdf[j] + i + 4] *= SQRT_3;
+                    }
                 }
 
                 if (reorder)
                     reorder_d (C + firstdf[j] + i);
             } else {
-                C[firstdf[j] + i + 1] *= SQRT_5;
-                C[firstdf[j] + i + 2] *= SQRT_5;
-                C[firstdf[j] + i + 3] *= SQRT_5;
-                C[firstdf[j] + i + 4] *= SQRT_15;
-                C[firstdf[j] + i + 5] *= SQRT_5;
-                C[firstdf[j] + i + 7] *= SQRT_5;
-                C[firstdf[j] + i + 8] *= SQRT_5;
+                if (norm) {
+                    if (normfromquick) {
+                        C[firstdf[j] + i + 1] *= SQRT_5;
+                        C[firstdf[j] + i + 2] *= SQRT_5;
+                        C[firstdf[j] + i + 4] *= SQRT_5;
+                        C[firstdf[j] + i + 5] *= SQRT_15;
+                        C[firstdf[j] + i + 6] *= SQRT_5;
+                        C[firstdf[j] + i + 7] *= SQRT_5;
+                        C[firstdf[j] + i + 8] *= SQRT_5;
+                    } else {
+                        C[firstdf[j] + i + 1] *= SQRT_5;
+                        C[firstdf[j] + i + 2] *= SQRT_5;
+                        C[firstdf[j] + i + 3] *= SQRT_5;
+                        C[firstdf[j] + i + 4] *= SQRT_15;
+                        C[firstdf[j] + i + 5] *= SQRT_5;
+                        C[firstdf[j] + i + 7] *= SQRT_5;
+                        C[firstdf[j] + i + 8] *= SQRT_5;
+                    }
+                }
 
                 if (reorder)
                     reorder_f (C + firstdf[j] + i);
