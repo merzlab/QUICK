@@ -41,6 +41,7 @@ contains
 #endif
 #if defined(CUDA) && defined(CUEST)
     use, intrinsic :: iso_c_binding, only: c_loc, c_int64_t
+    use quick_method_module, only: quick_method
     use quick_cuest_module, only: cuest_get_eri_J, cuest_get_eri_K
 #endif
   
@@ -140,10 +141,13 @@ contains
               else
                  call cuest_get_eri_J(c_loc(cuest_J), quick_qm_struct%dense)
               endif
-
-              call cuest_get_eri_K(c_loc(cuest_K), quick_qm_struct%co, int(quick_molspec%nelec / 2, c_int64_t))
-               
+              
 #ifdef CUESTDEBUG
+              print *, "got x_hybrid_coeff=", quick_method%x_hybrid_coeff
+
+              if (quick_method%x_hybrid_coeff /= 0.0d0) &
+                  call cuest_get_eri_K(c_loc(cuest_K), quick_qm_struct%co, int(quick_molspec%nelec / 2, c_int64_t))
+               
               print *, "deltaO=", deltaO
               print *, "======== cuEST %o contribution ========"
               if (deltaO) then
@@ -152,9 +156,16 @@ contains
                  call PriSym(6, nbasis, cuest_J - cuest_K, "F12.7")
               endif
               print *, "====== end cuEST %o contribution ======"
-#endif
 
-              cuest_J = cuest_J - cuest_K
+              if (quick_method%x_hybrid_coeff /= 0.0d0) &
+                  cuest_J = cuest_J - cuest_K
+#else
+              if (quick_method%x_hybrid_coeff /= 0.0d0) then
+                  ! TODO: scale K in cuEST
+                  call cuest_get_eri_K(c_loc(cuest_K), quick_qm_struct%co, int(quick_molspec%nelec / 2, c_int64_t))
+                  cuest_J = cuest_J - quick_method%x_hybrid_coeff * cuest_K
+              endif
+#endif
 
               if (deltaO) then
                  quick_qm_struct%o = quick_qm_struct%o + cuest_J - quick_qm_struct%cuest_prev_JmK
