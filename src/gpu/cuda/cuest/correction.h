@@ -5,14 +5,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define CORRECT_REORDER             1 // 0b0001
-#define CORRECT_NORM_CUEST_TO_QUICK 2 // 0b0010
-#define CORRECT_NORM_QUICK_TO_CUEST 6 // 0b0110
-#define CORRECT_NORM_INV            8 // 0b1000
+#define CORRECT_REORDER             0x1 // 0b0001
+#define CORRECT_NORM_CUEST_TO_QUICK 0x2 // 0b0010
+#define CORRECT_NORM_QUICK_TO_CUEST 0x6 // 0b0110
+#define CORRECT_NORM_INV            0x8 // 0b1000
 
 // do not pass the following specifiers as a parameter
-#define CORRECT_NORM_      2 // 0b0010
-#define CORRECT_FROMQUICK_ 4 // 0b0100
+#define CORRECT_NORM_      0x2 // 0b0010
+#define CORRECT_FROMQUICK_ 0x4 // 0b0100
 
 /** Must be called after initializing main basis set */
 void cuest_init_correct ();

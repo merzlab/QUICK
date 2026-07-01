@@ -56,7 +56,6 @@ contains
 #if defined(CUDA) && defined(CUEST)
      double precision, target :: cuest_J(nbasis, nbasis)
      double precision, target :: cuest_K(nbasis, nbasis)
-     double precision :: densetmp(nbasis, nbasis)
      logical :: firstiter, hasK
 #endif
 #ifdef MPIV
@@ -144,11 +143,17 @@ contains
            ! don't use cuEST on first iteration because quick_qm_struct%co will be all 0
            if (firstiter) then
               ! call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
+
+              ! density matrix input to this is correctly in QUICK form because it came from the SAD guess
               cuest_J = 0.0d0
               call gpu_get_cshell_eri(deltaO, cuest_J)  
+
               ! correct output
               call cuest_correct_o(cuest_J, ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, CUEST_CORRECT_NORM_INV))
               quick_qm_struct%o = quick_qm_struct%o + cuest_J
+
+              ! convert density matrix from QUICK to cuEST form
+              call cuest_correct_o(quick_qm_struct%dense, ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, CUEST_CORRECT_NORM_INV))
            else
 
               ! delta density is handled correctly
