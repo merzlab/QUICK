@@ -42,7 +42,8 @@ contains
 #if defined(CUDA) && defined(CUEST)
     use, intrinsic :: iso_c_binding, only: c_loc, c_int64_t
     use quick_method_module, only: quick_method
-    use quick_cuest_module, only: cuest_get_eri_J, cuest_get_eri_K
+    use quick_cuest_module, only: cuest_get_eri_J, cuest_get_eri_K, cuest_correct_o, &
+                                  CORRECT_NORM_AND_REORDER, CORRECT_QUICK_TO_CUEST
 #endif
   
      implicit none
@@ -52,7 +53,8 @@ contains
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      double precision tst, te, tred
 #if defined(CUDA) && defined(CUEST)
-     double precision, target :: cuest_J(nbasis, nbasis), cuest_K(nbasis, nbasis)
+     double precision, target :: cuest_J(nbasis, nbasis)
+     double precision, target :: cuest_K(nbasis, nbasis)
      logical :: hasK
 #endif
 #ifdef MPIV
@@ -138,7 +140,11 @@ contains
 #if defined(CUDA) && defined(CUEST)
            ! don't use cuEST on first iteration because quick_qm_struct%co will be all 0
            if (quick_qm_struct%co(1, 1) == 0) then
-              call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
+              ! call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
+              cuest_J = 0.0d0
+              call gpu_get_cshell_eri(deltaO, cuest_J)  
+              call cuest_correct_o(c_loc(cuest_J), CORRECT_NORM_AND_REORDER, CORRECT_QUICK_TO_CUEST)
+              quick_qm_struct%o = quick_qm_struct%o + cuest_J
            else
 
               ! delta density is handled correctly

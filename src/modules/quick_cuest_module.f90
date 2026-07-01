@@ -2,8 +2,14 @@ module quick_cuest_module
    !
    ! This module contains the fortran bindings for C functions that call cuEST
    !
-   use, intrinsic::iso_c_binding, only: c_int64_t, c_ptr
+   use, intrinsic::iso_c_binding, only: c_int8_t
    implicit none
+
+   integer(c_int8_t), protected :: CORRECT_REORDER = 1
+   integer(c_int8_t), protected :: CORRECT_NORM    = 2
+   integer(c_int8_t), protected :: CORRECT_NORM_AND_REORDER = 3
+   integer(c_int8_t), protected :: CORRECT_CUEST_TO_QUICK = 0
+   integer(c_int8_t), protected :: CORRECT_QUICK_TO_CUEST = 1
 
    ! unless commented otherwise, C will not modify the memory a pointer points to
 
@@ -33,6 +39,16 @@ module quick_cuest_module
 
    interface
       subroutine cuest_deinit_correct() bind (c, name="deinit_correct")
+      end subroutine
+   end interface
+
+   interface
+      subroutine cuest_correct_o(o, qspec, dirspec) bind(c, name="correct_o")
+         use, intrinsic :: iso_c_binding, only: c_ptr, c_int8_t
+         implicit none
+         type(c_ptr), intent(in), value :: o ! double; modified
+         integer(c_int8_t), intent(in), value :: qspec
+         integer(c_int8_t), intent(in), value :: dirspec
       end subroutine
    end interface
 

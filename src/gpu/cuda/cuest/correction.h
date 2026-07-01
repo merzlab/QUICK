@@ -5,13 +5,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define CORRECT_REORDER             1 // 0b001
-#define CORRECT_NORM_CUEST_TO_QUICK 2 // 0b010
-#define CORRECT_NORM_QUICK_TO_CUEST 6 // 0b110
+#define CORRECT_REORDER 1 // 0b01
+#define CORRECT_NORM    2 // 0b10
 
-// do not pass the following specifiers as a parameter
-#define CORRECT_NORM_      2 // 0b010
-#define CORRECT_FROMQUICK_ 4 // 0b100
+#define CORRECT_CUEST_TO_QUICK 0
+#define CORRECT_QUICK_TO_CUEST 1
 
 /**
  * @param[in] `qspec` Takes the following specifiers that can be combined with bitwise OR (`|`):
@@ -19,7 +17,7 @@
  *   - CORRECT_NORM_CUEST_TO_QUICK; corrects normalization when `o` is given in cuEST convention
  *   - CORRECT_NORM_QUICK_TO_CUEST; corrects normalization when `o` is given in QUICK convention
  */
-void correct_o (double *o, uint8_t qspec);
+void correct_o (double *o, int8_t qspec, int8_t dirspec);
 
 /**
  * @param[in] `nocc` Number of occupied orbitals
@@ -29,6 +27,6 @@ void correct_o (double *o, uint8_t qspec);
  *   - CORRECT_NORM_CUEST_TO_QUICK; corrects normalization when `o` is given in cuEST convention
  *   - CORRECT_NORM_QUICK_TO_CUEST; corrects normalization when `o` is given in QUICK convention
  */
-void correct_C (double *C, size_t nocc, uint8_t qspec);
+void correct_C (double *C, size_t nocc, int8_t qspec, int8_t dirspec);
 
 #endif

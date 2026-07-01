@@ -87,7 +87,7 @@ subroutine get1e(deltaO)
    logical, intent(in) :: deltaO
 
 #if defined(CUDA) && defined(CUEST)
-   double precision, target :: tmp_o_T(nbasis, nbasis), tmp_o_V(nbasis, nbasis)
+   double precision, target :: cuest_T(nbasis, nbasis), cuest_V(nbasis, nbasis)
 #endif
 
    !------------------------------------------------
@@ -112,9 +112,13 @@ subroutine get1e(deltaO)
          ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
          !-----------------------------------------------------------------
          RECORD_TIME(timer_begin%T1eT)
+#if defined(CUDA) && defined(CUEST)
+         call cuest_get_oei_T (c_loc(cuest_T));
+#else
          do Ibas=1,nbasis
             call kineticO(Ibas)
          enddo
+#endif
          RECORD_TIME(timer_end%T1eT)
 
 
@@ -127,21 +131,22 @@ subroutine get1e(deltaO)
          if(.not. quick_method%hasF) then
 #if defined(CUDA) && defined(CUEST)
            ! compute V integral
-           call cuest_get_oei_V(c_loc(tmp_o_V))
+           call cuest_get_oei_V(c_loc(cuest_V))
+           quick_qm_struct%o = cuest_T - cuest_V
 
 #ifdef CUESTDEBUG
-           call cuest_get_oei_T(c_loc(tmp_o_T))
+           ! call cuest_get_oei_T(c_loc(cuest_T))
            print *, "======== cuEST T+V ========"
-           call PriSym(6, nbasis, tmp_o_T - tmp_o_V, "F12.7")
+           call PriSym(6, nbasis, cuest_T - cuest_V, "F12.7")
            print *, "====== end cuEST T+V ======"
 
-           tmp_o_T = quick_qm_struct%o
-           call gpu_get_oei(tmp_o_T)
+           ! cuest_T = quick_qm_struct%o
+           call gpu_get_oei(cuest_T)
            print *, "======== quick T+V ========"
-           call PriSym(6, nbasis, tmp_o_T, "F12.7")
+           call PriSym(6, nbasis, cuest_T, "F12.7")
            print *, "====== end quick T+V ======"
 #endif
-           quick_qm_struct%o = quick_qm_struct%o - tmp_o_V
+           ! quick_qm_struct%o = quick_qm_struct%o - cuest_V
            call cuest_deinit_oei_plan()
 #else
            call gpu_get_oei(quick_qm_struct%o)
@@ -232,9 +237,9 @@ subroutine get1e(deltaO)
 #if defined(MPIV_GPU)
       if(.not. quick_method%hasF) then
 #if defined(CUDA) && defined(CUEST)
-        ! call cuest_get_oei_T(c_loc(tmp_o_T))
-        ! call cuest_get_oei_V(c_loc(tmp_o_V))
-        ! quick_qm_struct%o = tmp_o_T - tmp_o_V
+        ! call cuest_get_oei_T(c_loc(cuest_T))
+        ! call cuest_get_oei_V(c_loc(cuest_V))
+        ! quick_qm_struct%o = cuest_T - cuest_V
         print *, "QUICK called second branch"
         call gpu_get_oei(quick_qm_struct%o)
 #else

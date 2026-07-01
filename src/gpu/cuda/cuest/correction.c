@@ -84,7 +84,7 @@ deinit_correct ()
  *     f: xxx xxy xxz xyy xyz xzz yyy yyz yzz zzz
  */
 void
-correct_o (double *o, uint8_t qspec)
+correct_o (double *o, int8_t qspec, int8_t dirspec)
 {
     if (qspec == 0 || qspec > 7)
         return;
@@ -99,9 +99,22 @@ correct_o (double *o, uint8_t qspec)
 
     double *tmpbuf = quick_cuest_memchk.tmpbuf_dp;
 
-    bool reorder       = qspec & CORRECT_REORDER;
-    bool norm          = qspec & CORRECT_NORM_;
-    bool normfromquick = qspec & CORRECT_FROMQUICK_;
+    bool reorder   = qspec & CORRECT_REORDER;
+    bool norm      = qspec & CORRECT_NORM;
+    bool fromquick = dirspec == CORRECT_QUICK_TO_CUEST;
+
+    double kdxx, kfxxy, kfxyz;
+    if (fromquick) {
+        kdxx  = SQRT_3_INV;
+        kfxxy = SQRT_5_INV;
+        kfxyz = SQRT_15_INV;
+    } else {
+        kdxx  = SQRT_3;
+        kfxxy = SQRT_5;
+        kfxyz = SQRT_15;
+    }
+
+    // TODO(michaelyxsun): operate only on upper or lower half of matrix
 
     if (reorder) {
         // copy row col intersections to other side of diagonal
@@ -119,76 +132,76 @@ correct_o (double *o, uint8_t qspec)
 
     // normalize then reorder so normalize doesn't depend on if we reorder
     if (norm) {
-        if (normfromquick) {
+        if (fromquick) {
             // row normalization
             for (int i = 0; i < ifd; ++i) {
-                APPLY_NORM_ROW (firstd[i], 1, SQRT_3);
-                APPLY_NORM_ROW (firstd[i], 3, SQRT_3);
-                APPLY_NORM_ROW (firstd[i], 4, SQRT_3);
+                APPLY_NORM_ROW (firstd[i], 1, kdxx);
+                APPLY_NORM_ROW (firstd[i], 3, kdxx);
+                APPLY_NORM_ROW (firstd[i], 4, kdxx);
             }
 
             for (int i = 0; i < iff; ++i) {
-                APPLY_NORM_ROW (firstf[i], 1, SQRT_5);
-                APPLY_NORM_ROW (firstf[i], 2, SQRT_5);
-                APPLY_NORM_ROW (firstf[i], 4, SQRT_5);
-                APPLY_NORM_ROW (firstf[i], 5, SQRT_15);
-                APPLY_NORM_ROW (firstf[i], 6, SQRT_5);
-                APPLY_NORM_ROW (firstf[i], 7, SQRT_5);
-                APPLY_NORM_ROW (firstf[i], 8, SQRT_5);
+                APPLY_NORM_ROW (firstf[i], 1, kfxxy);
+                APPLY_NORM_ROW (firstf[i], 2, kfxxy);
+                APPLY_NORM_ROW (firstf[i], 4, kfxxy);
+                APPLY_NORM_ROW (firstf[i], 5, kfxyz);
+                APPLY_NORM_ROW (firstf[i], 6, kfxxy);
+                APPLY_NORM_ROW (firstf[i], 7, kfxxy);
+                APPLY_NORM_ROW (firstf[i], 8, kfxxy);
             }
 
             // column normalization
             for (int i = 0; i < nbasis; ++i) {
                 for (int j = 0; j < ifd; ++j) {
-                    get (o, i, firstd[j] + 1, nbasis) *= SQRT_3;
-                    get (o, i, firstd[j] + 3, nbasis) *= SQRT_3;
-                    get (o, i, firstd[j] + 4, nbasis) *= SQRT_3;
+                    get (o, i, firstd[j] + 1, nbasis) *= kdxx;
+                    get (o, i, firstd[j] + 3, nbasis) *= kdxx;
+                    get (o, i, firstd[j] + 4, nbasis) *= kdxx;
                 }
 
                 for (int j = 0; j < iff; ++j) {
-                    get (o, i, firstf[j] + 1, nbasis) *= SQRT_5;
-                    get (o, i, firstf[j] + 2, nbasis) *= SQRT_5;
-                    get (o, i, firstf[j] + 4, nbasis) *= SQRT_5;
-                    get (o, i, firstf[j] + 5, nbasis) *= SQRT_15;
-                    get (o, i, firstf[j] + 6, nbasis) *= SQRT_5;
-                    get (o, i, firstf[j] + 7, nbasis) *= SQRT_5;
-                    get (o, i, firstf[j] + 8, nbasis) *= SQRT_5;
+                    get (o, i, firstf[j] + 1, nbasis) *= kfxxy;
+                    get (o, i, firstf[j] + 2, nbasis) *= kfxxy;
+                    get (o, i, firstf[j] + 4, nbasis) *= kfxxy;
+                    get (o, i, firstf[j] + 5, nbasis) *= kfxyz;
+                    get (o, i, firstf[j] + 6, nbasis) *= kfxxy;
+                    get (o, i, firstf[j] + 7, nbasis) *= kfxxy;
+                    get (o, i, firstf[j] + 8, nbasis) *= kfxxy;
                 }
             }
         } else {
             // row normalization
             for (int i = 0; i < ifd; ++i) {
-                APPLY_NORM_ROW (firstd[i], 1, SQRT_3);
-                APPLY_NORM_ROW (firstd[i], 2, SQRT_3);
-                APPLY_NORM_ROW (firstd[i], 4, SQRT_3);
+                APPLY_NORM_ROW (firstd[i], 1, kdxx);
+                APPLY_NORM_ROW (firstd[i], 2, kdxx);
+                APPLY_NORM_ROW (firstd[i], 4, kdxx);
             }
 
             for (int i = 0; i < iff; ++i) {
-                APPLY_NORM_ROW (firstf[i], 1, SQRT_5);
-                APPLY_NORM_ROW (firstf[i], 2, SQRT_5);
-                APPLY_NORM_ROW (firstf[i], 3, SQRT_5);
-                APPLY_NORM_ROW (firstf[i], 4, SQRT_15);
-                APPLY_NORM_ROW (firstf[i], 5, SQRT_5);
-                APPLY_NORM_ROW (firstf[i], 7, SQRT_5);
-                APPLY_NORM_ROW (firstf[i], 8, SQRT_5);
+                APPLY_NORM_ROW (firstf[i], 1, kfxxy);
+                APPLY_NORM_ROW (firstf[i], 2, kfxxy);
+                APPLY_NORM_ROW (firstf[i], 3, kfxxy);
+                APPLY_NORM_ROW (firstf[i], 4, kfxyz);
+                APPLY_NORM_ROW (firstf[i], 5, kfxxy);
+                APPLY_NORM_ROW (firstf[i], 7, kfxxy);
+                APPLY_NORM_ROW (firstf[i], 8, kfxxy);
             }
 
             // column normalization
             for (int i = 0; i < nbasis; ++i) {
                 for (int j = 0; j < ifd; ++j) {
-                    get (o, i, firstd[j] + 1, nbasis) *= SQRT_3;
-                    get (o, i, firstd[j] + 2, nbasis) *= SQRT_3;
-                    get (o, i, firstd[j] + 4, nbasis) *= SQRT_3;
+                    get (o, i, firstd[j] + 1, nbasis) *= kdxx;
+                    get (o, i, firstd[j] + 2, nbasis) *= kdxx;
+                    get (o, i, firstd[j] + 4, nbasis) *= kdxx;
                 }
 
                 for (int j = 0; j < iff; ++j) {
-                    get (o, i, firstf[j] + 1, nbasis) *= SQRT_5;
-                    get (o, i, firstf[j] + 2, nbasis) *= SQRT_5;
-                    get (o, i, firstf[j] + 3, nbasis) *= SQRT_5;
-                    get (o, i, firstf[j] + 4, nbasis) *= SQRT_15;
-                    get (o, i, firstf[j] + 5, nbasis) *= SQRT_5;
-                    get (o, i, firstf[j] + 7, nbasis) *= SQRT_5;
-                    get (o, i, firstf[j] + 8, nbasis) *= SQRT_5;
+                    get (o, i, firstf[j] + 1, nbasis) *= kfxxy;
+                    get (o, i, firstf[j] + 2, nbasis) *= kfxxy;
+                    get (o, i, firstf[j] + 3, nbasis) *= kfxxy;
+                    get (o, i, firstf[j] + 4, nbasis) *= kfxyz;
+                    get (o, i, firstf[j] + 5, nbasis) *= kfxxy;
+                    get (o, i, firstf[j] + 7, nbasis) *= kfxxy;
+                    get (o, i, firstf[j] + 8, nbasis) *= kfxxy;
                 }
             }
         }
@@ -226,7 +239,7 @@ correct_o (double *o, uint8_t qspec)
 #undef SWP_IND
 
 void
-correct_C (double *C, size_t nocc, uint8_t qspec)
+correct_C (double *C, size_t nocc, int8_t qspec, int8_t dirspec)
 {
     uint64_t nbasis = quick_cuest_data.nbasis;
     uint64_t nshell = quick_cuest_data.nshell;
@@ -236,9 +249,20 @@ correct_C (double *C, size_t nocc, uint8_t qspec)
     size_t  ifd    = quick_cuest_memchk.ifd;
     size_t  iff    = quick_cuest_memchk.iff;
 
-    bool reorder       = qspec & CORRECT_REORDER;
-    bool norm          = qspec & CORRECT_NORM_;
-    bool normfromquick = qspec & CORRECT_FROMQUICK_;
+    bool reorder   = qspec & CORRECT_REORDER;
+    bool norm      = qspec & CORRECT_NORM;
+    bool fromquick = dirspec == CORRECT_QUICK_TO_CUEST;
+
+    double kdxx, kfxxy, kfxyz;
+    if (fromquick) {
+        kdxx  = SQRT_3_INV;
+        kfxxy = SQRT_5_INV;
+        kfxyz = SQRT_15_INV;
+    } else {
+        kdxx  = SQRT_3;
+        kfxxy = SQRT_5;
+        kfxyz = SQRT_15;
+    }
 
 #ifdef CUESTDEBUG
     puts ("======== C from QUICK ========");
@@ -253,40 +277,40 @@ correct_C (double *C, size_t nocc, uint8_t qspec)
     const size_t endi = nocc * nbasis;
 
     if (norm) {
-        if (normfromquick) {
+        if (fromquick) {
             for (size_t i = 0; i < endi; i += nbasis) {
                 for (size_t j = 0; j < ifd; ++j) {
-                    C[firstd[j] + i + 1] *= SQRT_3;
-                    C[firstd[j] + i + 3] *= SQRT_3;
-                    C[firstd[j] + i + 4] *= SQRT_3;
+                    C[firstd[j] + i + 1] *= kdxx;
+                    C[firstd[j] + i + 3] *= kdxx;
+                    C[firstd[j] + i + 4] *= kdxx;
                 }
 
                 for (size_t j = 0; j < iff; ++j) {
-                    C[firstf[j] + i + 1] *= SQRT_5;
-                    C[firstf[j] + i + 2] *= SQRT_5;
-                    C[firstf[j] + i + 4] *= SQRT_5;
-                    C[firstf[j] + i + 5] *= SQRT_15;
-                    C[firstf[j] + i + 6] *= SQRT_5;
-                    C[firstf[j] + i + 7] *= SQRT_5;
-                    C[firstf[j] + i + 8] *= SQRT_5;
+                    C[firstf[j] + i + 1] *= kfxxy;
+                    C[firstf[j] + i + 2] *= kfxxy;
+                    C[firstf[j] + i + 4] *= kfxxy;
+                    C[firstf[j] + i + 5] *= kfxyz;
+                    C[firstf[j] + i + 6] *= kfxxy;
+                    C[firstf[j] + i + 7] *= kfxxy;
+                    C[firstf[j] + i + 8] *= kfxxy;
                 }
             }
         } else {
             for (size_t i = 0; i < endi; i += nbasis) {
                 for (size_t j = 0; j < ifd; ++j) {
-                    C[firstd[j] + i + 1] *= SQRT_3;
-                    C[firstd[j] + i + 2] *= SQRT_3;
-                    C[firstd[j] + i + 4] *= SQRT_3;
+                    C[firstd[j] + i + 1] *= kdxx;
+                    C[firstd[j] + i + 2] *= kdxx;
+                    C[firstd[j] + i + 4] *= kdxx;
                 }
 
                 for (size_t j = 0; j < iff; ++j) {
-                    C[firstf[j] + i + 1] *= SQRT_5;
-                    C[firstf[j] + i + 2] *= SQRT_5;
-                    C[firstf[j] + i + 3] *= SQRT_5;
-                    C[firstf[j] + i + 4] *= SQRT_15;
-                    C[firstf[j] + i + 5] *= SQRT_5;
-                    C[firstf[j] + i + 7] *= SQRT_5;
-                    C[firstf[j] + i + 8] *= SQRT_5;
+                    C[firstf[j] + i + 1] *= kfxxy;
+                    C[firstf[j] + i + 2] *= kfxxy;
+                    C[firstf[j] + i + 3] *= kfxxy;
+                    C[firstf[j] + i + 4] *= kfxyz;
+                    C[firstf[j] + i + 5] *= kfxxy;
+                    C[firstf[j] + i + 7] *= kfxxy;
+                    C[firstf[j] + i + 8] *= kfxxy;
                 }
             }
         }
