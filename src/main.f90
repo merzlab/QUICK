@@ -65,7 +65,8 @@
     use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_loc, c_bool
     use quick_cuest_module, only: cuest_init, cuest_deinit, cuest_init_basis, &
                                   cuest_init_dfint_plan, cuest_init_pair_list, cuest_init_correct, &
-                                  cuest_deinit_correct
+                                  cuest_deinit_correct, cuest_correct_o, &
+                                  CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
     ! use quick_aux_basis_module, only: quick_aux_basis, readauxbasis
     use quick_aux_basis_sph_module, only: quick_aux_basis_sph, read_aux_basis_sph
 #endif
@@ -423,7 +424,14 @@
         if (quick_method%zmat) call zmake
 
         ! Calculate Dipole Moment
-        if (quick_method%dipole) call dipole
+        if (quick_method%dipole) then
+#if defined(CUDA) && defined(CUEST)
+            ! convert overlap and density matrix back to QUICK form since dipole uses raw dcoeff and aexp
+            call cuest_correct_o(quick_qm_struct%s, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+            call cuest_correct_o(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+#endif
+            call dipole
+        endif
     endif
     ! Now at this point we have an energy and a geometry.  If this is
     ! an optimization job, we now have the optimized geometry.
