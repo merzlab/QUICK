@@ -126,7 +126,7 @@ module quick_calculated_module
 
 #if defined(CUDA) && defined(CUEST)
       ! previous J - K computed by cuEST
-      double precision, dimension(:,:), allocatable :: cuest_prev_JmK
+      double precision, dimension(:,:), allocatable :: cuest_prev_K
 #endif
 
       ! A matrix of orbital degeneracies
@@ -313,8 +313,8 @@ contains
       if(.not. allocated(self%iDegen)) allocate(self%iDegen(nbasis))
 
 #if defined(CUDA) && defined(CUEST)
-      if(.not. allocated(self%cuest_prev_JmK)) allocate(self%cuest_prev_JmK(nbasis,nbasis))
-      self%cuest_prev_JmK = 0.0d0
+      if(.not. allocated(self%cuest_prev_K)) allocate(self%cuest_prev_K(nbasis,nbasis))
+      self%cuest_prev_K = 0.0d0
 #endif
 
       if(.not. allocated(self%Mulliken)) allocate(self%Mulliken(natom))
@@ -436,7 +436,7 @@ contains
       if (allocated(self%E)) deallocate(self%E)
       if (allocated(self%iDegen)) deallocate(self%iDegen)
 #if defined(CUDA) && defined(CUEST)
-      if (allocated(self%cuest_prev_JmK)) deallocate(self%cuest_prev_JmK)
+      if (allocated(self%cuest_prev_K)) deallocate(self%cuest_prev_K)
 #endif
 
       if (allocated(self%Mulliken)) deallocate(self%Mulliken)

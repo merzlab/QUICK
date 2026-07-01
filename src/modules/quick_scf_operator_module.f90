@@ -52,7 +52,8 @@ contains
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      double precision tst, te, tred
 #if defined(CUDA) && defined(CUEST)
-    double precision, target :: cuest_J(nbasis, nbasis), cuest_K(nbasis, nbasis)
+     double precision, target :: cuest_J(nbasis, nbasis), cuest_K(nbasis, nbasis)
+     logical :: hasK
 #endif
 #ifdef MPIV
      integer ierror
@@ -67,6 +68,10 @@ contains
   
      quick_qm_struct%o = 0.0d0
      quick_qm_struct%Eel=0.0d0
+
+#if defined(CUDA) && defined(CUEST)
+     hasK = quick_method%x_hybrid_coeff /= 0.0d0
+#endif
   
   !-----------------------------------------------------------------
   !  Step 1. evaluate 1e integrals
@@ -135,52 +140,43 @@ contains
            if (quick_qm_struct%co(1, 1) == 0) then
               call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
            else
-              ! cuest
-              if (deltaO) then
-                 call cuest_get_eri_J(c_loc(cuest_J), quick_qm_struct%dense + quick_qm_struct%denseOld)
-              else
-                 call cuest_get_eri_J(c_loc(cuest_J), quick_qm_struct%dense)
-              endif
+
+              ! delta density is handled correctly
+              call cuest_get_eri_J(c_loc(cuest_J), quick_qm_struct%dense)
               
 #ifdef CUESTDEBUG
               print *, "got x_hybrid_coeff=", quick_method%x_hybrid_coeff
 
-              if (quick_method%x_hybrid_coeff /= 0.0d0) &
+              if (hasK) &
                   call cuest_get_eri_K(c_loc(cuest_K), quick_qm_struct%co, int(quick_molspec%nelec / 2, c_int64_t))
                
               print *, "deltaO=", deltaO
               print *, "======== cuEST %o contribution ========"
               if (deltaO) then
-                 call PriSym(6, nbasis, cuest_J - cuest_K - quick_qm_struct%cuest_prev_JmK, "F12.7")
+                 call PriSym(6, nbasis, cuest_J - cuest_K + quick_qm_struct%cuest_prev_K, "F12.7")
               else
                  call PriSym(6, nbasis, cuest_J - cuest_K, "F12.7")
               endif
               print *, "====== end cuEST %o contribution ======"
 
-              if (quick_method%x_hybrid_coeff /= 0.0d0) &
+              if (hasK) &
                   cuest_J = cuest_J - cuest_K
 #else
-              if (quick_method%x_hybrid_coeff /= 0.0d0) then
+              if (hasK) then
                   call cuest_get_eri_K(c_loc(cuest_K), quick_qm_struct%co, int(quick_molspec%nelec / 2, c_int64_t))
                   cuest_J = cuest_J - cuest_K ! K is scaled in cuEST
               endif
 #endif
 
-              if (deltaO) then
-                 quick_qm_struct%o = quick_qm_struct%o + cuest_J - quick_qm_struct%cuest_prev_JmK
+              if (deltaO .and. hasK) then
+                 quick_qm_struct%o = quick_qm_struct%o + cuest_J + quick_qm_struct%cuest_prev_K
               else
                  quick_qm_struct%o = quick_qm_struct%o + cuest_J
               endif
               
-              quick_qm_struct%cuest_prev_JmK = cuest_J
+              if (hasK) &
+                  quick_qm_struct%cuest_prev_K = cuest_K
               
-              ! cuest_J = quick_qm_struct%o ! use cuest_J as temporary buffer
-              !
-              ! call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)
-              ! print *, "======== gpu_get_cshell_eri ========"
-              ! call PriSym(6, nbasis, quick_qm_struct%o - cuest_J, "F14.8")
-              ! print *, "====== end gpu_get_cshell_eri ======"
-
 #ifdef CUESTDEBUG
               ! call QUICK for debug info
               cuest_J = 0.0d0
