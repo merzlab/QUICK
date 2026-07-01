@@ -22,7 +22,7 @@ init_correct ()
     // all have length ceil(nbasis/2)
     const size_t len    = ((nbasis + 1) >> 1);
     size_t      *firstd = chk_firstd_firstf;
-    size_t      *firstf = firstd + +len;
+    size_t      *firstf = firstd + len;
     size_t       ifd = 0, iff = 0;
 
     // get index of d and f orbitals
@@ -84,7 +84,7 @@ deinit_correct ()
  *     f: xxx xxy xxz xyy xyz xzz yyy yyz yzz zzz
  */
 void
-correct_o (double *o, int8_t qspec, int8_t dirspec)
+correct_o (double *o, int8_t qspec)
 {
     if (qspec == 0 || qspec > 7)
         return;
@@ -99,12 +99,13 @@ correct_o (double *o, int8_t qspec, int8_t dirspec)
 
     double *tmpbuf = quick_cuest_memchk.tmpbuf_dp;
 
-    bool reorder   = qspec & CORRECT_REORDER;
-    bool norm      = qspec & CORRECT_NORM;
-    bool fromquick = dirspec == CORRECT_QUICK_TO_CUEST;
+    bool reorder            = qspec & CORRECT_REORDER;
+    bool norm               = qspec & CORRECT_NORM_;
+    bool reorder_from_quick = qspec & CORRECT_FROMQUICK_;
+    bool norminv            = qspec & CORRECT_NORM_INV;
 
     double kdxx, kfxxy, kfxyz;
-    if (fromquick) {
+    if (norminv) {
         kdxx  = SQRT_3_INV;
         kfxxy = SQRT_5_INV;
         kfxyz = SQRT_15_INV;
@@ -132,7 +133,7 @@ correct_o (double *o, int8_t qspec, int8_t dirspec)
 
     // normalize then reorder so normalize doesn't depend on if we reorder
     if (norm) {
-        if (fromquick) {
+        if (reorder_from_quick) {
             // row normalization
             for (int i = 0; i < ifd; ++i) {
                 APPLY_NORM_ROW (firstd[i], 1, kdxx);
@@ -239,7 +240,7 @@ correct_o (double *o, int8_t qspec, int8_t dirspec)
 #undef SWP_IND
 
 void
-correct_C (double *C, size_t nocc, int8_t qspec, int8_t dirspec)
+correct_C (double *C, size_t nocc, int8_t qspec)
 {
     uint64_t nbasis = quick_cuest_data.nbasis;
     uint64_t nshell = quick_cuest_data.nshell;
@@ -249,12 +250,13 @@ correct_C (double *C, size_t nocc, int8_t qspec, int8_t dirspec)
     size_t  ifd    = quick_cuest_memchk.ifd;
     size_t  iff    = quick_cuest_memchk.iff;
 
-    bool reorder   = qspec & CORRECT_REORDER;
-    bool norm      = qspec & CORRECT_NORM;
-    bool fromquick = dirspec == CORRECT_QUICK_TO_CUEST;
+    bool reorder            = qspec & CORRECT_REORDER;
+    bool norm               = qspec & CORRECT_NORM_;
+    bool reorder_from_quick = qspec & CORRECT_FROMQUICK_;
+    bool norminv            = qspec & CORRECT_NORM_INV;
 
     double kdxx, kfxxy, kfxyz;
-    if (fromquick) {
+    if (norminv) {
         kdxx  = SQRT_3_INV;
         kfxxy = SQRT_5_INV;
         kfxyz = SQRT_15_INV;
@@ -277,7 +279,7 @@ correct_C (double *C, size_t nocc, int8_t qspec, int8_t dirspec)
     const size_t endi = nocc * nbasis;
 
     if (norm) {
-        if (fromquick) {
+        if (reorder_from_quick) {
             for (size_t i = 0; i < endi; i += nbasis) {
                 for (size_t j = 0; j < ifd; ++j) {
                     C[firstd[j] + i + 1] *= kdxx;

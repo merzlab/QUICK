@@ -43,7 +43,7 @@ contains
     use, intrinsic :: iso_c_binding, only: c_loc, c_int64_t
     use quick_method_module, only: quick_method
     use quick_cuest_module, only: cuest_get_eri_J, cuest_get_eri_K, cuest_correct_o, &
-                                  CORRECT_NORM_AND_REORDER, CORRECT_QUICK_TO_CUEST
+                                  CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST
 #endif
   
      implicit none
@@ -143,7 +143,7 @@ contains
               ! call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
               cuest_J = 0.0d0
               call gpu_get_cshell_eri(deltaO, cuest_J)  
-              call cuest_correct_o(c_loc(cuest_J), CORRECT_NORM_AND_REORDER, CORRECT_QUICK_TO_CUEST)
+              call cuest_correct_o(c_loc(cuest_J), CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
               quick_qm_struct%o = quick_qm_struct%o + cuest_J
            else
 

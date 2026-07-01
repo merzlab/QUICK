@@ -6,10 +6,11 @@ module quick_cuest_module
    implicit none
 
    integer(c_int8_t), protected :: CORRECT_REORDER = 1
-   integer(c_int8_t), protected :: CORRECT_NORM    = 2
-   integer(c_int8_t), protected :: CORRECT_NORM_AND_REORDER = 3
-   integer(c_int8_t), protected :: CORRECT_CUEST_TO_QUICK = 0
-   integer(c_int8_t), protected :: CORRECT_QUICK_TO_CUEST = 1
+   integer(c_int8_t), protected :: CORRECT_NORM_CUEST_TO_QUICK = 2
+   integer(c_int8_t), protected :: CORRECT_NORM_QUICK_TO_CUEST = 6
+   integer(c_int8_t), protected :: CORRECT_NORM_INV = 8
+   integer(c_int8_t), protected :: CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK = 3
+   integer(c_int8_t), protected :: CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST = 7
 
    ! unless commented otherwise, C will not modify the memory a pointer points to
 
@@ -43,12 +44,11 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_correct_o(o, qspec, dirspec) bind(c, name="correct_o")
+      subroutine cuest_correct_o(o, qspec) bind(c, name="correct_o")
          use, intrinsic :: iso_c_binding, only: c_ptr, c_int8_t
          implicit none
          type(c_ptr), intent(in), value :: o ! double; modified
          integer(c_int8_t), intent(in), value :: qspec
-         integer(c_int8_t), intent(in), value :: dirspec
       end subroutine
    end interface
 

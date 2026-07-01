@@ -18,8 +18,7 @@
 #include "quick_cuest.h"
 #include "util.h"
 
-#define correct_o(a, b, c)
-#define correct_C(a, b, c, d)
+#define correct_o(a, b)
 
 /**
  * Initializes the one-electron integrals plan `OEIntPlan` in `quick_cuest_struct`
@@ -105,7 +104,7 @@ cuest_get_oei_S (double *o)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, CORRECT_REORDER | CORRECT_NORM, CORRECT_CUEST_TO_QUICK);
+    correct_o (o, CORRECT_REORDER | CORRECT_NORM_CUEST_TO_QUICK);
 
 #ifdef CUESTDEBUG
     puts ("-------- S --------");
@@ -165,7 +164,7 @@ cuest_get_oei_T (double *o)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, CORRECT_REORDER | CORRECT_NORM, CORRECT_CUEST_TO_QUICK);
+    correct_o (o, CORRECT_REORDER | CORRECT_NORM_CUEST_TO_QUICK);
 
 #ifdef CUESTDEBUG
     puts ("-------- T --------");
@@ -230,7 +229,7 @@ cuest_get_oei_V (double *o)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, CORRECT_REORDER | CORRECT_NORM, CORRECT_CUEST_TO_QUICK);
+    correct_o (o, CORRECT_REORDER | CORRECT_NORM_CUEST_TO_QUICK);
 
 #ifdef CUESTDEBUG
     puts ("-------- V --------");
@@ -276,7 +275,9 @@ cuest_get_eri_J (double *o, double *P)
 #endif
 
     memcpy (tmp_o, P, nbasis * nbasis * sizeof (double));
-    correct_o (tmp_o, CORRECT_REORDER | CORRECT_NORM, CORRECT_QUICK_TO_CUEST);
+#undef correct_o
+    correct_o (tmp_o, CORRECT_REORDER | CORRECT_NORM_QUICK_TO_CUEST);
+#define correct_o(a, b)
 
 #ifdef CUESTDEBUG
     puts ("-------- corrected cuEST DENSITY MATRIX --------");
@@ -327,7 +328,7 @@ cuest_get_eri_J (double *o, double *P)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, CORRECT_REORDER | CORRECT_NORM, CORRECT_CUEST_TO_QUICK);
+    correct_o (o, CORRECT_REORDER | CORRECT_NORM_CUEST_TO_QUICK);
 
 #ifdef CUESTDEBUG
     puts ("-------- J --------");
@@ -373,7 +374,7 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
         tmp_C = malloc (d_C_siz);
 
     memcpy (tmp_C, C, d_C_siz);
-    correct_C (tmp_C, nocc, CORRECT_REORDER | CORRECT_NORM, CORRECT_QUICK_TO_CUEST);
+    correct_C (tmp_C, nocc, CORRECT_REORDER | CORRECT_NORM_QUICK_TO_CUEST);
 
     if (cudaMemcpy (d_C, tmp_C, d_C_siz, cudaMemcpyHostToDevice) != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
@@ -413,7 +414,7 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, CORRECT_REORDER | CORRECT_NORM, CORRECT_CUEST_TO_QUICK);
+    correct_o (o, CORRECT_REORDER | CORRECT_NORM_CUEST_TO_QUICK);
 
 #ifdef CUESTDEBUG
     puts ("-------- K --------");
@@ -432,4 +433,3 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
 }
 
 #undef correct_o
-#undef correct_C
