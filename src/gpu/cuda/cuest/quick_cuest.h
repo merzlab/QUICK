@@ -80,7 +80,7 @@ void cuest_init_pair_list (double cutoff);
 void cuest_init_oei_plan ();
 void cuest_deinit_oei_plan ();
 
-void cuest_init_dfint_plan ();
+void cuest_init_dfint_plan (double hyb_coeff);
 
 void cuest_get_oei_S (double *o);
 void cuest_get_oei_T (double *o);

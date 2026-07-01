@@ -75,7 +75,10 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_init_dfint_plan() bind(c, name="cuest_init_dfint_plan")
+      subroutine cuest_init_dfint_plan(hyb_coeff) bind(c, name="cuest_init_dfint_plan")
+         use, intrinsic :: iso_c_binding, only: c_double
+         implicit none
+         real(c_double), intent(in), value :: hyb_coeff
       end subroutine cuest_init_dfint_plan
    end interface
 

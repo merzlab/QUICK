@@ -128,6 +128,7 @@ contains
       use quick_constants_module, only: symbol
       use quick_size_module, only: MAXPRIM_AUX
       use quick_files_module, only: basisSetName, basisDir
+      use quick_method_module, only: quick_method
 
       implicit none
       integer, intent(in) :: natomxiao
@@ -160,16 +161,20 @@ contains
       ! nbasis here counts SPHERICAL (2L+1) functions, not Cartesian ones.
       ! ------------------------------------------------------------------
 
-      select case (trim(basisSetName))
-      case ("CC-PVTZ")
-          aux_basis_file = "CC-PVTZ-JKFIT.BAS"
-      case ("DEF2-SVP")
-          aux_basis_file = "DEF2-SVP-JKFIT.BAS"
-      case default
-          aux_basis_file = "DEF2-UNIVERSAL-JKFIT.BAS"
-      end select
+      if (quick_method%x_hybrid_coeff == 0.0d0) then
+         aux_basis_file = "DEF2-UNIVERSAL-JFIT.BAS"
+      else
+         select case (trim(basisSetName))
+         case ("CC-PVTZ")
+            aux_basis_file = "CC-PVTZ-JKFIT.BAS"
+         case ("DEF2-SVP")
+            aux_basis_file = "DEF2-SVP-JKFIT.BAS"
+         case default
+            aux_basis_file = "DEF2-UNIVERSAL-JKFIT.BAS"
+         end select
+      end if
 
-      aux_basis_file = trim(basisDir) // "/" // trim(aux_basis_file)
+      aux_basis_file = trim(basisDir)//"/"//trim(aux_basis_file)
       print *, "Auxiliary DF Basis File: ", trim(aux_basis_file)
 
       open (newunit=iauxbasisfile, file=trim(aux_basis_file), status='old', action='read', iostat=ierr)
@@ -449,7 +454,7 @@ contains
          ierr = 37
          print *, "quick_aux_basis_sph%maxcontract > MAXPRIM_AUX. aborting read_aux_basis_sph."
          return
-      endif
+      end if
 
       ! ------------------------------------------------------------------
       ! Note on MPI: if this routine is only called on the master rank,

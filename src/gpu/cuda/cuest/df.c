@@ -12,7 +12,7 @@
 #include "quick_cuest.h"
 
 void
-cuest_init_dfint_plan ()
+cuest_init_dfint_plan (double hyb_coeff)
 {
     cuestHandle_t               handle    = quick_cuest_struct.handle;
     cuestWorkspaceDescriptor_t *tmpWD     = quick_cuest_struct.tmpWD;
@@ -20,6 +20,12 @@ cuest_init_dfint_plan ()
 
     cuestDFIntPlanParameters_t dfint_plan_parameters;
     checkCuestErrors (cuestParametersCreate (CUEST_DFINTPLAN_PARAMETERS, &dfint_plan_parameters));
+
+    // set hybrid exchange fraction
+    checkCuestErrors (cuestParametersConfigure (CUEST_DFINTPLAN_PARAMETERS, dfint_plan_parameters,
+                                                CUEST_DFINTPLAN_PARAMETERS_EXCHANGE_FRACTION,
+                                                &hyb_coeff, sizeof (double)));
+
     checkCuestErrors (cuestDFIntPlanCreateWorkspaceQuery (
         handle, quick_cuest_struct.basis, quick_cuest_struct.auxBasis,
         quick_cuest_struct.AOPairList, dfint_plan_parameters, persistWD, tmpWD,

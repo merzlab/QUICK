@@ -281,7 +281,7 @@
     call cuest_init_pair_list(quick_method%coreIntegralCutoff)
 
     ! init 2 electron integral plan
-    call cuest_init_dfint_plan
+    call cuest_init_dfint_plan(quick_method%x_hybrid_coeff)
 
     RECORD_TIME(timer_end%TIniCuest)
     timer_cumer%TIniCuest=timer_cumer%TIniCuest+timer_end%TIniCuest-timer_begin%TIniCuest &

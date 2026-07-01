@@ -161,9 +161,8 @@ contains
                   cuest_J = cuest_J - cuest_K
 #else
               if (quick_method%x_hybrid_coeff /= 0.0d0) then
-                  ! TODO: scale K in cuEST
                   call cuest_get_eri_K(c_loc(cuest_K), quick_qm_struct%co, int(quick_molspec%nelec / 2, c_int64_t))
-                  cuest_J = cuest_J - quick_method%x_hybrid_coeff * cuest_K
+                  cuest_J = cuest_J - cuest_K ! K is scaled in cuEST
               endif
 #endif
 
