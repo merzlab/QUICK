@@ -12,13 +12,10 @@
 #include <cuest.h>
 #endif
 
-#include "correction.h"
 #include "helper_status.h"
 #include "helper_workspace.h"
 #include "quick_cuest.h"
 #include "util.h"
-
-#define correct_o(a, b)
 
 /**
  * Initializes the one-electron integrals plan `OEIntPlan` in `quick_cuest_struct`
@@ -104,8 +101,6 @@ cuest_get_oei_S (double *o)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, CORRECT_REORDER | CORRECT_NORM_CUEST_TO_QUICK);
-
 #ifdef CUESTDEBUG
     puts ("-------- S --------");
     for (int i = 0; i < nbasis; ++i) {
@@ -163,8 +158,6 @@ cuest_get_oei_T (double *o)
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
-
-    correct_o (o, CORRECT_REORDER | CORRECT_NORM_CUEST_TO_QUICK);
 
 #ifdef CUESTDEBUG
     puts ("-------- T --------");
@@ -229,8 +222,6 @@ cuest_get_oei_V (double *o)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, CORRECT_REORDER | CORRECT_NORM_CUEST_TO_QUICK);
-
 #ifdef CUESTDEBUG
     puts ("-------- V --------");
     for (int i = 0; i < nbasis; ++i) {
@@ -255,7 +246,6 @@ cuest_get_eri_J (double *o, double *P)
     cuestAOBasis_t              basis  = quick_cuest_struct.basis;
 
     uint64_t nbasis = quick_cuest_data.nbasis;
-    double  *tmp_o  = quick_cuest_memchk.tmp_o;
 
     double *d_J;
     size_t  d_J_siz = nbasis * nbasis * sizeof (double);
@@ -264,30 +254,7 @@ cuest_get_eri_J (double *o, double *P)
         exit (EXIT_FAILURE);
     }
 
-#ifdef CUESTDEBUG
-    puts ("-------- uncorrected cuEST DENSITY MATRIX --------");
-    for (int i = 0; i < nbasis; ++i) {
-        for (int j = 0; j < nbasis; ++j)
-            printf ("%f ", get (P, i, j, nbasis));
-        putchar ('\n');
-    }
-    puts ("------ END uncorrected cuEST DENSITY MATRIX ------");
-#endif
-
-    memcpy (tmp_o, P, nbasis * nbasis * sizeof (double));
-#undef correct_o
-    correct_o (tmp_o, CORRECT_REORDER | CORRECT_NORM_QUICK_TO_CUEST);
-#define correct_o(a, b)
-
-#ifdef CUESTDEBUG
-    puts ("-------- corrected cuEST DENSITY MATRIX --------");
-    for (int i = 0; i < nbasis; ++i) {
-        for (int j = 0; j < nbasis; ++j)
-            printf ("%f ", get (tmp_o, i, j, nbasis));
-        putchar ('\n');
-    }
-    puts ("------ END corrected cuEST DENSITY MATRIX ------");
-#endif
+    // P does not need to be corrected because S is correct already
 
     // density matrix
     double *d_P;
@@ -297,7 +264,7 @@ cuest_get_eri_J (double *o, double *P)
         exit (EXIT_FAILURE);
     }
 
-    if (cudaMemcpy (d_P, tmp_o, d_P_siz, cudaMemcpyHostToDevice) != cudaSuccess) {
+    if (cudaMemcpy (d_P, P, d_P_siz, cudaMemcpyHostToDevice) != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
@@ -328,8 +295,6 @@ cuest_get_eri_J (double *o, double *P)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, CORRECT_REORDER | CORRECT_NORM_CUEST_TO_QUICK);
-
 #ifdef CUESTDEBUG
     puts ("-------- J --------");
     for (int i = 0; i < nbasis; ++i) {
@@ -354,7 +319,6 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
     cuestAOBasis_t              basis  = quick_cuest_struct.basis;
 
     uint64_t nbasis = quick_cuest_data.nbasis;
-    double  *tmp_C  = quick_cuest_memchk.tmp_C;
 
     double *d_K;
     size_t  d_K_siz = nbasis * nbasis * sizeof (double);
@@ -370,13 +334,9 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
         exit (EXIT_FAILURE);
     }
 
-    if (tmp_C == NULL)
-        tmp_C = malloc (d_C_siz);
+    // P does not need to be corrected because S is correct already
 
-    memcpy (tmp_C, C, d_C_siz);
-    correct_C (tmp_C, nocc, CORRECT_REORDER | CORRECT_NORM_QUICK_TO_CUEST);
-
-    if (cudaMemcpy (d_C, tmp_C, d_C_siz, cudaMemcpyHostToDevice) != cudaSuccess) {
+    if (cudaMemcpy (d_C, C, d_C_siz, cudaMemcpyHostToDevice) != cudaSuccess) {
         fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
@@ -414,8 +374,6 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
         exit (EXIT_FAILURE);
     }
 
-    correct_o (o, CORRECT_REORDER | CORRECT_NORM_CUEST_TO_QUICK);
-
 #ifdef CUESTDEBUG
     puts ("-------- K --------");
     for (int i = 0; i < nbasis; ++i) {
@@ -431,5 +389,3 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
         exit (EXIT_FAILURE);
     }
 }
-
-#undef correct_o

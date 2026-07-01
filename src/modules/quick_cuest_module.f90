@@ -5,12 +5,12 @@ module quick_cuest_module
    use, intrinsic::iso_c_binding, only: c_int8_t
    implicit none
 
-   integer(c_int8_t), protected :: CORRECT_REORDER = 1
-   integer(c_int8_t), protected :: CORRECT_NORM_CUEST_TO_QUICK = 2
-   integer(c_int8_t), protected :: CORRECT_NORM_QUICK_TO_CUEST = 6
-   integer(c_int8_t), protected :: CORRECT_NORM_INV = 8
-   integer(c_int8_t), protected :: CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK = 3
-   integer(c_int8_t), protected :: CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST = 7
+   integer(c_int8_t), protected :: CUEST_CORRECT_REORDER = 1
+   integer(c_int8_t), protected :: CUEST_CORRECT_NORM_CUEST_TO_QUICK = 2
+   integer(c_int8_t), protected :: CUEST_CORRECT_NORM_QUICK_TO_CUEST = 6
+   integer(c_int8_t), protected :: CUEST_CORRECT_NORM_INV = 8
+   integer(c_int8_t), protected :: CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK = 3
+   integer(c_int8_t), protected :: CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST = 7
 
    ! unless commented otherwise, C will not modify the memory a pointer points to
 
@@ -34,20 +34,20 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_init_correct() bind (c, name="init_correct")
+      subroutine cuest_init_correct() bind (c, name="cuest_init_correct")
       end subroutine
    end interface
 
    interface
-      subroutine cuest_deinit_correct() bind (c, name="deinit_correct")
+      subroutine cuest_deinit_correct() bind (c, name="cuest_deinit_correct")
       end subroutine
    end interface
 
    interface
-      subroutine cuest_correct_o(o, qspec) bind(c, name="correct_o")
-         use, intrinsic :: iso_c_binding, only: c_ptr, c_int8_t
+      subroutine cuest_correct_o(o, qspec) bind(c, name="cuest_correct_o")
+         use, intrinsic :: iso_c_binding, only: c_double, c_int8_t
          implicit none
-         type(c_ptr), intent(in), value :: o ! double; modified
+         real(c_double), intent(inout) :: o(*)
          integer(c_int8_t), intent(in), value :: qspec
       end subroutine
    end interface

@@ -14,6 +14,10 @@
 #define CORRECT_NORM_      2 // 0b0010
 #define CORRECT_FROMQUICK_ 4 // 0b0100
 
+/** Must be called after initializing main basis set */
+void cuest_init_correct ();
+void cuest_deinit_correct ();
+
 /**
  * @param[in] `qspec` Takes the following specifiers that can be combined with bitwise OR (`|`):
  *   - CORRECT_REORDER; reorders `o` between QUICK and cuEST basis set ordering
@@ -21,7 +25,7 @@
  *   - CORRECT_NORM_QUICK_TO_CUEST; corrects normalization when `o` is given in QUICK convention
  *   - CORRECT_NORM_INV; inverts normalization coefficients
  */
-void correct_o (double *o, int8_t qspec);
+void cuest_correct_o (double *o, int8_t qspec);
 
 /**
  * @param[in] `nocc` Number of occupied orbitals
@@ -32,6 +36,6 @@ void correct_o (double *o, int8_t qspec);
  *   - CORRECT_NORM_QUICK_TO_CUEST; corrects normalization when `o` is given in QUICK convention
  *   - CORRECT_NORM_INV; inverts normalization coefficients
  */
-void correct_C (double *C, size_t nocc, int8_t qspec);
+void cuest_correct_C (double *C, size_t nocc, int8_t qspec);
 
 #endif

@@ -43,7 +43,8 @@ contains
     use, intrinsic :: iso_c_binding, only: c_loc, c_int64_t
     use quick_method_module, only: quick_method
     use quick_cuest_module, only: cuest_get_eri_J, cuest_get_eri_K, cuest_correct_o, &
-                                  CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST
+                                  CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, &
+                                  CUEST_CORRECT_NORM_INV
 #endif
   
      implicit none
@@ -55,7 +56,8 @@ contains
 #if defined(CUDA) && defined(CUEST)
      double precision, target :: cuest_J(nbasis, nbasis)
      double precision, target :: cuest_K(nbasis, nbasis)
-     logical :: hasK
+     double precision :: densetmp(nbasis, nbasis)
+     logical :: firstiter, hasK
 #endif
 #ifdef MPIV
      integer ierror
@@ -72,6 +74,7 @@ contains
      quick_qm_struct%Eel=0.0d0
 
 #if defined(CUDA) && defined(CUEST)
+     firstiter = quick_qm_struct%co(1, 1) == 0
      hasK = quick_method%x_hybrid_coeff /= 0.0d0
 #endif
   
@@ -139,11 +142,12 @@ contains
         if (quick_method%bGPU) then          
 #if defined(CUDA) && defined(CUEST)
            ! don't use cuEST on first iteration because quick_qm_struct%co will be all 0
-           if (quick_qm_struct%co(1, 1) == 0) then
+           if (firstiter) then
               ! call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
               cuest_J = 0.0d0
               call gpu_get_cshell_eri(deltaO, cuest_J)  
-              call cuest_correct_o(c_loc(cuest_J), CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
+              ! correct output
+              call cuest_correct_o(cuest_J, ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, CUEST_CORRECT_NORM_INV))
               quick_qm_struct%o = quick_qm_struct%o + cuest_J
            else
 

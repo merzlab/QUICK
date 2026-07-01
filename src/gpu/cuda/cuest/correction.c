@@ -10,7 +10,7 @@
 #include "util.h"
 
 void
-init_correct ()
+cuest_init_correct ()
 {
     uint64_t  nbasis = quick_cuest_data.nbasis;
     uint64_t  nshell = quick_cuest_data.nshell;
@@ -40,7 +40,7 @@ init_correct ()
 }
 
 void
-deinit_correct ()
+cuest_deinit_correct ()
 {
     free (quick_cuest_memchk.chk_firstd_firstf);
     free (quick_cuest_memchk.tmpbuf_dp);
@@ -84,7 +84,7 @@ deinit_correct ()
  *     f: xxx xxy xxz xyy xyz xzz yyy yyz yzz zzz
  */
 void
-correct_o (double *o, int8_t qspec)
+cuest_correct_o (double *o, int8_t qspec)
 {
     if (qspec == 0 || qspec > 7)
         return;
@@ -240,7 +240,7 @@ correct_o (double *o, int8_t qspec)
 #undef SWP_IND
 
 void
-correct_C (double *C, size_t nocc, int8_t qspec)
+cuest_correct_C (double *C, size_t nocc, int8_t qspec)
 {
     uint64_t nbasis = quick_cuest_data.nbasis;
     uint64_t nshell = quick_cuest_data.nshell;
