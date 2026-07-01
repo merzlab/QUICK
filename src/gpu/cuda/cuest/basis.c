@@ -261,11 +261,11 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
     checkCuestErrors (cuestAOBasisCreateWorkspaceQuery (handle, natom, nshells_per_atom, shells,
                                                         basis_params, persistWD, tmpWD, &basis));
 
-#ifdef CUESTDEBUG
+    // #ifdef CUESTDEBUG
     printf ("%s: basis persistWD allocation size:\t%zu\n", __func__,
             persistWD->deviceBufferSizeInBytes);
     printf ("%s: basis tmpWD allocation size:\t%zu\n", __func__, tmpWD->deviceBufferSizeInBytes);
-#endif
+    // #endif
     cuestWorkspace_t *persistBasisWorkspace = allocateWorkspace (persistWD);
     cuestWorkspace_t *tmpBasisWorkspace     = allocateWorkspace (tmpWD);
 

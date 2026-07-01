@@ -135,12 +135,12 @@ cuest_init_pair_list (double cutoff)
                                                            xyz, cutoff, pair_list_params, persistWD,
                                                            tmpWD, &quick_cuest_struct.AOPairList));
 
-#ifdef CUESTDEBUG
+    // #ifdef CUESTDEBUG
     printf ("%s: pair list persistWD allocation size:\t%zu\n", __func__,
             persistWD->deviceBufferSizeInBytes);
     printf ("%s: pair list tmpWD allocation size:\t%zu\n", __func__,
             tmpWD->deviceBufferSizeInBytes);
-#endif
+    // #endif
     quick_cuest_struct.persistAOPairListWorkspace = allocateWorkspace (persistWD);
     cuestWorkspace_t *tmpAOPairListWorkspace      = allocateWorkspace (tmpWD);
 
