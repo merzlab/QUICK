@@ -243,6 +243,7 @@
         int(nbasis, c_int64_t),                          &
         int(quick_aux_basis_sph%nshell, c_int64_t),      &
         int(maxcontract, c_int64_t),                     &
+        int(quick_molspec%iattype, c_int8_t),            &
         int(quick_aux_basis_sph%maxcontract, c_int64_t), &
         c_loc(xyz),                                      &
         quick_molspec%chg,                               &

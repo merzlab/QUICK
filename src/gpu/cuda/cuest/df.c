@@ -10,6 +10,7 @@
 #include "helper_workspace.h"
 
 #include "quick_cuest.h"
+#include "util.h"
 
 void
 cuest_init_dfint_plan (double hyb_coeff)
@@ -31,12 +32,7 @@ cuest_init_dfint_plan (double hyb_coeff)
         quick_cuest_struct.AOPairList, dfint_plan_parameters, persistWD, tmpWD,
         &quick_cuest_struct.DFIntPlan));
 
-    // #ifdef CUESTDEBUG
-    printf ("%s: density fitting integral plan persistWD allocation size:\t%zu\n", __func__,
-            persistWD->deviceBufferSizeInBytes);
-    printf ("%s: density fitting integral plan tmpWD allocation size:\t%zu\n", __func__,
-            tmpWD->deviceBufferSizeInBytes);
-    // #endif
+    MEMLOG ("Density Fit Integral Plan");
     quick_cuest_struct.persistDFIntPlanWorkspace = allocateWorkspace (persistWD);
     cuestWorkspace_t *tmpDFIntPlanWorkspace      = allocateWorkspace (tmpWD);
     checkCuestErrors (cuestDFIntPlanCreate (handle, quick_cuest_struct.basis,

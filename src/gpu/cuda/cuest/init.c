@@ -14,13 +14,24 @@
 #include "helper_workspace.h"
 
 #include "quick_cuest.h"
+#include "util.h"
 
+/**
+ * Requires persistent parameters:
+ *     - xyz
+ *     - iattype
+ */
 void
 cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nauxshell, int64_t maxcontract,
-            int64_t maxcontract_aux, double *xyz, double *chg, int64_t nextatom, double *extxyz,
-            double *extchg)
+            int64_t maxcontract_aux, int8_t *iattype, double *xyz, double *chg, int64_t nextatom,
+            double *extxyz, double *extchg)
 {
-    freopen ("cuest.log", "w", stdout);
+    freopen ("cuest.debug", "w", stdout);
+
+    if ((quick_cuest_logfp = fopen ("cuest.log", "w")) == NULL) {
+        perror ("cuest_init fopen cuest.log error: ");
+        exit (EXIT_FAILURE);
+    }
 
     // =========== //
     // init handle //
@@ -50,6 +61,11 @@ cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nauxshell, in
     quick_cuest_data.maxcontract_aux = maxcontract_aux;
     quick_cuest_data.xyz             = xyz;
     quick_cuest_data.nbasis          = nbasis;
+
+    // ensure iattype persists
+    const size_t iattype_siz = natom * sizeof (int8_t);
+    quick_cuest_data.iattype = malloc (iattype_siz);
+    memcpy (quick_cuest_data.iattype, iattype, iattype_siz);
 
     // =========== //
     // init arrays //
@@ -132,12 +148,8 @@ cuest_init_pair_list (double cutoff)
                                                            xyz, cutoff, pair_list_params, persistWD,
                                                            tmpWD, &quick_cuest_struct.AOPairList));
 
-    // #ifdef CUESTDEBUG
-    printf ("%s: pair list persistWD allocation size:\t%zu\n", __func__,
-            persistWD->deviceBufferSizeInBytes);
-    printf ("%s: pair list tmpWD allocation size:\t%zu\n", __func__,
-            tmpWD->deviceBufferSizeInBytes);
-    // #endif
+    MEMLOG ("cuEST Pair List");
+
     quick_cuest_struct.persistAOPairListWorkspace = allocateWorkspace (persistWD);
     cuestWorkspace_t *tmpAOPairListWorkspace      = allocateWorkspace (tmpWD);
 
@@ -160,6 +172,8 @@ cuest_deinit_oei_plan ()
 void
 cuest_deinit ()
 {
+    fclose (quick_cuest_logfp);
+
     checkCuestErrors (cuestDFIntPlanDestroy (quick_cuest_struct.DFIntPlan));
     freeWorkspace (quick_cuest_struct.persistDFIntPlanWorkspace);
     checkCuestErrors (cuestAOPairListDestroy (quick_cuest_struct.AOPairList));
@@ -172,6 +186,7 @@ cuest_deinit ()
 
     free (quick_cuest_data.allchg);
     free (quick_cuest_data.ifshell);
+    free (quick_cuest_data.iattype);
     free (quick_cuest_memchk.chk_katom_ktype_kprim);
 
     if (cudaFree (quick_cuest_data.allxyz_gpu) != cudaSuccess) {

@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #ifdef LOCAL
 #include "/Users/msun/rehs2026/cuest/libcuest-linux-sbsa-0.1.1.1_cuda13-archive/include/cuest.h"
@@ -46,6 +47,7 @@ typedef struct {
     double  *allchg;
     double  *allchg_gpu;
     size_t  *ifshell;
+    int8_t  *iattype;
 } quick_cuest_data_t;
 
 typedef struct {
@@ -59,10 +61,11 @@ typedef struct {
 extern quick_cuest_struct_t quick_cuest_struct;
 extern quick_cuest_data_t   quick_cuest_data;
 extern quick_cuest_memchk_t quick_cuest_memchk;
+extern FILE                *quick_cuest_logfp;
 
 void cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nauxshell,
-                 int64_t maxcontract, int64_t maxcontract_aux, double *xyz, double *chg,
-                 int64_t nextatom, double *extxyz, double *extchg);
+                 int64_t maxcontract, int64_t maxcontract_aux, int8_t *iattype, double *xyz,
+                 double *chg, int64_t nextatom, double *extxyz, double *extchg);
 /** Deinitializes the basis set, pair list, and DF integral plan */
 void cuest_deinit ();
 

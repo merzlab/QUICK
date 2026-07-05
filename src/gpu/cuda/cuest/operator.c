@@ -40,11 +40,7 @@ cuest_init_oei_plan ()
         handle, basis, quick_cuest_struct.AOPairList, oeint_plan_params, persistWD, tmpWD,
         &quick_cuest_struct.OEIntPlan));
 
-    // #ifdef CUESTDEBUG
-    printf ("%s: oei plan persistWD allocation size:\t%zu\n", __func__,
-            persistWD->deviceBufferSizeInBytes);
-    printf ("%s: oei plan tmpWD allocation size:\t%zu\n", __func__, tmpWD->deviceBufferSizeInBytes);
-    // #endif
+    MEMLOG ("One-electron Integral Plan");
     quick_cuest_struct.persistOEIntPlanWorkspace = allocateWorkspace (persistWD);
     cuestWorkspace_t *tmpOEIntPlanWorkspace      = allocateWorkspace (tmpWD);
     checkCuestErrors (cuestOEIntPlanCreate (handle, basis, quick_cuest_struct.AOPairList,
@@ -81,9 +77,7 @@ cuest_get_oei_S (double *o)
     checkCuestErrors (cuestOverlapComputeWorkspaceQuery (handle, quick_cuest_struct.OEIntPlan,
                                                          overlap_compute_params, tmpWD, d_S));
 
-    // #ifdef CUESTDEBUG
-    printf ("%s: overlap tmpWD allocation size:\t%zu\n", __func__, tmpWD->deviceBufferSizeInBytes);
-    // #endif
+    MEMLOG_TMPWD ("Overlap Matrix Compute");
     cuestWorkspace_t *tmpSWorkspace = allocateWorkspace (tmpWD);
     checkCuestErrors (cuestOverlapCompute (handle, quick_cuest_struct.OEIntPlan,
                                            overlap_compute_params, tmpSWorkspace, d_S));
@@ -139,9 +133,7 @@ cuest_get_oei_T (double *o)
     checkCuestErrors (cuestKineticComputeWorkspaceQuery (handle, quick_cuest_struct.OEIntPlan,
                                                          kinetic_compute_params, tmpWD, d_T));
 
-    // #ifdef CUESTDEBUG
-    printf ("%s: kinetic tmpWD allocation size:\t%zu\n", __func__, tmpWD->deviceBufferSizeInBytes);
-    // #endif
+    MEMLOG_TMPWD ("Kinetic Integral Compute");
     cuestWorkspace_t *tmpTWorkspace = allocateWorkspace (tmpWD);
     checkCuestErrors (cuestKineticCompute (handle, quick_cuest_struct.OEIntPlan,
                                            kinetic_compute_params, tmpTWorkspace, d_T));
@@ -199,10 +191,7 @@ cuest_get_oei_V (double *o)
         quick_cuest_data.ntotalatom, quick_cuest_data.allxyz_gpu, quick_cuest_data.allchg_gpu,
         d_V));
 
-    // #ifdef CUESTDEBUG
-    printf ("%s: potential tmpWD allocation size:\t%zu\n", __func__,
-            tmpWD->deviceBufferSizeInBytes);
-    // #endif
+    MEMLOG_TMPWD ("Potential Integral Compute");
     cuestWorkspace_t *tmpVWorkspace = allocateWorkspace (tmpWD);
     checkCuestErrors (
         cuestPotentialCompute (handle, quick_cuest_struct.OEIntPlan, potential_compute_params,
@@ -275,9 +264,7 @@ cuest_get_eri_J (double *o, double *P)
     checkCuestErrors (cuestDFCoulombComputeWorkspaceQuery (handle, quick_cuest_struct.DFIntPlan,
                                                            dfj_compute_params, tmpWD, d_P, d_J));
 
-    // #ifdef CUESTDEBUG
-    printf ("%s: coulomb tmpWD allocation size:\t%zu\n", __func__, tmpWD->deviceBufferSizeInBytes);
-    // #endif
+    MEMLOG_TMPWD ("Coulomb Integral Compute");
     cuestWorkspace_t *tmpDFJWorkspace = allocateWorkspace (tmpWD);
     checkCuestErrors (cuestDFCoulombCompute (handle, quick_cuest_struct.DFIntPlan,
                                              dfj_compute_params, tmpDFJWorkspace, d_P, d_J));
@@ -352,9 +339,7 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
         handle, quick_cuest_struct.DFIntPlan, dfk_compute_params, varBufSiz, tmpWD, nocc, d_C,
         d_K));
 
-    // #ifdef CUESTDEBUG
-    printf ("%s: exchange tmpWD allocation size:\t%zu\n", __func__, tmpWD->deviceBufferSizeInBytes);
-    // #endif
+    MEMLOG_TMPWD ("Exchange Integral Compute");
     cuestWorkspace_t *tmpDFKWorkspace = allocateWorkspace (tmpWD);
     checkCuestErrors (cuestDFSymmetricExchangeCompute (handle, quick_cuest_struct.DFIntPlan,
                                                        dfk_compute_params, varBufSiz,

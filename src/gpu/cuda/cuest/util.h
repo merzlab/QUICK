@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 
+#include "quick_cuest.h"
+
 #define SWAP(x, y, type)                                                                           \
     do {                                                                                           \
         type swap_temporary_variable_88888888_ = (x);                                              \
@@ -40,5 +42,19 @@ reorder_f (double *a)
     SWAP (a[5], a[7], double);
     SWAP (a[6], a[7], double);
 }
+
+#define MEMLOG(desc)                                                                               \
+    do {                                                                                           \
+        printf ("%s: Persistent workspace requires %.2f GB of memory\n", desc,                     \
+                quick_cuest_struct.persistWD->deviceBufferSizeInBytes / 1e9);                      \
+        printf ("%s: Temporary workspace requires %.2f GB of memory\n", desc,                      \
+                quick_cuest_struct.tmpWD->deviceBufferSizeInBytes / 1e9);                          \
+    } while (0)
+
+#define MEMLOG_TMPWD(desc)                                                                         \
+    do {                                                                                           \
+        printf ("%s: Temporary workspace requires %.2f GB of memory\n", desc,                      \
+                quick_cuest_struct.tmpWD->deviceBufferSizeInBytes / 1e9);                          \
+    } while (0)
 
 #endif
