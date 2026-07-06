@@ -62,10 +62,8 @@
 #endif
 
 #if defined(CUDA) && defined(CUEST)
-    use, intrinsic::iso_c_binding, only: c_int64_t, c_double, c_loc, c_bool
-    use quick_cuest_module, only: cuest_init, cuest_deinit, cuest_init_basis, &
-                                  cuest_init_dfint_plan, cuest_init_pair_list, cuest_init_correct, &
-                                  cuest_deinit_correct
+    use, intrinsic::iso_c_binding, only: c_int64_t, c_int8_t, c_double, c_loc, c_bool
+    use quick_cuest_module
     use quick_aux_basis_sph_module, only: quick_aux_basis_sph, read_aux_basis_sph
 #endif
 
@@ -241,10 +239,11 @@
         int(natom, c_int64_t),                           &
         int(nshell, c_int64_t),                          &
         int(nbasis, c_int64_t),                          &
+        int(quick_molspec%nelec / 2, c_int64_t),         &
         int(quick_aux_basis_sph%nshell, c_int64_t),      &
         int(maxcontract, c_int64_t),                     &
-        int(quick_molspec%iattype, c_int8_t),            &
         int(quick_aux_basis_sph%maxcontract, c_int64_t), &
+        int(quick_molspec%iattype, c_int8_t),            &
         c_loc(xyz),                                      &
         quick_molspec%chg,                               &
         int(quick_molspec%nextatom, c_int64_t),          &
@@ -282,6 +281,15 @@
 
     ! init 2 electron integral plan
     call cuest_init_dfint_plan(quick_method%x_hybrid_coeff)
+
+    ! init xc compute if DFT wanted
+    if (quick_method%DFT) then
+        if (quick_method%BLYP) then
+            call cuest_init_xc(CUEST_FUNCTIONAL_BLYP)
+        elseif (quick_method%B3LYP) then
+            call cuest_init_xc(CUEST_FUNCTIONAL_B3LYP)
+        endif
+    endif
 
     RECORD_TIME(timer_end%TIniCuest)
     timer_cumer%TIniCuest=timer_cumer%TIniCuest+timer_end%TIniCuest-timer_begin%TIniCuest &

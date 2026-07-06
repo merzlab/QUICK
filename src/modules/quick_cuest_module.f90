@@ -11,11 +11,14 @@ module quick_cuest_module
    integer(c_int8_t), protected :: CUEST_CORRECT_NORM_INV = 8
    integer(c_int8_t), protected :: CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK = 3
    integer(c_int8_t), protected :: CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST = 7
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_BLYP = 0
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_B3LYP = 1
+
 
    ! unless commented otherwise, C will not modify the memory a pointer points to
 
    interface
-      subroutine cuest_init(natom, nshell, nbasis, nauxshell, maxcontract, maxcontract_aux, &
+      subroutine cuest_init(natom, nshell, nbasis, nocc, nauxshell, maxcontract, maxcontract_aux, &
                             iattype, xyz, chg, nextatom, extxyz, extchg) &
          bind(c, name="cuest_init")
          use, intrinsic::iso_c_binding, only: c_int64_t, c_int8_t, c_double, c_ptr
@@ -23,6 +26,7 @@ module quick_cuest_module
          integer(c_int64_t), intent(in), value :: natom
          integer(c_int64_t), intent(in), value :: nshell
          integer(c_int64_t), intent(in), value :: nbasis
+         integer(c_int64_t), intent(in), value :: nocc
          integer(c_int64_t), intent(in), value :: nauxshell
          integer(c_int64_t), intent(in), value :: maxcontract
          integer(c_int64_t), intent(in), value :: maxcontract_aux
@@ -130,11 +134,24 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_get_eri_K(o, C, nocc) bind(c, name="cuest_get_eri_K")
+      subroutine cuest_get_eri_K(o, C) bind(c, name="cuest_get_eri_K")
          use, intrinsic::iso_c_binding, only: c_ptr, c_double, c_int64_t
          type(c_ptr), intent(in), value :: o ! double; modified
          real(c_double), intent(in) :: C(*)
-         integer(c_int64_t), intent(in), value :: nocc
       end subroutine cuest_get_eri_K
+   end interface
+
+   interface
+      subroutine cuest_init_xc (fnl) bind(c, name="cuest_init_xc")
+         use, intrinsic :: iso_c_binding, only: c_int8_t
+         integer(c_int8_t), intent(in), value :: fnl
+      end subroutine
+   end interface
+
+   interface
+      subroutine cuest_get_Vxc (fnl) bind(c, name="cuest_get_Vxc")
+         use, intrinsic :: iso_c_binding, only: c_int8_t
+         integer(c_int8_t), intent(in), value :: fnl
+      end subroutine
    end interface
 end module quick_cuest_module

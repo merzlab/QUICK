@@ -163,7 +163,7 @@ contains
               print *, "got x_hybrid_coeff=", quick_method%x_hybrid_coeff
 
               if (hasK) &
-                  call cuest_get_eri_K(c_loc(cuest_K), quick_qm_struct%co, int(quick_molspec%nelec / 2, c_int64_t))
+                  call cuest_get_eri_K(c_loc(cuest_K), quick_qm_struct%co)
                
               print *, "deltaO=", deltaO
               print *, "======== cuEST %o contribution ========"
@@ -178,7 +178,7 @@ contains
                   cuest_J = cuest_J - cuest_K
 #else
               if (hasK) then
-                  call cuest_get_eri_K(c_loc(cuest_K), quick_qm_struct%co, int(quick_molspec%nelec / 2, c_int64_t))
+                  call cuest_get_eri_K(c_loc(cuest_K), quick_qm_struct%co)
                   cuest_J = cuest_J - cuest_K ! K is scaled in cuEST
               endif
 #endif

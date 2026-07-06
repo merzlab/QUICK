@@ -299,13 +299,14 @@ cuest_get_eri_J (double *o, double *P)
 }
 
 void
-cuest_get_eri_K (double *o, double *C, int64_t nocc)
+cuest_get_eri_K (double *o, double *C)
 {
     cuestHandle_t               handle = quick_cuest_struct.handle;
     cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
     cuestAOBasis_t              basis  = quick_cuest_struct.basis;
 
     uint64_t nbasis = quick_cuest_data.nbasis;
+    uint64_t nocc   = quick_cuest_data.nocc;
 
     double *d_K;
     size_t  d_K_siz = nbasis * nbasis * sizeof (double);
@@ -371,6 +372,11 @@ cuest_get_eri_K (double *o, double *C, int64_t nocc)
 
     if (cudaFree (d_K) != cudaSuccess) {
         fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
+        exit (EXIT_FAILURE);
+    }
+
+    if (cudaFree (d_C) != cudaSuccess) {
+        fprintf (stderr, "cudaFree failed at %s:%d\n", __func__, __LINE__);
         exit (EXIT_FAILURE);
     }
 }

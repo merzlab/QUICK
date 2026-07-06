@@ -22,9 +22,9 @@
  *     - iattype
  */
 void
-cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nauxshell, int64_t maxcontract,
-            int64_t maxcontract_aux, int8_t *iattype, double *xyz, double *chg, int64_t nextatom,
-            double *extxyz, double *extchg)
+cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t nauxshell,
+            int64_t maxcontract, int64_t maxcontract_aux, int8_t *iattype, double *xyz, double *chg,
+            int64_t nextatom, double *extxyz, double *extchg)
 {
     freopen ("cuest.debug", "w", stdout);
 
@@ -56,6 +56,7 @@ cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nauxshell, in
     quick_cuest_data.natom           = natom;
     quick_cuest_data.ntotalatom      = natom + nextatom;
     quick_cuest_data.nshell          = nshell;
+    quick_cuest_data.nocc            = nocc;
     quick_cuest_data.nauxshell       = nauxshell;
     quick_cuest_data.maxcontract     = maxcontract;
     quick_cuest_data.maxcontract_aux = maxcontract_aux;
