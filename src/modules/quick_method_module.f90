@@ -121,7 +121,7 @@ module quick_method_module
         double precision :: integralCutoff = 1.0d-8   ! integral cutoff
         double precision :: leastIntegralCutoff = LEASTCUTOFF  ! the smallest cutoff
         double precision :: maxIntegralCutoff = 1.0d-12
-        double precision :: primLimit      = 1.0d-8   ! prime cutoff
+        double precision :: primLimit      = 1.0d-9   ! prime cutoff
         double precision :: gradCutoff     = 1.0d-7   ! gradient cutoff
         double precision :: DMCutoff       = 1.0d-10  ! density matrix cutoff
         double precision :: XCCutoff       = 1.0d-7   ! exchange correlation cutoff
@@ -984,7 +984,7 @@ module quick_method_module
                                            ! smallest integral cutoff, used in conventional SCF
             self%maxIntegralCutoff = 1.0d-12
                                            ! smallest integral cutoff, used in conventional SCF
-            self%primLimit      = 1.0d-8   ! prime cutoff
+            self%primLimit      = 1.0d-9   ! prime cutoff
             self%gradCutoff     = 1.0d-7   ! gradient cutoff
             self%DMCutoff       = 1.0d-10  ! density matrix cutoff
             self%XCCutoff       = 1.0d-7   ! exchange correlation cutoff
@@ -1073,6 +1073,7 @@ module quick_method_module
             ! tighten XCCutoff if diffuse functions exist
             if(self%diffuse_basis_funcs) then
                 self%integralCutoff=self%integralCutoff*1.0d-2
+                self%primLimit=self%integralCutoff*1.0d-1
                 if(self%DFT .and. self%isDefaultXCCutoff) self%XCCutoff=self%XCCutoff*1.0d-1
             endif
         end subroutine check_quick_method
