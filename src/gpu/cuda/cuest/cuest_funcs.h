@@ -1,0 +1,15 @@
+#ifndef CUEST_CUEST_FUNCS_H
+#define CUEST_CUEST_FUNCS_H
+
+#define CUEST_FUNCTIONAL_HF     0
+#define CUEST_FUNCTIONAL_B3LYP  1
+#define CUEST_FUNCTIONAL_B97    2
+#define CUEST_FUNCTIONAL_BLYP   3
+#define CUEST_FUNCTIONAL_M06L   4 // QUICK unsupported
+#define CUEST_FUNCTIONAL_PBE    5
+#define CUEST_FUNCTIONAL_PBE0   6
+#define CUEST_FUNCTIONAL_R2SCAN 7 // QUICK unsupported
+#define CUEST_FUNCTIONAL_SVWN5  8 // QUICK unsupported
+#define CUEST_FUNCTIONAL_B97MV  9 // QUICK unsupported
+
+#endif

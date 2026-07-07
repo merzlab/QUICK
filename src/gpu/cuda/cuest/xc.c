@@ -11,7 +11,7 @@
 #include <cuest.h>
 #endif
 
-#include "common/constants.h"
+#include "cuest_funcs.h"
 #include "helper_status.h"
 #include "helper_workspace.h"
 #include "quick_cuest.h"
@@ -26,8 +26,8 @@ static const double ahlrichs_radii[] = {
     1.50,1.40,1.30,1.20,1.20,1.20,1.20,1.20,1.20,1.10,1.10,1.10,1.10,1.00,0.90,0.90,0.90,0.90
 };
 // clang-format on
-//
-void
+
+static void
 build_ahlrichs_radial_quadrature (size_t npoint, double R, double *radialNodes,
                                   double *radialWeights)
 {
@@ -50,7 +50,7 @@ build_ahlrichs_radial_quadrature (size_t npoint, double R, double *radialNodes,
  * Forms a direct product atom grid for each atom, written to `agrid` of length `ntaom`
  */
 static void
-form_agrid (size_t n_rad_pts, size_t n_ang_pts, cuestAtomGrid_t *agrids)
+form_agrid (uint64_t n_rad_pts, uint64_t n_ang_pts, cuestAtomGrid_t *agrids)
 {
     uint64_t natom   = quick_cuest_data.natom;
     int8_t  *iattype = quick_cuest_data.iattype;
@@ -82,7 +82,7 @@ form_agrid (size_t n_rad_pts, size_t n_ang_pts, cuestAtomGrid_t *agrids)
 }
 
 void
-cuest_init_xc (int8_t fnl)
+cuest_init_xc (int64_t n_rad_pts, int64_t n_ang_pts, int8_t fnl)
 {
     uint64_t natom  = quick_cuest_data.natom;
     uint64_t nbasis = quick_cuest_data.nbasis;
@@ -93,7 +93,7 @@ cuest_init_xc (int8_t fnl)
     cuestWorkspaceDescriptor_t *tmpWD     = quick_cuest_struct.tmpWD;
 
     cuestAtomGrid_t *agrids = malloc (natom * sizeof (cuestAtomGrid_t));
-    form_agrid (75, 302, agrids); // TODO: update numbers
+    form_agrid (n_rad_pts, n_ang_pts, agrids);
 
     // ===================== //
     // set up molecular grid //
@@ -129,15 +129,27 @@ cuest_init_xc (int8_t fnl)
     cuestXCIntPlanParameters_t xcIntPlan_param;
     checkCuestErrors (cuestParametersCreate (CUEST_XCINTPLAN_PARAMETERS, &xcIntPlan_param));
 
-    // TODO: add support for other functionals
+    // TODO: add support for libxc functionals
     cuestXCIntPlanParametersFunctional_t functional;
     switch (fnl) {
-        case CUEST_FUNCTIONAL_BLYP:
-            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_BLYP;
-            break;
         case CUEST_FUNCTIONAL_B3LYP:
             functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_B3LYP1;
             break;
+        case CUEST_FUNCTIONAL_B97:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_B97;
+            break;
+        case CUEST_FUNCTIONAL_BLYP:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_BLYP;
+            break;
+        case CUEST_FUNCTIONAL_PBE:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_PBE;
+            break;
+        case CUEST_FUNCTIONAL_PBE0:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_PBE0;
+            break;
+        default:
+            fprintf (stderr, "%s:%d Unknown functional code %hhu\n", __func__, __LINE__, fnl);
+            return;
     }
 
     checkCuestErrors (cuestXCIntPlanCreateWorkspaceQuery (handle, quick_cuest_struct.basis, molgrid,

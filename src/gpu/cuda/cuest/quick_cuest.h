@@ -91,11 +91,8 @@ void cuest_get_oei_V (double *o);
 void cuest_get_eri_J (double *o, double *P);
 void cuest_get_eri_K (double *o, double *C);
 
-#define CUEST_FUNCTIONAL_BLYP  0
-#define CUEST_FUNCTIONAL_B3LYP 1
-
 // DFT
-void cuest_init_xc (int8_t fnl);
+void cuest_init_xc (int64_t n_rad_pts, int64_t n_ang_pts, int8_t fnl);
 void cuest_get_Vxc (double *Vxc, double *C);
 
 #endif

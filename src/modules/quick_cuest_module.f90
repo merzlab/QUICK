@@ -11,9 +11,16 @@ module quick_cuest_module
    integer(c_int8_t), protected :: CUEST_CORRECT_NORM_INV = 8
    integer(c_int8_t), protected :: CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK = 3
    integer(c_int8_t), protected :: CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST = 7
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_BLYP = 0
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_B3LYP = 1
-
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_HF     = 0
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_B3LYP  = 1
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_B97    = 2
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_BLYP   = 3
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_M06L   = 4 ! QUICK unsupported
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_PBE    = 5
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_PBE0   = 6
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_R2SCAN = 7 ! QUICK unsupported
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_SVWN5  = 8 ! QUICK unsupported
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_B97MV  = 9 ! QUICK unsupported
 
    ! unless commented otherwise, C will not modify the memory a pointer points to
 
@@ -142,16 +149,19 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_init_xc (fnl) bind(c, name="cuest_init_xc")
-         use, intrinsic :: iso_c_binding, only: c_int8_t
+      subroutine cuest_init_xc (nradpts, nangpts, fnl) bind(c, name="cuest_init_xc")
+         use, intrinsic :: iso_c_binding, only: c_int8_t, c_int64_t
+         integer(c_int64_t), intent(in), value :: nradpts
+         integer(c_int64_t), intent(in), value :: nangpts
          integer(c_int8_t), intent(in), value :: fnl
       end subroutine
    end interface
 
    interface
-      subroutine cuest_get_Vxc (fnl) bind(c, name="cuest_get_Vxc")
-         use, intrinsic :: iso_c_binding, only: c_int8_t
-         integer(c_int8_t), intent(in), value :: fnl
+      subroutine cuest_get_Vxc (Vxc, C) bind(c, name="cuest_get_Vxc")
+         use, intrinsic :: iso_c_binding, only: c_double, c_ptr
+         type(c_ptr), intent(in), value :: Vxc !double; modified
+         real(c_double), intent(in) :: C(*)
       end subroutine
    end interface
 end module quick_cuest_module

@@ -65,6 +65,7 @@
     use, intrinsic::iso_c_binding, only: c_int64_t, c_int8_t, c_double, c_loc, c_bool
     use quick_cuest_module
     use quick_aux_basis_sph_module, only: quick_aux_basis_sph, read_aux_basis_sph
+    use quick_size_module, only: MAXANGGRID, MAXRADGRID
 #endif
 
     implicit none
@@ -74,6 +75,10 @@
     integer :: ierr                     ! return error info
     integer :: i,j,k
     double precision :: t1_t, t2_t
+
+#if defined(CUDA) && defined(CUEST)
+    integer(c_int8_t) :: cuest_fnl_code
+#endif
 
     common /timer/ t1_t, t2_t
 
@@ -285,10 +290,24 @@
     ! init xc compute if DFT wanted
     if (quick_method%DFT) then
         if (quick_method%BLYP) then
-            call cuest_init_xc(CUEST_FUNCTIONAL_BLYP)
+            cuest_fnl_code = CUEST_FUNCTIONAL_BLYP
         elseif (quick_method%B3LYP) then
-            call cuest_init_xc(CUEST_FUNCTIONAL_B3LYP)
+            cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
+        else
+            select case (quick_method%functional_id(1))
+                case (226) ! HYB_GGA_XC_B97
+                    cuest_fnl_code = CUEST_FUNCTIONAL_B97
+                case (406) ! HYB_GGA_XC_PBEH
+                    cuest_fnl_code = CUEST_FUNCTIONAL_PBE0
+                case (101) ! GGA_X_PBE (accompanied with GGA_C_PBE after)
+                    cuest_fnl_code = CUEST_FUNCTIONAL_PBE
+                case default
+                    print *, "CUEST: libxc functional not supported, defaulting to B3LYP"
+                    cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
+            end select
         endif
+
+        call cuest_init_xc(int(MAXRADGRID, c_int64_t), int(MAXANGGRID, c_int64_t), cuest_fnl_code)
     endif
 
     RECORD_TIME(timer_end%TIniCuest)

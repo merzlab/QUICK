@@ -44,7 +44,7 @@ contains
     use quick_method_module, only: quick_method
     use quick_cuest_module, only: cuest_get_eri_J, cuest_get_eri_K, cuest_correct_o, &
                                   CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, &
-                                  CUEST_CORRECT_NORM_INV
+                                  CUEST_CORRECT_NORM_INV, cuest_get_Vxc
 #endif
   
      implicit none
@@ -56,6 +56,7 @@ contains
 #if defined(CUDA) && defined(CUEST)
      double precision, target :: cuest_J(nbasis, nbasis)
      double precision, target :: cuest_K(nbasis, nbasis)
+     double precision, target :: cuest_Vxc(nbasis, nbasis)
      logical :: firstiter, hasK
 #endif
 #ifdef MPIV
@@ -274,7 +275,12 @@ contains
         RECORD_TIME(timer_begin%TEx)
 
   !  Calculate exchange correlation contribution & add to operator    
+#if defined(CUDA) && defined(CUEST)
+        call cuest_get_Vxc(c_loc(cuest_Vxc), quick_qm_struct%co)
+        quick_qm_struct%oxc = cuest_Vxc
+#else
         call get_xc(deltaO)
+#endif
 
   !  Remember the operator is symmetric
         call copySym(quick_qm_struct%o,nbasis)
