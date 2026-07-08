@@ -124,7 +124,7 @@ module quick_method_module
         double precision :: primLimit      = 1.0d-9   ! prime cutoff
         double precision :: gradCutoff     = 1.0d-7   ! gradient cutoff
         double precision :: DMCutoff       = 1.0d-10  ! density matrix cutoff
-        double precision :: XCCutoff       = 1.0d-7   ! exchange correlation cutoff
+        double precision :: XCCutoff       = 1.0d-10   ! exchange correlation cutoff
         logical :: isDefaultXCCutoff       = .true.
         !tol
         double precision :: pmaxrms        = 1.0d-6   ! density matrix convergence criteria
@@ -987,7 +987,7 @@ module quick_method_module
             self%primLimit      = 1.0d-9   ! prime cutoff
             self%gradCutoff     = 1.0d-7   ! gradient cutoff
             self%DMCutoff       = 1.0d-10  ! density matrix cutoff
-            self%XCCutoff       = 1.0d-7   ! exchange correlation cutoff
+            self%XCCutoff       = 1.0d-10   ! exchange correlation cutoff
             self%isDefaultXCCutoff = .true. ! is XCCutoff default or user specified
 
             self%pmaxrms        = 1.0d-6   ! density matrix convergence criteria
@@ -1045,7 +1045,7 @@ module quick_method_module
                 self%integralCutoff=1.0d-7
                 self%primLimit=self%integralCutoff*1.0d-1
                 self%gradCutoff=1.0d-6
-                self%XCCutoff=1.0d-6
+                self%XCCutoff=1.0d-9
                 self%basisCutoff=1.0d-5
             endif
 
@@ -1054,7 +1054,7 @@ module quick_method_module
                 self%integralCutoff=1.0d-9
                 self%primLimit=self%integralCutoff*1.0d-1
                 self%gradCutoff=1.0d-8
-                self%XCCutoff=1.0d-8
+                self%XCCutoff=1.0d-11
                 self%basisCutoff=1.0d-7
             endif
 
