@@ -124,7 +124,8 @@ module quick_method_module
         double precision :: primLimit      = 1.0d-9   ! prime cutoff
         double precision :: gradCutoff     = 1.0d-7   ! gradient cutoff
         double precision :: DMCutoff       = 1.0d-10  ! density matrix cutoff
-        double precision :: XCCutoff       = 1.0d-7   ! exchange correlation cutoff
+        double precision :: XCCutoff       = 1.0d-8   ! exchange correlation cutoff
+        logical :: isDefaultCutoff         = .true.
         logical :: isDefaultXCCutoff       = .true.
         !tol
         double precision :: pmaxrms        = 1.0d-6   ! density matrix convergence criteria
@@ -772,6 +773,7 @@ module quick_method_module
             if (index(keywd,'CUTOFF') /= 0) then
                 call read(keywd, 'CUTOFF', self%integralCutoff)
                 self%primLimit=self%integralCutoff*1.0d-1
+                self%isDefaultCutoff = .false.
             endif
 
             ! Overlap-cutoff
@@ -987,7 +989,8 @@ module quick_method_module
             self%primLimit      = 1.0d-9   ! prime cutoff
             self%gradCutoff     = 1.0d-7   ! gradient cutoff
             self%DMCutoff       = 1.0d-10  ! density matrix cutoff
-            self%XCCutoff       = 1.0d-7   ! exchange correlation cutoff
+            self%XCCutoff       = 1.0d-8   ! exchange correlation cutoff
+            self%isDefaultCutoff = .true.   ! is Cutoff default or user specified
             self%isDefaultXCCutoff = .true. ! is XCCutoff default or user specified
 
             self%pmaxrms        = 1.0d-6   ! density matrix convergence criteria
@@ -1045,7 +1048,7 @@ module quick_method_module
                 self%integralCutoff=1.0d-7
                 self%primLimit=self%integralCutoff*1.0d-1
                 self%gradCutoff=1.0d-6
-                self%XCCutoff=1.0d-6
+                self%XCCutoff=1.0d-7
                 self%basisCutoff=1.0d-5
             endif
 
@@ -1054,7 +1057,7 @@ module quick_method_module
                 self%integralCutoff=1.0d-9
                 self%primLimit=self%integralCutoff*1.0d-1
                 self%gradCutoff=1.0d-8
-                self%XCCutoff=1.0d-8
+                self%XCCutoff=1.0d-9
                 self%basisCutoff=1.0d-7
             endif
 
@@ -1072,8 +1075,10 @@ module quick_method_module
 
             ! tighten XCCutoff if diffuse functions exist
             if(self%diffuse_basis_funcs) then
-                self%integralCutoff=self%integralCutoff*1.0d-2
-                self%primLimit=self%integralCutoff*1.0d-1
+                if(self%isDefaultCutoff)then
+                    self%integralCutoff=self%integralCutoff*1.0d-2
+                    self%primLimit=self%integralCutoff*1.0d-1
+                endif
                 if(self%DFT .and. self%isDefaultXCCutoff) self%XCCutoff=self%XCCutoff*1.0d-1
             endif
         end subroutine check_quick_method
