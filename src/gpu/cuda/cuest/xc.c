@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef LOCAL
 #include "/Users/msun/rehs2026/cuest/fake_cuda_headers/cuda_runtime.h"
@@ -52,6 +53,8 @@ build_ahlrichs_radial_quadrature (size_t npoint, double R, double *radialNodes,
 static void
 form_agrid (uint64_t n_rad_pts, uint64_t n_ang_pts, cuestAtomGrid_t *agrids)
 {
+    n_rad_pts        = 70;
+    n_ang_pts        = 300;
     uint64_t natom   = quick_cuest_data.natom;
     int8_t  *iattype = quick_cuest_data.iattype;
 
@@ -71,13 +74,22 @@ form_agrid (uint64_t n_rad_pts, uint64_t n_ang_pts, cuestAtomGrid_t *agrids)
         nap[i] = n_ang_pts;
 
     for (uint64_t i = 0; i < natom; ++i) {
+        printf ("iattype[%llu]=%hhu\nr=%f\n", i, iattype[i], ahlrichs_radii[iattype[i]]);
         build_ahlrichs_radial_quadrature (n_rad_pts, ahlrichs_radii[iattype[i]], radial_nodes, w);
+        printf ("radial_nodes: ");
+        for (uint64_t i = 0; i < n_rad_pts; ++i)
+            printf ("%f ", radial_nodes[i]);
+        printf ("\nw: ");
+        for (uint64_t i = 0; i < n_rad_pts; ++i)
+            printf ("%f ", w[i]);
+        putchar ('\n');
         checkCuestErrors (cuestAtomGridCreate (handle, n_rad_pts, radial_nodes, w, nap,
                                                atom_grid_param, &agrids[i]));
     }
 
     checkCuestErrors (cuestParametersDestroy (CUEST_ATOMGRID_PARAMETERS, atom_grid_param));
 
+    free (nap);
     free (chk_radialnodes_w);
 }
 
@@ -87,6 +99,7 @@ cuest_init_xc (int64_t n_rad_pts, int64_t n_ang_pts, int8_t fnl)
     uint64_t natom  = quick_cuest_data.natom;
     uint64_t nbasis = quick_cuest_data.nbasis;
     double  *xyz    = quick_cuest_data.xyz;
+    memcpy (xyz, quick_cuest_data.xyz, 3 * natom * sizeof (double));
 
     cuestHandle_t               handle    = quick_cuest_struct.handle;
     cuestWorkspaceDescriptor_t *persistWD = quick_cuest_struct.persistWD;
@@ -99,21 +112,37 @@ cuest_init_xc (int64_t n_rad_pts, int64_t n_ang_pts, int8_t fnl)
     // set up molecular grid //
     // ===================== //
 
-    cuestMolecularGrid_t           molgrid;
+    printf ("agrids: ");
+    for (int i = 0; i < natom; ++i)
+        printf ("%p ", agrids[i]);
+    putchar ('\n');
+
     cuestMolecularGridParameters_t molgrid_params;
     checkCuestErrors (cuestParametersCreate (CUEST_MOLECULARGRID_PARAMETERS, &molgrid_params));
     checkCuestErrors (cuestMolecularGridCreateWorkspaceQuery (
-        handle, natom, agrids, xyz, molgrid_params, persistWD, tmpWD, &molgrid));
+        handle, natom, agrids, xyz, molgrid_params, persistWD, tmpWD, &quick_cuest_struct.molgrid));
 
     MEMLOG ("XC Molecular Grid");
+    // persistWD->deviceBufferSizeInBytes *= 10;
+    // tmpWD->deviceBufferSizeInBytes *= 10;
+    // MEMLOG ("XC Molecular Grid x10 memory");
     quick_cuest_struct.persistXCGridWorkspace = allocateWorkspace (persistWD);
     cuestWorkspace_t *tmpGridWorkspace        = allocateWorkspace (tmpWD);
 
+    printf ("persist device buffer: %zu\n",
+            quick_cuest_struct.persistXCGridWorkspace->deviceBufferSizeInBytes);
+    printf ("persist host buffer: %zu\n",
+            quick_cuest_struct.persistXCGridWorkspace->hostBufferSizeInBytes);
+    printf ("tmp device buffer: %zu\n", tmpGridWorkspace->deviceBufferSizeInBytes);
+    printf ("tmp host buffer: %zu\n", tmpGridWorkspace->hostBufferSizeInBytes);
+
+    for (uint64_t i = 0; i < 3 * natom; ++i)
+        printf ("%f ", xyz[i]);
+    putchar ('\n');
+
     checkCuestErrors (cuestMolecularGridCreate (handle, natom, agrids, xyz, molgrid_params,
                                                 quick_cuest_struct.persistXCGridWorkspace,
-                                                tmpGridWorkspace, &molgrid));
-
-    quick_cuest_struct.molgrid = molgrid;
+                                                tmpGridWorkspace, &quick_cuest_struct.molgrid));
 
     checkCuestErrors (cuestParametersDestroy (CUEST_MOLECULARGRID_PARAMETERS, molgrid_params));
     freeWorkspace (tmpGridWorkspace);
@@ -152,16 +181,16 @@ cuest_init_xc (int64_t n_rad_pts, int64_t n_ang_pts, int8_t fnl)
             return;
     }
 
-    checkCuestErrors (cuestXCIntPlanCreateWorkspaceQuery (handle, quick_cuest_struct.basis, molgrid,
-                                                          functional, xcIntPlan_param, persistWD,
-                                                          tmpWD, &quick_cuest_struct.XCIntPlan));
+    checkCuestErrors (cuestXCIntPlanCreateWorkspaceQuery (
+        handle, quick_cuest_struct.basis, quick_cuest_struct.molgrid, functional, xcIntPlan_param,
+        persistWD, tmpWD, &quick_cuest_struct.XCIntPlan));
 
     MEMLOG ("XC Molecular Grid");
     quick_cuest_struct.persistXCIntPlanWorkspace = allocateWorkspace (persistWD);
     cuestWorkspace_t *tmpXCIntPlanWorkspace      = allocateWorkspace (tmpWD);
 
-    checkCuestErrors (cuestXCIntPlanCreate (handle, quick_cuest_struct.basis, molgrid, functional,
-                                            xcIntPlan_param,
+    checkCuestErrors (cuestXCIntPlanCreate (handle, quick_cuest_struct.basis,
+                                            quick_cuest_struct.molgrid, functional, xcIntPlan_param,
                                             quick_cuest_struct.persistXCIntPlanWorkspace,
                                             tmpXCIntPlanWorkspace, &quick_cuest_struct.XCIntPlan));
     checkCuestErrors (cuestParametersDestroy (CUEST_XCINTPLAN_PARAMETERS, xcIntPlan_param));

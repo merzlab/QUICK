@@ -19,7 +19,6 @@
 /**
  * Requires persistent parameters:
  *     - xyz
- *     - iattype
  */
 void
 cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t nauxshell,

@@ -289,12 +289,14 @@
 
     ! init xc compute if DFT wanted
     if (quick_method%DFT) then
-        if (quick_method%BLYP) then
+        if (quick_method%BLYP) then ! should not be triggered?
             cuest_fnl_code = CUEST_FUNCTIONAL_BLYP
         elseif (quick_method%B3LYP) then
             cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
         else
             select case (quick_method%functional_id(1))
+                case (106) ! GGA_X_B88,GGA_C_LYP
+                    cuest_fnl_code = CUEST_FUNCTIONAL_BLYP
                 case (226) ! HYB_GGA_XC_B97
                     cuest_fnl_code = CUEST_FUNCTIONAL_B97
                 case (406) ! HYB_GGA_XC_PBEH
