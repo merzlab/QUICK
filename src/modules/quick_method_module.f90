@@ -558,7 +558,7 @@ module quick_method_module
             implicit none
             character(len=300) :: keyWD
             character(len=300) :: tempstring
-            integer :: itemp,i,j
+            integer :: ind,pos,i,j
             type (quick_method_type) self
             integer, intent(inout) :: ierr
 
@@ -771,9 +771,21 @@ module quick_method_module
 
             ! 2e-cutoff
             if (index(keywd,'CUTOFF') /= 0) then
-                call read(keywd, 'CUTOFF', self%integralCutoff)
-                self%primLimit=self%integralCutoff*1.0d-1
-                self%isDefaultCutoff = .false.
+                ind = 1
+                ! Takes into account the multiple occurences
+                do
+                    pos = index(keywd(ind:),'CUTOFF')
+                    if (pos == 0) exit
+                    pos = pos + ind - 1
+                    ! Check if 'CUTOFF' is not a part of another keyword
+                    if (pos == 1 .or. keywd(pos-1:pos-1) == ' ') then
+                        call read(keywd(pos:), 'CUTOFF', self%integralCutoff)
+                        self%primLimit=self%integralCutoff*1.0d-1
+                        self%isDefaultCutoff = .false.
+                        exit
+                    endif
+                    ind = pos + 1
+                enddo
             endif
 
             ! Overlap-cutoff
