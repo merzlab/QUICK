@@ -214,7 +214,7 @@ cuest_init_xc (int8_t fnl)
 }
 
 void
-cuest_get_Vxc (double *Vxc, double *C)
+cuest_get_Vxc (double *Vxc, double *Exc, double *C)
 {
     uint64_t natom  = quick_cuest_data.natom;
     uint64_t nbasis = quick_cuest_data.nbasis;
@@ -226,8 +226,6 @@ cuest_get_Vxc (double *Vxc, double *C)
     // ============================== //
     // compute RKS XC Potential (Vxc) //
     // ============================== //
-
-    double Exc = 0;
 
     double      *d_Vxc;
     const size_t Vxc_siz = nbasis * nbasis * sizeof (double);
@@ -257,13 +255,13 @@ cuest_get_Vxc (double *Vxc, double *C)
     vbs->deviceBufferSizeInBytes    = 2e9; // TODO: update; 2GB now
 
     checkCuestErrors (cuestXCPotentialRKSComputeWorkspaceQuery (
-        handle, quick_cuest_struct.XCIntPlan, rks_V_params, vbs, tmpWD, nocc, d_C, &Exc, d_Vxc));
+        handle, quick_cuest_struct.XCIntPlan, rks_V_params, vbs, tmpWD, nocc, d_C, Exc, d_Vxc));
 
     MEMLOG_TMPWD ("V_xc Compute");
     cuestWorkspace_t *tmpVxcWorkspace = allocateWorkspace (tmpWD);
     checkCuestErrors (cuestXCPotentialRKSCompute (handle, quick_cuest_struct.XCIntPlan,
                                                   rks_V_params, vbs, tmpVxcWorkspace, nocc, d_C,
-                                                  &Exc, d_Vxc));
+                                                  Exc, d_Vxc));
 
     // copy to host
     if (cudaMemcpy (Vxc, d_Vxc, Vxc_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {

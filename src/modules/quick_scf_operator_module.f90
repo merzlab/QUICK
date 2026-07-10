@@ -57,6 +57,7 @@ contains
      double precision, target :: cuest_J(nbasis, nbasis)
      double precision, target :: cuest_K(nbasis, nbasis)
      double precision, target :: cuest_Vxc(nbasis, nbasis)
+     double precision, target :: cuest_Exc
      logical :: firstiter, hasK
 #endif
 #ifdef MPIV
@@ -276,8 +277,11 @@ contains
 
   !  Calculate exchange correlation contribution & add to operator    
 #if defined(CUDA) && defined(CUEST)
-        call cuest_get_Vxc(c_loc(cuest_Vxc), quick_qm_struct%co)
+        call cuest_get_Vxc(c_loc(cuest_Vxc), c_loc(cuest_Exc), quick_qm_struct%co)
         quick_qm_struct%oxc = cuest_Vxc
+        quick_qm_struct%o = quick_qm_struct%o + cuest_Vxc
+        quick_qm_struct%Exc = cuest_Exc
+        quick_qm_struct%Eel = quick_qm_struct%Eel + cuest_Exc
 #else
         call get_xc(deltaO)
 #endif

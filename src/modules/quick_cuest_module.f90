@@ -178,9 +178,10 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_get_Vxc (Vxc, C) bind(c, name="cuest_get_Vxc")
+      subroutine cuest_get_Vxc (Vxc, Exc, C) bind(c, name="cuest_get_Vxc")
          use, intrinsic :: iso_c_binding, only: c_double, c_ptr
-         type(c_ptr), intent(in), value :: Vxc !double; modified
+         type(c_ptr), intent(in), value :: Vxc !double array; modified
+         type(c_ptr), intent(in), value :: Exc ! double scalar; modified
          real(c_double), intent(in) :: C(*)
       end subroutine
    end interface
