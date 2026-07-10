@@ -169,10 +169,8 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_init_xc (nradpts, nangpts, fnl) bind(c, name="cuest_init_xc")
-         use, intrinsic :: iso_c_binding, only: c_int8_t, c_int64_t
-         integer(c_int64_t), intent(in), value :: nradpts
-         integer(c_int64_t), intent(in), value :: nangpts
+      subroutine cuest_init_xc (fnl) bind(c, name="cuest_init_xc")
+         use, intrinsic :: iso_c_binding, only: c_int8_t
          integer(c_int8_t), intent(in), value :: fnl
       end subroutine
    end interface
@@ -186,23 +184,24 @@ module quick_cuest_module
       end subroutine
    end interface
 
-contains
-
-   function cuest_get_n_rad_pts() result(out)
-      use quick_method_module, only: quick_method
-      use, intrinsic :: iso_c_binding, only: c_int64_t
-      implicit none
-      integer(c_int64_t) :: out
-
-      if (quick_method%iSG == 1) then
-         out = 50
-      else
-         if (quick_molspec%iattype(iatm) <= 10) then
-            out = 23
-         else
-            out = 26
-         endif
-      endif
-   end function cuest_get_n_rad_pts
+! contains
+!
+!    function cuest_get_n_rad_pts() result(out)
+!       use quick_method_module, only: quick_method
+!       use quick_molspec_module, only: quick_molspec
+!       use, intrinsic :: iso_c_binding, only: c_int64_t
+!       implicit none
+!       integer(c_int64_t) :: out
+!
+!       if (quick_method%iSG == 1) then
+!          out = 50
+!       else
+!          if (quick_molspec%iattype(iatm) <= 10) then
+!             out = 23
+!          else
+!             out = 26
+!          endif
+!       endif
+!    end function cuest_get_n_rad_pts
 
 end module quick_cuest_module

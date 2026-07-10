@@ -213,6 +213,7 @@ cuest_init_xc (int8_t fnl)
     freeWorkspace (tmpXCIntPlanWorkspace);
 }
 
+// TODO: calculate alpha and beta electron density (here or in QUICK module)
 void
 cuest_get_Vxc (double *Vxc, double *Exc, double *C)
 {

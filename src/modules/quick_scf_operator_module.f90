@@ -59,6 +59,7 @@ contains
      double precision, target :: cuest_Vxc(nbasis, nbasis)
      double precision, target :: cuest_Exc
      logical :: firstiter, hasK
+     double precision :: Sum2Mat
 #endif
 #ifdef MPIV
      integer ierror
@@ -282,6 +283,14 @@ contains
         quick_qm_struct%o = quick_qm_struct%o + cuest_Vxc
         quick_qm_struct%Exc = cuest_Exc
         quick_qm_struct%Eel = quick_qm_struct%Eel + cuest_Exc
+
+        ! alpha and beta electron density
+        if (deltaO) then
+           quick_qm_struct%aelec = Sum2Mat(quick_qm_struct%denseSave, quick_qm_struct%s, nbasis) / 2.0d0
+        else
+           quick_qm_struct%aelec = Sum2Mat(quick_qm_struct%dense, quick_qm_struct%s, nbasis) / 2.0d0
+        endif
+        quick_qm_struct%belec = quick_qm_struct%aelec
 #else
         call get_xc(deltaO)
 #endif

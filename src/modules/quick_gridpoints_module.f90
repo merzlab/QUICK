@@ -160,6 +160,7 @@ module quick_gridpoints_module
     double precision :: t_octree, t_prscrn
 
 #if defined(CUDA) && defined(CUEST)
+    integer(c_int8_t) :: cuest_fnl_code
     real(c_double) :: cuest_r(MAXRADGRID), cuest_w(MAXRADGRID)
     integer(c_int64_t) :: cuest_nang(MAXRADGRID)
 #endif
@@ -218,13 +219,12 @@ module quick_gridpoints_module
             endif
             rad3 = rad*rad*rad
 
+#if defined(CUDA) && defined(CUEST)
             cuest_r(Irad) = RGRID(Irad)*rad
             cuest_w(Irad) = RWT(Irad)*rad3
             cuest_nang(Irad) = iiangt
-
-#if defined(CUEST) && defined(CUDA)
             continue
-#else
+#endif
             do Iang=1,iiangt
                 idx_grid=idx_grid+1
                 xcg_tmp%init_grid_ptx(idx_grid)=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
@@ -240,7 +240,7 @@ module quick_gridpoints_module
 
 #if defined(CUEST) && defined(CUDA)
         call cuest_create_atom_grid(int(Iradtemp, c_int64_t), cuest_r, cuest_w, cuest_nang)
-#else
+#endif
     enddo
 
     self%init_ngpts  = idx_grid
@@ -250,7 +250,28 @@ module quick_gridpoints_module
     timer_cumer%TDFTGrdGen = timer_cumer%TDFTGrdGen + timer_end%TDFTGrdGen - timer_begin%TDFTGrdGen
 
 #if defined(CUDA) && defined(CUEST)
-    call cuest_init_xc
+    ! get DFT functional
+    if (quick_method%BLYP) then ! should not be triggered?
+        cuest_fnl_code = CUEST_FUNCTIONAL_BLYP
+    elseif (quick_method%B3LYP) then
+        cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
+    else
+        select case (quick_method%functional_id(1))
+            case (106) ! GGA_X_B88,GGA_C_LYP
+                cuest_fnl_code = CUEST_FUNCTIONAL_BLYP
+            case (226) ! HYB_GGA_XC_B97
+                cuest_fnl_code = CUEST_FUNCTIONAL_B97
+            case (406) ! HYB_GGA_XC_PBEH
+                cuest_fnl_code = CUEST_FUNCTIONAL_PBE0
+            case (101) ! GGA_X_PBE (accompanied with GGA_C_PBE after)
+                cuest_fnl_code = CUEST_FUNCTIONAL_PBE
+            case default
+                print *, "CUEST: libxc functional not supported, defaulting to B3LYP"
+                cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
+        end select
+    endif
+
+    call cuest_init_xc(cuest_fnl_code)
     call cuest_destroy_atom_grid
     return
 #endif
