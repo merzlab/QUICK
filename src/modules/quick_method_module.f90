@@ -1066,10 +1066,10 @@ module quick_method_module
 
             if(self%tight_cutoff) then
                 self%pmaxrms=1.0d-7
-                self%integralCutoff=1.0d-9
+                self%integralCutoff=1.0d-10
                 self%primLimit=self%integralCutoff*1.0d-1
                 self%gradCutoff=1.0d-8
-                self%XCCutoff=1.0d-9
+                self%XCCutoff=1.0d-10
                 self%basisCutoff=1.0d-7
             endif
 
