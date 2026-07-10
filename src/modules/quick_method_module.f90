@@ -1130,17 +1130,17 @@ module quick_method_module
 
              if(PRMS.le.TEN_TO_MINUS5 .and. self%integralCutoff.gt.1.0d0/(10.0d0**8.5d0))then
                 self%integralCutoff=TEN_TO_MINUS9
-                self%primLimit=min(self%integralCutoff,self%primLimit)
+                self%primLimit=self%integralCutoff*1.0D-1
              endif
 
             if(PRMS.le.TEN_TO_MINUS6 .and. self%integralCutoff.gt.1.0d0/(10.0d0**9.5d0))then
                 self%integralCutoff=TEN_TO_MINUS10
-                self%primLimit=min(self%integralCutoff,self%primLimit)
+                self%primLimit=self%integralCutoff*1.0D-1
             endif
 
             if(PRMS.le.TEN_TO_MINUS7 .and.quick_method%integralCutoff.gt.1.0d0/(10.0d0**10.5d0))then
             quick_method%integralCutoff=TEN_TO_MINUS11
-            quick_method%primLimit=min(quick_method%integralCutoff,self%primLimit)
+            quick_method%primLimit=self%integralCutoff*1.0D-1
             endif
         end subroutine adjust_Cutoff
 
