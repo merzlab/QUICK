@@ -149,6 +149,26 @@ module quick_cuest_module
    end interface
 
    interface
+      subroutine cuest_create_atom_grid_setup() bind(c, name="cuest_create_atom_grid_setup")
+      end subroutine cuest_create_atom_grid_setup
+   end interface
+
+   interface
+      subroutine cuest_create_atom_grid (nrad, r, w, nang) bind(c, name="cuest_create_atom_grid")
+         use, intrinsic :: iso_c_binding, only: c_double, c_int64_t
+         integer(c_int64_t), intent(in), value :: nrad
+         real(c_double), intent(in) :: r(*)
+         real(c_double), intent(in) :: w(*)
+         integer(c_int64_t), intent(in) :: nang(*)
+      end subroutine cuest_create_atom_grid
+   end interface
+
+   interface
+      subroutine cuest_destroy_atom_grid() bind(c, name="cuest_destroy_atom_grid")
+      end subroutine cuest_destroy_atom_grid
+   end interface
+
+   interface
       subroutine cuest_init_xc (nradpts, nangpts, fnl) bind(c, name="cuest_init_xc")
          use, intrinsic :: iso_c_binding, only: c_int8_t, c_int64_t
          integer(c_int64_t), intent(in), value :: nradpts
@@ -164,4 +184,24 @@ module quick_cuest_module
          real(c_double), intent(in) :: C(*)
       end subroutine
    end interface
+
+contains
+
+   function cuest_get_n_rad_pts() result(out)
+      use quick_method_module, only: quick_method
+      use, intrinsic :: iso_c_binding, only: c_int64_t
+      implicit none
+      integer(c_int64_t) :: out
+
+      if (quick_method%iSG == 1) then
+         out = 50
+      else
+         if (quick_molspec%iattype(iatm) <= 10) then
+            out = 23
+         else
+            out = 26
+         endif
+      endif
+   end function cuest_get_n_rad_pts
+
 end module quick_cuest_module

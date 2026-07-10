@@ -148,11 +148,21 @@ module quick_gridpoints_module
     use quick_molspec_module, only: quick_molspec, xyz, natom
     use quick_basis_module
     use quick_timer_module
+#if defined(CUDA) && defined(CUEST)
+    use, intrinsic :: iso_c_binding, only: c_int64_t, c_double
+    use quick_cuest_module
+#endif
+
 
     implicit double precision(a-h,o-z)
     type(quick_xc_grid_type) self
     type(quick_xcg_tmp_type) xcg_tmp
     double precision :: t_octree, t_prscrn
+
+#if defined(CUDA) && defined(CUEST)
+    real(c_double) :: cuest_r(MAXRADGRID), cuest_w(MAXRADGRID)
+    integer(c_int64_t) :: cuest_nang(MAXRADGRID)
+#endif
 
     !Form the quadrature and store coordinates and other information
     !Measure the time to form grid
@@ -182,6 +192,10 @@ module quick_gridpoints_module
     ! form SG1 grid
     !if(quick_method%iSG.eq.1) call gridformSG1()
 
+#if defined(CUEST) && defined(CUDA)
+    call cuest_create_atom_grid_setup
+#endif
+
     idx_grid = 0
     do Iatm=1,natom
         if(quick_method%iSG.eq.1)then
@@ -193,6 +207,7 @@ module quick_gridpoints_module
                 Iradtemp=26
             endif
         endif
+
         do Irad = 1, Iradtemp
             if(quick_method%iSG.eq.1)then
                 call gridformnew(iatm,RGRID(Irad),iiangt)
@@ -202,6 +217,14 @@ module quick_gridpoints_module
                 rad = radii2(quick_molspec%iattype(iatm))
             endif
             rad3 = rad*rad*rad
+
+            cuest_r(Irad) = RGRID(Irad)*rad
+            cuest_w(Irad) = RWT(Irad)*rad3
+            cuest_nang(Irad) = iiangt
+
+#if defined(CUEST) && defined(CUDA)
+            continue
+#else
             do Iang=1,iiangt
                 idx_grid=idx_grid+1
                 xcg_tmp%init_grid_ptx(idx_grid)=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
@@ -214,6 +237,10 @@ module quick_gridpoints_module
             enddo
 
         enddo
+
+#if defined(CUEST) && defined(CUDA)
+        call cuest_create_atom_grid(int(Iradtemp, c_int64_t), cuest_r, cuest_w, cuest_nang)
+#else
     enddo
 
     self%init_ngpts  = idx_grid
@@ -221,6 +248,12 @@ module quick_gridpoints_module
     RECORD_TIME(timer_end%TDFTGrdGen)
 
     timer_cumer%TDFTGrdGen = timer_cumer%TDFTGrdGen + timer_end%TDFTGrdGen - timer_begin%TDFTGrdGen
+
+#if defined(CUDA) && defined(CUEST)
+    call cuest_init_xc
+    call cuest_destroy_atom_grid
+    return
+#endif
 
     !Measure time to compute grid weights
     RECORD_TIME(timer_begin%TDFTGrdWt)

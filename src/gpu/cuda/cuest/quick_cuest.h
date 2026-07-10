@@ -92,7 +92,11 @@ void cuest_get_eri_J (double *o, double *P);
 void cuest_get_eri_K (double *o, double *C);
 
 // DFT
-void cuest_init_xc (int64_t n_rad_pts, int64_t n_ang_pts, int8_t fnl);
+void cuest_create_atom_grid_setup ();
+void cuest_create_atom_grid (int64_t nrad, double *r, double *w, int64_t *nang);
+void cuest_destroy_atom_grid ();
+
+void cuest_init_xc (int8_t fnl);
 void cuest_get_Vxc (double *Vxc, double *C);
 
 #endif

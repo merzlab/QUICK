@@ -65,7 +65,6 @@
     use, intrinsic::iso_c_binding, only: c_int64_t, c_int8_t, c_double, c_loc, c_bool
     use quick_cuest_module
     use quick_aux_basis_sph_module, only: quick_aux_basis_sph, read_aux_basis_sph
-    use quick_size_module, only: MAXANGGRID, MAXRADGRID
 #endif
 
     implicit none
@@ -78,6 +77,7 @@
 
 #if defined(CUDA) && defined(CUEST)
     integer(c_int8_t) :: cuest_fnl_code
+    integer(c_int64_t) :: cuest_xc_nradpts
 #endif
 
     common /timer/ t1_t, t2_t
@@ -309,7 +309,16 @@
             end select
         endif
 
-        call cuest_init_xc(int(MAXRADGRID, c_int64_t), int(MAXANGGRID, c_int64_t), cuest_fnl_code)
+        ! if (quick_method%iSG == 1) then
+        !     cuest_xc_nradpts = 50
+        ! else
+        !     if (quick_molspec%iattype(iatm) <= 10) then
+        !         cuest_xc_nradpts = 23
+        !     else
+        !         cuest_xc_nradpts = 26
+        !     endif
+        ! endif
+        ! call cuest_init_xc(cuest_get_nrad_pts(), int(MAXANGGRID, c_int64_t), cuest_fnl_code)
     endif
 
     RECORD_TIME(timer_end%TIniCuest)
