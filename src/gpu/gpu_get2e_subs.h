@@ -436,6 +436,8 @@ __device__ static inline void iclass_spdf10
 #endif
                             }
 
+                            if (devSim.hyb_coeff == 0.0) continue;
+
                             // ATOMIC ADD VALUE 3
 #if defined(OSHELL)
                             temp = (III == KKK && III < JJJ && JJJ < LLL)
