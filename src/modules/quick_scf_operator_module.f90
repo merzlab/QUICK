@@ -40,7 +40,7 @@ contains
      use mpi
 #endif
 #if defined(CUDA) && defined(CUEST)
-    use, intrinsic :: iso_c_binding, only: c_loc, c_int64_t
+    use, intrinsic :: iso_c_binding, only: c_int64_t
     use quick_method_module, only: quick_method
     use quick_cuest_module
 #endif
@@ -52,10 +52,10 @@ contains
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      double precision tst, te, tred
 #if defined(CUDA) && defined(CUEST)
-     double precision, target :: cuest_J(nbasis, nbasis)
-     double precision, target :: cuest_K(nbasis, nbasis)
-     double precision, target :: cuest_Vxc(nbasis, nbasis)
-     double precision, target :: cuest_Exc
+     double precision :: cuest_J(nbasis, nbasis)
+     double precision :: cuest_K(nbasis, nbasis)
+     double precision :: cuest_Vxc(nbasis, nbasis)
+     double precision :: cuest_Exc
      logical :: firstiter, hasK
      double precision :: Sum2Mat
 #endif
@@ -161,13 +161,13 @@ contains
            else
 
               ! delta density is handled correctly
-              call cuest_get_eri_J(c_loc(cuest_J), quick_qm_struct%dense)
+              call cuest_get_eri_J(cuest_J, quick_qm_struct%dense)
               
 #ifdef CUESTDEBUG
               print *, "got x_hybrid_coeff=", quick_method%x_hybrid_coeff
 
               if (hasK) &
-                  call cuest_get_eri_K(c_loc(cuest_K), quick_qm_struct%co)
+                  call cuest_get_eri_K(cuest_K, quick_qm_struct%co)
                
               print *, "deltaO=", deltaO
               print *, "======== cuEST %o contribution ========"
@@ -182,7 +182,7 @@ contains
                   cuest_J = cuest_J - cuest_K
 #else
               if (hasK) then
-                  call cuest_get_eri_K(c_loc(cuest_K), quick_qm_struct%co)
+                  call cuest_get_eri_K(cuest_K, quick_qm_struct%co)
                   cuest_J = cuest_J - cuest_K ! K is scaled in cuEST
               endif
 #endif
@@ -296,7 +296,7 @@ contains
             ! convert density matrix from QUICK to cuEST form
             call cuest_correct_o(quick_qm_struct%dense, ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, CUEST_CORRECT_NORM_INV))
         else
-            call cuest_get_Vxc(c_loc(cuest_Vxc), c_loc(cuest_Exc), quick_qm_struct%co)
+            call cuest_get_Vxc(cuest_Vxc, cuest_Exc, quick_qm_struct%co)
             quick_qm_struct%oxc = cuest_Vxc
             quick_qm_struct%o = quick_qm_struct%o + cuest_Vxc
             quick_qm_struct%Exc = cuest_Exc

@@ -113,37 +113,37 @@ module quick_cuest_module
 
    interface
       subroutine cuest_get_oei_S(o) bind(c, name="cuest_get_oei_S")
-         use, intrinsic::iso_c_binding, only: c_ptr
-         type(c_ptr), intent(in), value :: o ! double; modified
+         use, intrinsic::iso_c_binding, only: c_double
+         real(c_double), intent(out) :: o(*)
       end subroutine cuest_get_oei_S
    end interface
 
    interface
       subroutine cuest_get_oei_T(o) bind(c, name="cuest_get_oei_T")
-         use, intrinsic::iso_c_binding, only: c_ptr
-         type(c_ptr), intent(in), value :: o ! double; modified
+         use, intrinsic::iso_c_binding, only: c_double
+         real(c_double), intent(out) :: o(*)
       end subroutine cuest_get_oei_T
    end interface
 
    interface
       subroutine cuest_get_oei_V(o) bind(c, name="cuest_get_oei_V")
-         use, intrinsic::iso_c_binding, only: c_ptr
-         type(c_ptr), intent(in), value :: o ! double; modified
+         use, intrinsic::iso_c_binding, only: c_double
+         real(c_double), intent(out) :: o(*)
       end subroutine cuest_get_oei_V
    end interface
 
    interface
       subroutine cuest_get_eri_J(o, dense) bind(c, name="cuest_get_eri_J")
-         use, intrinsic::iso_c_binding, only: c_ptr, c_double
-         type(c_ptr), intent(in), value :: o ! double; modified
+         use, intrinsic::iso_c_binding, only: c_double
+         real(c_double), intent(out) :: o(*)
          real(c_double), intent(in) :: dense(*)
       end subroutine cuest_get_eri_J
    end interface
 
    interface
       subroutine cuest_get_eri_K(o, C) bind(c, name="cuest_get_eri_K")
-         use, intrinsic::iso_c_binding, only: c_ptr, c_double, c_int64_t
-         type(c_ptr), intent(in), value :: o ! double; modified
+         use, intrinsic::iso_c_binding, only: c_double, c_int64_t
+         real(c_double), intent(out) :: o(*)
          real(c_double), intent(in) :: C(*)
       end subroutine cuest_get_eri_K
    end interface
@@ -177,9 +177,9 @@ module quick_cuest_module
 
    interface
       subroutine cuest_get_Vxc (Vxc, Exc, C) bind(c, name="cuest_get_Vxc")
-         use, intrinsic :: iso_c_binding, only: c_double, c_ptr
-         type(c_ptr), intent(in), value :: Vxc !double array; modified
-         type(c_ptr), intent(in), value :: Exc ! double scalar; modified
+         use, intrinsic :: iso_c_binding, only: c_double
+         real(c_double), intent(out) :: Vxc(*)
+         real(c_double), intent(out) :: Exc
          real(c_double), intent(in) :: C(*)
       end subroutine
    end interface
