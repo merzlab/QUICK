@@ -112,7 +112,7 @@ cuest_correct_o (double *o, int8_t qspec)
         kfxyz = SQRT_15;
     }
 
-    // TODO(michaelyxsun): operate only on upper or lower half of matrix
+    // TODO(michaelyxsun): add flag to operate only on upper or lower half of matrix
 
     if (reorder) {
         // copy row col intersections to other side of diagonal

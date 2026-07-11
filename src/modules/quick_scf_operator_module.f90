@@ -148,7 +148,8 @@ contains
               call gpu_get_cshell_eri(deltaO, cuest_J)  
 
               ! correct output
-              call cuest_correct_o(cuest_J, ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, CUEST_CORRECT_NORM_INV))
+              call cuest_correct_o(cuest_J, ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, &
+                                                CUEST_CORRECT_NORM_INV))
               quick_qm_struct%o = quick_qm_struct%o + cuest_J
 
               
@@ -156,7 +157,12 @@ contains
               ! convert density matrix from QUICK to cuEST form
               ! if DFT, this will happen after xc is done
               if (.not.quick_method%DFT) then
-                 call cuest_correct_o(quick_qm_struct%dense, ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, CUEST_CORRECT_NORM_INV))
+                 ! call cuest_correct_o(quick_qm_struct%dense, &
+                 !                      ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, &
+                 !                          CUEST_CORRECT_NORM_INV))
+
+                 ! recall that P normalization correction is inverse of orbitals
+                 call cuest_correct_o(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
               endif
            else
 
@@ -289,12 +295,17 @@ contains
             
             ! correct oxc addition to o
             ! cuest_K <- correct(%oxc QUICK) = %oxc cuEST
-            call cuest_correct_o(cuest_K, ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, CUEST_CORRECT_NORM_INV))
+            call cuest_correct_o(cuest_K, ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, &
+                                              CUEST_CORRECT_NORM_INV))
             !        %o cuEST = (%o_HF cuEST + %oxc QUICK) - %oxc QUICK          + %oxc cuEST
             quick_qm_struct%o = quick_qm_struct%o          - quick_qm_struct%oxc + cuest_K
 
             ! convert density matrix from QUICK to cuEST form
-            call cuest_correct_o(quick_qm_struct%dense, ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, CUEST_CORRECT_NORM_INV))
+            ! recall that P normalization correction is inverse of orbitals
+            ! call cuest_correct_o(quick_qm_struct%dense, &
+            !                      ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, &
+            !                          CUEST_CORRECT_NORM_INV))
+            call cuest_correct_o(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
         else
             call cuest_get_Vxc(cuest_Vxc, cuest_Exc, quick_qm_struct%co)
             quick_qm_struct%oxc = cuest_Vxc
