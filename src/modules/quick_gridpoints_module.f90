@@ -223,7 +223,7 @@ module quick_gridpoints_module
             cuest_r(Irad) = RGRID(Irad)*rad
             cuest_w(Irad) = RWT(Irad)*rad3
             cuest_nang(Irad) = iiangt
-            continue
+            ! continue
 #endif
             do Iang=1,iiangt
                 idx_grid=idx_grid+1
@@ -273,7 +273,7 @@ module quick_gridpoints_module
 
     call cuest_init_xc(cuest_fnl_code)
     call cuest_destroy_atom_grid
-    return
+    ! return
 #endif
 
     !Measure time to compute grid weights

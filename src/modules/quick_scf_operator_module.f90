@@ -42,9 +42,7 @@ contains
 #if defined(CUDA) && defined(CUEST)
     use, intrinsic :: iso_c_binding, only: c_loc, c_int64_t
     use quick_method_module, only: quick_method
-    use quick_cuest_module, only: cuest_get_eri_J, cuest_get_eri_K, cuest_correct_o, &
-                                  CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, &
-                                  CUEST_CORRECT_NORM_INV, cuest_get_Vxc
+    use quick_cuest_module
 #endif
   
      implicit none
@@ -145,8 +143,6 @@ contains
 #if defined(CUDA) && defined(CUEST)
            ! don't use cuEST on first iteration because quick_qm_struct%co will be all 0
            if (firstiter) then
-              ! call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
-
               ! density matrix input to this is correctly in QUICK form because it came from the SAD guess
               cuest_J = 0.0d0
               call gpu_get_cshell_eri(deltaO, cuest_J)  
@@ -155,8 +151,13 @@ contains
               call cuest_correct_o(cuest_J, ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, CUEST_CORRECT_NORM_INV))
               quick_qm_struct%o = quick_qm_struct%o + cuest_J
 
+              
+               
               ! convert density matrix from QUICK to cuEST form
-              call cuest_correct_o(quick_qm_struct%dense, ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, CUEST_CORRECT_NORM_INV))
+              ! if DFT, this will happen after xc is done
+              if (.not.quick_method%DFT) then
+                 call cuest_correct_o(quick_qm_struct%dense, ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, CUEST_CORRECT_NORM_INV))
+              endif
            else
 
               ! delta density is handled correctly
@@ -278,19 +279,37 @@ contains
 
   !  Calculate exchange correlation contribution & add to operator    
 #if defined(CUDA) && defined(CUEST)
-        call cuest_get_Vxc(c_loc(cuest_Vxc), c_loc(cuest_Exc), quick_qm_struct%co)
-        quick_qm_struct%oxc = cuest_Vxc
-        quick_qm_struct%o = quick_qm_struct%o + cuest_Vxc
-        quick_qm_struct%Exc = cuest_Exc
-        quick_qm_struct%Eel = quick_qm_struct%Eel + cuest_Exc
+        if (firstiter) then
+            ! use cuest_J and cuest_K as temp buffers
+            ! cuest_J <- %o_HF cuEST
+            cuest_J = quick_qm_struct%o
+            call get_xc(deltaO)
+            ! cuest_K <- %o_HF cuEST + %oxc QUICK - %o_HF cuEST = %oxc QUICK
+            cuest_K   =  quick_qm_struct%o        - cuest_J
+            
+            ! correct oxc addition to o
+            ! cuest_K <- correct(%oxc QUICK) = %oxc cuEST
+            call cuest_correct_o(cuest_K, ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, CUEST_CORRECT_NORM_INV))
+            !        %o cuEST = (%o_HF cuEST + %oxc QUICK) - %oxc QUICK          + %oxc cuEST
+            quick_qm_struct%o = quick_qm_struct%o          - quick_qm_struct%oxc + cuest_K
 
-        ! alpha and beta electron density
-        if (deltaO) then
-           quick_qm_struct%aelec = Sum2Mat(quick_qm_struct%denseSave, quick_qm_struct%s, nbasis) / 2.0d0
+            ! convert density matrix from QUICK to cuEST form
+            call cuest_correct_o(quick_qm_struct%dense, ior(CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST, CUEST_CORRECT_NORM_INV))
         else
-           quick_qm_struct%aelec = Sum2Mat(quick_qm_struct%dense, quick_qm_struct%s, nbasis) / 2.0d0
+            call cuest_get_Vxc(c_loc(cuest_Vxc), c_loc(cuest_Exc), quick_qm_struct%co)
+            quick_qm_struct%oxc = cuest_Vxc
+            quick_qm_struct%o = quick_qm_struct%o + cuest_Vxc
+            quick_qm_struct%Exc = cuest_Exc
+            quick_qm_struct%Eel = quick_qm_struct%Eel + cuest_Exc
+
+            ! alpha and beta electron density
+            if (deltaO) then
+               quick_qm_struct%aelec = Sum2Mat(quick_qm_struct%denseSave, quick_qm_struct%s, nbasis) / 2.0d0
+            else
+               quick_qm_struct%aelec = Sum2Mat(quick_qm_struct%dense, quick_qm_struct%s, nbasis) / 2.0d0
+            endif
+            quick_qm_struct%belec = quick_qm_struct%aelec
         endif
-        quick_qm_struct%belec = quick_qm_struct%aelec
 #else
         call get_xc(deltaO)
 #endif
