@@ -185,24 +185,19 @@ module quick_cuest_module
       end subroutine
    end interface
 
-! contains
-!
-!    function cuest_get_n_rad_pts() result(out)
-!       use quick_method_module, only: quick_method
-!       use quick_molspec_module, only: quick_molspec
-!       use, intrinsic :: iso_c_binding, only: c_int64_t
-!       implicit none
-!       integer(c_int64_t) :: out
-!
-!       if (quick_method%iSG == 1) then
-!          out = 50
-!       else
-!          if (quick_molspec%iattype(iatm) <= 10) then
-!             out = 23
-!          else
-!             out = 26
-!          endif
-!       endif
-!    end function cuest_get_n_rad_pts
+contains
+
+   subroutine cuest_correct_P(o, qspec)
+      !
+      ! For correcting density matrix ordering.
+      ! Coefficient matrix normalization correction is inverted from orbitals.
+      !
+      use, intrinsic :: iso_c_binding, only: c_double, c_int8_t
+      implicit none
+      real(c_double), intent(inout) :: o(*)
+      integer(c_int8_t), intent(in), value :: qspec
+
+      call cuest_correct_o(o, ior(qspec, CUEST_CORRECT_NORM_INV))
+   end subroutine cuest_correct_P
 
 end module quick_cuest_module

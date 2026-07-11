@@ -27,6 +27,8 @@ void cuest_deinit_correct ();
  */
 void cuest_correct_o (double *o, int8_t qspec);
 
+#define cuest_correct_P(o, qspec) cuest_correct_o (o, qspec | CORRECT_NORM_INV)
+
 /**
  * @param[in] `nocc` Number of occupied orbitals
  *

@@ -8,9 +8,7 @@
     subroutine dipole
     use allmod
 #if defined(CUDA) && defined(CUEST)
-    use quick_cuest_module, only: cuest_correct_o, &
-                                  CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK, &
-                                  CUEST_CORRECT_NORM_INV
+    use quick_cuest_module, only: cuest_correct_P, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
 #endif
     implicit double precision(a-h,o-z)
     double precision xyzdipole(3,natom)
@@ -149,9 +147,7 @@
 
 #if defined(CUDA) && defined(CUEST)
     densetmp = quick_qm_struct%dense
-    call cuest_correct_o(quick_qm_struct%dense, &
-                         ior(CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK, &
-                             CUEST_CORRECT_NORM_INV))
+    call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
 #endif
 
     DO Ibas=1,nbasis

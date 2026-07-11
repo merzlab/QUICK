@@ -99,7 +99,7 @@ cuest_correct_o (double *o, int8_t qspec)
     bool reorder            = qspec & CORRECT_REORDER;
     bool norm               = qspec & CORRECT_NORM_;
     bool reorder_from_quick = qspec & CORRECT_FROMQUICK_;
-    bool norminv            = qspec & CORRECT_NORM_INV;
+    bool norminv = ((qspec & CORRECT_FROMQUICK_) >> 2) ^ ((qspec & CORRECT_NORM_INV) >> 3);
 
     double kdxx, kfxxy, kfxyz;
     if (norminv) {
@@ -250,7 +250,7 @@ cuest_correct_C (double *C, size_t nocc, int8_t qspec)
     bool reorder            = qspec & CORRECT_REORDER;
     bool norm               = qspec & CORRECT_NORM_;
     bool reorder_from_quick = qspec & CORRECT_FROMQUICK_;
-    bool norminv            = qspec & CORRECT_NORM_INV;
+    bool norminv = ~((qspec & CORRECT_FROMQUICK_) >> 2) ^ ((qspec & CORRECT_NORM_INV) >> 3);
 
     double kdxx, kfxxy, kfxyz;
     if (norminv) {
