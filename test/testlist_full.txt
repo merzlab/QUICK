@@ -72,6 +72,12 @@ ene_CH4_rhf_ccpvdz                      #CH4: RHF energy test: cc-pVDZ basis set
 ene_H2O_rhf_ccpvdz                      #H2O: RHF energy test: cc-pVDZ basis set
 ene_LiF_rhf_ccpvdz                      #LiF: RHF energy test: cc-pVDZ basis set
 ene_NH4_rhf_ccpvdz                      #NH4: RHF energy test: cc-pVDZ basis set
+ene_ch5nos_b3lyp_631plplgdp_sg2         #CH5NOS: DFT energy test: B3LYP functional
+ene_ch5nos_b3lyp_631plplgdp_sg3         #CH5NOS: DFT energy test: B3LYP functional
+ene_ch5nos_b3lyp_631plplgdp_eml         #CH5NOS: DFT energy test: B3LYP functional
+ene_wat_blyp_631g_sg2                   #H2O: DFT energy test: 6-31G basis set
+ene_wat_blyp_631g_sg3                   #H2O: DFT energy test: 6-31G basis set
+ene_wat_blyp_631g_eml                   #H2O: DFT energy test: 6-31G basis set
 ene_benzene_b3lyp_aug-cc-pvdz           #C6H6: DFT energy test: B3LYP/aug-cc-pvtz near-linear dependency of basis sets
 ene_benzene_ub3lyp_aug-cc-pvdz          #C6H6: unrestricted DFT energy test: UB3LYP/aug-cc-pvtz near-linear dependency of basis sets
 ene_benzene_ub3lyp_aug-cc-pvdz_triplet  #C6H6: unrestricted DFT energy test for triplet: UB3LYP/aug-cc-pvtz near-linear dependency
