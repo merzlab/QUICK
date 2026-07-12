@@ -116,7 +116,15 @@ contains
  
      call get1e(deltaO)
 
-     if(quick_method%printEnergy) call get1eEnergy(deltaO)
+     if(quick_method%printEnergy) then
+#if defined(CUDA) && defined(CUEST)
+         call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
+#endif
+         call get1eEnergy(deltaO)
+#if defined(CUDA) && defined(CUEST)
+         call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+#endif
+     endif
 
 
 !     if (quick_method%nodirect) then
@@ -145,6 +153,7 @@ contains
            if (firstiter) then
               ! density matrix input to this is correctly in QUICK form
               ! because it came from the SAD guess and the compute uses gccoeff in QUICK form
+
               cuest_J = 0.0d0
               call gpu_get_cshell_eri(deltaO, cuest_J)  
 
@@ -153,10 +162,8 @@ contains
               quick_qm_struct%o = quick_qm_struct%o + cuest_J
                
               ! convert density matrix from QUICK to cuEST form
-              ! if DFT, this will happen after xc is done
-              ! if (.not.quick_method%DFT) then
-                 call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
-              ! endif
+              ! needed for accumulating eri energy before DFT
+              call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
            else
 
               ! delta density is handled correctly
@@ -279,6 +286,7 @@ contains
   !  Calculate exchange correlation contribution & add to operator    
 #if defined(CUDA) && defined(CUEST)
         if (firstiter) then
+            ! convert to QUICK form to use QUICK xc compute
             call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
 
             ! use cuest_J and cuest_K as temp buffers
@@ -294,7 +302,7 @@ contains
             !        %o cuEST = (%o_HF cuEST + %oxc QUICK) - %oxc QUICK          + %oxc cuEST
             quick_qm_struct%o = quick_qm_struct%o          - quick_qm_struct%oxc + cuest_K
 
-            ! convert density matrix from QUICK to cuEST form
+            ! convert density matrix back to cuEST form
             call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
         else
             call cuest_get_Vxc(cuest_Vxc, cuest_Exc, quick_qm_struct%co)
