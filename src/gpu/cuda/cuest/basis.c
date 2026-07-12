@@ -59,68 +59,68 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
     }
 
 #ifdef CUESTDEBUG
-    puts ("-------- DUMP --------");
+    fputs ("-------- DUMP --------", quick_cuest_log_fp);
 
-    printf ("natom=%llu\n", natom);
-    printf ("nshell=%llu\n", nshell);
+    DEBUGLOG ("natom=%llu\n", natom);
+    DEBUGLOG ("nshell=%llu\n", nshell);
 
-    puts ("ncenter:");
+    fputs ("ncenter:", quick_cuest_log_fp);
     for (int i = 0; i < 7; ++i)
-        printf ("%llu ", ncenter[i]);
+        DEBUGLOG ("%llu ", ncenter[i]);
     putchar ('\n');
 
-    puts ("katom_:");
+    fputs ("katom_:", quick_cuest_log_fp);
     for (int i = 0; i < nshell; ++i)
-        printf ("%llu ", katom_[i]);
+        DEBUGLOG ("%llu ", katom_[i]);
     putchar ('\n');
 
-    puts ("ktype_:");
+    fputs ("ktype_:", quick_cuest_log_fp);
     for (int i = 0; i < nshell; ++i)
-        printf ("%llu ", ktype_[i]);
+        DEBUGLOG ("%llu ", ktype_[i]);
     putchar ('\n');
 
-    puts ("kprim_:");
+    fputs ("kprim_:", quick_cuest_log_fp);
     for (int i = 0; i < nshell; ++i)
-        printf ("%llu ", kprim_[i]);
+        DEBUGLOG ("%llu ", kprim_[i]);
     putchar ('\n');
 
-    puts ("aexp:");
+    fputs ("aexp:", quick_cuest_log_fp);
     for (int i = 0; i < 7; ++i) {
         for (int j = 0; j < maxcontract; ++j)
-            printf ("%f ", get (aexp, i, j, maxcontract));
+            DEBUGLOG ("%f ", get (aexp, i, j, maxcontract));
         putchar ('\n');
     }
 
-    puts ("dcoeff:");
+    fputs ("dcoeff:", quick_cuest_log_fp);
     for (int i = 0; i < 7; ++i) {
         for (int j = 0; j < maxcontract; ++j)
-            printf ("%f ", get (dcoeff, i, j, maxcontract));
+            DEBUGLOG ("%f ", get (dcoeff, i, j, maxcontract));
         putchar ('\n');
     }
 
-    puts ("xyz:");
+    fputs ("xyz:", quick_cuest_log_fp);
     for (int i = 0; i < natom; ++i) {
         for (int j = 0; j < 3; ++j)
-            printf ("%f ", get (quick_cuest_data.xyz, i, j, 3));
+            DEBUGLOG ("%f ", get (quick_cuest_data.xyz, i, j, 3));
         putchar ('\n');
     }
 
-    puts ("aexp flat:");
+    fputs ("aexp flat:", quick_cuest_log_fp);
     for (int i = 0; i < 7 * maxcontract; ++i)
-        printf ("%f ", aexp[i]);
+        DEBUGLOG ("%f ", aexp[i]);
     putchar ('\n');
 
-    puts ("dcoeff flat:");
+    fputs ("dcoeff flat:", quick_cuest_log_fp);
     for (int i = 0; i < 7 * maxcontract; ++i)
-        printf ("%f ", dcoeff[i]);
+        DEBUGLOG ("%f ", dcoeff[i]);
     putchar ('\n');
 
-    puts ("xyz flat:");
+    fputs ("xyz flat:", quick_cuest_log_fp);
     for (int i = 0; i < natom * 3; ++i)
-        printf ("%f ", quick_cuest_data.xyz[i]);
+        DEBUGLOG ("%f ", quick_cuest_data.xyz[i]);
     putchar ('\n');
 
-    puts ("------ END DUMP ------");
+    fputs ("------ END DUMP ------", quick_cuest_log_fp);
 
     fflush (stdout);
 #endif
@@ -173,17 +173,17 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
     }
 
 #ifdef CUESTDEBUG
-    puts ("new katom:");
+    fputs ("new katom:", quick_cuest_log_fp);
     for (int i = 0; i < nshell; ++i)
-        printf ("%llu ", katom[i]);
+        DEBUGLOG ("%llu ", katom[i]);
     putchar ('\n');
-    puts ("new ktype:");
+    fputs ("new ktype:", quick_cuest_log_fp);
     for (int i = 0; i < nshell; ++i)
-        printf ("%llu ", ktype[i]);
+        DEBUGLOG ("%llu ", ktype[i]);
     putchar ('\n');
-    puts ("new kprim:");
+    fputs ("new kprim:", quick_cuest_log_fp);
     for (int i = 0; i < nshell; ++i)
-        printf ("%llu ", kprim[i]);
+        DEBUGLOG ("%llu ", kprim[i]);
     putchar ('\n');
     fflush (stdout);
 #endif
@@ -203,7 +203,7 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
         ++nshells_per_atom[a];
         if (i > 0)
             ifshell[i] = ifshell[i - 1] + ktype[i - 1];
-        // printf ("ifshell[%zu]=%zu\n", i, ifshell[i]);
+        // DEBUGLOG ("ifshell[%zu]=%zu\n", i, ifshell[i]);
     }
 
     // fflush (stdout);
@@ -317,14 +317,14 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
     checkCuestErrors (cuestQuery (handle, CUEST_AOBASIS, basis, CUEST_AOBASIS_IS_PURE,
                                   &query_is_pure, sizeof (int32_t)));
 
-    printf ("AO Basis from handle:\n");
-    printf ("%-10s = %6llu\n", "natom", query_natom);
-    printf ("%-10s = %6llu\n", "nshell", query_nshell);
-    printf ("%-10s = %6llu\n", "nao", query_nao);
-    printf ("%-10s = %6llu\n", "ncart", query_ncart);
-    printf ("%-10s = %6llu\n", "nprimitive", query_nprimitive);
-    printf ("%-10s = %6llu\n", "max_L", query_max_L);
-    printf ("%-10s = %6s\n", "is_pure", query_is_pure ? "true" : "false");
+    DEBUGLOG ("AO Basis from handle:\n");
+    DEBUGLOG ("%-10s = %6llu\n", "natom", query_natom);
+    DEBUGLOG ("%-10s = %6llu\n", "nshell", query_nshell);
+    DEBUGLOG ("%-10s = %6llu\n", "nao", query_nao);
+    DEBUGLOG ("%-10s = %6llu\n", "ncart", query_ncart);
+    DEBUGLOG ("%-10s = %6llu\n", "nprimitive", query_nprimitive);
+    DEBUGLOG ("%-10s = %6llu\n", "max_L", query_max_L);
+    DEBUGLOG ("%-10s = %6s\n", "is_pure", query_is_pure ? "true" : "false");
 #endif
 }
 

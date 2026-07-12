@@ -66,10 +66,7 @@ cuest_get_oei_S (double *o)
 
     double *d_S;
     size_t  d_S_siz = nbasis * nbasis * sizeof (double);
-    if (cudaMalloc ((void **)&d_S, d_S_siz)) {
-        fprintf (stderr, "Failed to allocate device buffer\n");
-        exit (EXIT_FAILURE);
-    }
+    cudaMallocChecked ((void **)&d_S, d_S_siz);
 
     cuestOverlapComputeParameters_t overlap_compute_params;
     checkCuestErrors (
@@ -90,25 +87,19 @@ cuest_get_oei_S (double *o)
     // copy overlap matrix to o //
     // ======================== //
 
-    if (cudaMemcpy (o, d_S, d_S_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
-        fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMemcpyChecked (o, d_S, d_S_siz, cudaMemcpyDeviceToHost);
 
 #ifdef CUESTDEBUG
-    puts ("-------- S --------");
+    fputs ("-------- S --------", quick_cuest_log_fp);
     for (int i = 0; i < nbasis; ++i) {
         for (int j = 0; j < nbasis; ++j)
-            printf ("%16.10f", o[i * nbasis + j]);
+            DEBUGLOG ("%16.10f", o[i * nbasis + j]);
         putchar ('\n');
     }
-    puts ("------ END S ------");
+    fputs ("------ END S ------", quick_cuest_log_fp);
 #endif
 
-    if (cudaFree (d_S) != cudaSuccess) {
-        fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaFreeChecked (d_S);
 }
 
 void
@@ -122,10 +113,7 @@ cuest_get_oei_T (double *o)
 
     double *d_T;
     size_t  d_T_siz = nbasis * nbasis * sizeof (double);
-    if (cudaMalloc ((void **)&d_T, d_T_siz) != cudaSuccess) {
-        fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMallocChecked ((void **)&d_T, d_T_siz);
 
     cuestKineticComputeParameters_t kinetic_compute_params;
     checkCuestErrors (
@@ -146,25 +134,19 @@ cuest_get_oei_T (double *o)
     // copy kinetic matrix to o //
     // ======================== //
 
-    if (cudaMemcpy (o, d_T, d_T_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
-        fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMemcpyChecked (o, d_T, d_T_siz, cudaMemcpyDeviceToHost);
 
 #ifdef CUESTDEBUG
-    puts ("-------- T --------");
+    fputs ("-------- T --------", quick_cuest_log_fp);
     for (int i = 0; i < nbasis; ++i) {
         for (int j = 0; j < nbasis; ++j)
-            printf ("%16.10f", o[i * nbasis + j]);
+            DEBUGLOG ("%16.10f", o[i * nbasis + j]);
         putchar ('\n');
     }
-    puts ("------ END T ------");
+    fputs ("------ END T ------", quick_cuest_log_fp);
 #endif
 
-    if (cudaFree (d_T) != cudaSuccess) {
-        fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaFreeChecked (d_T);
 }
 
 void
@@ -178,10 +160,7 @@ cuest_get_oei_V (double *o)
 
     double *d_V;
     size_t  d_V_siz = nbasis * nbasis * sizeof (double);
-    if (cudaMalloc ((void **)&d_V, d_V_siz) != cudaSuccess) {
-        fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMallocChecked ((void **)&d_V, d_V_siz);
 
     cuestPotentialComputeParameters_t potential_compute_params;
     checkCuestErrors (
@@ -206,25 +185,19 @@ cuest_get_oei_V (double *o)
     // copy potential matrix to o //
     // ========================== //
 
-    if (cudaMemcpy (o, d_V, d_V_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
-        fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMemcpyChecked (o, d_V, d_V_siz, cudaMemcpyDeviceToHost);
 
 #ifdef CUESTDEBUG
-    puts ("-------- V --------");
+    fputs ("-------- V --------", quick_cuest_log_fp);
     for (int i = 0; i < nbasis; ++i) {
         for (int j = 0; j < nbasis; ++j)
-            printf ("%16.10f", o[i * nbasis + j]);
+            DEBUGLOG ("%16.10f", o[i * nbasis + j]);
         putchar ('\n');
     }
-    puts ("------ END V ------");
+    fputs ("------ END V ------", quick_cuest_log_fp);
 #endif
 
-    if (cudaFree (d_V) != cudaSuccess) {
-        fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaFreeChecked (d_V);
 }
 
 void
@@ -238,25 +211,16 @@ cuest_get_eri_J (double *o, double *P)
 
     double *d_J;
     size_t  d_J_siz = nbasis * nbasis * sizeof (double);
-    if (cudaMalloc ((void **)&d_J, d_J_siz) != cudaSuccess) {
-        fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMallocChecked ((void **)&d_J, d_J_siz);
 
     // P does not need to be corrected because S is correct already
 
     // density matrix
     double *d_P;
     size_t  d_P_siz = d_J_siz;
-    if (cudaMalloc ((void **)&d_P, d_P_siz)) {
-        fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMallocChecked ((void **)&d_P, d_P_siz);
 
-    if (cudaMemcpy (d_P, P, d_P_siz, cudaMemcpyHostToDevice) != cudaSuccess) {
-        fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMemcpyChecked (d_P, P, d_P_siz, cudaMemcpyHostToDevice);
 
     cuestDFCoulombComputeParameters_t dfj_compute_params;
     checkCuestErrors (
@@ -277,25 +241,19 @@ cuest_get_eri_J (double *o, double *P)
     // copy coulomb matrix to o //
     // ======================== //
 
-    if (cudaMemcpy (o, d_J, d_J_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
-        fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMemcpyChecked (o, d_J, d_J_siz, cudaMemcpyDeviceToHost);
 
 #ifdef CUESTDEBUG
-    puts ("-------- J --------");
+    fputs ("-------- J --------", quick_cuest_log_fp);
     for (int i = 0; i < nbasis; ++i) {
         for (int j = 0; j < nbasis; ++j)
             printf ("%16.10f", o[i * nbasis + j]);
         putchar ('\n');
     }
-    puts ("------ END J ------");
+    fputs ("------ END J ------", quick_cuest_log_fp);
 #endif
 
-    if (cudaFree (d_J) != cudaSuccess) {
-        fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaFreeChecked (d_J);
 }
 
 void
@@ -310,24 +268,15 @@ cuest_get_eri_K (double *o, double *C)
 
     double *d_K;
     size_t  d_K_siz = nbasis * nbasis * sizeof (double);
-    if (cudaMalloc ((void **)&d_K, d_K_siz) != cudaSuccess) {
-        fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMallocChecked ((void **)&d_K, d_K_siz);
 
     double *d_C;
     size_t  d_C_siz = nocc * nbasis * sizeof (double);
-    if (cudaMalloc ((void **)&d_C, d_C_siz)) {
-        fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMallocChecked ((void **)&d_C, d_C_siz);
 
     // P does not need to be corrected because S is correct already
 
-    if (cudaMemcpy (d_C, C, d_C_siz, cudaMemcpyHostToDevice) != cudaSuccess) {
-        fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMemcpyChecked (d_C, C, d_C_siz, cudaMemcpyHostToDevice);
 
     cuestDFSymmetricExchangeComputeParameters_t dfk_compute_params;
     checkCuestErrors (
@@ -355,28 +304,18 @@ cuest_get_eri_K (double *o, double *C)
     // copy exchange matrix to o //
     // ========================= //
 
-    if (cudaMemcpy (o, d_K, d_K_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
-        fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMemcpyChecked (o, d_K, d_K_siz, cudaMemcpyDeviceToHost);
 
 #ifdef CUESTDEBUG
-    puts ("-------- K --------");
+    fputs ("-------- K --------", quick_cuest_log_fp);
     for (int i = 0; i < nbasis; ++i) {
         for (int j = 0; j < nbasis; ++j)
-            printf ("%16.10f", o[i * nbasis + j]);
+            DEBUGLOG ("%16.10f", o[i * nbasis + j]);
         putchar ('\n');
     }
-    puts ("------ END K ------");
+    fputs ("------ END K ------", quick_cuest_log_fp);
 #endif
 
-    if (cudaFree (d_K) != cudaSuccess) {
-        fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
-
-    if (cudaFree (d_C) != cudaSuccess) {
-        fprintf (stderr, "cudaFree failed at %s:%d\n", __func__, __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaFreeChecked (d_K);
+    cudaFreeChecked (d_C);
 }

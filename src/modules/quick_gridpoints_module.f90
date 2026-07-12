@@ -149,7 +149,7 @@ module quick_gridpoints_module
     use quick_basis_module
     use quick_timer_module
 #if defined(CUDA) && defined(CUEST)
-    use, intrinsic :: iso_c_binding, only: c_int64_t, c_double
+    use, intrinsic :: iso_c_binding, only: c_int64_t, c_double, c_null_char
     use quick_cuest_module
 #endif
 
@@ -266,7 +266,7 @@ module quick_gridpoints_module
             case (101) ! GGA_X_PBE (accompanied with GGA_C_PBE after)
                 cuest_fnl_code = CUEST_FUNCTIONAL_PBE
             case default
-                print *, "CUEST: libxc functional not supported, defaulting to B3LYP"
+                call cuest_debuglog("CUEST: libxc functional not supported, defaulting to B3LYP" // c_null_char)
                 cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
         end select
     endif

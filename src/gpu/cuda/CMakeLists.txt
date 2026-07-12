@@ -46,7 +46,7 @@ target_include_directories(cusolver_obj PUBLIC ${CUDA_INCLUDE_DIRS})
 
 if(CUEST)
     set(CUEST_SOURCES cuest/quick_cuest.c cuest/init.c cuest/basis.c
-                      cuest/operator.c cuest/df.c cuest/correction.c cuest/xc.c)
+                      cuest/operator.c cuest/df.c cuest/correction.c cuest/xc.c cuest/fortlog.c)
 
     add_library(cuest_obj OBJECT ${CUEST_SOURCES})
     set_property(TARGET cuest_obj PROPERTY COMPILE_OPTIONS ${OPT_CFLAGS})

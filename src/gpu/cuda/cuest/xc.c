@@ -103,19 +103,19 @@ cuest_create_atom_grid (int64_t nrad, double *r, double *w, int64_t *nang)
                                            atom_grid_param, &atom_grids[i_atom_grids++]));
 
 #ifdef CUESTDEBUG
-    printf ("created atom grid %zu\n", i_atom_grids - 1);
-    printf ("\tnrad=%lld\n", nrad);
-    printf ("\tr=");
+    DEBUGLOG ("created atom grid %zu\n", i_atom_grids - 1);
+    DEBUGLOG ("\tnrad=%lld\n", nrad);
+    DEBUGLOG ("\tr=");
     for (size_t i = 0; i < nrad; ++i)
-        printf ("%f ", r[i]);
+        DEBUGLOG ("%f ", r[i]);
     putchar ('\n');
-    printf ("\tw=");
+    DEBUGLOG ("\tw=");
     for (size_t i = 0; i < nrad; ++i)
-        printf ("%f ", w[i]);
+        DEBUGLOG ("%f ", w[i]);
     putchar ('\n');
-    printf ("\tnang=");
+    DEBUGLOG ("\tnang=");
     for (size_t i = 0; i < nrad; ++i)
-        printf ("%lld ", nang[i]);
+        DEBUGLOG ("%lld ", nang[i]);
     putchar ('\n');
 #endif
 }
@@ -173,7 +173,7 @@ cuest_init_xc (int8_t fnl)
     cuestXCIntPlanParameters_t xcIntPlan_param;
     checkCuestErrors (cuestParametersCreate (CUEST_XCINTPLAN_PARAMETERS, &xcIntPlan_param));
 
-    // TODO: add support for libxc functionals
+    // TODO: add support for other functionals supported by cuEST
     cuestXCIntPlanParametersFunctional_t functional;
     switch (fnl) {
         case CUEST_FUNCTIONAL_B3LYP:
@@ -230,22 +230,13 @@ cuest_get_Vxc (double *Vxc, double *Exc, double *C)
 
     double      *d_Vxc;
     const size_t Vxc_siz = nbasis * nbasis * sizeof (double);
-    if (cudaMalloc ((void **)&d_Vxc, Vxc_siz) != cudaSuccess) {
-        fprintf (stderr, "cudaMalloc failed in %s:%d\n", __func__, __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMallocChecked ((void **)&d_Vxc, Vxc_siz);
 
     double *d_C;
     size_t  d_C_siz = nocc * nbasis * sizeof (double);
-    if (cudaMalloc ((void **)&d_C, d_C_siz)) {
-        fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMallocChecked ((void **)&d_C, d_C_siz);
 
-    if (cudaMemcpy (d_C, C, d_C_siz, cudaMemcpyHostToDevice) != cudaSuccess) {
-        fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMemcpyChecked (d_C, C, d_C_siz, cudaMemcpyHostToDevice);
 
     cuestXCPotentialRKSComputeParameters_t rks_V_params;
     checkCuestErrors (
@@ -265,22 +256,12 @@ cuest_get_Vxc (double *Vxc, double *Exc, double *C)
                                                   Exc, d_Vxc));
 
     // copy to host
-    if (cudaMemcpy (Vxc, d_Vxc, Vxc_siz, cudaMemcpyDeviceToHost) != cudaSuccess) {
-        fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
-
-    if (cudaFree (d_Vxc) != cudaSuccess) {
-        fprintf (stderr, "cudaFree failed at %s:%d\n", __func__, __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMemcpyChecked (Vxc, d_Vxc, Vxc_siz, cudaMemcpyDeviceToHost);
+    cudaFreeChecked (d_Vxc);
 
     // free memory
 
-    if (cudaFree (d_C) != cudaSuccess) {
-        fprintf (stderr, "cudaFree failed at %s:%d\n", __func__, __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaFreeChecked (d_C);
 
     free (vbs);
     freeWorkspace (tmpVxcWorkspace);

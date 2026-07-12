@@ -3,8 +3,6 @@
 
 #include <stddef.h>
 
-#include "quick_cuest.h"
-
 #define SWAP(x, y, type)                                                                           \
     do {                                                                                           \
         type swap_temporary_variable_88888888_ = (x);                                              \
@@ -55,6 +53,32 @@ reorder_f (double *a)
     do {                                                                                           \
         printf ("%s: Temporary workspace requires %.2f GB of memory\n", desc,                      \
                 quick_cuest_struct.tmpWD->deviceBufferSizeInBytes / 1e9);                          \
+    } while (0)
+
+#define DEBUGLOG(...) fprintf (quick_cuest_log_fp, __VA_ARGS__);
+
+#define cudaMallocChecked(ptr, siz)                                                                \
+    do {                                                                                           \
+        if (cudaMalloc (ptr, siz) != cudaSuccess) {                                                \
+            fprintf (stderr, "cudaMalloc failed at %s:%d\n", __func__, __LINE__ - 1);              \
+            exit (EXIT_FAILURE);                                                                   \
+        }                                                                                          \
+    } while (0)
+
+#define cudaMemcpyChecked(dst, src, siz, dirspec)                                                  \
+    do {                                                                                           \
+        if (cudaMemcpy (dst, src, siz, dirspec) != cudaSuccess) {                                  \
+            fprintf (stderr, "cudaMemcpy failed at %s:%d\n", __func__, __LINE__ - 1);              \
+            exit (EXIT_FAILURE);                                                                   \
+        }                                                                                          \
+    } while (0)
+
+#define cudaFreeChecked(ptr)                                                                       \
+    do {                                                                                           \
+        if (cudaFree (ptr) != cudaSuccess) {                                                       \
+            fprintf (stderr, "cudaFree failed at %s:%d\n", __func__, __LINE__);                    \
+            exit (EXIT_FAILURE);                                                                   \
+        }                                                                                          \
     } while (0)
 
 #endif

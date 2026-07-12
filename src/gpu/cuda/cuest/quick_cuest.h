@@ -66,7 +66,7 @@ typedef struct {
 extern quick_cuest_struct_t quick_cuest_struct;
 extern quick_cuest_data_t   quick_cuest_data;
 extern quick_cuest_memchk_t quick_cuest_memchk;
-extern FILE                *quick_cuest_logfp;
+extern FILE                *quick_cuest_log_fp;
 
 void cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t nauxshell,
                  int64_t maxcontract, int64_t maxcontract_aux, int8_t *iattype, double *xyz,
@@ -98,5 +98,8 @@ void cuest_destroy_atom_grid ();
 
 void cuest_init_xc (int8_t fnl);
 void cuest_get_Vxc (double *Vxc, double *Exc, double *C);
+
+// Other
+void cuest_debuglog (const char *str);
 
 #endif

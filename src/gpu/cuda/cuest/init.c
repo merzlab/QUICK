@@ -25,9 +25,7 @@ cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t
             int64_t maxcontract, int64_t maxcontract_aux, int8_t *iattype, double *xyz, double *chg,
             int64_t nextatom, double *extxyz, double *extchg)
 {
-    freopen ("debug.cuest", "w", stdout);
-
-    if ((quick_cuest_logfp = fopen ("cuest.log", "w")) == NULL) {
+    if ((quick_cuest_log_fp = fopen ("cuest.log", "w")) == NULL) {
         perror ("cuest_init fopen cuest.log error: ");
         exit (EXIT_FAILURE);
     }
@@ -87,45 +85,16 @@ cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t
     memcpy (quick_cuest_data.allchg + natom, extchg, extchg_siz);
 
     // xyz
-
-    if (cudaMalloc ((void **)&quick_cuest_data.allxyz_gpu, xyz_gpu_siz + extxyz_gpu_siz)
-        != cudaSuccess) {
-        fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
-
-    if (cudaMemcpy (quick_cuest_data.allxyz_gpu, xyz, xyz_gpu_siz, cudaMemcpyHostToDevice)
-        != cudaSuccess) {
-        fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
-
-    if (cudaMemcpy ((uint8_t *)quick_cuest_data.allxyz_gpu + xyz_gpu_siz, extxyz, extxyz_gpu_siz,
-                    cudaMemcpyHostToDevice)
-        != cudaSuccess) {
-        fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMallocChecked ((void **)&quick_cuest_data.allxyz_gpu, xyz_gpu_siz + extxyz_gpu_siz);
+    cudaMemcpyChecked (quick_cuest_data.allxyz_gpu, xyz, xyz_gpu_siz, cudaMemcpyHostToDevice);
+    cudaMemcpyChecked ((uint8_t *)quick_cuest_data.allxyz_gpu + xyz_gpu_siz, extxyz, extxyz_gpu_siz,
+                       cudaMemcpyHostToDevice);
 
     // charges
-
-    if (cudaMalloc ((void **)&quick_cuest_data.allchg_gpu, chg_siz + extchg_siz) != cudaSuccess) {
-        fprintf (stderr, "cudaMalloc failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
-
-    if (cudaMemcpy (quick_cuest_data.allchg_gpu, chg, chg_siz, cudaMemcpyHostToDevice)
-        != cudaSuccess) {
-        fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
-
-    if (cudaMemcpy ((uint8_t *)quick_cuest_data.allchg_gpu + chg_siz, extchg, extchg_siz,
-                    cudaMemcpyHostToDevice)
-        != cudaSuccess) {
-        fprintf (stderr, "cudaMemcpy failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaMallocChecked ((void **)&quick_cuest_data.allchg_gpu, chg_siz + extchg_siz);
+    cudaMemcpyChecked (quick_cuest_data.allchg_gpu, chg, chg_siz, cudaMemcpyHostToDevice);
+    cudaMemcpyChecked ((uint8_t *)quick_cuest_data.allchg_gpu + chg_siz, extchg, extchg_siz,
+                       cudaMemcpyHostToDevice);
 }
 
 void
@@ -172,7 +141,7 @@ cuest_deinit_oei_plan ()
 void
 cuest_deinit ()
 {
-    fclose (quick_cuest_logfp);
+    fclose (quick_cuest_log_fp);
 
     checkCuestErrors (cuestDFIntPlanDestroy (quick_cuest_struct.DFIntPlan));
     freeWorkspace (quick_cuest_struct.persistDFIntPlanWorkspace);
@@ -189,13 +158,6 @@ cuest_deinit ()
     free (quick_cuest_data.iattype);
     free (quick_cuest_memchk.chk_katom_ktype_kprim);
 
-    if (cudaFree (quick_cuest_data.allxyz_gpu) != cudaSuccess) {
-        fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
-
-    if (cudaFree (quick_cuest_data.allchg_gpu) != cudaSuccess) {
-        fprintf (stderr, "cudaFree failed on line %d\n", __LINE__);
-        exit (EXIT_FAILURE);
-    }
+    cudaFreeChecked (quick_cuest_data.allxyz_gpu);
+    cudaFreeChecked (quick_cuest_data.allchg_gpu);
 }
