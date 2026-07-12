@@ -63,10 +63,22 @@ typedef struct {
     double   *tmpbuf_dp;         // ^^ also
 } quick_cuest_memchk_t;
 
-extern quick_cuest_struct_t quick_cuest_struct;
-extern quick_cuest_data_t   quick_cuest_data;
-extern quick_cuest_memchk_t quick_cuest_memchk;
-extern FILE                *quick_cuest_log_fp;
+typedef struct {
+    size_t hostmax;    // max memory allocated in host
+    size_t hosttotal;  // total memory allocated in host
+    size_t hostallocs; // number of host allocations
+    size_t hostcur;    // current memory allocation
+    size_t devmax;     // max memory allocated in device
+    size_t devtotal;   // total memory allocated in device
+    size_t devallocs;  // number of device allocations
+    size_t devcur;     // current memory allocation
+} quick_cuest_memtrace_t;
+
+extern quick_cuest_struct_t   quick_cuest_struct;
+extern quick_cuest_data_t     quick_cuest_data;
+extern quick_cuest_memchk_t   quick_cuest_memchk;
+extern quick_cuest_memtrace_t quick_cuest_memtrace;
+extern FILE                  *quick_cuest_log_fp;
 
 void cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t nauxshell,
                  int64_t maxcontract, int64_t maxcontract_aux, int8_t *iattype, double *xyz,

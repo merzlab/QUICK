@@ -147,7 +147,9 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
     else
         quick_cuest_data.nshell += nsp;
 
-    uint64_t *chk_katom_ktype_kprim = malloc (3 * nshell * sizeof (uint64_t));
+    const size_t chk_katom_ktype_kprim_siz = 3 * nshell * sizeof (uint64_t);
+    uint64_t    *chk_katom_ktype_kprim     = malloc (chk_katom_ktype_kprim_siz);
+    add_host_alloc (chk_katom_ktype_kprim_siz);
     if (!aux)
         quick_cuest_memchk.chk_katom_ktype_kprim = chk_katom_ktype_kprim;
     // expanded arrays (SP -> S and P)
@@ -188,13 +190,18 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
     fflush (stdout);
 #endif
 
+    const size_t ifshell_siz = nshell * sizeof (size_t);
     // first_basis_function but instead first_basis_shell
-    size_t *ifshell = malloc (nshell * sizeof (size_t));
+    size_t *ifshell = malloc (ifshell_siz);
+    add_host_alloc (ifshell_siz);
     if (!aux)
         quick_cuest_data.ifshell = ifshell;
+
+    const size_t nshells_per_atom_siz = natom * sizeof (uint64_t);
     // nshells_per_atom[a] is number of shells atom `a` has.
     // This is the same as the number of times it appears in `katom`.
     uint64_t *nshells_per_atom = calloc (natom, sizeof (uint64_t));
+    add_host_alloc (nshells_per_atom_siz);
 
     ifshell[0] = 0;
 
@@ -212,12 +219,14 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
     // 2. make cuest shells //
     // -------------------- //
 
-    cuestAOShell_t *shells = malloc (nshell * sizeof (cuestAOShell_t));
+    const size_t    shells_siz = nshell * sizeof (cuestAOShell_t);
+    cuestAOShell_t *shells     = malloc (shells_siz);
     if (!shells) {
         fprintf (stderr, "Failed to allocate AO shell array\n");
         checkCuestErrors (cuestDestroy (handle));
         exit (EXIT_FAILURE);
     }
+    add_host_alloc (shells_siz);
 
     cuestAOShellParameters_t aoshell_params;
     checkCuestErrors (cuestParametersCreate (CUEST_AOSHELL_PARAMETERS, &aoshell_params));
@@ -246,6 +255,8 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
     if (aux) {
         free (ifshell);
         free (chk_katom_ktype_kprim);
+        free_host_alloc (ifshell_siz);
+        free_host_alloc (chk_katom_ktype_kprim_siz);
     }
 
     checkCuestErrors (cuestParametersDestroy (CUEST_AOSHELL_PARAMETERS, aoshell_params));
@@ -288,6 +299,8 @@ cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *k
 
     free (shells);
     free (nshells_per_atom);
+    free_host_alloc (shells_siz);
+    free_host_alloc (nshells_per_atom_siz);
 
 #ifdef CUESTDEBUG
     // ================= //

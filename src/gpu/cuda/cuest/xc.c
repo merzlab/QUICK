@@ -61,13 +61,19 @@ form_agrid (uint64_t n_rad_pts, uint64_t n_ang_pts, cuestAtomGrid_t *agrids)
     cuestAtomGridParameters_t atom_grid_param;
     checkCuestErrors (cuestParametersCreate (CUEST_ATOMGRID_PARAMETERS, &atom_grid_param));
 
-    double *chk_radialnodes_w
-        = malloc ((n_rad_pts * sizeof (double) << 1) + natom * sizeof (cuestAtomGrid_t));
+    const size_t chk_radialnodes_w_siz
+        = (n_rad_pts * sizeof (double) << 1) + natom * sizeof (cuestAtomGrid_t);
+    double *chk_radialnodes_w = malloc (chk_radialnodes_w_siz);
+    add_host_alloc (chk_radialnodes_w_siz);
+
     double *radial_nodes = chk_radialnodes_w;
     double *w            = radial_nodes + n_rad_pts;
 
+    const size_t nap_siz = n_rad_pts * sizeof (uint64_t);
     // nap[i] is number of angular points of radial point i
-    uint64_t *nap = malloc (n_rad_pts * sizeof (uint64_t));
+    uint64_t *nap = malloc (nap_siz);
+    add_host_alloc (nap_siz);
+
     for (uint64_t i = 0; i < n_rad_pts; ++i)
         nap[i] = n_ang_pts;
 
@@ -81,6 +87,8 @@ form_agrid (uint64_t n_rad_pts, uint64_t n_ang_pts, cuestAtomGrid_t *agrids)
 
     free (nap);
     free (chk_radialnodes_w);
+    free_host_alloc (nap_siz);
+    free_host_alloc (chk_radialnodes_w_siz);
 }
 
 static size_t                    i_atom_grids;
@@ -91,7 +99,10 @@ void
 cuest_create_atom_grid_setup ()
 {
     i_atom_grids = 0;
-    atom_grids   = malloc (quick_cuest_data.natom * sizeof (cuestAtomGrid_t));
+
+    const size_t atom_grids_siz = quick_cuest_data.natom * sizeof (cuestAtomGrid_t);
+    atom_grids                  = malloc (atom_grids_siz);
+    add_host_alloc (atom_grids_siz);
 
     checkCuestErrors (cuestParametersCreate (CUEST_ATOMGRID_PARAMETERS, &atom_grid_param));
 }
@@ -127,6 +138,7 @@ cuest_destroy_atom_grid ()
     for (int i = 0; i < quick_cuest_data.natom; ++i)
         checkCuestErrors (cuestAtomGridDestroy (atom_grids[i]));
     free (atom_grids);
+    free_host_alloc (quick_cuest_data.natom * sizeof (cuestAtomGrid_t));
     checkCuestErrors (cuestParametersDestroy (CUEST_ATOMGRID_PARAMETERS, atom_grid_param));
 }
 
@@ -243,8 +255,9 @@ cuest_get_Vxc (double *Vxc, double *Exc, double *C)
         cuestParametersCreate (CUEST_XCPOTENTIALRKSCOMPUTE_PARAMETERS, &rks_V_params));
 
     cuestWorkspaceDescriptor_t *vbs = malloc (sizeof (cuestWorkspaceDescriptor_t));
-    vbs->hostBufferSizeInBytes      = 0;
-    vbs->deviceBufferSizeInBytes    = 2e9; // TODO: update; 2GB now
+    add_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
+    vbs->hostBufferSizeInBytes   = 0;
+    vbs->deviceBufferSizeInBytes = 2e9; // TODO: update; 2GB now
 
     checkCuestErrors (cuestXCPotentialRKSComputeWorkspaceQuery (
         handle, quick_cuest_struct.XCIntPlan, rks_V_params, vbs, tmpWD, nocc, d_C, Exc, d_Vxc));
@@ -257,13 +270,16 @@ cuest_get_Vxc (double *Vxc, double *Exc, double *C)
 
     // copy to host
     cudaMemcpyChecked (Vxc, d_Vxc, Vxc_siz, cudaMemcpyDeviceToHost);
-    cudaFreeChecked (d_Vxc);
 
     // free memory
 
+    cudaFreeChecked (d_Vxc);
     cudaFreeChecked (d_C);
+    free_dev_alloc (Vxc_siz);
+    free_dev_alloc (d_C_siz);
 
     free (vbs);
+    free_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
     freeWorkspace (tmpVxcWorkspace);
     checkCuestErrors (
         cuestParametersDestroy (CUEST_XCPOTENTIALRKSCOMPUTE_PARAMETERS, rks_V_params));

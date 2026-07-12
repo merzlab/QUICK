@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 
+#include "quick_cuest.h"
+
 #define SWAP(x, y, type)                                                                           \
     do {                                                                                           \
         type swap_temporary_variable_88888888_ = (x);                                              \
@@ -63,6 +65,7 @@ reorder_f (double *a)
             fprintf (stderr, "cudaMalloc failed at %s:%d\n", __func__, __LINE__ - 1);              \
             exit (EXIT_FAILURE);                                                                   \
         }                                                                                          \
+        add_dev_alloc (siz);                                                                       \
     } while (0)
 
 #define cudaMemcpyChecked(dst, src, siz, dirspec)                                                  \
@@ -80,5 +83,35 @@ reorder_f (double *a)
             exit (EXIT_FAILURE);                                                                   \
         }                                                                                          \
     } while (0)
+
+static void
+add_host_alloc (size_t bytes)
+{
+    if ((quick_cuest_memtrace.hostcur += bytes) > quick_cuest_memtrace.hostmax)
+        quick_cuest_memtrace.hostmax = quick_cuest_memtrace.hostcur;
+    quick_cuest_memtrace.hosttotal += bytes;
+    ++quick_cuest_memtrace.hostallocs;
+}
+
+static void
+free_host_alloc (size_t bytes)
+{
+    quick_cuest_memtrace.hostcur -= bytes;
+}
+
+static void
+add_dev_alloc (size_t bytes)
+{
+    if ((quick_cuest_memtrace.devcur += bytes) > quick_cuest_memtrace.devmax)
+        quick_cuest_memtrace.devmax = quick_cuest_memtrace.devcur;
+    quick_cuest_memtrace.devtotal += bytes;
+    ++quick_cuest_memtrace.devallocs;
+}
+
+static void
+free_dev_alloc (size_t bytes)
+{
+    quick_cuest_memtrace.devcur -= bytes;
+}
 
 #endif

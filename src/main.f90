@@ -78,6 +78,7 @@
 #if defined(CUDA) && defined(CUEST)
     integer(c_int8_t) :: cuest_fnl_code
     integer(c_int64_t) :: cuest_xc_nradpts
+    integer(c_int64_t) :: hostmax, hosttotal, hostallocs, devmax, devtotal, devallocs
 #endif
 
     common /timer/ t1_t, t2_t
@@ -469,6 +470,16 @@
     !-----------------------------------------------------------------
     ! 7.The final job is to output energy and many other infos
     !-----------------------------------------------------------------
+#if defined(CUDA) && defined(CUEST)
+    call cuest_get_memtrace(hostmax, hosttotal, hostallocs, devmax, devtotal, devallocs)
+    print *, "Maximum Host Footprint:   ", hostmax
+    print *, "Total Host Footprint:     ", hosttotal
+    print *, "Host Allocations:         ", hostallocs
+    print *, "Maximum Device Footprint: ", devmax
+    print *, "Total Device Footprint:   ", devtotal
+    print *, "Device Allocations:       ", devallocs
+#endif
+
 #if defined(GPU) || defined(MPIV_GPU)
     call delete(quick_method, ierr)
     call gpu_deallocate_scratch(quick_method%grad .or. quick_method%opt)

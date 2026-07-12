@@ -16,8 +16,12 @@ cuest_init_correct ()
     uint64_t  nshell = quick_cuest_data.nshell;
     uint64_t *ktype  = quick_cuest_memchk.chk_katom_ktype_kprim + nshell;
 
-    double *tmpbuf_dp         = malloc (nbasis * sizeof (double));
-    void   *chk_firstd_firstf = malloc ((nbasis + 1) * sizeof (size_t));
+    const size_t tmpbuf_dp_siz         = nbasis * sizeof (double);
+    const size_t chk_firstd_firstf_siz = (nbasis + 1) * sizeof (size_t);
+    double      *tmpbuf_dp             = malloc (tmpbuf_dp_siz);
+    void        *chk_firstd_firstf     = malloc (chk_firstd_firstf_siz);
+    add_host_alloc (tmpbuf_dp_siz);
+    add_host_alloc (chk_firstd_firstf_siz);
 
     // all have length ceil(nbasis/2)
     const size_t len    = ((nbasis + 1) >> 1);
@@ -42,8 +46,12 @@ cuest_init_correct ()
 void
 cuest_deinit_correct ()
 {
+    const uint64_t nbasis = quick_cuest_data.nbasis;
+
     free (quick_cuest_memchk.chk_firstd_firstf);
     free (quick_cuest_memchk.tmpbuf_dp);
+    add_host_alloc (nbasis * sizeof (double));
+    add_host_alloc ((nbasis + 1) * sizeof (size_t));
 }
 
 #define APPLY_NORM_ROW(basei, ii, normfac)                                                         \

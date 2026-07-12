@@ -100,6 +100,7 @@ cuest_get_oei_S (double *o)
 #endif
 
     cudaFreeChecked (d_S);
+    free_dev_alloc (d_S_siz);
 }
 
 void
@@ -147,6 +148,7 @@ cuest_get_oei_T (double *o)
 #endif
 
     cudaFreeChecked (d_T);
+    free_dev_alloc (d_T_siz);
 }
 
 void
@@ -198,6 +200,7 @@ cuest_get_oei_V (double *o)
 #endif
 
     cudaFreeChecked (d_V);
+    free_dev_alloc (d_V_siz);
 }
 
 void
@@ -254,6 +257,7 @@ cuest_get_eri_J (double *o, double *P)
 #endif
 
     cudaFreeChecked (d_J);
+    free_dev_alloc (d_J_siz);
 }
 
 void
@@ -283,8 +287,10 @@ cuest_get_eri_K (double *o, double *C)
         cuestParametersCreate (CUEST_DFSYMMETRICEXCHANGECOMPUTE_PARAMETERS, &dfk_compute_params));
 
     cuestWorkspaceDescriptor_t *varBufSiz = malloc (sizeof (cuestWorkspaceDescriptor_t));
-    varBufSiz->hostBufferSizeInBytes      = 0;
-    varBufSiz->deviceBufferSizeInBytes    = 2e9; // TODO(michaelyxsun): adapt this. 2 GB right now
+    add_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
+    varBufSiz->hostBufferSizeInBytes   = 0;
+    varBufSiz->deviceBufferSizeInBytes = 2e9; // TODO(michaelyxsun): adapt this. 2 GB right now
+
     checkCuestErrors (cuestDFSymmetricExchangeComputeWorkspaceQuery (
         handle, quick_cuest_struct.DFIntPlan, dfk_compute_params, varBufSiz, tmpWD, nocc, d_C,
         d_K));
@@ -296,6 +302,7 @@ cuest_get_eri_K (double *o, double *C)
                                                        tmpDFKWorkspace, nocc, d_C, d_K));
 
     free (varBufSiz);
+    free_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
     freeWorkspace (tmpDFKWorkspace);
     checkCuestErrors (
         cuestParametersDestroy (CUEST_DFSYMMETRICEXCHANGECOMPUTE_PARAMETERS, dfk_compute_params));
@@ -318,4 +325,6 @@ cuest_get_eri_K (double *o, double *C)
 
     cudaFreeChecked (d_K);
     cudaFreeChecked (d_C);
+    free_dev_alloc (d_K_siz);
+    free_dev_alloc (d_C_siz);
 }

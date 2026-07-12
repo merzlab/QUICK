@@ -24,6 +24,7 @@
 #include <cuda_runtime.h>
 
 #include "helper_status.h"
+#include "util.h" // MODIFY
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,6 +60,7 @@ static cuestWorkspace_t* allocateWorkspace(const cuestWorkspaceDescriptor_t* wor
         fprintf(stderr, "Failed to allocate cuestWorkspace_t struct\n");
         exit(EXIT_FAILURE);
     }
+    add_host_alloc(sizeof(cuestWorkspace_t)); // MODIFY
 
     /* Set the length of the host and device buffers. */
     workspace->hostBufferSizeInBytes   = workspaceDescriptor->hostBufferSizeInBytes;
@@ -74,6 +76,7 @@ static cuestWorkspace_t* allocateWorkspace(const cuestWorkspaceDescriptor_t* wor
             free(workspace);
             exit(EXIT_FAILURE);
         }
+        add_host_alloc(workspace->hostBufferSizeInBytes); // MODIFY
         workspace->hostBuffer = (uintptr_t) hostPtr;
     }
 
@@ -87,6 +90,7 @@ static cuestWorkspace_t* allocateWorkspace(const cuestWorkspaceDescriptor_t* wor
             free(workspace);
             exit(EXIT_FAILURE);
         }
+        add_dev_alloc(workspace->deviceBufferSizeInBytes); // MODIFY
         workspace->deviceBuffer = (uintptr_t) devicePtr;
     }
 
@@ -111,6 +115,7 @@ static void freeWorkspace(cuestWorkspace_t* workspace)
     /* Frss the host buffer if it is not NULL. */
     if (workspace->hostBuffer) {
         free((void*) workspace->hostBuffer);
+        free_host_alloc(workspace->hostBufferSizeInBytes); // MODIFY
     }
 
     /* Frss the device buffer if it is not NULL. */
@@ -121,10 +126,12 @@ static void freeWorkspace(cuestWorkspace_t* workspace)
             free(workspace);
             exit(EXIT_FAILURE);
         }
+        free_dev_alloc(workspace->deviceBufferSizeInBytes); // MODIFY
     }
 
     /* Free the workspace structure. */
     free(workspace);
+    free_host_alloc(sizeof (cuestWorkspace_t)); // MODIFY
 }
 
 #endif

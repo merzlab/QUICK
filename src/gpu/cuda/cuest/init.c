@@ -45,6 +45,8 @@ cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t
 
     quick_cuest_struct.tmpWD     = malloc (sizeof (cuestWorkspaceDescriptor_t));
     quick_cuest_struct.persistWD = malloc (sizeof (cuestWorkspaceDescriptor_t));
+    add_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
+    add_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
 
     // ========= //
     // init info //
@@ -63,6 +65,7 @@ cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t
     // ensure iattype persists
     const size_t iattype_siz = natom * sizeof (int8_t);
     quick_cuest_data.iattype = malloc (iattype_siz);
+    add_host_alloc (iattype_siz);
     memcpy (quick_cuest_data.iattype, iattype, iattype_siz);
 
     // =========== //
@@ -80,6 +83,7 @@ cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t
         fprintf (stderr, "malloc failed on line %d\n", __LINE__);
         exit (EXIT_FAILURE);
     }
+    add_host_alloc (chg_siz + extchg_siz);
 
     memcpy (quick_cuest_data.allchg, chg, chg_siz);
     memcpy (quick_cuest_data.allchg + natom, extchg, extchg_siz);
@@ -141,6 +145,8 @@ cuest_deinit_oei_plan ()
 void
 cuest_deinit ()
 {
+    // dont worry about tracking host free because we are deiniting anyways
+
     fclose (quick_cuest_log_fp);
 
     checkCuestErrors (cuestDFIntPlanDestroy (quick_cuest_struct.DFIntPlan));

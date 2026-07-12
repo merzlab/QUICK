@@ -201,4 +201,16 @@ module quick_cuest_module
       end subroutine cuest_debuglog
    end interface
 
+   interface
+      subroutine cuest_get_memtrace(hostmax, hosttotal, hostallocs, devmax, devtotal, devallocs) bind(c, name="cuest_get_memtrace")
+         use, intrinsic :: iso_c_binding, only: c_int64_t
+         integer(c_int64_t), intent(out) :: hostmax
+         integer(c_int64_t), intent(out) :: hosttotal
+         integer(c_int64_t), intent(out) :: hostallocs
+         integer(c_int64_t), intent(out) :: devmax
+         integer(c_int64_t), intent(out) :: devtotal
+         integer(c_int64_t), intent(out) :: devallocs
+      end subroutine cuest_get_memtrace
+   end interface
+
 end module quick_cuest_module
