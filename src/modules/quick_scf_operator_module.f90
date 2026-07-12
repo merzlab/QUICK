@@ -143,21 +143,20 @@ contains
 #if defined(CUDA) && defined(CUEST)
            ! don't use cuEST on first iteration because quick_qm_struct%co will be all 0
            if (firstiter) then
-              ! density matrix input to this is correctly in QUICK form because it came from the SAD guess
+              ! density matrix input to this is correctly in QUICK form
+              ! because it came from the SAD guess and the compute uses gccoeff in QUICK form
               cuest_J = 0.0d0
               call gpu_get_cshell_eri(deltaO, cuest_J)  
 
               ! correct output
               call cuest_correct_o(cuest_J, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
               quick_qm_struct%o = quick_qm_struct%o + cuest_J
-
-              
                
               ! convert density matrix from QUICK to cuEST form
               ! if DFT, this will happen after xc is done
-              if (.not.quick_method%DFT) then
+              ! if (.not.quick_method%DFT) then
                  call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
-              endif
+              ! endif
            else
 
               ! delta density is handled correctly
@@ -280,6 +279,8 @@ contains
   !  Calculate exchange correlation contribution & add to operator    
 #if defined(CUDA) && defined(CUEST)
         if (firstiter) then
+            call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+
             ! use cuest_J and cuest_K as temp buffers
             ! cuest_J <- %o_HF cuEST
             cuest_J = quick_qm_struct%o
