@@ -67,6 +67,15 @@ module quick_cuest_module
    end interface
 
    interface
+      subroutine cuest_correct_P(o, qspec) bind(c, name="cuest_correct_P")
+         use, intrinsic :: iso_c_binding, only: c_double, c_int8_t
+         implicit none
+         real(c_double), intent(inout) :: o(*)
+         integer(c_int8_t), intent(in), value :: qspec
+      end subroutine
+   end interface
+
+   interface
       subroutine cuest_deinit_oei_plan() bind(c, name="cuest_deinit_oei_plan")
       end subroutine
    end interface
@@ -187,17 +196,17 @@ module quick_cuest_module
 
 contains
 
-   subroutine cuest_correct_P(o, qspec)
-      !
-      ! For correcting density matrix ordering.
-      ! Coefficient matrix normalization correction is inverted from orbitals.
-      !
-      use, intrinsic :: iso_c_binding, only: c_double, c_int8_t
-      implicit none
-      real(c_double), intent(inout) :: o(*)
-      integer(c_int8_t), intent(in), value :: qspec
-
-      call cuest_correct_o(o, ior(qspec, CUEST_CORRECT_NORM_INV))
-   end subroutine cuest_correct_P
+   ! subroutine cuest_correct_P(o, qspec)
+   !    !
+   !    ! For correcting density matrix ordering.
+   !    ! Coefficient matrix normalization correction is inverted from orbitals.
+   !    !
+   !    use, intrinsic :: iso_c_binding, only: c_double, c_int8_t
+   !    implicit none
+   !    real(c_double), intent(inout) :: o(*)
+   !    integer(c_int8_t), intent(in), value :: qspec
+   !
+   !    call cuest_correct_o(o, ior(qspec, CUEST_CORRECT_NORM_INV))
+   ! end subroutine cuest_correct_P
 
 end module quick_cuest_module

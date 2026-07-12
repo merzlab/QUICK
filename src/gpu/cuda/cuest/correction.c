@@ -237,6 +237,12 @@ cuest_correct_o (double *o, int8_t qspec)
 #undef SWP_IND
 
 void
+cuest_correct_P (double *o, int8_t qspec)
+{
+    cuest_correct_o (o, qspec | CORRECT_NORM_INV);
+}
+
+void
 cuest_correct_C (double *C, size_t nocc, int8_t qspec)
 {
     uint64_t nbasis = quick_cuest_data.nbasis;
