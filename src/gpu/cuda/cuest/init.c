@@ -25,8 +25,8 @@ cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t
             int64_t maxcontract, int64_t maxcontract_aux, int8_t *iattype, double *xyz, double *chg,
             int64_t nextatom, double *extxyz, double *extchg)
 {
-    if ((quick_cuest_log_fp = fopen ("cuest.log", "w")) == NULL) {
-        perror ("cuest_init fopen cuest.log error: ");
+    if ((quick_cuest_log_fp = fopen ("debug.cuest", "w")) == NULL) {
+        perror ("cuest_init fopen debug.cuest error: ");
         exit (EXIT_FAILURE);
     }
 

@@ -270,13 +270,13 @@ cuest_correct_C (double *C, size_t nocc, int8_t qspec)
     }
 
 #ifdef CUESTDEBUG
-    fputs ("======== C from QUICK ========", quick_cuest_log_fp);
+    DEBUGLOG ("======== C from QUICK ========\n");
     for (int i = 0; i < nocc; ++i) {
         for (int j = 0; j < quick_cuest_data.nbasis; ++j)
             DEBUGLOG ("%f ", get (C, i, j, quick_cuest_data.nbasis));
-        putchar ('\n');
+        DEBUGLOG ("\n");
     }
-    fputs ("====== end C from QUICK ======", quick_cuest_log_fp);
+    DEBUGLOG ("====== end C from QUICK ======\n");
 #endif
 
     const size_t endi = nocc * nbasis;
@@ -332,12 +332,12 @@ cuest_correct_C (double *C, size_t nocc, int8_t qspec)
     }
 
 #ifdef CUESTDEBUG
-    fputs ("======== C reordered ========", quick_cuest_log_fp);
+    DEBUGLOG ("======== C reordered ========\n");
     for (int i = 0; i < nocc; ++i) {
         for (int j = 0; j < quick_cuest_data.nbasis; ++j)
             DEBUGLOG ("%f ", get (C, i, j, quick_cuest_data.nbasis));
-        putchar ('\n');
+        DEBUGLOG ("\n");
     }
-    fputs ("====== end C reordered ======", quick_cuest_log_fp);
+    DEBUGLOG ("====== end C reordered ======\n");
 #endif
 }

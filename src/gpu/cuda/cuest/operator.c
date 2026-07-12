@@ -90,13 +90,13 @@ cuest_get_oei_S (double *o)
     cudaMemcpyChecked (o, d_S, d_S_siz, cudaMemcpyDeviceToHost);
 
 #ifdef CUESTDEBUG
-    fputs ("-------- S --------", quick_cuest_log_fp);
+    DEBUGLOG ("-------- S --------\n");
     for (int i = 0; i < nbasis; ++i) {
         for (int j = 0; j < nbasis; ++j)
             DEBUGLOG ("%16.10f", o[i * nbasis + j]);
-        putchar ('\n');
+        DEBUGLOG ("\n");
     }
-    fputs ("------ END S ------", quick_cuest_log_fp);
+    DEBUGLOG ("------ END S ------\n");
 #endif
 
     cudaFreeChecked (d_S);
@@ -137,13 +137,13 @@ cuest_get_oei_T (double *o)
     cudaMemcpyChecked (o, d_T, d_T_siz, cudaMemcpyDeviceToHost);
 
 #ifdef CUESTDEBUG
-    fputs ("-------- T --------", quick_cuest_log_fp);
+    DEBUGLOG ("-------- T --------\n");
     for (int i = 0; i < nbasis; ++i) {
         for (int j = 0; j < nbasis; ++j)
             DEBUGLOG ("%16.10f", o[i * nbasis + j]);
-        putchar ('\n');
+        DEBUGLOG ("\n");
     }
-    fputs ("------ END T ------", quick_cuest_log_fp);
+    DEBUGLOG ("------ END T ------\n");
 #endif
 
     cudaFreeChecked (d_T);
@@ -188,13 +188,13 @@ cuest_get_oei_V (double *o)
     cudaMemcpyChecked (o, d_V, d_V_siz, cudaMemcpyDeviceToHost);
 
 #ifdef CUESTDEBUG
-    fputs ("-------- V --------", quick_cuest_log_fp);
+    DEBUGLOG ("-------- V --------\n");
     for (int i = 0; i < nbasis; ++i) {
         for (int j = 0; j < nbasis; ++j)
             DEBUGLOG ("%16.10f", o[i * nbasis + j]);
-        putchar ('\n');
+        DEBUGLOG ("\n");
     }
-    fputs ("------ END V ------", quick_cuest_log_fp);
+    DEBUGLOG ("------ END V ------\n");
 #endif
 
     cudaFreeChecked (d_V);
@@ -244,13 +244,13 @@ cuest_get_eri_J (double *o, double *P)
     cudaMemcpyChecked (o, d_J, d_J_siz, cudaMemcpyDeviceToHost);
 
 #ifdef CUESTDEBUG
-    fputs ("-------- J --------", quick_cuest_log_fp);
+    DEBUGLOG ("-------- J --------\n");
     for (int i = 0; i < nbasis; ++i) {
         for (int j = 0; j < nbasis; ++j)
-            printf ("%16.10f", o[i * nbasis + j]);
-        putchar ('\n');
+            fprintf (quick_cuest_log_fp, "%16.10f", o[i * nbasis + j]);
+        DEBUGLOG ("\n");
     }
-    fputs ("------ END J ------", quick_cuest_log_fp);
+    DEBUGLOG ("------ END J ------\n");
 #endif
 
     cudaFreeChecked (d_J);
@@ -307,13 +307,13 @@ cuest_get_eri_K (double *o, double *C)
     cudaMemcpyChecked (o, d_K, d_K_siz, cudaMemcpyDeviceToHost);
 
 #ifdef CUESTDEBUG
-    fputs ("-------- K --------", quick_cuest_log_fp);
+    DEBUGLOG ("-------- K --------\n");
     for (int i = 0; i < nbasis; ++i) {
         for (int j = 0; j < nbasis; ++j)
             DEBUGLOG ("%16.10f", o[i * nbasis + j]);
-        putchar ('\n');
+        DEBUGLOG ("\n");
     }
-    fputs ("------ END K ------", quick_cuest_log_fp);
+    DEBUGLOG ("------ END K ------\n");
 #endif
 
     cudaFreeChecked (d_K);

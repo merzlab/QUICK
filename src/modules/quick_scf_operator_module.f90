@@ -175,9 +175,9 @@ contains
                
               call cuest_debuglog("======== cuEST %o contribution ========" // c_null_char)
               if (deltaO) then
-                 call PriSym(6, nbasis, cuest_J - cuest_K + quick_qm_struct%cuest_prev_K, "F12.7")
+                 call cuest_debuglog_PriSym(nbasis, cuest_J - cuest_K + quick_qm_struct%cuest_prev_K, "F12.7")
               else
-                 call PriSym(6, nbasis, cuest_J - cuest_K, "F12.7")
+                 call cuest_debuglog_PriSym(nbasis, cuest_J - cuest_K, "F12.7")
               endif
               call cuest_debuglog("====== end cuEST %o contribution ======" // c_null_char)
 
@@ -205,11 +205,11 @@ contains
 
               call gpu_get_cshell_eri(deltaO, cuest_J)
               call cuest_debuglog("======== QUICK gpu_get_cshell_eri contribution ========" // c_null_char)
-              call PriSym(6, nbasis, cuest_J, "F12.7")
+              call cuest_debuglog_PriSym(nbasis, cuest_J, "F12.7")
               call cuest_debuglog("====== end QUICK gpu_get_cshell_eri contribution ======" // c_null_char)
 
               call cuest_debuglog("======== cuEST %o final ========" // c_null_char)
-              call PriSym(6, nbasis, quick_qm_struct%o, "F12.7")
+              call cuest_debuglog_PriSym(nbasis, quick_qm_struct%o, "F12.7")
               call cuest_debuglog("====== end cuEST %o final ======" // c_null_char)
 #endif
            endif

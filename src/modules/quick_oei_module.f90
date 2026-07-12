@@ -137,13 +137,13 @@ subroutine get1e(deltaO)
 #ifdef CUESTDEBUG
            ! call cuest_get_oei_T(cuest_T)
            call cuest_debuglog("======== cuEST T+V ========" // c_null_char)
-           call PriSym(6, nbasis, cuest_T - cuest_V, "F12.7")
+           call cuest_debuglog_PriSym(nbasis, cuest_T - cuest_V, "F12.7")
            call cuest_debuglog("====== end cuEST T+V ======" // c_null_char)
 
            ! cuest_T = quick_qm_struct%o
            call gpu_get_oei(cuest_T)
            call cuest_debuglog("======== quick T+V ========" // c_null_char)
-           call PriSym(6, nbasis, cuest_T, "F12.7")
+           call cuest_debuglog_PriSym(nbasis, cuest_T, "F12.7")
            call cuest_debuglog("====== end quick T+V ======" // c_null_char)
 #endif
            ! quick_qm_struct%o = quick_qm_struct%o - cuest_V

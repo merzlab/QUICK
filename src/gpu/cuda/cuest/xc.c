@@ -108,15 +108,15 @@ cuest_create_atom_grid (int64_t nrad, double *r, double *w, int64_t *nang)
     DEBUGLOG ("\tr=");
     for (size_t i = 0; i < nrad; ++i)
         DEBUGLOG ("%f ", r[i]);
-    putchar ('\n');
+    DEBUGLOG ("\n");
     DEBUGLOG ("\tw=");
     for (size_t i = 0; i < nrad; ++i)
         DEBUGLOG ("%f ", w[i]);
-    putchar ('\n');
+    DEBUGLOG ("\n");
     DEBUGLOG ("\tnang=");
     for (size_t i = 0; i < nrad; ++i)
         DEBUGLOG ("%lld ", nang[i]);
-    putchar ('\n');
+    DEBUGLOG ("\n");
 #endif
 }
 

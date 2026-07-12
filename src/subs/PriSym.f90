@@ -56,3 +56,56 @@ subroutine PriSym(io,n,mat,fm) ! format: f(x.y) x>7 sugg 12.5,12.7,14.9
   call flush(io)
 
 end subroutine PriSym
+
+#if defined(CUDA) && defined(CUEST)
+subroutine cuest_debuglog_PriSym(n,mat,fm)
+  use, intrinsic :: iso_c_binding, only: c_null_char
+  use quick_cuest_module, only: cuest_debuglog
+  implicit none
+  integer j,jj,n,n5,nf,x,y,ini,ifi,k
+  double precision mat(n,n)
+  character fm*(*),ch,fm2*10
+  character*40 fmt1,fmt2,fmt3,fmt4
+  character(len=n*30) iobuf
+
+  n5=n/5
+  nf=mod(n,5)
+  fm2=fm
+  ch=fm2(1:1)
+  k=index(fm2,'.')
+  read(fm2(2:k-1),*) x
+  read(fm2(k+1:10),*) y
+
+  write(fmt1,101) ch,x,y
+  write(fmt2,102) nf,ch,x,y
+101 format('(i7,5',a1,i2,'.',i2,')')
+102 format('(i7,',i2,a1,i2,'.',i2,')')
+  write(fmt3,103) x-7
+  write(fmt4,104) nf,x-7
+103 format('(3x,5(',i2,'x,i7))')
+104 format('(3x,',i2,'(',i2,'x,i7))')
+
+  do jj=1,n5
+     ini=1+(jj-1)*5
+     write(iobuf,fmt3) (j,j=ini,jj*5)
+     call cuest_debuglog(trim(iobuf) // c_null_char)
+     do k=1+(jj-1)*5,n
+        ifi=min(jj*5,k)
+        write(iobuf,fmt1) k,(mat(k,j),j=ini,ifi)
+        call cuest_debuglog(trim(iobuf) // c_null_char)
+     enddo
+     !         if (jj.ne.n5.or.nf.ne.0) write(io,*)
+  enddo
+
+  if (nf.ne.0) then
+     ini=n-nf+1
+     write(iobuf,fmt4)(j,j=ini,n)
+     call cuest_debuglog(trim(iobuf) // c_null_char)
+     do k=ini,n
+        write(iobuf,fmt2) k,(mat(k,j),j=ini,k)
+        call cuest_debuglog(trim(iobuf) // c_null_char)
+     enddo
+  endif
+
+end subroutine cuest_debuglog_PriSym
+#endif
