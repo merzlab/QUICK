@@ -1,3 +1,5 @@
+#if defined(CUDA) && defined(CUEST)
+
 module quick_cuest_module
    !
    ! This module contains the fortran bindings for C functions that call cuEST
@@ -124,6 +126,7 @@ module quick_cuest_module
    interface
       subroutine cuest_get_oei_S(o) bind(c, name="cuest_get_oei_S")
          use, intrinsic::iso_c_binding, only: c_double
+         implicit none
          real(c_double), intent(out) :: o(*)
       end subroutine cuest_get_oei_S
    end interface
@@ -131,6 +134,7 @@ module quick_cuest_module
    interface
       subroutine cuest_get_oei_T(o) bind(c, name="cuest_get_oei_T")
          use, intrinsic::iso_c_binding, only: c_double
+         implicit none
          real(c_double), intent(out) :: o(*)
       end subroutine cuest_get_oei_T
    end interface
@@ -138,6 +142,7 @@ module quick_cuest_module
    interface
       subroutine cuest_get_oei_V(o) bind(c, name="cuest_get_oei_V")
          use, intrinsic::iso_c_binding, only: c_double
+         implicit none
          real(c_double), intent(out) :: o(*)
       end subroutine cuest_get_oei_V
    end interface
@@ -145,6 +150,7 @@ module quick_cuest_module
    interface
       subroutine cuest_get_eri_J(o, dense) bind(c, name="cuest_get_eri_J")
          use, intrinsic::iso_c_binding, only: c_double
+         implicit none
          real(c_double), intent(out) :: o(*)
          real(c_double), intent(in) :: dense(*)
       end subroutine cuest_get_eri_J
@@ -153,6 +159,7 @@ module quick_cuest_module
    interface
       subroutine cuest_get_eri_K(o, C) bind(c, name="cuest_get_eri_K")
          use, intrinsic::iso_c_binding, only: c_double, c_int64_t
+         implicit none
          real(c_double), intent(out) :: o(*)
          real(c_double), intent(in) :: C(*)
       end subroutine cuest_get_eri_K
@@ -166,6 +173,7 @@ module quick_cuest_module
    interface
       subroutine cuest_create_atom_grid (nrad, r, w, nang) bind(c, name="cuest_create_atom_grid")
          use, intrinsic :: iso_c_binding, only: c_double, c_int64_t
+         implicit none
          integer(c_int64_t), intent(in), value :: nrad
          real(c_double), intent(in) :: r(*)
          real(c_double), intent(in) :: w(*)
@@ -181,6 +189,7 @@ module quick_cuest_module
    interface
       subroutine cuest_init_xc (fnl) bind(c, name="cuest_init_xc")
          use, intrinsic :: iso_c_binding, only: c_int8_t
+         implicit none
          integer(c_int8_t), intent(in), value :: fnl
       end subroutine
    end interface
@@ -188,6 +197,7 @@ module quick_cuest_module
    interface
       subroutine cuest_get_Vxc (Vxc, Exc, C) bind(c, name="cuest_get_Vxc")
          use, intrinsic :: iso_c_binding, only: c_double
+         implicit none
          real(c_double), intent(out) :: Vxc(*)
          real(c_double), intent(out) :: Exc
          real(c_double), intent(in) :: C(*)
@@ -195,15 +205,17 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_debuglog(str) bind(c, name="cuest_debuglog")
+      subroutine cuest_debuglog_inner(str) bind(c, name="cuest_debuglog")
          use, intrinsic :: iso_c_binding, only: c_char
+         implicit none
          character(kind=c_char), intent(in) :: str(*)
-      end subroutine cuest_debuglog
+      end subroutine cuest_debuglog_inner
    end interface
 
    interface
       subroutine cuest_get_memtrace(hostmax, hosttotal, hostallocs, devmax, devtotal, devallocs) bind(c, name="cuest_get_memtrace")
          use, intrinsic :: iso_c_binding, only: c_int64_t
+         implicit none
          integer(c_int64_t), intent(out) :: hostmax
          integer(c_int64_t), intent(out) :: hosttotal
          integer(c_int64_t), intent(out) :: hostallocs
@@ -213,4 +225,35 @@ module quick_cuest_module
       end subroutine cuest_get_memtrace
    end interface
 
+contains
+
+   subroutine cuest_debuglog(str)
+      use, intrinsic :: iso_c_binding, only: c_null_char
+      implicit none
+      character(len=*), intent(in) :: str
+
+      call cuest_debuglog_inner(str // c_null_char)
+   end subroutine cuest_debuglog
+
+   subroutine cuest_print_memtrace(io)
+      use, intrinsic :: iso_c_binding, only: c_int64_t
+      implicit none
+      integer, intent(in) :: io
+      integer(c_int64_t) :: hostmax, hosttotal, hostallocs, devmax, devtotal, devallocs
+
+      call cuest_get_memtrace(hostmax, hosttotal, hostallocs, devmax, devtotal, devallocs)
+
+      call PrtAct(iOutFile, "Output cuEST Memory Footprint")
+      write(io, *) "| Maximum Host Footprint:   ", hostmax
+      write(io, *) "| Maximum Host Footprint:   ", hostmax
+      write(io, *) "| Total Host Footprint:     ", hosttotal
+      write(io, *) "| Host Allocations:         ", hostallocs
+      write(io, *) "| Maximum Device Footprint: ", devmax
+      write(io, *) "| Total Device Footprint:   ", devtotal
+      write(io, *) "| Device Allocations:       ", devallocs
+      call PrtAct(iOutFile, "Finish Output cuEST Memory Footprint")
+   end subroutine cuest_print_memtrace
+
 end module quick_cuest_module
+
+#endif

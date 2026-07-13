@@ -78,7 +78,6 @@ subroutine get1e(deltaO)
 #endif
 
 #if defined(CUDA) && defined(CUEST)
-   use, intrinsic :: iso_c_binding, only: c_null_char
    use quick_cuest_module, only: cuest_deinit_oei_plan, cuest_get_oei_T, cuest_get_oei_V, cuest_debuglog
 #endif
    
@@ -136,15 +135,15 @@ subroutine get1e(deltaO)
 
 #ifdef CUESTDEBUG
            ! call cuest_get_oei_T(cuest_T)
-           call cuest_debuglog("======== cuEST T+V ========" // c_null_char)
+           call cuest_debuglog("======== cuEST T+V ========")
            call cuest_debuglog_PriSym(nbasis, cuest_T - cuest_V, "F12.7")
-           call cuest_debuglog("====== end cuEST T+V ======" // c_null_char)
+           call cuest_debuglog("====== end cuEST T+V ======")
 
            ! cuest_T = quick_qm_struct%o
            call gpu_get_oei(cuest_T)
-           call cuest_debuglog("======== quick T+V ========" // c_null_char)
+           call cuest_debuglog("======== quick T+V ========")
            call cuest_debuglog_PriSym(nbasis, cuest_T, "F12.7")
-           call cuest_debuglog("====== end quick T+V ======" // c_null_char)
+           call cuest_debuglog("====== end quick T+V ======")
 #endif
            ! quick_qm_struct%o = quick_qm_struct%o - cuest_V
            call cuest_deinit_oei_plan()
@@ -240,7 +239,7 @@ subroutine get1e(deltaO)
         ! call cuest_get_oei_T(cuest_T)
         ! call cuest_get_oei_V(cuest_V)
         ! quick_qm_struct%o = cuest_T - cuest_V
-        call cuest_debuglog("QUICK called second branch" // c_null_char)
+        call cuest_debuglog("QUICK called second branch")
         call gpu_get_oei(quick_qm_struct%o)
 #else
         call gpu_get_oei(quick_qm_struct%o)

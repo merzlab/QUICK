@@ -21,7 +21,6 @@
 !---------------------------------------------------------------------!
 
 #include "util.fh"
-#include "cuest_subs.fh"
 
     program quick
 
@@ -472,16 +471,7 @@
     ! 7.The final job is to output energy and many other infos
     !-----------------------------------------------------------------
 #if defined(CUDA) && defined(CUEST)
-    call PrtAct(iOutFile, "Output cuEST Memory Footprint")
-    ! call cuest_get_memtrace(hostmax, hosttotal, hostallocs, devmax, devtotal, devallocs)
-    ! print *, "Maximum Host Footprint:   ", hostmax
-    ! print *, "Total Host Footprint:     ", hosttotal
-    ! print *, "Host Allocations:         ", hostallocs
-    ! print *, "Maximum Device Footprint: ", devmax
-    ! print *, "Total Device Footprint:   ", devtotal
-    ! print *, "Device Allocations:       ", devallocs
     call cuest_print_memtrace(iOutFile)
-    call PrtAct(iOutFile, "Finish Output cuEST Memory Footprint")
 #endif
 
 #if defined(GPU) || defined(MPIV_GPU)

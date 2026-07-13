@@ -40,7 +40,7 @@ contains
      use mpi
 #endif
 #if defined(CUDA) && defined(CUEST)
-    use, intrinsic :: iso_c_binding, only: c_int64_t, c_null_char
+    use, intrinsic :: iso_c_binding, only: c_int64_t
     use quick_method_module, only: quick_method
     use quick_cuest_module
 #endif
@@ -173,13 +173,13 @@ contains
               if (hasK) &
                   call cuest_get_eri_K(cuest_K, quick_qm_struct%co)
                
-              call cuest_debuglog("======== cuEST %o contribution ========" // c_null_char)
+              call cuest_debuglog("======== cuEST %o contribution ========")
               if (deltaO) then
                  call cuest_debuglog_PriSym(nbasis, cuest_J - cuest_K + quick_qm_struct%cuest_prev_K, "F12.7")
               else
                  call cuest_debuglog_PriSym(nbasis, cuest_J - cuest_K, "F12.7")
               endif
-              call cuest_debuglog("====== end cuEST %o contribution ======" // c_null_char)
+              call cuest_debuglog("====== end cuEST %o contribution ======")
 
               if (hasK) &
                   cuest_J = cuest_J - cuest_K
@@ -204,13 +204,13 @@ contains
               cuest_J = 0.0d0
 
               call gpu_get_cshell_eri(deltaO, cuest_J)
-              call cuest_debuglog("======== QUICK gpu_get_cshell_eri contribution ========" // c_null_char)
+              call cuest_debuglog("======== QUICK gpu_get_cshell_eri contribution ========")
               call cuest_debuglog_PriSym(nbasis, cuest_J, "F12.7")
-              call cuest_debuglog("====== end QUICK gpu_get_cshell_eri contribution ======" // c_null_char)
+              call cuest_debuglog("====== end QUICK gpu_get_cshell_eri contribution ======")
 
-              call cuest_debuglog("======== cuEST %o final ========" // c_null_char)
+              call cuest_debuglog("======== cuEST %o final ========")
               call cuest_debuglog_PriSym(nbasis, quick_qm_struct%o, "F12.7")
-              call cuest_debuglog("====== end cuEST %o final ======" // c_null_char)
+              call cuest_debuglog("====== end cuEST %o final ======")
 #endif
            endif
 #else
