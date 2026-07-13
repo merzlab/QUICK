@@ -52,6 +52,18 @@ if(NOT _f2py_result EQUAL 0)
         "Install numpy to build the Python extension, or reconfigure without -DPYTHON=TRUE.")
 endif()
 
+# f2py is driven with its meson backend (see the build command below), which
+# needs the meson and ninja executables on PATH. Check now for a clear error.
+find_program(MESON_EXECUTABLE meson)
+find_program(NINJA_EXECUTABLE ninja)
+if(NOT MESON_EXECUTABLE OR NOT NINJA_EXECUTABLE)
+    message(FATAL_ERROR
+        "pyquick requires 'meson' and 'ninja' for f2py's meson build backend, "
+        "but they were not found on PATH. Install them for the build Python, e.g.\n"
+        "    ${Python3_EXECUTABLE} -m pip install meson ninja\n"
+        "then reconfigure (or pass -DPYTHON=FALSE to skip the Python extension).")
+endif()
+
 # ---------------------------------------------------------------------------
 # 3. Compute the platform-specific extension suffix
 #    e.g. .cpython-313-x86_64-linux-gnu.so
@@ -75,9 +87,14 @@ set(_PYQUICK_SO "${CMAKE_CURRENT_BINARY_DIR}/_pyquick${PYTHON_EXT_SUFFIX}")
 #    -L always points to the actual location of libquick.so regardless of
 #    CMAKE_INSTALL_PREFIX.
 # ---------------------------------------------------------------------------
+#    Backend: force the meson backend. f2py's legacy distutils backend is
+#    removed on Python 3.12+ and is already broken on 3.9 with modern numpy
+#    (numpy.distutils imports distutils.msvccompiler, which no longer exists),
+#    so meson is the portable choice. Requires meson + ninja (checked above).
 add_custom_command(
     OUTPUT  "${_PYQUICK_SO}"
     COMMAND ${Python3_EXECUTABLE} -m numpy.f2py
+                --backend meson
                 -c "${CMAKE_SOURCE_DIR}/src/pyquick/pyquick.f90"
                 "-I${CMAKE_BINARY_DIR}/amber-modules/quick/serial"
                 "-L$<TARGET_FILE_DIR:libquick>"
