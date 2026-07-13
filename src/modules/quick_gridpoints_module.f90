@@ -271,7 +271,7 @@ module quick_gridpoints_module
         end select
     endif
 
-    call cuest_init_xc(cuest_fnl_code)
+    call cuest_init_xc(cuest_fnl_code, int(2d9, c_int64_t))
     call cuest_destroy_atom_grid
     ! return
 #endif

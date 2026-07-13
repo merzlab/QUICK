@@ -148,12 +148,35 @@ module quick_cuest_module
    end interface
 
    interface
+      subroutine cuest_init_eri_J() bind(c, name="cuest_init_eri_J")
+      end subroutine cuest_init_eri_J
+   end interface
+
+   interface
+      subroutine cuest_deinit_eri_J() bind(c, name="cuest_deinit_eri_J")
+      end subroutine cuest_deinit_eri_J
+   end interface
+
+   interface
       subroutine cuest_get_eri_J(o, dense) bind(c, name="cuest_get_eri_J")
          use, intrinsic::iso_c_binding, only: c_double
          implicit none
          real(c_double), intent(out) :: o(*)
          real(c_double), intent(in) :: dense(*)
       end subroutine cuest_get_eri_J
+   end interface
+
+   interface
+      subroutine cuest_init_eri_K(devsiz) bind(c, name="cuest_init_eri_K")
+         use, intrinsic :: iso_c_binding, only: c_int64_t
+         implicit none
+         integer(c_int64_t), intent(in), value :: devsiz
+      end subroutine cuest_init_eri_K
+   end interface
+
+   interface
+      subroutine cuest_deinit_eri_K() bind(c, name="cuest_deinit_eri_K")
+      end subroutine cuest_deinit_eri_K
    end interface
 
    interface
@@ -187,11 +210,17 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_init_xc(fnl) bind(c, name="cuest_init_xc")
-         use, intrinsic :: iso_c_binding, only: c_int8_t
+      subroutine cuest_init_xc(fnl, devsiz) bind(c, name="cuest_init_xc")
+         use, intrinsic :: iso_c_binding, only: c_int8_t, c_int64_t
          implicit none
          integer(c_int8_t), intent(in), value :: fnl
-      end subroutine
+         integer(c_int64_t), intent(in), value :: devsiz
+      end subroutine cuest_init_xc
+   end interface
+
+   interface
+      subroutine cuest_deinit_xc() bind(c, name="cuest_deinit_xc")
+      end subroutine cuest_deinit_xc
    end interface
 
    interface

@@ -204,47 +204,60 @@ cuest_get_oei_V (double *o)
 }
 
 void
+cuest_init_eri_J ()
+{
+    cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
+    const uint64_t              nbasis = quick_cuest_data.nbasis;
+
+    // allocate J device buffer
+    const size_t d_J_siz = nbasis * nbasis * sizeof (double);
+    cudaMallocChecked (&quick_cuest_compute_mem.d_J, d_J_siz);
+
+    // create parameters
+    checkCuestErrors (
+        cuestParametersCreate (CUEST_DFCOULOMBCOMPUTE_PARAMETERS, &quick_cuest_compute_mem.J_par));
+
+    // allocate temp workspace
+    checkCuestErrors (cuestDFCoulombComputeWorkspaceQuery (
+        quick_cuest_struct.handle, quick_cuest_struct.DFIntPlan, quick_cuest_compute_mem.J_par,
+        tmpWD, NULL, quick_cuest_compute_mem.d_J));
+
+    MEMLOG_TMPWD ("Coulomb Integral Compute");
+    quick_cuest_compute_mem.J_wksp = allocateWorkspace (tmpWD);
+}
+
+void
+cuest_deinit_eri_J ()
+{
+    const uint64_t nbasis = quick_cuest_data.nbasis;
+
+    freeWorkspace (quick_cuest_compute_mem.J_wksp);
+    checkCuestErrors (
+        cuestParametersDestroy (CUEST_DFCOULOMBCOMPUTE_PARAMETERS, quick_cuest_compute_mem.J_par));
+
+    cudaFreeChecked (quick_cuest_compute_mem.d_J);
+    free_dev_alloc (nbasis * nbasis * sizeof (double));
+}
+
+void
 cuest_get_eri_J (double *o, double *P)
 {
     cuestHandle_t               handle = quick_cuest_struct.handle;
     cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
     cuestAOBasis_t              basis  = quick_cuest_struct.basis;
+    const uint64_t              nbasis = quick_cuest_data.nbasis;
 
-    uint64_t nbasis = quick_cuest_data.nbasis;
-
-    double *d_J;
-    size_t  d_J_siz = nbasis * nbasis * sizeof (double);
-    cudaMallocChecked ((void **)&d_J, d_J_siz);
-
-    // P does not need to be corrected because S is correct already
-
-    // density matrix
-    double *d_P;
-    size_t  d_P_siz = d_J_siz;
-    cudaMallocChecked ((void **)&d_P, d_P_siz);
-
+    void  *d_P;
+    size_t d_P_siz = nbasis * nbasis * sizeof (double);
+    cudaMallocChecked (&d_P, d_P_siz);
     cudaMemcpyChecked (d_P, P, d_P_siz, cudaMemcpyHostToDevice);
 
-    cuestDFCoulombComputeParameters_t dfj_compute_params;
     checkCuestErrors (
-        cuestParametersCreate (CUEST_DFCOULOMBCOMPUTE_PARAMETERS, &dfj_compute_params));
-    checkCuestErrors (cuestDFCoulombComputeWorkspaceQuery (handle, quick_cuest_struct.DFIntPlan,
-                                                           dfj_compute_params, tmpWD, d_P, d_J));
+        cuestDFCoulombCompute (handle, quick_cuest_struct.DFIntPlan, quick_cuest_compute_mem.J_par,
+                               quick_cuest_compute_mem.J_wksp, d_P, quick_cuest_compute_mem.d_J));
 
-    MEMLOG_TMPWD ("Coulomb Integral Compute");
-    cuestWorkspace_t *tmpDFJWorkspace = allocateWorkspace (tmpWD);
-    checkCuestErrors (cuestDFCoulombCompute (handle, quick_cuest_struct.DFIntPlan,
-                                             dfj_compute_params, tmpDFJWorkspace, d_P, d_J));
-
-    freeWorkspace (tmpDFJWorkspace);
-    checkCuestErrors (
-        cuestParametersDestroy (CUEST_DFCOULOMBCOMPUTE_PARAMETERS, dfj_compute_params));
-
-    // ======================== //
-    // copy coulomb matrix to o //
-    // ======================== //
-
-    cudaMemcpyChecked (o, d_J, d_J_siz, cudaMemcpyDeviceToHost);
+    // copy coulomb matrix to o
+    cudaMemcpyChecked (o, quick_cuest_compute_mem.d_J, d_P_siz, cudaMemcpyDeviceToHost);
 
 #ifdef CUESTDEBUG
     DEBUGLOG ("-------- J --------\n");
@@ -256,8 +269,51 @@ cuest_get_eri_J (double *o, double *P)
     DEBUGLOG ("------ END J ------\n");
 #endif
 
-    cudaFreeChecked (d_J);
-    free_dev_alloc (d_J_siz);
+    cudaFreeChecked (d_P);
+    free_dev_alloc (d_P_siz);
+}
+
+void
+cuest_init_eri_K (int64_t devsiz)
+{
+    cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
+    const uint64_t              nbasis = quick_cuest_data.nbasis;
+
+    // allocate K device buffer
+    const size_t d_K_siz = nbasis * nbasis * sizeof (double);
+    cudaMallocChecked (&quick_cuest_compute_mem.d_K, d_K_siz);
+
+    checkCuestErrors (cuestParametersCreate (CUEST_DFSYMMETRICEXCHANGECOMPUTE_PARAMETERS,
+                                             &quick_cuest_compute_mem.K_par));
+
+    cuestWorkspaceDescriptor_t *vbs = malloc (sizeof (cuestWorkspaceDescriptor_t));
+    add_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
+    vbs->hostBufferSizeInBytes    = 0;
+    vbs->deviceBufferSizeInBytes  = devsiz;
+    quick_cuest_compute_mem.K_vbs = vbs;
+
+    checkCuestErrors (cuestDFSymmetricExchangeComputeWorkspaceQuery (
+        quick_cuest_struct.handle, quick_cuest_struct.DFIntPlan, quick_cuest_compute_mem.K_par, vbs,
+        tmpWD, quick_cuest_data.nocc, NULL, quick_cuest_compute_mem.d_K));
+
+    MEMLOG_TMPWD ("Exchange Integral Compute");
+    quick_cuest_compute_mem.K_wksp = allocateWorkspace (tmpWD);
+}
+
+void
+cuest_deinit_eri_K ()
+{
+    const uint64_t nbasis = quick_cuest_data.nbasis;
+
+    free (quick_cuest_compute_mem.K_vbs);
+    free_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
+
+    freeWorkspace (quick_cuest_compute_mem.K_wksp);
+    checkCuestErrors (cuestParametersDestroy (CUEST_DFSYMMETRICEXCHANGECOMPUTE_PARAMETERS,
+                                              quick_cuest_compute_mem.K_par));
+
+    cudaFreeChecked (quick_cuest_compute_mem.d_K);
+    free_dev_alloc (nbasis * nbasis * sizeof (double));
 }
 
 void
@@ -270,48 +326,22 @@ cuest_get_eri_K (double *o, double *C)
     uint64_t nbasis = quick_cuest_data.nbasis;
     uint64_t nocc   = quick_cuest_data.nocc;
 
-    double *d_K;
-    size_t  d_K_siz = nbasis * nbasis * sizeof (double);
-    cudaMallocChecked ((void **)&d_K, d_K_siz);
-
-    double *d_C;
-    size_t  d_C_siz = nocc * nbasis * sizeof (double);
-    cudaMallocChecked ((void **)&d_C, d_C_siz);
-
-    // P does not need to be corrected because S is correct already
-
+    void  *d_C;
+    size_t d_C_siz = nocc * nbasis * sizeof (double);
+    cudaMallocChecked (&d_C, d_C_siz);
     cudaMemcpyChecked (d_C, C, d_C_siz, cudaMemcpyHostToDevice);
 
-    cuestDFSymmetricExchangeComputeParameters_t dfk_compute_params;
-    checkCuestErrors (
-        cuestParametersCreate (CUEST_DFSYMMETRICEXCHANGECOMPUTE_PARAMETERS, &dfk_compute_params));
-
-    cuestWorkspaceDescriptor_t *varBufSiz = malloc (sizeof (cuestWorkspaceDescriptor_t));
-    add_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
-    varBufSiz->hostBufferSizeInBytes   = 0;
-    varBufSiz->deviceBufferSizeInBytes = 2e9; // TODO(michaelyxsun): adapt this. 2 GB right now
-
-    checkCuestErrors (cuestDFSymmetricExchangeComputeWorkspaceQuery (
-        handle, quick_cuest_struct.DFIntPlan, dfk_compute_params, varBufSiz, tmpWD, nocc, d_C,
-        d_K));
-
-    MEMLOG_TMPWD ("Exchange Integral Compute");
-    cuestWorkspace_t *tmpDFKWorkspace = allocateWorkspace (tmpWD);
-    checkCuestErrors (cuestDFSymmetricExchangeCompute (handle, quick_cuest_struct.DFIntPlan,
-                                                       dfk_compute_params, varBufSiz,
-                                                       tmpDFKWorkspace, nocc, d_C, d_K));
-
-    free (varBufSiz);
-    free_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
-    freeWorkspace (tmpDFKWorkspace);
-    checkCuestErrors (
-        cuestParametersDestroy (CUEST_DFSYMMETRICEXCHANGECOMPUTE_PARAMETERS, dfk_compute_params));
+    checkCuestErrors (cuestDFSymmetricExchangeCompute (
+        handle, quick_cuest_struct.DFIntPlan, quick_cuest_compute_mem.K_par,
+        quick_cuest_compute_mem.K_vbs, quick_cuest_compute_mem.K_wksp, nocc, d_C,
+        quick_cuest_compute_mem.d_K));
 
     // ========================= //
     // copy exchange matrix to o //
     // ========================= //
 
-    cudaMemcpyChecked (o, d_K, d_K_siz, cudaMemcpyDeviceToHost);
+    cudaMemcpyChecked (o, quick_cuest_compute_mem.d_K, nbasis * nbasis * sizeof (double),
+                       cudaMemcpyDeviceToHost);
 
 #ifdef CUESTDEBUG
     DEBUGLOG ("-------- K --------\n");
@@ -323,8 +353,6 @@ cuest_get_eri_K (double *o, double *C)
     DEBUGLOG ("------ END K ------\n");
 #endif
 
-    cudaFreeChecked (d_K);
     cudaFreeChecked (d_C);
-    free_dev_alloc (d_K_siz);
     free_dev_alloc (d_C_siz);
 }

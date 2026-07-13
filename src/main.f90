@@ -79,6 +79,7 @@
     integer(c_int8_t) :: cuest_fnl_code
     integer(c_int64_t) :: cuest_xc_nradpts
     integer(c_int64_t) :: hostmax, hosttotal, hostallocs, devmax, devtotal, devallocs
+    logical :: hasK
 #endif
 
     common /timer/ t1_t, t2_t
@@ -231,6 +232,8 @@
 #if defined(CUDA) && defined(CUEST)
     RECORD_TIME(timer_begin%TIniCuest)
 
+    hasK = quick_method%x_hybrid_coeff /= 0.0d0
+
     ! read auxiliary basis
     call read_aux_basis_sph(natom, quick_molspec%iattype, ierr)
     if (ierr /= 0) print *, "ERROR: read_aux_basis_sph failed with ierr ", ierr
@@ -288,6 +291,9 @@
     ! init 2 electron integral plan
     call cuest_init_dfint_plan(quick_method%x_hybrid_coeff)
 
+    call cuest_init_eri_J
+    if (hasK) call cuest_init_eri_K(int(2d9, c_int64_t))
+
     RECORD_TIME(timer_end%TIniCuest)
     timer_cumer%TIniCuest=timer_cumer%TIniCuest+timer_end%TIniCuest-timer_begin%TIniCuest &
                           -(timer_end%T2elb-timer_begin%T2elb)
@@ -295,6 +301,13 @@
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         SAFE_CALL(getEnergy(.false.,ierr))
+
+#if defined(CUDA) && defined(CUEST)
+        ! deinit compute things
+        call cuest_deinit_eri_J
+        if (hasK) call cuest_deinit_eri_K
+        if (quick_method%DFT) call cuest_deinit_xc
+#endif
 
         ! One electron properties (ESP, EField)
         call compute_oeprop()

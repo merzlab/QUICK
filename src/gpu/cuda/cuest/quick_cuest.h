@@ -39,6 +39,20 @@ typedef struct {
 } quick_cuest_struct_t;
 
 typedef struct {
+    cuestWorkspace_t                           *J_wksp;
+    cuestDFCoulombComputeParameters_t           J_par;
+    void                                       *d_J;
+    cuestWorkspace_t                           *K_wksp;
+    cuestWorkspaceDescriptor_t                 *K_vbs;
+    cuestDFSymmetricExchangeComputeParameters_t K_par;
+    void                                       *d_K;
+    cuestWorkspace_t                           *Vxc_wksp;
+    cuestWorkspaceDescriptor_t                 *Vxc_vbs;
+    cuestXCPotentialRKSComputeParameters_t      Vxc_par;
+    void                                       *d_Vxc;
+} quick_cuest_compute_mem_t;
+
+typedef struct {
     uint64_t natom;
     uint64_t nshell;
     uint64_t nbasis;
@@ -74,11 +88,12 @@ typedef struct {
     size_t devcur;     // current memory allocation
 } quick_cuest_memtrace_t;
 
-extern quick_cuest_struct_t   quick_cuest_struct;
-extern quick_cuest_data_t     quick_cuest_data;
-extern quick_cuest_memchk_t   quick_cuest_memchk;
-extern quick_cuest_memtrace_t quick_cuest_memtrace;
-extern FILE                  *quick_cuest_log_fp;
+extern quick_cuest_struct_t      quick_cuest_struct;
+extern quick_cuest_compute_mem_t quick_cuest_compute_mem;
+extern quick_cuest_data_t        quick_cuest_data;
+extern quick_cuest_memchk_t      quick_cuest_memchk;
+extern quick_cuest_memtrace_t    quick_cuest_memtrace;
+extern FILE                     *quick_cuest_log_fp;
 
 void cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t nauxshell,
                  int64_t maxcontract, int64_t maxcontract_aux, int8_t *iattype, double *xyz,
@@ -100,7 +115,13 @@ void cuest_init_dfint_plan (double hyb_coeff);
 void cuest_get_oei_S (double *o);
 void cuest_get_oei_T (double *o);
 void cuest_get_oei_V (double *o);
+
+void cuest_init_eri_J ();
+void cuest_deinit_eri_J ();
 void cuest_get_eri_J (double *o, double *P);
+
+void cuest_init_eri_K (int64_t devsiz);
+void cuest_deinit_eri_K ();
 void cuest_get_eri_K (double *o, double *C);
 
 // DFT
@@ -108,7 +129,8 @@ void cuest_create_atom_grid_setup ();
 void cuest_create_atom_grid (int64_t nrad, double *r, double *w, int64_t *nang);
 void cuest_destroy_atom_grid ();
 
-void cuest_init_xc (int8_t fnl);
+void cuest_init_xc (int8_t fnl, int64_t devsiz);
+void cuest_deinit_xc ();
 void cuest_get_Vxc (double *Vxc, double *Exc, double *C);
 
 // Other
