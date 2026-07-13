@@ -14,16 +14,16 @@ module quick_cuest_module
    integer(c_int8_t), protected :: CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK = 3
    integer(c_int8_t), protected :: CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST = 7
 
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_HF     = 0
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_B3LYP  = 1
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_B97    = 2
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_BLYP   = 3
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_M06L   = 4 ! QUICK unsupported
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_PBE    = 5
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_PBE0   = 6
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_HF = 0
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_B3LYP = 1
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_B97 = 2
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_BLYP = 3
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_M06L = 4 ! QUICK unsupported
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_PBE = 5
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_PBE0 = 6
    integer(c_int8_t), protected :: CUEST_FUNCTIONAL_R2SCAN = 7 ! QUICK unsupported
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_SVWN5  = 8 ! QUICK unsupported
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_B97MV  = 9 ! QUICK unsupported
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_SVWN5 = 8 ! QUICK unsupported
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_B97MV = 9 ! QUICK unsupported
 
    ! unless commented otherwise, C will not modify the memory a pointer points to
 
@@ -50,12 +50,12 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_init_correct() bind (c, name="cuest_init_correct")
+      subroutine cuest_init_correct() bind(c, name="cuest_init_correct")
       end subroutine
    end interface
 
    interface
-      subroutine cuest_deinit_correct() bind (c, name="cuest_deinit_correct")
+      subroutine cuest_deinit_correct() bind(c, name="cuest_deinit_correct")
       end subroutine
    end interface
 
@@ -171,7 +171,7 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_create_atom_grid (nrad, r, w, nang) bind(c, name="cuest_create_atom_grid")
+      subroutine cuest_create_atom_grid(nrad, r, w, nang) bind(c, name="cuest_create_atom_grid")
          use, intrinsic :: iso_c_binding, only: c_double, c_int64_t
          implicit none
          integer(c_int64_t), intent(in), value :: nrad
@@ -187,7 +187,7 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_init_xc (fnl) bind(c, name="cuest_init_xc")
+      subroutine cuest_init_xc(fnl) bind(c, name="cuest_init_xc")
          use, intrinsic :: iso_c_binding, only: c_int8_t
          implicit none
          integer(c_int8_t), intent(in), value :: fnl
@@ -195,7 +195,7 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_get_Vxc (Vxc, Exc, C) bind(c, name="cuest_get_Vxc")
+      subroutine cuest_get_Vxc(Vxc, Exc, C) bind(c, name="cuest_get_Vxc")
          use, intrinsic :: iso_c_binding, only: c_double
          implicit none
          real(c_double), intent(out) :: Vxc(*)
@@ -232,26 +232,60 @@ contains
       implicit none
       character(len=*), intent(in) :: str
 
-      call cuest_debuglog_inner(str // c_null_char)
+      call cuest_debuglog_inner(str//c_null_char)
    end subroutine cuest_debuglog
+
+   subroutine get_memstr(b, mem, suf)
+      implicit none
+      integer(kind=8), intent(in) :: b
+      double precision, intent(out) :: mem
+      character(len=*), intent(out) :: suf
+      double precision :: bb
+
+      bb = dble(b)
+
+      if (bb/1e3 < 1) then
+         mem = b
+         suf = "B"
+      else if (bb/1e6 < 1) then
+         mem = b/1e3
+         suf = "kB"
+      else if (b/1e9 < 1) then
+         mem = b/1e6
+         suf = "MB"
+      else if (b/1e12 < 1) then
+         mem = b/1e9
+         suf = "GB"
+      else
+         mem = b/1e12
+         suf = "TB"
+      end if
+   end subroutine get_memstr
 
    subroutine cuest_print_memtrace(io)
       use, intrinsic :: iso_c_binding, only: c_int64_t
       implicit none
       integer, intent(in) :: io
       integer(c_int64_t) :: hostmax, hosttotal, hostallocs, devmax, devtotal, devallocs
+      double precision :: mem
+      character(len=2) :: suf
 
       call cuest_get_memtrace(hostmax, hosttotal, hostallocs, devmax, devtotal, devallocs)
 
-      call PrtAct(iOutFile, "Output cuEST Memory Footprint")
-      write(io, *) "| Maximum Host Footprint:   ", hostmax
-      write(io, *) "| Maximum Host Footprint:   ", hostmax
-      write(io, *) "| Total Host Footprint:     ", hosttotal
-      write(io, *) "| Host Allocations:         ", hostallocs
-      write(io, *) "| Maximum Device Footprint: ", devmax
-      write(io, *) "| Total Device Footprint:   ", devtotal
-      write(io, *) "| Device Allocations:       ", devallocs
-      call PrtAct(iOutFile, "Finish Output cuEST Memory Footprint")
+      call PrtAct(io, "Output cuEST Memory Footprint")
+      write (io, '("------------- cuEST MEMORY USAGE ---------------")')
+      call get_memstr(int(hostmax, kind=8), mem, suf)
+      write (io, '("| Peak Host Footprint = ",F8.2," ",A)') mem, suf
+      call get_memstr(int(hosttotal, kind=8), mem, suf)
+      write (io, '("| Total Host Footprint = ",F8.2," ",A)') mem, suf
+      write (io, '("| Host Allocations = ",I5)') hostallocs
+      call get_memstr(int(devmax, kind=8), mem, suf)
+      write (io, '("| Peak Device Footprint = ",F8.2," ",A)') mem, suf
+      call get_memstr(int(devtotal, kind=8), mem, suf)
+      write (io, '("| Total Device Footprint = ",F8.2," ",A)') mem, suf
+      write (io, '("| Device Allocations = ",I5)') devallocs
+      write (io, '("------------------------------------------------")')
+      call PrtAct(io, "Finish Output cuEST Memory Footprint")
    end subroutine cuest_print_memtrace
 
 end module quick_cuest_module
