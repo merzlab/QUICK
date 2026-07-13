@@ -371,9 +371,6 @@ contains
         implicit none
         type(quick_basis_type) self
         integer iOutFile
-#ifdef CUESTDEBUG
-        integer :: inject_i, inject_j
-#endif
 
         if (ioutfile.ne.0) then
             write (iOutFile,*)

@@ -169,26 +169,10 @@ contains
               ! delta density is handled correctly
               call cuest_get_eri_J(cuest_J, quick_qm_struct%dense)
               
-#ifdef CUESTDEBUG
-              if (hasK) &
-                  call cuest_get_eri_K(cuest_K, quick_qm_struct%co)
-               
-              call cuest_debuglog("======== cuEST %o contribution ========")
-              if (deltaO) then
-                 call cuest_debuglog_PriSym(nbasis, cuest_J - cuest_K + quick_qm_struct%cuest_prev_K, "F12.7")
-              else
-                 call cuest_debuglog_PriSym(nbasis, cuest_J - cuest_K, "F12.7")
-              endif
-              call cuest_debuglog("====== end cuEST %o contribution ======")
-
-              if (hasK) &
-                  cuest_J = cuest_J - cuest_K
-#else
               if (hasK) then
                   call cuest_get_eri_K(cuest_K, quick_qm_struct%co)
                   cuest_J = cuest_J - cuest_K ! K is scaled in cuEST
               endif
-#endif
 
               if (deltaO .and. hasK) then
                  quick_qm_struct%o = quick_qm_struct%o + cuest_J + quick_qm_struct%cuest_prev_K
@@ -199,19 +183,6 @@ contains
               if (hasK) &
                   quick_qm_struct%cuest_prev_K = cuest_K
               
-#ifdef CUESTDEBUG
-              ! call QUICK for debug info
-              cuest_J = 0.0d0
-
-              call gpu_get_cshell_eri(deltaO, cuest_J)
-              call cuest_debuglog("======== QUICK gpu_get_cshell_eri contribution ========")
-              call cuest_debuglog_PriSym(nbasis, cuest_J, "F12.7")
-              call cuest_debuglog("====== end QUICK gpu_get_cshell_eri contribution ======")
-
-              call cuest_debuglog("======== cuEST %o final ========")
-              call cuest_debuglog_PriSym(nbasis, quick_qm_struct%o, "F12.7")
-              call cuest_debuglog("====== end cuEST %o final ======")
-#endif
            endif
 #else
            call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  

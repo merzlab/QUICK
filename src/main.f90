@@ -288,40 +288,6 @@
     ! init 2 electron integral plan
     call cuest_init_dfint_plan(quick_method%x_hybrid_coeff)
 
-    ! init xc compute if DFT wanted
-    ! if (quick_method%DFT) then
-    !     if (quick_method%BLYP) then ! should not be triggered?
-    !         cuest_fnl_code = CUEST_FUNCTIONAL_BLYP
-    !     elseif (quick_method%B3LYP) then
-    !         cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
-    !     else
-    !         select case (quick_method%functional_id(1))
-    !             case (106) ! GGA_X_B88,GGA_C_LYP
-    !                 cuest_fnl_code = CUEST_FUNCTIONAL_BLYP
-    !             case (226) ! HYB_GGA_XC_B97
-    !                 cuest_fnl_code = CUEST_FUNCTIONAL_B97
-    !             case (406) ! HYB_GGA_XC_PBEH
-    !                 cuest_fnl_code = CUEST_FUNCTIONAL_PBE0
-    !             case (101) ! GGA_X_PBE (accompanied with GGA_C_PBE after)
-    !                 cuest_fnl_code = CUEST_FUNCTIONAL_PBE
-    !             case default
-    !                 print *, "CUEST: libxc functional not supported, defaulting to B3LYP"
-    !                 cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
-    !         end select
-    !     endif
-    !
-    !     if (quick_method%iSG == 1) then
-    !         cuest_xc_nradpts = 50
-    !     else
-    !         if (quick_molspec%iattype(iatm) <= 10) then
-    !             cuest_xc_nradpts = 23
-    !         else
-    !             cuest_xc_nradpts = 26
-    !         endif
-    !     endif
-    !     call cuest_init_xc(cuest_get_nrad_pts(), int(MAXANGGRID, c_int64_t), cuest_fnl_code)
-    ! endif
-
     RECORD_TIME(timer_end%TIniCuest)
     timer_cumer%TIniCuest=timer_cumer%TIniCuest+timer_end%TIniCuest-timer_begin%TIniCuest &
                           -(timer_end%T2elb-timer_begin%T2elb)
