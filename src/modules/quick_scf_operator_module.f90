@@ -118,11 +118,11 @@ contains
 
      if(quick_method%printEnergy) then
 #if defined(CUDA) && defined(CUEST)
-         call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
+         if (firstiter) call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
 #endif
          call get1eEnergy(deltaO)
 #if defined(CUDA) && defined(CUEST)
-         call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+         if (firstiter) call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
 #endif
      endif
 
