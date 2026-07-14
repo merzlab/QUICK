@@ -181,15 +181,13 @@ contains
                   cuest_J = cuest_J - cuest_K ! K fraction is applied in cuEST
               endif
 
-              if (hasK) then
-                 if (deltaO) then
-                    quick_qm_struct%o = quick_qm_struct%o + cuest_J + quick_qm_struct%cuest_prev_K
-                 else
-                    quick_qm_struct%o = quick_qm_struct%o + cuest_J
-                 endif
-                 
-                 quick_qm_struct%cuest_prev_K = cuest_K
+              if (hasK .and. deltaO) then
+                 quick_qm_struct%o = quick_qm_struct%o + cuest_J + quick_qm_struct%cuest_prev_K
+              else
+                 quick_qm_struct%o = quick_qm_struct%o + cuest_J
               endif
+                 
+              if (hasK) quick_qm_struct%cuest_prev_K = cuest_K
               
 #ifdef CUESTDEBUG
               tmp2d = cuest_J
