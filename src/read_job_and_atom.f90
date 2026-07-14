@@ -89,8 +89,8 @@ subroutine read_job_and_atom(ierr)
       if( .not. (quick_api%apiMode .and. quick_api%hasKeywd )) close(inFile)
 
       ! ECP integrals prescreening  -Alessandro GENONI 03/05/2007
-      if ((index(keywd,'TOL_ECPINT=') /= 0).and.quick_method%ecp) then
-         istrt = index(keywd,'TOL_ECPINT=')+10
+      if (found_keyword(keywd,'TOL_ECPINT=').and.quick_method%ecp) then
+         istrt = index_keyword(keywd,'TOL_ECPINT=')+10
          call rdinum(keywd,istrt,itolecp,ierr)
          tolecp=2.30258d+00*itolecp
          thrshecp=10.0d0**(-1.0d0*itolecp)
