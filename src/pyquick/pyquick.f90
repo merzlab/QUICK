@@ -1,6 +1,5 @@
 module pyquick
 
-#include "util.fh"
     use iso_fortran_env, only : output_unit
     use quick_molspec_module, only : quick_molspec, natom, xyz, alloc
     use quick_calculated_module, only : quick_qm_struct
@@ -13,8 +12,6 @@ module pyquick
     use quick_cutoff_module, only : schwarzoff
     use quick_eri_cshell_module, only : getEriPrecomputables
     use quick_sad_guess_module, only : getSadGuess
-    use quick_grad_cshell_module, only : cshell_gradient
-    use quick_grad_oshell_module, only : oshell_gradient
 
     implicit none
 
@@ -24,12 +21,9 @@ module pyquick
               job_run, job_destroy, job_set_output, &
               job_active, &
               job_total_energy, job_e_core, job_e_electronic, &
-              job_e_1e, job_e_xc, job_e_disp, job_e_charge, &
-              job_dipole, job_has_dipole, &
-              job_has_dispersion, job_has_extcharge, job_has_gradient, &
+              job_e_1e, job_e_xc, job_e_disp, &
               job_has_mulliken, job_has_lowdin, job_has_mo_energies, job_has_density_matrix, &
-              job_get_mulliken, job_get_lowdin, job_get_mo_energies, job_get_density_matrix, &
-              job_get_gradients, job_get_geometry
+              job_get_mulliken, job_get_lowdin, job_get_mo_energies, job_get_density_matrix
 
     integer, parameter :: KEYWORD_LEN = 300
     integer, parameter :: INPUT_LEN   = 10000
@@ -58,25 +52,12 @@ module pyquick
     logical :: job_active = .false.
 
     ! scalar results (always available after a successful job_run)
-    ! job_e_core is QUICK's ECore: the core-core NUCLEAR REPULSION energy
     double precision :: job_total_energy   = 0.0d0
     double precision :: job_e_core         = 0.0d0
     double precision :: job_e_electronic   = 0.0d0
     double precision :: job_e_1e           = 0.0d0
     double precision :: job_e_xc           = 0.0d0
     double precision :: job_e_disp         = 0.0d0
-    double precision :: job_e_charge       = 0.0d0   ! ECharge; never part of ETot
-
-    ! dipole moment vector (Debye), available when the DIPOLE routine ran
-    double precision :: job_dipole(3) = 0.0d0
-    logical :: job_has_dipole = .false.
-
-    ! whether dispersion (D* keyword) / EXTCHARGES were active for the last run
-    logical :: job_has_dispersion = .false.
-    logical :: job_has_extcharge  = .false.
-
-    ! whether a nuclear gradient was computed for the last run
-    logical :: job_has_gradient = .false.
 
     ! availability flags for array results
     logical :: job_has_mulliken      = .false.
@@ -321,24 +302,29 @@ contains
         output_stem = trim(stem)
     end subroutine job_set_output
 
-    subroutine job_run(jobtype)
-        ! jobtype: 0 = single-point energy, 1 = energy + nuclear gradient.
-        ! (2 = geometry optimization is reserved for a later phase.)
-        integer, intent(in) :: jobtype
+    subroutine job_run()
         ! External free subroutines in libquick.so
         external :: initialize1, read_Job_and_Atom, getMol, getEnergy, dipole
-        external :: finalize, outputCopyright, PrtDate
+        external :: finalize, outputCopyright, PrtDate, quick_open
 
         character(len=:), allocatable :: keyword_line
-        character(len=:), allocatable :: null_dev
         character(len=10) :: kwlen_str
-        integer :: ierr, i, j, k, ios
+        character(len=1) :: open_mode
+        integer :: ierr, i, j, k
         integer :: natm_type
         integer :: atm_type_id(geom_natom)
-        logical :: new_type, unit_open
+        logical :: new_type
         character(len=256) :: note
 
         ierr = 0
+
+        ! --- determine open mode before finalize clears job_active ---
+        ! first run: replace the output file; re-runs: append to it
+        if (job_active) then
+            open_mode = 'A'
+        else
+            open_mode = 'R'
+        end if
 
         ! --- if a previous run is still active, finalize it before re-running ---
         ! This deallocates all basis/MO/density arrays sized for the previous run
@@ -368,10 +354,6 @@ contains
 
         ! --- build keyword line ---
         keyword_line = build_keyword_line()
-
-        ! for a gradient job, add the GRADIENT keyword so read_Job_and_Atom sets
-        ! quick_method%grad before getMol allocates quick_qm_struct%gradient
-        if (jobtype == 1) keyword_line = trim(keyword_line) // ' GRADIENT'
 
         ! --- guard against silent Fortran truncation on assignment to quick_api%Keywd ---
         if (len_trim(keyword_line) > KEYWORD_LEN) then
@@ -403,20 +385,9 @@ contains
             return
         end if
 
-        ! --- send QUICK's diagnostic log to the null device (no on-disk file) ---
-        ! Override the <stem>.out name that set_quick_files derived, and open the
-        ! unit directly (not via quick_open, which would try to back up an existing
-        ! file with 'mv' -- meaningless and failing for a null device). The device
-        ! name is chosen at runtime so this works on Windows (NUL) as well as
-        ! Unix/macOS (/dev/null).
-        null_dev = null_device()
-        outFileName = null_dev
-        inquire(unit=iOutFile, opened=unit_open)
-        if (unit_open) close(iOutFile)
-        open(unit=iOutFile, file=null_dev, status='UNKNOWN', form='FORMATTED', &
-             action='WRITE', iostat=ios)
-        if (ios /= 0) then
-            call fail('job_run: could not open null output device')
+        call quick_open(iOutFile, outFileName, 'U', 'F', open_mode, .false., ierr)
+        if (ierr /= 0) then
+            call fail('job_run: quick_open failed')
             return
         end if
 
@@ -508,26 +479,11 @@ contains
         call getEriPrecomputables()
         call schwarzoff()
 
-        ! --- energy, or energy + gradient (a gradient job runs the SCF itself) ---
-        ! quick_method%grad is set from the GRADIENT keyword appended above; when
-        ! set we call the gradient routine instead of getEnergy (matching
-        ! quick_api_module) so the SCF is not run twice.
-        if (quick_method%grad) then
-            if (quick_method%unrst) then
-                call oshell_gradient(ierr)
-            else
-                call cshell_gradient(ierr)
-            end if
-            if (ierr /= 0) then
-                call fail('job_run: gradient calculation failed')
-                return
-            end if
-        else
-            call getEnergy(.false., ierr)
-            if (ierr /= 0) then
-                call fail('job_run: getEnergy failed')
-                return
-            end if
+        ! --- SCF energy ---
+        call getEnergy(.false., ierr)
+        if (ierr /= 0) then
+            call fail('job_run: getEnergy failed')
+            return
         end if
 
         ! --- post-SCF: Mulliken/Lowdin charges and dipole moment ---
@@ -540,21 +496,12 @@ contains
         job_e_1e           = quick_qm_struct%E1e
         job_e_xc           = quick_qm_struct%Exc
         job_e_disp         = quick_qm_struct%Edisp
-        job_e_charge       = quick_qm_struct%ECharge
-        job_has_dispersion = quick_method%edisp
-        job_has_extcharge  = quick_method%extcharges
-
-        ! --- dipole vector (Debye), available only when the dipole routine ran ---
-        job_has_dipole = quick_method%dipole
-        if (quick_method%dipole) job_dipole = quick_qm_struct%dipole
 
         ! --- set array availability flags ---
         job_has_mulliken       = quick_method%dipole
         job_has_lowdin         = quick_method%dipole
         job_has_mo_energies    = allocated(quick_qm_struct%E)
         job_has_density_matrix = allocated(quick_qm_struct%dense)
-        job_has_gradient       = quick_method%grad .and. &
-                                 allocated(quick_qm_struct%gradient)
 
         job_active = .true.
 
@@ -646,52 +593,6 @@ contains
         end do
     end subroutine job_get_density_matrix
 
-    subroutine job_get_gradients(g, n)
-        ! Returns the nuclear gradient as a flat, row-major (per-atom) array of
-        ! length 3*n = 3*natom: (dx1,dy1,dz1, dx2,dy2,dz2, ...), in Hartree/Bohr.
-        ! Reshape in Python: g[:3*n].reshape(n, 3).
-        !f2py intent(out) g, n
-        integer, intent(out) :: n
-        double precision, intent(out) :: g(30000)
-        integer :: i
-        g = 0.0d0
-        if (.not. job_has_gradient) then
-            call fail("'gradient' was not computed; use get_grad() (not get_energy())")
-            n = 0
-            return
-        end if
-        n = natom
-        do i = 1, 3 * natom
-            g(i) = quick_qm_struct%gradient(i)
-        end do
-    end subroutine job_get_gradients
-
-    subroutine job_get_geometry(atnums, coords, n)
-        ! Returns QUICK's own parsed geometry: atomic numbers and Angstrom
-        ! coordinates as stored by read_geom (no re-parsing on the Python side).
-        ! coords is flattened row-major per atom: (x1,y1,z1, x2,y2,z2, ...);
-        ! reshape in Python: coords[:3*n].reshape(n, 3).
-        !f2py intent(out) atnums, coords, n
-        integer, intent(out) :: n
-        integer, intent(out) :: atnums(10000)
-        double precision, intent(out) :: coords(30000)
-        integer :: i, j
-        atnums = 0
-        coords = 0.0d0
-        if (.not. has_geom) then
-            call fail('job_get_geometry: no geometry set; call read_geom first')
-            n = 0
-            return
-        end if
-        n = geom_natom
-        do i = 1, geom_natom
-            atnums(i) = geom_atnum(i)
-            do j = 1, 3
-                coords((i - 1) * 3 + j) = geom_coords(j, i)
-            end do
-        end do
-    end subroutine job_get_geometry
-
     ! -----------------------------------------------------------------------
     ! Private helpers
     ! -----------------------------------------------------------------------
@@ -765,32 +666,5 @@ contains
             end select
         end do
     end function uppercase
-
-    function null_device() result(dev)
-        ! Platform-appropriate null device for discarding QUICK's log.
-        ! Detected at runtime so the choice does not depend on preprocessor
-        ! flags or a specific Fortran compiler's predefined macros:
-        !   Windows sets OS=Windows_NT and defines %WINDIR% -> use 'NUL'
-        !   Unix/macOS -> use '/dev/null'
-        character(len=:), allocatable :: dev
-        character(len=64) :: val
-        integer :: length, stat
-
-        call get_environment_variable('OS', val, length, stat)
-        if (stat == 0 .and. length > 0) then
-            if (index(uppercase(val(1:min(length, len(val)))), 'WINDOWS') > 0) then
-                dev = 'NUL'
-                return
-            end if
-        end if
-
-        call get_environment_variable('WINDIR', val, length, stat)
-        if (stat == 0 .and. length > 0) then
-            dev = 'NUL'
-            return
-        end if
-
-        dev = '/dev/null'
-    end function null_device
 
 end module pyquick

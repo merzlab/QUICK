@@ -193,11 +193,6 @@
     write (ioutfile,'(6x,"X",9x,"Y",9x,"Z",8x,"TOTAL")')
     write (ioutfile,'(4f10.4)') xdip*2.541765d0,ydip*2.541765d0,zdip*2.541765d0,totdip
 
-    ! store the dipole vector (Debye) so callers (e.g. the Python API) can read it
-    quick_qm_struct%dipole(1) = xdip*2.541765d0
-    quick_qm_struct%dipole(2) = ydip*2.541765d0
-    quick_qm_struct%dipole(3) = zdip*2.541765d0
-
     RECORD_TIME(timer_end%TDip)
     timer_cumer%TDip=timer_cumer%TDip+(timer_end%TDip-timer_begin%TDip)
 

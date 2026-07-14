@@ -163,9 +163,6 @@ module quick_calculated_module
       ! total energy, only to HF level
       double precision :: ETot
 
-      ! dipole moment vector (x,y,z) in Debye, set by subroutine dipole
-      double precision :: dipole(3) = 0.0d0
-
       ! MP2 perturbation energy
       double precision :: EMP2
 
