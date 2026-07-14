@@ -126,18 +126,16 @@ subroutine get1e(deltaO)
          !-----------------------------------------------------------------
          RECORD_TIME(timer_begin%T1eV)
 
-#if defined(GPU)
-         if(.not. quick_method%hasF) then
 #if defined(CUDA) && defined(CUEST)
-           ! compute V integral
-           call cuest_get_oei_V(cuest_V)
-           quick_qm_struct%o = cuest_T - cuest_V
+         ! compute V integral
+         call cuest_get_oei_V(cuest_V)
+         quick_qm_struct%o = cuest_T - cuest_V
 
-           ! quick_qm_struct%o = quick_qm_struct%o - cuest_V
-           call cuest_deinit_oei_plan()
-#else
+         ! quick_qm_struct%o = quick_qm_struct%o - cuest_V
+         call cuest_deinit_oei_plan()
+#elif defined(GPU)
+         if(.not. quick_method%hasF) then
            call gpu_get_oei(quick_qm_struct%o)
-#endif
          else
 
            do IIsh=1,jshell
@@ -223,15 +221,7 @@ subroutine get1e(deltaO)
 
 #if defined(MPIV_GPU)
       if(.not. quick_method%hasF) then
-#if defined(CUDA) && defined(CUEST)
-        ! call cuest_get_oei_T(cuest_T)
-        ! call cuest_get_oei_V(cuest_V)
-        ! quick_qm_struct%o = cuest_T - cuest_V
-        call cuest_debuglog("QUICK called second branch")
         call gpu_get_oei(quick_qm_struct%o)
-#else
-        call gpu_get_oei(quick_qm_struct%o)
-#endif
       else
         do i=1,mpi_jshelln(mpirank)
            IIsh=mpi_jshell(mpirank,i)
