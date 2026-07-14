@@ -11,16 +11,18 @@
 ! like "**** ABC=1.0 ****", then call 
 ! rdnml(keywd,"ABC") will return val=1.0
 function rdnml(keywd,nml)
+    use quick_input_parser_module, only:index_keyword, found_keyword
+
     implicit none
     character nml*(*),keywd*(*)
     double precision rdnml
     integer i,j,k,ierror
     
 
-    if (index(keywd,nml//'=') .ne. 0) then
-        i=index(keywd,nml//'=')
-        k=index(keywd(i:len(keywd)),'=')+i-1
-        j=index(keywd(i:len(keywd)),' ')+i-1
+    if (index_keyword(keywd,nml//'=') .ne. 0) then
+        i=index_keyword(keywd,nml//'=')
+        k=index_keyword(keywd(i:len(keywd)),'=')+i-1
+        j=index_keyword(keywd(i:len(keywd)),' ')+i-1
         call rdnum(keywd(k+1:j-1),1,rdnml,ierror)
         return
     else
@@ -28,24 +30,3 @@ function rdnml(keywd,nml)
         return
     endif
 end function rdnml
-
-! this subroutine is to read integer number value from keywords, 
-! like "**** ABC=100 ****", then call 
-! rdnml(keywd,"ABC") will return val=100
-function rdinml(keywd,nml)
-    implicit none
-    character nml*(*),keywd*(*)
-    integer rdinml
-    integer i,j,k,ierror
-
-    if (index(keywd,nml//'=') .ne. 0) then
-        i=index(keywd,nml//'=')
-        k=index(keywd(i:len(keywd)),'=')+i-1
-        j=index(keywd(i:len(keywd)),' ')+i-1
-        call rdinum(keywd(k+1:j-1),1,rdinml,ierror)
-        return
-    else
-        rdinml=0
-        return
-    endif
-end function rdinml

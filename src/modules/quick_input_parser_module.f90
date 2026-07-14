@@ -231,7 +231,7 @@ module quick_input_parser_module
             if(j==0) then
                 j = len_trim(line)
             endif
-            
+
             found = .true.
             
         end subroutine trimSpace
