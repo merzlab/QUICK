@@ -7,9 +7,9 @@
 !Subroutine list:
 !MPI_INIT()
 !MPI_COMM_RANK(MPI_COMM_WORL,MPIRANK,IERR)
-!MPI_COMM_SIZE(MPI_COMM_WORLD,MPISIZE,IERR)
+!MPI_COMM_SIZE(quick_comm,MPISIZE,IERR)
 !MPI_FINALIZE(IERR)
-!MPI_BARRIER(MPI_COMM_WORLD,IERR)
+!MPI_BARRIER(quick_comm,IERR)
 
 !=======================================================================
 
@@ -22,9 +22,9 @@
 
 !=======================================================================
 
-    SUBROUTINE MPI_COMM_RANK(MPI_COMM_WORLD,MPIRANK,IERR)
+    SUBROUTINE MPI_COMM_RANK(quick_comm,MPIRANK,IERR)
     IMPLICIT NONE
-    INTEGER :: IERR,MPI_COMM_WORLD,MPIRANK
+    INTEGER :: IERR,quick_comm,MPIRANK
 
     MPIRANK=0
     RETURN
@@ -32,9 +32,9 @@
 
 !=======================================================================
 
-    SUBROUTINE MPI_COMM_SIZE(MPI_COMM_WORLD,MPISIZE,IERR)
+    SUBROUTINE MPI_COMM_SIZE(quick_comm,MPISIZE,IERR)
     IMPLICIT NONE
-    INTEGER :: IERR,MPI_COMM_WORLD,MPISIZE
+    INTEGER :: IERR,quick_comm,MPISIZE
 
     MPISIZE=1
     RETURN
@@ -52,18 +52,18 @@
 
 !=======================================================================
 
-    SUBROUTINE MPI_BARRIER(MPI_COMM_WORLD,IERR)
+    SUBROUTINE MPI_BARRIER(quick_comm,IERR)
     IMPLICIT NONE
-    INTEGER :: IERR,MPI_COMM_WORLD
+    INTEGER :: IERR,quick_comm
 
     IERR=0
     RETURN
     END SUBROUTINE MPI_BARRIER
 !=======================================================================
 
-    SUBROUTINE MPI_ABORT(MPI_COMM_WORLD,STATUS,IERR)
+    SUBROUTINE MPI_ABORT(quick_comm,STATUS,IERR)
     IMPLICIT NONE
-    INTEGER :: IERR,MPI_COMM_WORLD,STATUS
+    INTEGER :: IERR,quick_comm,STATUS
 
     IERR=0
     RETURN

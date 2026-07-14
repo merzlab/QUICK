@@ -7,19 +7,17 @@
 
 #include "util.fh"
 
+
+! this subroutine is to read job and atoms
 subroutine read_job_and_atom(ierr)
-   
-   ! this subroutine is to read job and atoms
-   
    use quick_molspec_module
    use quick_method_module
-   use quick_mpi_module
+   use quick_mpi_module, only: bMPI, master
    use quick_files_module
    use quick_calculated_module
    use quick_ecp_module
    use quick_api_module
    use quick_exception_module
-
 #ifdef CEW
    use quick_cew_module, only: quick_cew, print
 #endif
@@ -34,7 +32,6 @@ subroutine read_job_and_atom(ierr)
    integer, intent(inout) :: ierr
 
    if (master) then
-
       ! AG 03/05/2007
       itolecp=0
 

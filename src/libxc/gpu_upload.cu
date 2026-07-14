@@ -1,10 +1,82 @@
 #if defined(HIP) || defined(HIP_MPIV)
-  #include "../gpu/hip/gpu_utils.h"
+  #define gpuError_t hipError_t
+  #define gpuSuccess hipSuccess
+  #define gpuMemcpyKind hipMemcpyKind
   #define gpuMemcpyHostToDevice hipMemcpyHostToDevice
+  #define gpuGetErrorString_ hipGetErrorString
 #elif defined(CUDA) || defined(CUDA_MPIV)
-  #include "../gpu/cuda/gpu_utils.h"
+  #define gpuError_t cudaError_t
+  #define gpuSuccess cudaSuccess
+  #define gpuMemcpyKind cudaMemcpyKind
   #define gpuMemcpyHostToDevice cudaMemcpyHostToDevice
+  #define gpuGetErrorString_ cudaGetErrorString
 #endif
+
+
+/* Safe wrapper around gpuMalloc_
+ *
+ * ptr: pointer to allocated device memory
+ * size: reqested allocation size in bytes
+ * filename: NULL-terminated source filename where function call originated
+ * line: line of source file where function call originated
+ */
+static void gpuMalloc_(void **ptr, size_t size, const char * const filename,
+        int line)
+{
+    gpuError_t ret;
+
+#if defined(HIP) || defined(HIP_MPIV)
+    ret = hipMalloc(ptr, size);
+#elif defined(CUDA) || defined(CUDA_MPIV)
+    ret = cudaMalloc(ptr, size);
+#endif
+
+    if (ret != gpuSuccess) {
+        const char *str = gpuGetErrorString_(ret);
+
+        fprintf(stderr, "[ERROR] GPU error: gpuMalloc failure\n");
+        fprintf(stderr, "  [INFO] At line %d in file %.*s\n",
+                line, (int) strlen(filename), filename);
+        fprintf(stderr, "  [INFO] Error code: %d\n", ret);
+        fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
+
+        exit(1);
+    }  
+}
+
+
+/* Safe wrapper around gpuMemcpy_
+ *
+ * dest: address to be copied to
+ * src: address to be copied from
+ * count: num. bytes to copy
+ * dir: GPU enum specifying address types for dest and src
+ * filename: NULL-terminated source filename where function call originated
+ * line: line of source file where function call originated
+ */
+static void gpuMemcpy_(void * const dest, void const * const src, size_t count,
+        gpuMemcpyKind dir, const char * const filename, int line)
+{
+    gpuError_t ret;
+
+#if defined(HIP) || defined(HIP_MPIV)
+    ret = hipMemcpy(dest, src, count, dir);
+#elif defined(CUDA) || defined(CUDA_MPIV)
+    ret = cudaMemcpy(dest, src, count, dir);
+#endif
+
+    if (ret != gpuSuccess) {
+        const char *str = gpuGetErrorString_(ret);
+
+        fprintf(stderr, "[ERROR] GPU error: gpuMemcpy failure\n");
+        fprintf(stderr, "  [INFO] At line %d in file %.*s\n",
+                line, (int) strlen(filename), filename);
+        fprintf(stderr, "  [INFO] Error code: %d\n", ret);
+        fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
+
+        exit(1);
+    }
+}
 
 
 //Uploads parameters required for kernels. *p is a pointer to libxc functional, gpu_work_params is a pointer
@@ -18,8 +90,8 @@ void* gpu_upload_maple2c_params(const xc_func_type *p)
             __FILE__, __LINE__, __func__, p->params_byte_size);
 #endif
 
-    gpuMalloc((void **) &d_maple_params, p->params_byte_size);
-    gpuMemcpy(d_maple_params, p->params, p->params_byte_size, gpuMemcpyHostToDevice);
+    gpuMalloc_((void **) &d_maple_params, p->params_byte_size, __FILE__, __LINE__);
+    gpuMemcpy_(d_maple_params, p->params, p->params_byte_size, gpuMemcpyHostToDevice, __FILE__, __LINE__);
 
     return d_maple_params;
 }
@@ -69,8 +141,8 @@ void* gpu_upload_work_params(const xc_func_type *p, void* gpu_work_params)
             __FILE__, __LINE__, __func__, work_param_size);
 #endif
 
-    gpuMalloc((void **) &d_work_params, work_param_size);
-    gpuMemcpy(d_work_params, gpu_work_params, work_param_size, gpuMemcpyHostToDevice);
+    gpuMalloc_((void **) &d_work_params, work_param_size, __FILE__, __LINE__);
+    gpuMemcpy_(d_work_params, gpu_work_params, work_param_size, gpuMemcpyHostToDevice, __FILE__, __LINE__);
 
     return d_work_params;
 }
@@ -82,7 +154,7 @@ double* gpu_upload_libxc_out_array(int size)
     double *d_double_arr;
     int arr_size = size * sizeof(double);
 
-    gpuMalloc((void **) &d_double_arr, arr_size);
+    gpuMalloc_((void **) &d_double_arr, arr_size, __FILE__, __LINE__);
 
     return d_double_arr;
 }
@@ -94,8 +166,8 @@ double* gpu_upload_libxc_input_array(const double *h_input, int size)
     double *d_double_arr;
     int arr_size = size * sizeof(double);
 
-    gpuMalloc((void **) &d_double_arr, arr_size);
-    gpuMemcpy(d_double_arr, h_input, arr_size, gpuMemcpyHostToDevice);
+    gpuMalloc_((void **) &d_double_arr, arr_size, __FILE__, __LINE__);
+    gpuMemcpy_(d_double_arr, h_input, arr_size, gpuMemcpyHostToDevice, __FILE__, __LINE__);
 
     return d_double_arr;
 }
@@ -156,8 +228,8 @@ gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, double 
     h_glinfo.d_rhoLDA = gpu_upload_libxc_out_array(np);
 
     gpu_libxc_info* d_glinfo;
-    gpuMalloc((void **) &d_glinfo, sizeof(gpu_libxc_info));
-    gpuMemcpy(d_glinfo, &h_glinfo, sizeof(gpu_libxc_info), gpuMemcpyHostToDevice);
+    gpuMalloc_((void **) &d_glinfo, sizeof(gpu_libxc_info), __FILE__, __LINE__);
+    gpuMemcpy_(d_glinfo, &h_glinfo, sizeof(gpu_libxc_info), gpuMemcpyHostToDevice, __FILE__, __LINE__);
 
     return d_glinfo;
 }
@@ -172,8 +244,8 @@ gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, double 
 //
 //
 //    gpu_libxc_out* d_glout;
-//    gpuMalloc((void **) &d_glout, sizeof(gpu_libxc_out));
-//    gpuMemcpy(d_glout, &h_glout, sizeof(gpu_libxc_out), gpuMemcpyHostToDevice);
+//    gpuMalloc_((void **) &d_glout, sizeof(gpu_libxc_out), __FILE__, __LINE__);
+//    gpuMemcpy_(d_glout, &h_glout, sizeof(gpu_libxc_out), gpuMemcpyHostToDevice, __FILE__, __LINE__);
 //
 //    return d_glout;
 //}
@@ -186,8 +258,8 @@ gpu_libxc_info* gpu_upload_libxc_info(const xc_func_type *p, void *ggwp, double 
 //    h_glin.d_sigma = gpu_upload_libxc_input_array(h_sigma, np);
 //
 //    gpu_libxc_in* d_glin;
-//    gpuMalloc((void **) &d_glin, sizeof(gpu_libxc_in));
-//    gpuMemcpy(d_glin, &h_glin, sizeof(gpu_libxc_in), gpuMemcpyHostToDevice);
+//    gpuMalloc_((void **) &d_glin, sizeof(gpu_libxc_in), __FILE__, __LINE__);
+//    gpuMemcpy_(d_glin, &h_glin, sizeof(gpu_libxc_in), gpuMemcpyHostToDevice, __FILE__, __LINE__);
 //
 //    return d_glin;
 //}

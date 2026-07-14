@@ -48,6 +48,8 @@ subroutine fdhessian(failed)
   use allmod
   use quick_grad_cshell_module, only: cshell_gradient
   use quick_exception_module
+  use quick_mpi_module, only: master
+
   implicit double precision(a-h,o-z)
 
   character(len=1) cartsym(3)
@@ -138,6 +140,7 @@ subroutine HFHessian
   use allmod
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic
+
   implicit double precision(a-h,o-z)
   ! dimension W(2*(maxbasis/2)**2,2*(maxbasis/2)**2),
   dimension itype2(3,2),ielecfld(3)

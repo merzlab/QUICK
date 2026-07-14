@@ -12,32 +12,26 @@
 !------------------------------------------------------
 ! initialize1(ierror)
 ! outputCopyright(ierror)
-! allocateAtoms
-! allocateAtoms_ECP
-! allocatebasis
 !------------------------------------------------------
 
 #include "util.fh"
 
+!  This subroutine is to initalize variables, set their default values
+!  most of them are called from interface "init". See modules' files to
+!  see detailed implementation
 subroutine initialize1(ierr)
-
-   !  This subroutine is to initalize variables, set their default values
-   !  most of them are called from interface "init". See modules' files to
-   !  see detailed implementation
-
    use quick_molspec_module
    use quick_method_module
    use quick_timer_module
    use quick_exception_module
+
    implicit none
 
-   ! Parameter list
    integer, intent(inout) :: ierr    ! Error Flag
 
 #ifndef REPORT_CPU_TIME
    call init_ref_time()
 #endif
-
 #ifdef MPIV
    !--------------------MPI/ALL NODES--------------------------------
    ! MPI Initializer
@@ -49,22 +43,16 @@ subroutine initialize1(ierr)
    call init(quick_molspec, ierr)    !initialize quick_molspec namelist
 
    RECORD_TIME(timer_begin%TTotal) !Trigger time counter
-
    RECORD_TIME(timer_begin%Tinitialize) !Trigger time counter
-
-   return
-
 end subroutine initialize1
 
 
+!  Output Copyright information
 subroutine outputCopyright(io,ierr)
-
-   !  Output Copyright information
-
    use quick_exception_module
+
    implicit none
 
-   ! parameter list
    integer, intent(inout) :: ierr    ! Error Flag
    integer io
 
@@ -110,7 +98,4 @@ subroutine outputCopyright(io,ierr)
    write(io,'(A107)') "| If you have any comments or queries, please reach out to us on GitHub issues or discussion sections:     "
    write(io,'(A107)') "| https://github.com/merzlab/QUICK.                                                                        "
    write(io,'(A107)') "|                                                                                                          "
-
-   return
-
 end subroutine outputCopyright

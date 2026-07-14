@@ -196,7 +196,7 @@ extern "C" void gpu_set_device_(int* gpu_dev_id, int* ierr)
 //-----------------------------------------------
 extern "C" void gpu_new_(
 #if defined(MPIV_GPU)
-        int mpirank,
+        int mpi_comm_rank,
 #endif
         int* ierr)
 {
@@ -204,7 +204,7 @@ extern "C" void gpu_new_(
 #if defined(MPIV_GPU)
     char fname[16];
 
-    sprintf(fname, "debug.gpu.%i", mpirank);
+    sprintf(fname, "debug.gpu.%i", mpi_comm_rank);
     debugFile = fopen(fname, "w+");
 #else
     debugFile = fopen("debug.gpu", "w+");
@@ -228,8 +228,11 @@ extern "C" void gpu_new_(
     gpu->xc_blocks = 0;
     gpu->xc_threadsPerBlock = 0;
     gpu->sswGradThreadsPerBlock = 0;
-    gpu->mpirank = -1;
-    gpu->mpisize = 0;    
+#if defined(MPIV_GPU)
+    gpu->mpi_comm = MPI_COMM_NULL;
+#endif
+    gpu->mpi_comm_rank = -1;
+    gpu->mpi_comm_size = 0;    
     gpu->timer = NULL;
     gpu->natom = 0;
     gpu->nextatom = 0;
@@ -251,17 +254,23 @@ extern "C" void gpu_new_(
     gpu->DFT_calculated = NULL;
     gpu->grad = NULL;
     gpu->ptchg_grad = NULL;
+#if defined(USE_LEGACY_ATOMICS)
     gpu->gradULL = NULL;
     gpu->ptchg_gradULL = NULL;
+#endif
+#if defined(CEW)
     gpu->cew_grad = NULL;
+    gpu->lri_data = NULL;
+#endif
     gpu->gpu_calculated = NULL;
     gpu->gpu_basis = NULL;
     gpu->gpu_cutoff = NULL;
     gpu->gpu_xcq = NULL;
+#if defined(COMPILE_GPU_AOINT)
     gpu->aoint_buffer = NULL;
     gpu->intCount = NULL;
+#endif
     gpu->scratch = NULL;
-    gpu->lri_data = NULL;
 
 #if defined(MPIV_GPU)
     gpu->timer = new gpu_timer_type;
@@ -542,7 +551,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
 #if defined(DEBUG)
     PRINTDEBUG("BEGIN TO SETUP");
   #if defined(MPIV_GPU)
-    fprintf(gpu->debugFile,"mpirank %i natoms %i \n", gpu->mpirank, *natom );
+    fprintf(gpu->debugFile,"mpi_comm_rank %i natoms %i \n", gpu->mpi_comm_rank, *natom );
   #endif
 #endif
 
@@ -641,7 +650,9 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu->gpu_sim.imult = *imult;
     gpu->gpu_sim.molchg = *molchg;
     gpu->gpu_sim.iAtomType = *iAtomType;
+#if defined(CEW)
     gpu->gpu_sim.use_cew = false;
+#endif
 
     gpu->gpu_xcq = new XC_quadrature_type;
     gpu->gpu_xcq->npoints = 0;
@@ -2168,6 +2179,7 @@ extern "C" void gpu_upload_grad_(QUICKDouble* gradCutoff)
 }
 
 
+#if defined(CEW)
 //-----------------------------------------------
 //  upload information for LRI calculation
 //-----------------------------------------------
@@ -2195,7 +2207,6 @@ extern "C" void gpu_upload_lri_(QUICKDouble* zeta, QUICKDouble* cc, int *ierr)
 }
 
 
-#if defined(CEW)
 //-----------------------------------------------
 //  upload information for CEW quad calculation
 //-----------------------------------------------
@@ -2238,11 +2249,11 @@ extern "C" void gpu_get_ssw_(QUICKDouble *gridx, QUICKDouble *gridy, QUICKDouble
     gpu->gpu_xcq->gridy = new gpu_buffer_type<QUICKDouble>(gridy, gpu->gpu_xcq->npoints);
     gpu->gpu_xcq->gridz = new gpu_buffer_type<QUICKDouble>(gridz, gpu->gpu_xcq->npoints);
     gpu->gpu_xcq->wtang = new gpu_buffer_type<QUICKDouble>(wtang, gpu->gpu_xcq->npoints);
-    gpu->gpu_xcq->rwt   = new gpu_buffer_type<QUICKDouble>(rwt, gpu->gpu_xcq->npoints);
-    gpu->gpu_xcq->rad3  = new gpu_buffer_type<QUICKDouble>(rad3, gpu->gpu_xcq->npoints);
-    gpu->gpu_xcq->gatm  = new gpu_buffer_type<int>(gatm, gpu->gpu_xcq->npoints);
-    gpu->gpu_xcq->sswt  = new gpu_buffer_type<QUICKDouble>(gpu->gpu_xcq->npoints);
-    gpu->gpu_xcq->weight= new gpu_buffer_type<QUICKDouble>(gpu->gpu_xcq->npoints);
+    gpu->gpu_xcq->rwt = new gpu_buffer_type<QUICKDouble>(rwt, gpu->gpu_xcq->npoints);
+    gpu->gpu_xcq->rad3 = new gpu_buffer_type<QUICKDouble>(rad3, gpu->gpu_xcq->npoints);
+    gpu->gpu_xcq->gatm = new gpu_buffer_type<int>(gatm, gpu->gpu_xcq->npoints);
+    gpu->gpu_xcq->sswt = new gpu_buffer_type<QUICKDouble>(gpu->gpu_xcq->npoints);
+    gpu->gpu_xcq->weight = new gpu_buffer_type<QUICKDouble>(gpu->gpu_xcq->npoints);
 
     gpu->gpu_xcq->gridx->Upload();
     gpu->gpu_xcq->gridy->Upload();
@@ -2337,7 +2348,7 @@ void prune_grid_sswgrad()
 #if defined(MPIV_GPU)
     GPU_TIMER_START();
 
-    int netgain = getAdjustment(gpu->mpisize, gpu->mpirank, count);
+    int netgain = getAdjustment(gpu->mpi_comm, gpu->mpi_comm_size, gpu->mpi_comm_rank, count);
     count += netgain;
 
     GPU_TIMER_STOP();
@@ -2357,7 +2368,7 @@ void prune_grid_sswgrad()
 
     GPU_TIMER_START();
 
-    sswderRedistribute(gpu->mpisize, gpu->mpirank, count-netgain, count,
+    sswderRedistribute(gpu->mpi_comm, gpu->mpi_comm_size, gpu->mpi_comm_rank, count-netgain, count,
             tmp_gridx, tmp_gridy, tmp_gridz, tmp_exc, tmp_quadwt, tmp_gatm, gpu->gpu_xcq->gridx_ssd->_hostData,
             gpu->gpu_xcq->gridy_ssd->_hostData, gpu->gpu_xcq->gridz_ssd->_hostData,
             gpu->gpu_xcq->exc_ssd->_hostData, gpu->gpu_xcq->quadwt->_hostData,
@@ -2624,8 +2635,8 @@ extern "C" void gpu_upload_dft_grid_(QUICKDouble *gridxb, QUICKDouble *gridyb, Q
     gpu->timer->t_xclb += (double) time / 1000.0;
     GPU_TIMER_DESTROY();
 
-    gpu->gpu_sim.mpirank = gpu->mpirank;
-    gpu->gpu_sim.mpisize = gpu->mpisize;
+    gpu->gpu_sim.mpi_comm_rank = gpu->mpi_comm_rank;
+    gpu->gpu_sim.mpi_comm_size = gpu->mpi_comm_size;
 #endif
 
     gpu->xc_threadsPerBlock = SM_2X_XC_THREADS_PER_BLOCK;
@@ -3433,6 +3444,7 @@ extern "C" void gpu_delete_libxc_(int *ierr)
 }
 
 
+#if defined(CEW)
 //-------------------------------------------------
 //  delete information uploaded for LRI calculation
 //-------------------------------------------------
@@ -3449,3 +3461,4 @@ extern "C" void gpu_delete_cew_vrecip_(int *ierr)
 {
     SAFE_DELETE(gpu->lri_data->vrecip);
 }
+#endif
