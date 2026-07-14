@@ -33,7 +33,7 @@ cuest_init_correct ()
     for (size_t i = 0; i < nshell; ++i) {
         if (ktype[i] == KTYPE_CART_D)
             firstd[ifd++] = quick_cuest_data.ifshell[i];
-        else if (ktype[i] == KTYPE_CART_D)
+        else if (ktype[i] == KTYPE_CART_F)
             firstf[iff++] = quick_cuest_data.ifshell[i];
     }
 
