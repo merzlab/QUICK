@@ -381,7 +381,7 @@ contains
     integer :: nextpoint
     integer :: nconsatom
     integer :: nfreezeatom
-    double precision :: temp,rdnml
+    double precision :: temp
     character(len=STR_LEN) :: keywd
     character(len=STR_LEN) :: tempstring
     logical :: is_extcharge = .false.
