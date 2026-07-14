@@ -149,8 +149,6 @@ cuest_deinit ()
 
     fclose (quick_cuest_log_fp);
 
-    checkCuestErrors (cuestDFIntPlanDestroy (quick_cuest_struct.DFIntPlan));
-    freeWorkspace (quick_cuest_struct.persistDFIntPlanWorkspace);
     checkCuestErrors (cuestAOPairListDestroy (quick_cuest_struct.AOPairList));
     freeWorkspace (quick_cuest_struct.persistAOPairListWorkspace);
     checkCuestErrors (cuestAOBasisDestroy (quick_cuest_struct.basis));

@@ -289,7 +289,7 @@
     call cuest_init_pair_list(quick_method%coreIntegralCutoff)
 
     ! init 2 electron integral plan
-    call cuest_init_dfint_plan(quick_method%x_hybrid_coeff)
+    call cuest_init_df(quick_method%x_hybrid_coeff)
 
     call cuest_init_eri_J
     if (hasK) call cuest_init_eri_K(int(2d9, c_int64_t))
@@ -306,6 +306,7 @@
         ! deinit compute things
         call cuest_deinit_eri_J
         if (hasK) call cuest_deinit_eri_K
+        call cuest_deinit_df
         if (quick_method%DFT) call cuest_deinit_xc
 #endif
 

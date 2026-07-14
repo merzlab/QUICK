@@ -187,6 +187,11 @@ cuest_deinit_xc ()
     freeWorkspace (quick_cuest_compute_mem.Vxc_wksp);
     checkCuestErrors (cuestParametersDestroy (CUEST_XCPOTENTIALRKSCOMPUTE_PARAMETERS,
                                               quick_cuest_compute_mem.Vxc_par));
+
+    checkCuestErrors (cuestMolecularGridDestroy (quick_cuest_struct.molgrid));
+    freeWorkspace (quick_cuest_struct.persistXCGridWorkspace);
+    checkCuestErrors (cuestXCIntPlanDestroy (quick_cuest_struct.XCIntPlan));
+    freeWorkspace (quick_cuest_struct.persistXCIntPlanWorkspace);
 }
 
 void

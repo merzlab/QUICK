@@ -13,7 +13,7 @@
 #include "util.h"
 
 void
-cuest_init_dfint_plan (double hyb_coeff)
+cuest_init_df (double hyb_coeff)
 {
     cuestHandle_t               handle    = quick_cuest_struct.handle;
     cuestWorkspaceDescriptor_t *tmpWD     = quick_cuest_struct.tmpWD;
@@ -43,4 +43,11 @@ cuest_init_dfint_plan (double hyb_coeff)
 
     checkCuestErrors (cuestParametersDestroy (CUEST_DFINTPLAN_PARAMETERS, dfint_plan_parameters));
     freeWorkspace (tmpDFIntPlanWorkspace);
+}
+
+void
+cuest_deinit_df ()
+{
+    checkCuestErrors (cuestDFIntPlanDestroy (quick_cuest_struct.DFIntPlan));
+    freeWorkspace (quick_cuest_struct.persistDFIntPlanWorkspace);
 }
