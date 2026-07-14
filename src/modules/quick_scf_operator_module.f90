@@ -58,6 +58,7 @@ contains
      double precision :: cuest_Exc
      logical :: firstiter, hasK
      double precision :: Sum2Mat
+     double precision :: tmp2d(nbasis, nbasis)
 #endif
 #ifdef MPIV
      integer ierror
@@ -157,6 +158,12 @@ contains
               cuest_J = 0.0d0
               call gpu_get_cshell_eri(deltaO, cuest_J)  
 
+#ifdef CUESTDEBUG
+              call cuest_debuglog("======== quick J+K first ========")
+              call cuest_debuglog_PriSym(nbasis, cuest_J, "F12.7")
+              call cuest_debuglog("======== end quick J+K first ========")
+#endif
+
               ! correct output
               call cuest_correct_o(cuest_J, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
               quick_qm_struct%o = quick_qm_struct%o + cuest_J
@@ -171,18 +178,26 @@ contains
               
               if (hasK) then
                   call cuest_get_eri_K(cuest_K, quick_qm_struct%co)
-                  cuest_J = cuest_J - cuest_K ! K is scaled in cuEST
+                  cuest_J = cuest_J - cuest_K ! K fraction is applied in cuEST
               endif
 
-              if (deltaO .and. hasK) then
-                 quick_qm_struct%o = quick_qm_struct%o + cuest_J + quick_qm_struct%cuest_prev_K
-              else
-                 quick_qm_struct%o = quick_qm_struct%o + cuest_J
+              if (hasK) then
+                 if (deltaO) then
+                    quick_qm_struct%o = quick_qm_struct%o + cuest_J + quick_qm_struct%cuest_prev_K
+                 else
+                    quick_qm_struct%o = quick_qm_struct%o + cuest_J
+                 endif
+                 
+                 quick_qm_struct%cuest_prev_K = cuest_K
               endif
               
-              if (hasK) &
-                  quick_qm_struct%cuest_prev_K = cuest_K
-              
+#ifdef CUESTDEBUG
+              tmp2d = cuest_J
+              call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+              call cuest_debuglog("======== quick J+K ========")
+              call cuest_debuglog_PriSym(nbasis, cuest_J, "F12.7")
+              call cuest_debuglog("====== end quick J+K ======")
+#endif
            endif
 #else
            call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  

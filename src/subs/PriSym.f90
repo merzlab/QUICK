@@ -59,7 +59,6 @@ end subroutine PriSym
 
 #if defined(CUDA) && defined(CUEST)
 subroutine cuest_debuglog_PriSym(n,mat,fm)
-  use, intrinsic :: iso_c_binding, only: c_null_char
   use quick_cuest_module, only: cuest_debuglog
   implicit none
   integer j,jj,n,n5,nf,x,y,ini,ifi,k
@@ -88,11 +87,11 @@ subroutine cuest_debuglog_PriSym(n,mat,fm)
   do jj=1,n5
      ini=1+(jj-1)*5
      write(iobuf,fmt3) (j,j=ini,jj*5)
-     call cuest_debuglog(trim(iobuf) // c_null_char)
+     call cuest_debuglog(trim(iobuf))
      do k=1+(jj-1)*5,n
         ifi=min(jj*5,k)
         write(iobuf,fmt1) k,(mat(k,j),j=ini,ifi)
-        call cuest_debuglog(trim(iobuf) // c_null_char)
+        call cuest_debuglog(trim(iobuf))
      enddo
      !         if (jj.ne.n5.or.nf.ne.0) write(io,*)
   enddo
@@ -100,10 +99,10 @@ subroutine cuest_debuglog_PriSym(n,mat,fm)
   if (nf.ne.0) then
      ini=n-nf+1
      write(iobuf,fmt4)(j,j=ini,n)
-     call cuest_debuglog(trim(iobuf) // c_null_char)
+     call cuest_debuglog(trim(iobuf))
      do k=ini,n
         write(iobuf,fmt2) k,(mat(k,j),j=ini,k)
-        call cuest_debuglog(trim(iobuf) // c_null_char)
+        call cuest_debuglog(trim(iobuf))
      enddo
   endif
 

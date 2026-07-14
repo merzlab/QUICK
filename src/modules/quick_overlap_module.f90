@@ -177,6 +177,9 @@ subroutine fullx
 #if defined(CUDA) && defined(CUEST)
    ! TODO: probably remove this. using GPU is probably slower
    use quick_cuest_module, only: cuest_init_oei_plan, cuest_get_oei_S
+#ifdef CUESTDEBUG
+   use quick_cuest_module, only: cuest_debuglog, cuest_correct_o, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
+#endif
 #endif
 
    implicit none
@@ -186,6 +189,9 @@ subroutine fullx
    double precision g_table(200),Px,Py,Pz
    integer g_count,ii,jj,kk
    double precision a,b,Ax,Ay,Az,Bx,By,Bz
+#if defined(CUDA) && defined(CUEST)
+   double precision :: tmp2d(nbasis, nbasis)
+#endif
 
 #if defined(CUDA) && defined(CUEST)
    ! initialize oei plan (since overlap is computed before T and V)
@@ -199,6 +205,13 @@ subroutine fullx
 
 #if defined(CUDA) && defined(CUEST)
    call cuest_get_oei_S (quick_qm_struct%s)
+#ifdef CUESTDEBUG
+   tmp2d = quick_qm_struct%s
+   call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+   call cuest_debuglog("======== S ========")
+   call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+   call cuest_debuglog("====== end S ======")
+#endif
 #else
    do Ibas=1,nbasis
       ii = itype(1,Ibas)

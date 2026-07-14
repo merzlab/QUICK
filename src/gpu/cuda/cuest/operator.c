@@ -89,16 +89,6 @@ cuest_get_oei_S (double *o)
 
     cudaMemcpyChecked (o, d_S, d_S_siz, cudaMemcpyDeviceToHost);
 
-#ifdef CUESTDEBUG
-    DEBUGLOG ("-------- S --------\n");
-    for (int i = 0; i < nbasis; ++i) {
-        for (int j = 0; j < nbasis; ++j)
-            DEBUGLOG ("%16.10f", o[i * nbasis + j]);
-        DEBUGLOG ("\n");
-    }
-    DEBUGLOG ("------ END S ------\n");
-#endif
-
     cudaFreeChecked (d_S);
     free_dev_alloc (d_S_siz);
 }
@@ -136,16 +126,6 @@ cuest_get_oei_T (double *o)
     // ======================== //
 
     cudaMemcpyChecked (o, d_T, d_T_siz, cudaMemcpyDeviceToHost);
-
-#ifdef CUESTDEBUG
-    DEBUGLOG ("-------- T --------\n");
-    for (int i = 0; i < nbasis; ++i) {
-        for (int j = 0; j < nbasis; ++j)
-            DEBUGLOG ("%16.10f", o[i * nbasis + j]);
-        DEBUGLOG ("\n");
-    }
-    DEBUGLOG ("------ END T ------\n");
-#endif
 
     cudaFreeChecked (d_T);
     free_dev_alloc (d_T_siz);
@@ -188,16 +168,6 @@ cuest_get_oei_V (double *o)
     // ========================== //
 
     cudaMemcpyChecked (o, d_V, d_V_siz, cudaMemcpyDeviceToHost);
-
-#ifdef CUESTDEBUG
-    DEBUGLOG ("-------- V --------\n");
-    for (int i = 0; i < nbasis; ++i) {
-        for (int j = 0; j < nbasis; ++j)
-            DEBUGLOG ("%16.10f", o[i * nbasis + j]);
-        DEBUGLOG ("\n");
-    }
-    DEBUGLOG ("------ END V ------\n");
-#endif
 
     cudaFreeChecked (d_V);
     free_dev_alloc (d_V_siz);
@@ -258,16 +228,6 @@ cuest_get_eri_J (double *o, double *P)
 
     // copy coulomb matrix to o
     cudaMemcpyChecked (o, quick_cuest_compute_mem.d_J, d_P_siz, cudaMemcpyDeviceToHost);
-
-#ifdef CUESTDEBUG
-    DEBUGLOG ("-------- J --------\n");
-    for (int i = 0; i < nbasis; ++i) {
-        for (int j = 0; j < nbasis; ++j)
-            fprintf (quick_cuest_log_fp, "%16.10f", o[i * nbasis + j]);
-        DEBUGLOG ("\n");
-    }
-    DEBUGLOG ("------ END J ------\n");
-#endif
 
     cudaFreeChecked (d_P);
     free_dev_alloc (d_P_siz);
@@ -342,16 +302,6 @@ cuest_get_eri_K (double *o, double *C)
 
     cudaMemcpyChecked (o, quick_cuest_compute_mem.d_K, nbasis * nbasis * sizeof (double),
                        cudaMemcpyDeviceToHost);
-
-#ifdef CUESTDEBUG
-    DEBUGLOG ("-------- K --------\n");
-    for (int i = 0; i < nbasis; ++i) {
-        for (int j = 0; j < nbasis; ++j)
-            DEBUGLOG ("%16.10f", o[i * nbasis + j]);
-        DEBUGLOG ("\n");
-    }
-    DEBUGLOG ("------ END K ------\n");
-#endif
 
     cudaFreeChecked (d_C);
     free_dev_alloc (d_C_siz);

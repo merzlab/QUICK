@@ -79,6 +79,9 @@ subroutine get1e(deltaO)
 
 #if defined(CUDA) && defined(CUEST)
    use quick_cuest_module, only: cuest_deinit_oei_plan, cuest_get_oei_T, cuest_get_oei_V, cuest_debuglog
+#ifdef CUESTDEBUG
+   use quick_cuest_module, only: cuest_correct_o, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
+#endif
 #endif
    
    implicit double precision(a-h,o-z)
@@ -87,6 +90,7 @@ subroutine get1e(deltaO)
 
 #if defined(CUDA) && defined(CUEST)
    double precision :: cuest_T(nbasis, nbasis), cuest_V(nbasis, nbasis)
+   double precision :: tmp2d(nbasis, nbasis)
 #endif
 
    !------------------------------------------------
@@ -113,6 +117,13 @@ subroutine get1e(deltaO)
          RECORD_TIME(timer_begin%T1eT)
 #if defined(CUDA) && defined(CUEST)
          call cuest_get_oei_T (cuest_T);
+#ifdef CUESTDEBUG
+         tmp2d = cuest_T
+         call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+         call cuest_debuglog("======== quick T ========")
+         call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+         call cuest_debuglog("====== end quick T ======")
+#endif
 #else
          do Ibas=1,nbasis
             call kineticO(Ibas)
@@ -133,6 +144,14 @@ subroutine get1e(deltaO)
 
          ! quick_qm_struct%o = quick_qm_struct%o - cuest_V
          call cuest_deinit_oei_plan()
+
+#ifdef CUESTDEBUG
+         tmp2d = cuest_T - cuest_V
+         call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+         call cuest_debuglog("======== T+V ========")
+         call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+         call cuest_debuglog("====== end T+V ======")
+#endif
 #elif defined(GPU)
          if(.not. quick_method%hasF) then
            call gpu_get_oei(quick_qm_struct%o)
