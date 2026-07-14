@@ -18,6 +18,7 @@ subroutine read_job_and_atom(ierr)
    use quick_ecp_module
    use quick_api_module
    use quick_exception_module
+   use quick_input_parser_module, only: found_keyword
 #ifdef CEW
    use quick_cew_module, only: quick_cew, print
 #endif

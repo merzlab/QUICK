@@ -150,6 +150,8 @@ end subroutine new_quick_api_type
 ! this subroutine checks if the string passed through api is a file name
 ! or a job card
 subroutine check_fqin(fqin, keywd, ierr)
+  use quick_input_parser_module, only: found_keyword
+
   implicit none
 
   character(len=80), intent(in)  :: fqin
@@ -158,7 +160,7 @@ subroutine check_fqin(fqin, keywd, ierr)
 
   call upcase(keywd, 256)
 
-  if ((index(keywd, 'HF') .ne. 0) .or. (index(keywd, 'DFT') .ne. 0) .and. (index(keywd, 'BASIS=') .ne. 0 )) then
+  if (found_keyword(keywd, 'HF') .or. found_keyword(keywd, 'DFT') .and. found_keyword(keywd, 'BASIS=')) then
     quick_api%hasKeywd = .true.
     quick_api%Keywd = keywd
   endif
