@@ -769,7 +769,7 @@ module quick_method_module
             endif
 
             ! 2e-cutoff
-            if (index(keywd,'CUTOFF') /= 0) then
+            if (found_keyword(keywd,'CUTOFF')) then
                 call read(keywd, 'CUTOFF', self%integralCutoff)
                 self%primLimit=self%integralCutoff*1.0d-1
             endif
