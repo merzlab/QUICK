@@ -15,6 +15,9 @@
   !---------------------------------------------------------------------!
 */
 
+#include "util.h"
+
+
 __device__ void xc_gga_c_am05_func_kernel
 (const void *p,  xc_gga_work_c_t *r);   
 

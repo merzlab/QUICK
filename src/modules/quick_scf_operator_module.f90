@@ -16,8 +16,8 @@
 module quick_scf_operator_module
 
   implicit none
-  private 
 
+  private 
   public :: scf_operator
   
 
@@ -37,11 +37,13 @@ contains
      use quick_cutoff_module, only: cshell_density_cutoff
      use quick_eri_cshell_module, only: getCshellEri, getCshellEriEnergy 
      use quick_oei_module, only:get1eEnergy,get1e
-#ifdef MPIV
+#if defined(MPIV)
+     use quick_mpi_module, only: bMPI, master, quick_comm, quick_comm_rank, quick_mpi_error
      use mpi
 #endif
   
      implicit none
+
   !   double precision oneElecO(nbasis,nbasis)
      logical :: deltaO
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
@@ -82,7 +84,7 @@ contains
      call cshell_density_cutoff
   
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
   
   
@@ -133,8 +135,8 @@ contains
   !  Every nodes will take about jshell/nodes shells integrals such as 1 water, which has 
   !  4 jshell, and 2 nodes will take 2 jshell respectively.
      if(bMPI) then
-        do i=1,mpi_jshelln(mpirank)
-           ii=mpi_jshell(mpirank,i)
+        do i=1,mpi_jshelln(quick_comm_rank)
+           ii=mpi_jshell(quick_comm_rank,i)
            call getCshellEri(II)
         enddo
      else
@@ -165,7 +167,7 @@ contains
 
 
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
   
   !  Terminate the timer for 2e-integrals
@@ -180,7 +182,7 @@ contains
   !-----------------------------------------------------------------
   
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
   
      if (quick_method%DFT) then
@@ -195,7 +197,7 @@ contains
         call copySym(quick_qm_struct%o,nbasis)
  
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
   
   !  Stop the exchange correlation timer
@@ -210,14 +212,14 @@ contains
 #ifdef MPIV
   !  MPI reduction operations
   
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
   
      RECORD_TIME(timer_begin%TEred)
   
      if (quick_method%DFT) then
-     call MPI_REDUCE(quick_qm_struct%Exc, Excsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-     call MPI_REDUCE(quick_qm_struct%aelec, aelec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-     call MPI_REDUCE(quick_qm_struct%belec, belec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+     call MPI_REDUCE(quick_qm_struct%Exc, Excsum, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
+     call MPI_REDUCE(quick_qm_struct%aelec, aelec, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
+     call MPI_REDUCE(quick_qm_struct%belec, belec, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
   
      if(master) then
        quick_qm_struct%Exc = Excsum
@@ -226,8 +228,8 @@ contains
      endif
      endif
   
-     call MPI_REDUCE(quick_qm_struct%o, quick_scratch%osum, nbasis*nbasis, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-     call MPI_REDUCE(quick_qm_struct%Eel, Eelsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+     call MPI_REDUCE(quick_qm_struct%o, quick_scratch%osum, nbasis*nbasis, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
+     call MPI_REDUCE(quick_qm_struct%Eel, Eelsum, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
   
      if(master) then
        quick_qm_struct%o(:,:) = quick_scratch%osum(:,:)
@@ -277,9 +279,10 @@ contains
      use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
      use xc_f90_types_m
      use xc_f90_lib_m
-#ifdef MPIV
-     use mpi
+#if defined(MPIV)
+     use quick_mpi_module, only: bMPI, quick_comm_rank
 #endif
+
      implicit none
   
      !integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
@@ -309,9 +312,7 @@ contains
      quick_qm_struct%belec=0.d0
 
 #if defined(GPU) || defined(MPIV_GPU)
-  
      if(quick_method%bGPU) then
-
         if(deltaO) call gpu_upload_density_matrix(quick_qm_struct%dense)
 
         quick_qm_struct%oxc=quick_qm_struct%o 
@@ -319,7 +320,6 @@ contains
         call gpu_get_cshell_xc(quick_qm_struct%Exc, quick_qm_struct%aelec, quick_qm_struct%belec, quick_qm_struct%o)
 
         quick_qm_struct%oxc=quick_qm_struct%o-quick_qm_struct%oxc  
-
      endif
 #else
 
@@ -341,8 +341,8 @@ contains
   
 #if defined(MPIV) && !defined(MPIV_GPU)
         if(bMPI) then
-           irad_init = quick_dft_grid%igridptll(mpirank+1)
-           irad_end = quick_dft_grid%igridptul(mpirank+1)
+           irad_init = quick_dft_grid%igridptll(quick_comm_rank+1)
+           irad_end = quick_dft_grid%igridptul(quick_comm_rank+1)
         else
            irad_init = 1
            irad_end = quick_dft_grid%nbins
@@ -521,14 +521,10 @@ contains
 
   !  Update KS operators
      quick_qm_struct%o=quick_qm_struct%o+quick_qm_struct%oxc
-
 #endif
 
   !  Add the exchange correlation energy to total electronic energy
      quick_qm_struct%Eel    = quick_qm_struct%Eel+quick_qm_struct%Exc
-
-     return
-  
   end subroutine get_xc
 
 end module quick_scf_operator_module

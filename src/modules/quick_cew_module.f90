@@ -85,13 +85,12 @@ contains
 
   
   subroutine new_quick_cew_type(self,beta,nqm,qmq)
-    
     implicit none
+
     type(quick_cew_type), intent(inout) :: self
     double precision,intent(in) :: beta
     integer,intent(in) :: nqm
     double precision,intent(in) :: qmq(nqm)
-    
 
     self%use_cew = .true.
     self%beta = beta
@@ -101,14 +100,13 @@ contains
     end if
     allocate(self%qmq(nqm))
     self%qmq = qmq
-    
   end subroutine new_quick_cew_type
 
 
   
   subroutine new_quick_cew(beta,nqm,qmq)
-
     implicit none
+
     double precision,intent(in) :: beta
     integer,intent(in) :: nqm
     double precision,intent(in) :: qmq(nqm)
@@ -120,15 +118,15 @@ contains
   
   
   subroutine quick_cew_prescf()
-    
     !use quick_api_module, only : quick_api
     use quick_molspec_module, only: quick_molspec
     use quick_lri_module, only : computeLRI
     use quick_calculated_module, only : quick_qm_struct
     use quick_basis_module
     use quick_method_module, only: quick_method
-#ifdef MPIV
-    use quick_mpi_module
+#if defined(MPIV)
+    use quick_mpi_module, only: quick_comm, quick_comm_rank, quick_mpi_error, &
+            natomll, natomul, nextatomll, nextatomul
     use mpi
 #endif    
 
@@ -146,10 +144,10 @@ contains
     double precision :: Esum
     Esum = 0.0d0
 
-    atominit = natomll(mpirank+1)
-    atomlast = natomul(mpirank+1)
-    extatominit = nextatomll(mpirank+1)
-    extatomlast = nextatomul(mpirank+1)
+    atominit = natomll(quick_comm_rank+1)
+    atomlast = natomul(quick_comm_rank+1)
+    extatominit = nextatomll(quick_comm_rank+1)
+    extatomlast = nextatomul(quick_comm_rank+1)
 #endif
 
     ierr=0
@@ -374,7 +372,7 @@ contains
     !write(6,*)"Ecore",(quick_qm_struct%ECore + E)
 
 #ifdef MPIV
-    call MPI_REDUCE(E,Esum,1,mpi_double_precision,mpi_sum,0, MPI_COMM_WORLD, mpierror)
+    call MPI_REDUCE(E,Esum,1,mpi_double_precision,mpi_sum,0, quick_comm, quick_mpi_error)
     E=Esum
 #endif
 
@@ -409,9 +407,11 @@ contains
    use xc_f90_lib_m
    use quick_gridpoints_module, only : quick_dft_grid
    use quick_molspec_module, only : quick_molspec
-#ifdef MPIV
-    use mpi
+#if defined(MPIV)
+   use quick_mpi_module, only: bMPI, quick_comm_rank
+   use mpi
 #endif
+
    implicit none
 
    !integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
@@ -439,8 +439,8 @@ contains
 
 #if defined(MPIV) && !defined(MPIV_GPU)
       if(bMPI) then
-         irad_init = quick_dft_grid%igridptll(mpirank+1)
-         irad_end = quick_dft_grid%igridptul(mpirank+1)
+         irad_init = quick_dft_grid%igridptll(quick_comm_rank+1)
+         irad_end = quick_dft_grid%igridptul(quick_comm_rank+1)
       else
          irad_init = 1
          irad_end = quick_dft_grid%nbins
@@ -565,7 +565,6 @@ contains
 
 
   subroutine quick_cew_grad()
-    
     !use quick_api_module, only : quick_api
     use quick_molspec_module, only : quick_molspec
     use quick_calculated_module, only : quick_qm_struct
@@ -573,11 +572,12 @@ contains
     !use quick_lri_grad_module, only: computeLRINumGrad
     use quick_gridpoints_module, only : quick_dft_grid
     use quick_method_module, only: quick_method
-#ifdef MPIV
-    use quick_mpi_module
-#endif    
+#if defined(MPIV)
+   use quick_mpi_module, only: quick_comm_rank, natomll, natomul, nextatomll, nextatomul
+#endif
 
     implicit none
+
     integer :: a,b,c,k,oa,ob,oc,ierr
     double precision :: c_coord(3), rvec(3)
     double precision :: r,r2,oor2,oor3,qa,qb,qc
@@ -588,10 +588,10 @@ contains
 #ifdef MPIV
     integer :: atominit, atomlast, extatominit, extatomlast
 
-    atominit = natomll(mpirank+1)
-    atomlast = natomul(mpirank+1)
-    extatominit = nextatomll(mpirank+1)
-    extatomlast = nextatomul(mpirank+1)
+    atominit = natomll(quick_comm_rank+1)
+    atomlast = natomul(quick_comm_rank+1)
+    extatominit = nextatomll(quick_comm_rank+1)
+    extatomlast = nextatomul(quick_comm_rank+1)
 #endif
 
     ierr=0
@@ -746,9 +746,6 @@ contains
   end subroutine quick_cew_grad
 
 
-
-
-
   ! subroutine getssw(gridx,gridy,gridz,Iparent,natom,xyz,p)
   !   implicit none
   !   double precision,intent(in) :: gridx,gridy,gridz
@@ -836,7 +833,6 @@ contains
   ! end subroutine getssw
 
 
-
   ! subroutine getsswnumder(gridx,gridy,gridz,Iparent,natom,xyz,dp)
   !   implicit none
   !   double precision,intent(in) :: gridx,gridy,gridz
@@ -890,8 +886,6 @@ contains
 
 
   subroutine quick_cew_grad_quad()
-
-
    use allmod
    use xc_f90_types_m
    use xc_f90_lib_m
@@ -899,7 +893,8 @@ contains
    !use quick_api_module, only : quick_api
    use quick_calculated_module, only : quick_qm_struct
    use quick_molspec_module, only : quick_molspec
-#ifdef MPIV
+#if defined(MPIV)
+   use quick_mpi_module, only: bMPI, quick_comm_rank
    use mpi
 #endif
    
@@ -931,8 +926,8 @@ contains
 
 #if defined(MPIV) && !defined(MPIV_GPU)
       if(bMPI) then
-         irad_init = quick_dft_grid%igridptll(mpirank+1)
-         irad_end = quick_dft_grid%igridptul(mpirank+1)
+         irad_init = quick_dft_grid%igridptll(quick_comm_rank+1)
+         irad_end = quick_dft_grid%igridptul(quick_comm_rank+1)
       else
          irad_init = 1
          irad_end = quick_dft_grid%nbins
@@ -1172,36 +1167,36 @@ end do
 
   end subroutine quick_cew_grad_quad
 
+
 #if defined(GPU) || defined(MPIV_GPU)
   ! MM: upload cew info onto GPU
   subroutine upload_cew(self, ierr)
-
     implicit none
+
     type(quick_cew_type), intent(in) :: self
     integer, intent(out) :: ierr
 
     ierr=0
     call gpu_set_cew(self%use_cew)
-
   end subroutine upload_cew
 
-  subroutine delete_cew_vrecip(self, ierr)
 
+  subroutine delete_cew_vrecip(self, ierr)
     implicit none
+
     type(quick_cew_type), intent(in) :: self ! dummy argument to access through interface
     integer, intent(inout) :: ierr
 
     ierr=0
   
     call gpu_delete_cew_vrecip(ierr)
-
   end subroutine delete_cew_vrecip
-
 #endif
 
+
   subroutine print_cew(self, iOutfile, ierr)
-  
     implicit none
+
     type(quick_cew_type), intent(in) :: self
     integer, intent(in) :: iOutfile
     integer, intent(out) :: ierr

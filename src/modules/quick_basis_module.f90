@@ -110,19 +110,10 @@ module quick_basis_module
         double precision, allocatable, dimension(:,:) :: gcexpo
 
         integer, allocatable, dimension(:,:) :: KLMN
-
-#if defined(MPIV_GPU)
-        integer :: mpi_qshell                   ! Total number or sorted shells
-
-        integer,allocatable :: mpi_qshelln(:)   ! qshell ranges calculated by each gpu
-#endif
-
    end type quick_basis_type
 
    type(quick_basis_type) quick_basis
 
-   ! to be sub into gauss type
-   type(gaussian),dimension(:), allocatable :: gauss
    integer,dimension(:),allocatable :: ncontract                                        ! to be sub
    integer, dimension(:,:), allocatable :: itype                                        ! to be sub
    double precision, dimension(:,:), allocatable :: aexp,dcoeff                         ! to be sub
@@ -142,28 +133,26 @@ module quick_basis_module
    integer, dimension(bufferSize) :: aBuffer
    integer, dimension(bufferSize) :: bBuffer
 
-logical, parameter ::  incoreInt =.false.! .true. !.false.
-integer, parameter :: incoreSize = 100000000
-integer incoreIndex
+   logical, parameter ::  incoreInt =.false.! .true. !.false.
+   integer, parameter :: incoreSize = 100000000
+   integer incoreIndex
 #if defined(GPU)
-double precision, dimension(1) :: intIncore
-integer, dimension(1) :: aIncore
-integer, dimension(1) :: bIncore
+   double precision, dimension(1) :: intIncore
+   integer, dimension(1) :: aIncore
+   integer, dimension(1) :: bIncore
 #else
-double precision, dimension(incoreSize) :: intIncore
-integer, dimension(incoreSize) :: aIncore
-integer, dimension(incoreSize) :: bIncore
+   double precision, dimension(incoreSize) :: intIncore
+   integer, dimension(incoreSize) :: aIncore
+   integer, dimension(incoreSize) :: bIncore
 #endif
 
    ! used for hrr and vrr
    double precision :: Y,dnmax
    double precision :: Yaa(3),Ybb(3),Ycc(3)  ! only used for opt
 
-
    ! this is for SAD initial guess
    integer,allocatable,dimension(:) :: atombasis    ! basis number for every atom
    double precision,allocatable,dimension(:,:,:) :: atomdens    ! density matrix for ceitain atom
-
 
    double precision, allocatable, dimension(:,:) :: Apri,Kpri
    double precision, allocatable, dimension(:,:,:) :: Ppri
@@ -171,7 +160,6 @@ integer, dimension(incoreSize) :: bIncore
    ! they are for Schwartz cutoff
    double precision, allocatable, dimension(:,:) :: Ycutoff,cutmatrix,cutprim
    double precision, allocatable, dimension(:,:,:,:) :: Yxiaoprim !Yxiaoprim only used at shwartz cutoff
-
 
    ! for MP2
    double precision, allocatable, dimension(:,:,:) :: orbmp2dcsub
@@ -184,14 +172,13 @@ integer, dimension(incoreSize) :: bIncore
    !
    double precision, allocatable, dimension(:,:,:) :: Yxiao,Yxiaotemp,attraxiao
 
-    !only for opt
+   !only for opt
    double precision, allocatable, dimension(:,:,:,:) :: attraxiaoopt
 
    ! only for dft
    double precision, allocatable, dimension(:) :: phixiao,dphidxxiao,dphidyxiao,dphidzxiao
 
-#ifdef MPIV
-   ! MPI
+#if defined(MPIV)
    integer,allocatable:: mpi_jshelln(:)    ! shell no. calculated this node
    integer,allocatable:: mpi_jshell(:,:)   ! shell series no. calcluated in this node
 
@@ -214,7 +201,9 @@ integer, dimension(incoreSize) :: bIncore
         module procedure print_quick_basis
     end interface print
 
+
 contains
+
 
    !----------------
    ! Allocate quick basis
@@ -222,8 +211,9 @@ contains
    subroutine allocate_quick_basis(self,natom_arg,nshell_arg,nbasis_arg)
         use quick_gaussian_class_module
         use quick_size_module
-        use quick_mpi_module
+
         implicit none
+
         integer natom_arg,nshell_arg,nbasis_arg,i,j
         type(quick_basis_type) self
 
@@ -271,9 +261,6 @@ contains
         enddo
 
         if(.not. allocated(self%KLMN)) allocate(self%KLMN(3,nbasis_arg))
-#if defined(MPIV_GPU)
-        if(.not. allocated(self%mpi_qshelln)) allocate(self%mpi_qshelln(mpisize+1))
-#endif
    end subroutine allocate_quick_basis
 
 
@@ -282,7 +269,9 @@ contains
    !----------------
    subroutine deallocate_quick_basis(self)
         use quick_gaussian_class_module
+
         implicit none
+
         type (quick_basis_type) self
 
         if (allocated(self%ncenter)) deallocate(self%ncenter)
@@ -307,22 +296,17 @@ contains
         if (allocated(self%unnorm_gccoeff)) deallocate(self%unnorm_gccoeff)
         if (allocated(self%KLMN)) deallocate(self%KLMN)
 
-#if defined(MPIV_GPU)
-        if (allocated(self%mpi_qshelln)) deallocate(self%mpi_qshelln)
-#endif
-
         if(allocated(Apri))          deallocate(Apri)
         if(allocated(Kpri))          deallocate(Kpri)
         if(allocated(cutprim))       deallocate(cutprim)
         if(allocated(Ppri))          deallocate(Ppri)
         if(allocated(self%Xcoeff)) deallocate(self%Xcoeff)
-
    end subroutine deallocate_quick_basis
 
 
    subroutine allocate_basis(self)
-
       implicit none
+
       type (quick_basis_type) :: self
 
       if(.not. allocated(Apri)) allocate(Apri(jbasis,jbasis))
@@ -332,12 +316,13 @@ contains
       if(.not. allocated(self%Xcoeff)) allocate(self%Xcoeff(jbasis,jbasis,0:3,0:3))
    end subroutine
 
+
    ! following arrays are only required for host version of xc, allocate and
    ! deallocate them separately. Note that we use quick_basis_arg and isDFT
    ! as dummy arguments to call this through the alloc interface
    subroutine allocate_host_xc_basis(self, isDFT)
-
      implicit none
+
      type(quick_basis_type) :: self
      logical, intent(in) :: isDFT
 
@@ -347,13 +332,13 @@ contains
        if(.not. allocated(dPhidYXiao)) allocate(dPhidYXiao(nbasis))
        if(.not. allocated(dPhidZXiao)) allocate(dPhidZXiao(nbasis))
      endif
-
    end subroutine allocate_host_xc_basis
+
 
    ! deallocate dft specific data structures
    subroutine deallocate_host_xc_basis(self, isDFT)
-
      implicit none
+
      type(quick_basis_type) :: self
      logical, intent(in) :: isDFT
 
@@ -363,12 +348,12 @@ contains
         if(allocated(dPhidYXiao)) deallocate(dPhidYXiao)
         if(allocated(dPhidZXiao)) deallocate(dPhidZXiao)
      end if
-
    end subroutine deallocate_host_xc_basis
 
 
    subroutine print_quick_basis(self,ioutfile)
         implicit none
+
         type(quick_basis_type) self
         integer iOutFile
 
@@ -382,8 +367,10 @@ contains
         endif
    end subroutine print_quick_basis
 
+
    subroutine normalize_basis()
       use quick_constants_module
+
       implicit none
 
       integer jbas,jcon,ibas,icon1,icon2,l
@@ -421,8 +408,6 @@ contains
             dcoeff(Icon1,Ibas) = dconew*dcoeff(Icon1,Ibas)
          enddo
       enddo
-
     end subroutine
-
 
 end module quick_basis_module

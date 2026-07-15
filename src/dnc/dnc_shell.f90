@@ -6,6 +6,7 @@ subroutine shellmp2divcon(i33,ittsub)
    use allmod
 
    Implicit double precision(a-h,o-z)
+
    double precision P(3),Q(3),W(3),KAB,KCD,AAtemp(3)
    Parameter(NN=13)
    double precision FM(0:13)

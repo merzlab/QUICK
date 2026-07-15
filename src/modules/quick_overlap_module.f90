@@ -540,8 +540,12 @@ end function opf
 subroutine gpt(a,b,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_count,g_table)
   implicit none
 
-  double precision a,b,Ax,Ay,Bx,By,Az,Bz,Px,Py,Pz,g_table(200),g,inv_g
-  integer g_count,ig
+  double precision, intent(in) :: a,b,Ax,Ay,Bx,By,Az,Bz
+  double precision, intent(out) :: Px,Py,Pz,g_table(200)
+  integer, intent(in) :: g_count
+
+  double precision :: g, inv_g
+  integer :: ig
 
   g = a+b
   do ig=0,g_count

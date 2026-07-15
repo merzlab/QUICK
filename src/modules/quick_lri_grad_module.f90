@@ -120,25 +120,23 @@ contains
 
 
 
+!----------------------------------------------------------------------!
+! The goal of this subroutine is to compute (ij|c) three center        !
+! integral gradients. (i.e. d(ij|c)/dA_i)                              !
+! Here i,j are two basis functions, c is a gaussian                    !     
+! located at a certain distance. To make use of the existing ERI code, !
+! we approximate above integral with (ij|c0) four center integral where!
+! 0 is another gaussian with zero exponent.                            !
+!______________________________________________________________________!
   subroutine compute_lri_grad(c_coords, c_zeta, c_chg, c_idx )
-
-    !----------------------------------------------------------------------!
-    ! The goal of this subroutine is to compute (ij|c) three center        !
-    ! integral gradients. (i.e. d(ij|c)/dA_i)                              !
-    ! Here i,j are two basis functions, c is a gaussian                    !     
-    ! located at a certain distance. To make use of the existing ERI code, !
-    ! we approximate above integral with (ij|c0) four center integral where!
-    ! 0 is another gaussian with zero exponent.                            !
-    !______________________________________________________________________!
-
     use quick_basis_module
     use quick_lri_module, only: compute_c0c0 
-
-#if defined(MPIV) && !defined(MPIV_GPU)
-    use quick_mpi_module
+#if defined(MPIV)
+    use quick_mpi_module, only: bMPI, quick_comm_rank
 #endif
     
     implicit none
+
     double precision, intent(in) :: c_coords(3), c_zeta, c_chg
     integer, intent(in) :: c_idx
     double precision :: c0c0
@@ -161,8 +159,8 @@ contains
   !  which has 
   !  4 jshell, and 2 nodes will take 2 jshell respectively.
      if(bMPI) then
-        do i=1,mpi_jshelln(mpirank)
-           ii=mpi_jshell(mpirank,i)
+        do i=1,mpi_jshelln(quick_comm_rank)
+           ii=mpi_jshell(quick_comm_rank,i)
            call prescreen_compute_lri_grad(II,c0c0)
         enddo
      else

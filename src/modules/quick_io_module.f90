@@ -33,6 +33,7 @@ module quick_io_module
   public :: chk_init, chk_close
   public :: chk_write, chk_read, chk_update
   public :: chk_create_opt_traj, chk_append_opt_traj, chk_read_opt_traj
+  public :: read_real8_rank3
 
   !-------------------------------------------------------------------!
   ! Generic interface: chk_write                                      !

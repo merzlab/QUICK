@@ -23,7 +23,11 @@ struct bflist{
 /*Fortran interface to prune & pack grid points*/
 extern "C" {
 
+#if defined(MPIV) && !defined(MPIV_GPU)
+void gpack_initialize_(int *);
+#else
 void gpack_initialize_();
+#endif
 
 void gpack_finalize_();
 
@@ -63,20 +67,21 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree);
 
 //MPI setup for the grid operations
 #if defined(MPIV) && !defined(MPIV_GPU)
-
-  int mpisize;
-  int mpirank;
-
+static int mpi_size;
+static int mpi_rank;
+static MPI_Comm mpi_comm;
 //Prescreening is parallelized by sharing bins among slaves, this array keeps track of that.
-  unsigned int *mpi_binlst;
+static unsigned int *mpi_binlst;
+
 
 void setup_gpack_mpi_1();
 
-void setup_gpack_mpi_2(unsigned int nbins, double *gridx, double *gridy, double *gridz, unsigned char *gpweight, unsigned char *tmp_gpweight, unsigned int *cfweight, unsigned int *tmp_cfweight, unsigned int *pfweight, unsigned int *tmp_pfweight, double *sswt, double *weight, int *iatm, unsigned int *bs_tracker);
+void setup_gpack_mpi_2(unsigned int, double *, double *, double *,
+        unsigned char *, unsigned char *, unsigned int *, unsigned int *, unsigned int *,
+        unsigned int *, double *, double *, int *, unsigned int *);
 
-void get_slave_primf_contraf_lists(unsigned int nbins, unsigned char *gpweight, unsigned char *tmp_gpweight, unsigned int *cfweight, unsigned int *tmp_cfweight, unsigned int *pfweight, unsigned int *tmp_pfweight, unsigned int *bs_tracker);
+void get_slave_primf_contraf_lists(unsigned int, unsigned char *, unsigned char *,
+        unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *);
 
 void delete_gpack_mpi();
-
 #endif
-
