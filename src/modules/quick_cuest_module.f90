@@ -1,6 +1,7 @@
+module quick_cuest_module
+
 #if defined(CUDA) && defined(CUEST)
 
-module quick_cuest_module
    !
    ! This module contains the fortran bindings for C functions that call cuEST
    !
@@ -322,6 +323,6 @@ contains
       call PrtAct(io, "Finish Output cuEST Memory Footprint")
    end subroutine cuest_print_memtrace
 
-end module quick_cuest_module
-
 #endif
+
+end module quick_cuest_module
