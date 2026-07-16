@@ -52,8 +52,7 @@ if(CUEST)
     set_property(TARGET cuest_obj PROPERTY COMPILE_OPTIONS ${OPT_CFLAGS})
     set_property(TARGET cuest_obj PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
-    target_include_directories(cuest_obj PUBLIC ${CUDA_INCLUDE_DIRS},
-                                                ${CUEST_INSTALL_DIR}/include)
+    target_include_directories(cuest_obj PUBLIC ${CUDA_INCLUDE_DIRS} ${CUEST_INSTALL_DIR}/include)
 
     if(CUEST_DEBUG)
         target_compile_definitions(cuest_obj PRIVATE CUESTDEBUG)
