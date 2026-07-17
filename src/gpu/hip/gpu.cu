@@ -538,11 +538,14 @@ extern "C" void gpu_delete_(int* ierr)
 
     // Gradient buffers (allocated in gpu_upload_grad_)
     SAFE_DELETE(gpu->grad);
+#if defined(USE_LEGACY_ATOMICS)
     SAFE_DELETE(gpu->gradULL);
+#endif
 
     // External point buffer (allocated in gpu_upload_oeprop_)
     SAFE_DELETE(gpu->extpointxyz);
 
+#if defined(COMPILE_GPU_AOINT)
     // Integral count buffer (allocated in gpu_upload_erilist_)
     SAFE_DELETE(gpu->intCount);
 
@@ -552,19 +555,20 @@ extern "C" void gpu_delete_(int* ierr)
         delete[] gpu->aoint_buffer;
         gpu->aoint_buffer = NULL;
     }
-#if defined(COMPILE_GPU_AOINT)
     if (gpu->gpu_sim.aoint_buffer != NULL) {
         delete[] gpu->gpu_sim.aoint_buffer;
         gpu->gpu_sim.aoint_buffer = NULL;
     }
 #endif
 
+#if defined(CEW)
     // lri_data struct itself (members freed earlier by gpu_delete_lri_ /
     // gpu_delete_cew_vrecip_)
     if (gpu->lri_data != NULL) {
         delete gpu->lri_data;
         gpu->lri_data = NULL;
     }
+#endif
 
 #if defined(MPIV_GPU)
     delete gpu->timer;
