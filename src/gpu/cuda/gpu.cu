@@ -212,7 +212,7 @@ extern "C" void gpu_new_(
 #endif
     PRINTDEBUGNS("BEGIN NEW GPU ALLOC AND INIT")
 
-    gpu = new gpu_type;
+    gpu = new gpu_type();
 
 #if defined(DEBUG) || defined(DEBUGTIME)
     gpu->debugFile = debugFile;
