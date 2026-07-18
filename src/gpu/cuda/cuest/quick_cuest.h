@@ -39,18 +39,45 @@ typedef struct {
 } quick_cuest_struct_t;
 
 typedef struct {
-    cuestWorkspace_t                           *J_wksp;
-    cuestDFCoulombComputeParameters_t           J_par;
-    void                                       *d_J;
+    cuestWorkspace_t                 *J_wksp;
+    cuestDFCoulombComputeParameters_t J_par;
+    void                             *d_J;
+
     cuestWorkspace_t                           *K_wksp;
     cuestWorkspaceDescriptor_t                 *K_vbs;
     cuestDFSymmetricExchangeComputeParameters_t K_par;
     void                                       *d_K;
-    cuestWorkspace_t                           *Vxc_wksp;
-    cuestWorkspaceDescriptor_t                 *Vxc_vbs;
-    cuestXCPotentialRKSComputeParameters_t      Vxc_par;
-    void                                       *d_Vxc;
+
+    cuestWorkspace_t                      *Vxc_wksp;
+    cuestWorkspaceDescriptor_t            *Vxc_vbs;
+    cuestXCPotentialRKSComputeParameters_t Vxc_par;
+    void                                  *d_Vxc;
 } quick_cuest_compute_mem_t;
+
+typedef struct {
+    cuestWorkspace_t                         *S_wksp;
+    cuestOverlapDerivativeComputeParameters_t S_par;
+    void                                     *d_dSdR;
+
+    cuestWorkspace_t                         *T_wksp;
+    cuestKineticDerivativeComputeParameters_t T_par;
+    void                                     *d_dTdR;
+
+    cuestWorkspace_t                           *V_wksp;
+    cuestPotentialDerivativeComputeParameters_t V_par;
+    void                                       *d_dVdR_bas;
+    void                                       *d_dVdR_ptchg;
+
+    cuestWorkspace_t                             *JK_wksp;
+    cuestDFSymmetricDerivativeComputeParameters_t JK_par;
+    cuestWorkspaceDescriptor_t                   *JK_vbs;
+    void                                         *d_dJKdR;
+
+    cuestWorkspace_t                      *Vxc_wksp;
+    cuestWorkspaceDescriptor_t            *Vxc_vbs;
+    cuestXCPotentialRKSComputeParameters_t Vxc_par;
+    void                                  *d_Vxc;
+} quick_cuest_grad_mem_t;
 
 typedef struct {
     uint64_t natom;
@@ -90,6 +117,7 @@ typedef struct {
 
 extern quick_cuest_struct_t      quick_cuest_struct;
 extern quick_cuest_compute_mem_t quick_cuest_compute_mem;
+extern quick_cuest_grad_mem_t    quick_cuest_grad_mem;
 extern quick_cuest_data_t        quick_cuest_data;
 extern quick_cuest_memchk_t      quick_cuest_memchk;
 extern quick_cuest_memtrace_t    quick_cuest_memtrace;
@@ -133,6 +161,24 @@ void cuest_destroy_atom_grid ();
 void cuest_init_xc (int8_t fnl, int64_t devsiz);
 void cuest_deinit_xc ();
 void cuest_get_Vxc (double *Vxc, double *Exc, double *C);
+
+// ======== //
+// Gradient //
+// ======== //
+
+void cuest_init_S_grad ();
+void cuest_deinit_S_grad ();
+void cuest_S_grad (double *dSdR, double *P);
+void cuest_init_T_grad ();
+void cuest_deinit_T_grad ();
+void cuest_T_grad (double *dTdR, double *P);
+void cuest_init_V_grad ();
+void cuest_deinit_V_grad ();
+void cuest_V_grad (double *dVdR_bas, double *dVdR_ptchg, double *P);
+
+void cuest_init_JK_grad (int64_t dev_buf_siz);
+void cuest_deinit_JK_grad ();
+void cuest_JK_grad (double *dJKdR, double *P, double *C);
 
 // Other
 void cuest_debuglog (const char *str);

@@ -4,6 +4,7 @@
 
 quick_cuest_struct_t      quick_cuest_struct;
 quick_cuest_compute_mem_t quick_cuest_compute_mem;
+quick_cuest_grad_mem_t    quick_cuest_grad_mem;
 quick_cuest_data_t        quick_cuest_data;
 quick_cuest_memchk_t      quick_cuest_memchk;
 quick_cuest_memtrace_t    quick_cuest_memtrace;

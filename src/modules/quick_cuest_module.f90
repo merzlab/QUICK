@@ -260,6 +260,86 @@ module quick_cuest_module
       end subroutine cuest_get_memtrace
    end interface
 
+   ! -------- !
+   ! GRADIENT !
+   ! -------- !
+
+   interface
+      subroutine cuest_init_S_grad() bind(c, name="cuest_init_S_grad")
+      end subroutine cuest_init_S_grad
+   end interface
+
+   interface
+      subroutine cuest_deinit_S_grad() bind(c, name="cuest_deinit_S_grad")
+      end subroutine cuest_deinit_S_grad
+   end interface
+
+   interface
+      subroutine cuest_S_grad(dSdR, P) bind(c, name="cuest_init_S_grad")
+         use, intrinsic :: iso_c_binding, only: c_double
+         real(c_double), intent(out) :: dSdR(*)
+         real(c_double), intent(in) :: P(*)
+      end subroutine
+   end interface
+
+   interface
+      subroutine cuest_init_T_grad() bind(c, name="cuest_init_T_grad")
+      end subroutine cuest_init_T_grad
+   end interface
+
+   interface
+      subroutine cuest_deinit_T_grad() bind(c, name="cuest_deinit_T_grad")
+      end subroutine cuest_deinit_T_grad
+   end interface
+
+   interface
+      subroutine cuest_T_grad(dTdR, P) bind(c, name="cuest_init_T_grad")
+         use, intrinsic :: iso_c_binding, only: c_double
+         real(c_double), intent(out) :: dTdR(*)
+         real(c_double), intent(in) :: P(*)
+      end subroutine
+   end interface
+
+   interface
+      subroutine cuest_init_V_grad() bind(c, name="cuest_init_V_grad")
+      end subroutine cuest_init_V_grad
+   end interface
+
+   interface
+      subroutine cuest_deinit_V_grad() bind(c, name="cuest_deinit_V_grad")
+      end subroutine cuest_deinit_V_grad
+   end interface
+
+   interface
+      subroutine cuest_V_grad(dVdR_bas, dVdR_ptchg, P) bind(c, name="cuest_init_V_grad")
+         use, intrinsic :: iso_c_binding, only: c_double
+         real(c_double), intent(out) :: dVdR_bas(*)
+         real(c_double), intent(out) :: dVdR_ptchg(*)
+         real(c_double), intent(in) :: P(*)
+      end subroutine
+   end interface
+
+   interface
+      subroutine cuest_init_JK_grad(dev_buf_siz) bind(c, name="cuest_init_JK_grad")
+         use, intrinsic :: iso_c_binding, only: c_int64_t
+         integer(c_int64_t), intent(in), value :: dev_buf_siz
+      end subroutine cuest_init_JK_grad
+   end interface
+
+   interface
+      subroutine cuest_deinit_JK_grad() bind(c, name="cuest_deinit_JK_grad")
+      end subroutine cuest_deinit_JK_grad
+   end interface
+
+   interface
+      subroutine cuest_JK_grad(dJKdR, P, C) bind(c, name="cuest_init_JK_grad")
+         use, intrinsic :: iso_c_binding, only: c_double
+         real(c_double), intent(out) :: dJKdR(*)
+         real(c_double), intent(in) :: P(*)
+         real(c_double), intent(in) :: C(*)
+      end subroutine
+   end interface
+
 contains
 
    subroutine cuest_debuglog(str)

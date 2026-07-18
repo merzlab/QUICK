@@ -44,6 +44,10 @@ contains
   subroutine allocate_quick_gradient()
 
     use quick_molspec_module, only : quick_molspec, natom
+#ifdef CUEST
+    use, intrinsic :: iso_c_binding, only: c_int64_t
+    use quick_cuest_module, only: cuest_init_JK_grad
+#endif
     implicit none
 
     if(.not. allocated(tmp_grad)) allocate(tmp_grad(3*natom))
@@ -54,11 +58,18 @@ contains
       tmp_ptchg_grad = 0.0d0
     endif
 
+#ifdef CUEST
+    call cuest_init_JK_grad(int(2000000000, c_int64_t))
+#endif
+
   end subroutine allocate_quick_gradient
 
   subroutine deallocate_quick_gradient()
 
     use quick_molspec_module, only : quick_molspec
+#ifdef CUEST
+    use quick_cuest_module, only: cuest_deinit_JK_grad
+#endif
     implicit none
 
     if(allocated(tmp_grad)) deallocate(tmp_grad) 
@@ -66,6 +77,10 @@ contains
     if(quick_molspec%nextatom.gt.0) then
       if(allocated(tmp_ptchg_grad)) deallocate(tmp_ptchg_grad)
     endif
+
+#ifdef CUEST
+    call cuest_deinit_JK_grad()
+#endif
   
   end subroutine deallocate_quick_gradient
 #endif
@@ -837,9 +852,15 @@ contains
 #ifdef MPIV
      use mpi
 #endif
+#ifdef CUEST
+     use quick_cuest_module, only: cuest_JK_grad
+#endif
      implicit double precision(a-h,o-z)
   
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+#ifdef CUEST
+     double precision :: cuest_JK_gradbuf(3*natom)
+#endif
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   
   !  This subroutine calculates the derivative of 4center 2e- 
@@ -864,7 +885,12 @@ contains
 !        call gpu_upload_calculated_beta(quick_qm_struct%ob,quick_qm_struct%denseb)
         call gpu_get_oshell_eri_grad(quick_qm_struct%gradient)
 #else
+#ifdef CUEST
+        call cuest_JK_grad(cuest_JK_gradbuf, quick_qm_struct%dense, quick_qm_struct%co)
+        quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_JK_gradbuf
+#else
         call gpu_get_cshell_eri_grad(quick_qm_struct%gradient)
+#endif
 #endif
   
      else
