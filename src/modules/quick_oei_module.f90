@@ -142,6 +142,9 @@ subroutine get1e(deltaO)
          call cuest_get_oei_V(cuest_V)
          quick_qm_struct%o = cuest_T - cuest_V
 
+         ! TODO: figure out what this is doing to prevent gradient from crashing
+         if(quick_method%grad) call gpu_get_oei(cuest_T)
+
          ! quick_qm_struct%o = quick_qm_struct%o - cuest_V
          call cuest_deinit_oei_plan()
 
