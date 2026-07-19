@@ -127,7 +127,7 @@ contains
      enddo
   
      call getEnergy(.false.,ierr)
-  
+
      if (quick_method%analgrad) then
 #ifdef OSHELL
         call uscf_gradient
@@ -853,13 +853,14 @@ contains
      use mpi
 #endif
 #ifdef CUEST
-     use quick_cuest_module, only: cuest_JK_grad
+     use quick_cuest_module, only: cuest_JK_grad, cuest_debuglog
 #endif
      implicit double precision(a-h,o-z)
   
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 #ifdef CUEST
      double precision :: cuest_JK_gradbuf(3*natom)
+     character(len=120) :: cuest_tmpstr
 #endif
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   
@@ -887,6 +888,13 @@ contains
 #else
 #ifdef CUEST
         call cuest_JK_grad(cuest_JK_gradbuf, quick_qm_struct%dense, quick_qm_struct%co)
+
+#ifdef CUESTDEBUG
+        call cuest_debuglog("======== cuest_JK_grad ========")
+        write (cuest_tmpstr, '(9F12.7)') cuest_JK_gradbuf
+        call cuest_debuglog(trim(cuest_tmpstr))
+        call cuest_debuglog("====== end cuest_JK_grad ======")
+#endif
         quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_JK_gradbuf
 #else
         call gpu_get_cshell_eri_grad(quick_qm_struct%gradient)
