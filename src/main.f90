@@ -302,14 +302,6 @@
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         SAFE_CALL(getEnergy(.false.,ierr))
 
-#if defined(CUDA) && defined(CUEST)
-        ! deinit compute things
-        call cuest_deinit_eri_J
-        if (hasK) call cuest_deinit_eri_K
-        call cuest_deinit_df
-        if (quick_method%DFT) call cuest_deinit_xc
-#endif
-
         ! One electron properties (ESP, EField)
         call compute_oeprop()
 
@@ -378,6 +370,14 @@
         endif
 
     endif
+
+#if defined(CUDA) && defined(CUEST)
+    ! deinit compute things
+    call cuest_deinit_eri_J
+    if (hasK) call cuest_deinit_eri_K
+    call cuest_deinit_df
+    if (quick_method%DFT) call cuest_deinit_xc
+#endif
 
     ! Now at this point we have an energy and a geometry.  If this is
     ! an optimization job, we now have the optimized geometry.
