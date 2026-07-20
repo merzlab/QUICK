@@ -44,10 +44,6 @@ contains
   subroutine allocate_quick_gradient()
 
     use quick_molspec_module, only : quick_molspec, natom
-#ifdef CUEST
-    use, intrinsic :: iso_c_binding, only: c_int64_t
-    use quick_cuest_module, only: cuest_init_JK_grad
-#endif
     implicit none
 
     if(.not. allocated(tmp_grad)) allocate(tmp_grad(3*natom))
@@ -57,10 +53,6 @@ contains
       if(.not. allocated(tmp_ptchg_grad)) allocate(tmp_ptchg_grad(3*quick_molspec%nextatom))    
       tmp_ptchg_grad = 0.0d0
     endif
-
-#ifdef CUEST
-    call cuest_init_JK_grad(int(2000000000, c_int64_t))
-#endif
 
   end subroutine allocate_quick_gradient
 
@@ -205,6 +197,10 @@ contains
 #ifdef MPIV
      use mpi
 #endif
+#ifdef CUEST
+    use, intrinsic :: iso_c_binding, only: c_int64_t
+    use quick_cuest_module, only: cuest_init_JK_grad, cuest_deinit_JK_grad
+#endif
      implicit double precision(a-h,o-z)
   
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,ierr
@@ -228,6 +224,9 @@ contains
   
 #ifdef MPIV
      call allocate_quick_gradient()
+#endif
+#ifdef CUEST
+     call cuest_init_JK_grad(int(2000000000, c_int64_t))
 #endif
   
   !  Set the values of gradient arry to zero 
@@ -426,6 +425,9 @@ contains
   
 #ifdef MPIV
      call deallocate_quick_gradient()
+#endif
+#ifdef CUEST
+     call cuest_deinit_JK_grad
 #endif
   
   !  Stop the timer and add up the total gradient times
@@ -888,6 +890,7 @@ contains
 #else
 #ifdef CUEST
         call cuest_JK_grad(cuest_gradbuf, quick_qm_struct%dense, quick_qm_struct%co)
+        quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
 
 #ifdef CUESTDEBUG
         call cuest_debuglog("======== dense ========")
@@ -899,7 +902,6 @@ contains
         call cuest_debuglog(trim(cuest_tmpstr))
         call cuest_debuglog("====== end cuest_JK_grad ======")
 #endif
-        quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
 #else
         call gpu_get_cshell_eri_grad(quick_qm_struct%gradient)
 #endif
