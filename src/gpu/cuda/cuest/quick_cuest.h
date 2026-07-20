@@ -73,10 +73,10 @@ typedef struct {
     cuestWorkspaceDescriptor_t                   *JK_vbs;
     void                                         *d_dJKdR;
 
-    cuestWorkspace_t                      *Vxc_wksp;
-    cuestWorkspaceDescriptor_t            *Vxc_vbs;
-    cuestXCPotentialRKSComputeParameters_t Vxc_par;
-    void                                  *d_Vxc;
+    cuestWorkspace_t                      *xc_wksp;
+    cuestWorkspaceDescriptor_t            *xc_vbs;
+    cuestXCPotentialRKSComputeParameters_t xc_par;
+    void                                  *d_dxcdR;
 } quick_cuest_grad_mem_t;
 
 typedef struct {
@@ -179,6 +179,10 @@ void cuest_V_grad (double *dVdR_bas, double *dVdR_ptchg, double *P);
 void cuest_init_JK_grad (int64_t dev_buf_siz);
 void cuest_deinit_JK_grad ();
 void cuest_JK_grad (double *dJKdR, double *P, double *C);
+
+void cuest_init_xc_grad (int64_t devsiz);
+void cuest_deinit_xc_grad ();
+void cuest_get_xc_grad (double *grad, double *C);
 
 // Other
 void cuest_debuglog (const char *str);

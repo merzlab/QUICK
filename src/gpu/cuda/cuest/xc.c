@@ -226,3 +226,73 @@ cuest_get_Vxc (double *Vxc, double *Exc, double *C)
     cudaFreeChecked (d_C);
     free_dev_alloc (d_C_siz);
 }
+
+void
+cuest_init_xc_grad (int64_t devsiz)
+{
+    cuestWorkspaceDescriptor_t *tmpWD = quick_cuest_struct.tmpWD;
+    uint64_t                    natom = quick_cuest_data.natom;
+
+    const size_t grad_siz = 3 * natom * sizeof (double);
+    cudaMallocChecked ((void **)&quick_cuest_grad_mem.d_dxcdR, grad_siz);
+
+    checkCuestErrors (cuestParametersCreate (CUEST_XCDERIVATIVERKSCOMPUTE_PARAMETERS,
+                                             &quick_cuest_grad_mem.xc_par));
+
+    cuestWorkspaceDescriptor_t *vbs = malloc (sizeof (cuestWorkspaceDescriptor_t));
+    add_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
+    vbs->hostBufferSizeInBytes   = 0;
+    vbs->deviceBufferSizeInBytes = devsiz;
+    quick_cuest_grad_mem.xc_vbs  = vbs;
+
+    checkCuestErrors (cuestXCDerivativeRKSComputeWorkspaceQuery (
+        quick_cuest_struct.handle, quick_cuest_struct.XCIntPlan, quick_cuest_grad_mem.xc_par, vbs,
+        tmpWD, quick_cuest_data.nocc, NULL, quick_cuest_grad_mem.d_dxcdR));
+
+    MEMLOG_TMPWD ("xc Gradient Compute");
+    quick_cuest_grad_mem.xc_wksp = allocateWorkspace (tmpWD);
+}
+
+void
+cuest_deinit_xc_grad ()
+{
+    const uint64_t natom = quick_cuest_data.natom;
+
+    cudaFreeChecked (quick_cuest_grad_mem.d_dxcdR);
+    free_dev_alloc (3 * natom * sizeof (double));
+
+    free (quick_cuest_grad_mem.xc_vbs);
+    free_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
+    freeWorkspace (quick_cuest_grad_mem.xc_wksp);
+    checkCuestErrors (cuestParametersDestroy (CUEST_XCDERIVATIVERKSCOMPUTE_PARAMETERS,
+                                              quick_cuest_grad_mem.xc_par));
+}
+
+void
+cuest_get_xc_grad (double *grad, double *C)
+{
+    uint64_t natom  = quick_cuest_data.natom;
+    uint64_t nbasis = quick_cuest_data.nbasis;
+    uint64_t nocc   = quick_cuest_data.nocc;
+
+    cuestHandle_t               handle = quick_cuest_struct.handle;
+    cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
+
+    double *d_C;
+    size_t  d_C_siz = nocc * nbasis * sizeof (double);
+    cudaMallocChecked ((void **)&d_C, d_C_siz);
+    cudaMemcpyChecked (d_C, C, d_C_siz, cudaMemcpyHostToDevice);
+
+    checkCuestErrors (cuestXCDerivativeRKSCompute (
+        handle, quick_cuest_struct.XCIntPlan, quick_cuest_grad_mem.xc_par,
+        quick_cuest_grad_mem.xc_vbs, quick_cuest_grad_mem.xc_wksp, nocc, d_C,
+        quick_cuest_grad_mem.d_dxcdR));
+
+    // copy to host
+    cudaMemcpyChecked (grad, quick_cuest_grad_mem.d_dxcdR, 3 * natom * sizeof (double),
+                       cudaMemcpyDeviceToHost);
+
+    // free memory
+    cudaFreeChecked (d_C);
+    free_dev_alloc (d_C_siz);
+}

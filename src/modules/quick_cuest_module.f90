@@ -340,6 +340,26 @@ module quick_cuest_module
       end subroutine
    end interface
 
+   interface
+      subroutine cuest_init_xc_grad(devsiz) bind(c, name="cuest_init_xc_grad")
+         use, intrinsic :: iso_c_binding, only: c_int64_t
+         integer(c_int64_t), intent(in), value :: devsiz
+      end subroutine cuest_init_xc_grad
+   end interface
+
+   interface
+      subroutine cuest_deinit_xc_grad() bind(c, name="cuest_deinit_xc_grad")
+      end subroutine cuest_deinit_xc_grad
+   end interface
+
+   interface
+      subroutine cuest_get_xc_grad(grad, C) bind(c, name="cuest_get_xc_grad")
+         use, intrinsic :: iso_c_binding, only: c_double
+         real(c_double), intent(out) :: grad(*)
+         real(c_double), intent(in) :: C(*)
+      end subroutine cuest_get_xc_grad
+   end interface
+
 contains
 
    subroutine cuest_debuglog(str)

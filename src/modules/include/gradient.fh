@@ -859,7 +859,7 @@ contains
   
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 #ifdef CUEST
-     double precision :: cuest_JK_gradbuf(3*natom)
+     double precision :: cuest_gradbuf(3*natom)
      character(len=120) :: cuest_tmpstr
 #endif
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -887,15 +887,19 @@ contains
         call gpu_get_oshell_eri_grad(quick_qm_struct%gradient)
 #else
 #ifdef CUEST
-        call cuest_JK_grad(cuest_JK_gradbuf, quick_qm_struct%dense, quick_qm_struct%co)
+        call cuest_JK_grad(cuest_gradbuf, quick_qm_struct%dense, quick_qm_struct%co)
 
 #ifdef CUESTDEBUG
+        call cuest_debuglog("======== dense ========")
+        call cuest_debuglog_PriSym(nbasis, quick_qm_struct%dense, "F12.7")
+        call cuest_debuglog("====== end dense ======")
+        print *, quick_qm_struct%co
         call cuest_debuglog("======== cuest_JK_grad ========")
-        write (cuest_tmpstr, '(9F12.7)') cuest_JK_gradbuf
+        write (cuest_tmpstr, '(9F12.7)') cuest_gradbuf
         call cuest_debuglog(trim(cuest_tmpstr))
         call cuest_debuglog("====== end cuest_JK_grad ======")
 #endif
-        quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_JK_gradbuf
+        quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
 #else
         call gpu_get_cshell_eri_grad(quick_qm_struct%gradient)
 #endif
@@ -1024,6 +1028,9 @@ contains
 #ifdef MPIV 
      use mpi
 #endif
+#ifdef CUEST
+     use quick_cuest_module, only: cuest_get_xc_grad, cuest_debuglog
+#endif
      implicit none
   
      integer :: iatm, ibas, ibin, icount, ifunc, igp, jbas, jcount, ibasstart, irad_init, &
@@ -1046,6 +1053,11 @@ contains
      integer :: i,k,oi
      double precision,allocatable :: dp(:,:)
 
+#ifdef CUEST
+     double precision :: cuest_gradbuf(3*natom)
+     character(len=120) :: cuest_tmpstr
+#endif
+
      if ( quick_method%HF ) then
         ! If we don't return for HF+CEW, then the unitialized data will enter
         ! the gradients somehow and screw everything up.  Not sure where the
@@ -1064,6 +1076,16 @@ contains
 #ifdef OSHELL
         call gpu_get_oshell_xcgrad(quick_qm_struct%gradient)
 #else
+#ifdef CUEST
+        call cuest_get_xc_grad(cuest_gradbuf, quick_qm_struct%co)
+        quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
+#ifdef CUESTDEBUG
+        call cuest_debuglog("======== cuest xc gradient ========")
+        write (cuest_tmpstr, '(9F12.7)') cuest_gradbuf
+        call cuest_debuglog(trim(cuest_tmpstr))
+        call cuest_debuglog("====== end cuest xc gradient ======")
+#endif !#ifdef CUESTDEBUG
+#endif ! #ifdef CUEST
         call gpu_get_cshell_xcgrad(quick_qm_struct%gradient)
 #endif
   
