@@ -1106,9 +1106,10 @@ contains
         write (cuest_tmpstr, '(9F12.7)') cuest_gradbuf(1:9)
         call cuest_debuglog(trim(cuest_tmpstr))
         call cuest_debuglog("====== end cuest xc gradient ======")
-#endif !#ifdef CUESTDEBUG
-#endif ! #ifdef CUEST
+#endif ! #ifdef CUESTDEBUG
+#else ! #ifdef CUEST
         call gpu_get_cshell_xcgrad(quick_qm_struct%gradient)
+#endif ! #ifdef CUEST
 #endif
   
         call gpu_delete_dft_grid()
