@@ -211,7 +211,7 @@ cuest_init_JK_grad (int64_t dev_buf_siz)
     checkCuestErrors (cuestParametersCreate (CUEST_DFSYMMETRICDERIVATIVECOMPUTE_PARAMETERS,
                                              &quick_cuest_grad_mem.JK_par));
     checkCuestErrors (cuestDFSymmetricDerivativeComputeWorkspaceQuery (
-        handle, quick_cuest_struct.DFIntPlan, quick_cuest_grad_mem.JK_par, vbs, tmpWD, 2.0, NULL,
+        handle, quick_cuest_struct.DFIntPlan, quick_cuest_grad_mem.JK_par, vbs, tmpWD, 0.5, NULL,
         -1.0, 1, &quick_cuest_data.nocc, NULL, quick_cuest_grad_mem.d_dJKdR));
 
     quick_cuest_grad_mem.JK_wksp = allocateWorkspace (tmpWD);
@@ -248,9 +248,10 @@ cuest_JK_grad (double *dJKdR, double *P, double *C)
     cudaMemcpyChecked (d_P, P, P_siz, cudaMemcpyHostToDevice);
     cudaMemcpyChecked (d_C, C, C_siz, cudaMemcpyHostToDevice);
 
+    // 0.5 densityScale because QUICK already includes factor of 2 in P
     checkCuestErrors (cuestDFSymmetricDerivativeCompute (
         handle, quick_cuest_struct.DFIntPlan, quick_cuest_grad_mem.JK_par,
-        quick_cuest_grad_mem.JK_vbs, quick_cuest_grad_mem.JK_wksp, 2.0, d_P, -1.0, 1, &nocc, d_C,
+        quick_cuest_grad_mem.JK_vbs, quick_cuest_grad_mem.JK_wksp, 0.5, d_P, -1.0, 1, &nocc, d_C,
         quick_cuest_grad_mem.d_dJKdR));
 
     cudaFreeChecked (d_P);

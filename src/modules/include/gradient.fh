@@ -896,7 +896,6 @@ contains
         call cuest_debuglog("======== dense ========")
         call cuest_debuglog_PriSym(nbasis, quick_qm_struct%dense, "F12.7")
         call cuest_debuglog("====== end dense ======")
-        print *, quick_qm_struct%co
         call cuest_debuglog("======== cuest_JK_grad ========")
         write (cuest_tmpstr, '(9F12.7)') cuest_gradbuf
         call cuest_debuglog(trim(cuest_tmpstr))
