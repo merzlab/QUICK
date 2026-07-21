@@ -138,7 +138,7 @@ cuest_init_xc (int8_t fnl, int64_t devsiz)
         handle, quick_cuest_struct.basis, quick_cuest_struct.molgrid, functional, xcIntPlan_param,
         persistWD, tmpWD, &quick_cuest_struct.XCIntPlan));
 
-    MEMLOG ("XC Molecular Grid");
+    MEMLOG ("XC Integral Plan");
     quick_cuest_struct.persistXCIntPlanWorkspace = allocateWorkspace (persistWD);
     cuestWorkspace_t *tmpXCIntPlanWorkspace      = allocateWorkspace (tmpWD);
 

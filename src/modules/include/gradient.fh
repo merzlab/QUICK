@@ -59,9 +59,6 @@ contains
   subroutine deallocate_quick_gradient()
 
     use quick_molspec_module, only : quick_molspec
-#ifdef CUEST
-    use quick_cuest_module, only: cuest_deinit_JK_grad
-#endif
     implicit none
 
     if(allocated(tmp_grad)) deallocate(tmp_grad) 
@@ -69,10 +66,6 @@ contains
     if(quick_molspec%nextatom.gt.0) then
       if(allocated(tmp_ptchg_grad)) deallocate(tmp_ptchg_grad)
     endif
-
-#ifdef CUEST
-    call cuest_deinit_JK_grad()
-#endif
   
   end subroutine deallocate_quick_gradient
 #endif
@@ -92,6 +85,10 @@ contains
      use quick_lri_grad_module
 #ifdef MPIV
      use mpi
+#endif
+#ifdef CUEST
+     use, intrinsic :: iso_c_binding, only: c_int64_t
+     use quick_cuest_module, only: cuest_init_JK_grad, cuest_deinit_JK_grad, cuest_init_xc_grad, cuest_deinit_xc_grad
 #endif
      implicit double precision(a-h,o-z)
   
@@ -120,6 +117,11 @@ contains
   
      call getEnergy(.false.,ierr)
 
+#ifdef CUEST
+     call cuest_init_JK_grad(int(2000000000, c_int64_t))
+     if(quick_method%DFT) call cuest_init_xc_grad(int(2000000000, c_int64_t))
+#endif
+
      if (quick_method%analgrad) then
 #ifdef OSHELL
         call uscf_gradient
@@ -133,6 +135,11 @@ contains
      if (quick_method%bGPU) then
         call gpu_cleanup()
      endif
+#endif
+
+#ifdef CUEST
+     call cuest_deinit_JK_grad
+     if(quick_method%DFT) call cuest_deinit_xc_grad
 #endif
   
 #ifdef MPIV
@@ -198,8 +205,7 @@ contains
      use mpi
 #endif
 #ifdef CUEST
-    use, intrinsic :: iso_c_binding, only: c_int64_t
-    use quick_cuest_module, only: cuest_init_JK_grad, cuest_deinit_JK_grad, cuest_correct_P, cuest_correct_C, &
+    use quick_cuest_module, only: cuest_correct_P, cuest_correct_C, &
                                   CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
 #endif
      implicit double precision(a-h,o-z)
@@ -229,9 +235,6 @@ contains
   
 #ifdef MPIV
      call allocate_quick_gradient()
-#endif
-#ifdef CUEST
-     call cuest_init_JK_grad(int(2000000000, c_int64_t))
 #endif
   
   !  Set the values of gradient arry to zero 
@@ -446,9 +449,6 @@ contains
   
 #ifdef MPIV
      call deallocate_quick_gradient()
-#endif
-#ifdef CUEST
-     call cuest_deinit_JK_grad
 #endif
   
   !  Stop the timer and add up the total gradient times
@@ -918,7 +918,7 @@ contains
         call cuest_debuglog_PriSym(nbasis, quick_qm_struct%dense, "F12.7")
         call cuest_debuglog("====== end dense ======")
         call cuest_debuglog("======== cuest_JK_grad ========")
-        write (cuest_tmpstr, '(9F12.7)') cuest_gradbuf
+        write (cuest_tmpstr, '(9F12.7)') cuest_gradbuf(1:9)
         call cuest_debuglog(trim(cuest_tmpstr))
         call cuest_debuglog("====== end cuest_JK_grad ======")
 #endif
@@ -1103,7 +1103,7 @@ contains
         quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
 #ifdef CUESTDEBUG
         call cuest_debuglog("======== cuest xc gradient ========")
-        write (cuest_tmpstr, '(9F12.7)') cuest_gradbuf
+        write (cuest_tmpstr, '(9F12.7)') cuest_gradbuf(1:9)
         call cuest_debuglog(trim(cuest_tmpstr))
         call cuest_debuglog("====== end cuest xc gradient ======")
 #endif !#ifdef CUESTDEBUG

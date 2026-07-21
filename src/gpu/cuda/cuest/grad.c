@@ -33,6 +33,7 @@ cuest_init_S_grad ()
         handle, quick_cuest_struct.OEIntPlan, quick_cuest_grad_mem.S_par, tmpWD, NULL,
         quick_cuest_grad_mem.d_dSdR));
 
+    MEMLOG_TMPWD ("S grad");
     quick_cuest_grad_mem.S_wksp = allocateWorkspace (tmpWD);
 }
 
@@ -89,6 +90,7 @@ cuest_init_T_grad ()
         handle, quick_cuest_struct.OEIntPlan, quick_cuest_grad_mem.T_par, tmpWD, NULL,
         quick_cuest_grad_mem.d_dTdR));
 
+    MEMLOG_TMPWD ("T grad");
     quick_cuest_grad_mem.T_wksp = allocateWorkspace (tmpWD);
 }
 
@@ -147,6 +149,7 @@ cuest_init_V_grad ()
         quick_cuest_data.ntotalatom, quick_cuest_data.allxyz_gpu, quick_cuest_data.allchg_gpu, NULL,
         quick_cuest_grad_mem.d_dVdR_bas, quick_cuest_grad_mem.d_dVdR_ptchg));
 
+    MEMLOG_TMPWD ("V grad");
     quick_cuest_grad_mem.V_wksp = allocateWorkspace (tmpWD);
 }
 
@@ -214,6 +217,7 @@ cuest_init_JK_grad (int64_t dev_buf_siz)
         handle, quick_cuest_struct.DFIntPlan, quick_cuest_grad_mem.JK_par, vbs, tmpWD, 0.5, NULL,
         -1.0, 1, &quick_cuest_data.nocc, NULL, quick_cuest_grad_mem.d_dJKdR));
 
+    MEMLOG_TMPWD ("JK grad");
     quick_cuest_grad_mem.JK_wksp = allocateWorkspace (tmpWD);
 }
 
