@@ -199,11 +199,16 @@ contains
 #endif
 #ifdef CUEST
     use, intrinsic :: iso_c_binding, only: c_int64_t
-    use quick_cuest_module, only: cuest_init_JK_grad, cuest_deinit_JK_grad
+    use quick_cuest_module, only: cuest_init_JK_grad, cuest_deinit_JK_grad, cuest_correct_P, cuest_correct_C, &
+                                  CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
 #endif
      implicit double precision(a-h,o-z)
   
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,ierr
+#ifdef CUEST
+     double precision :: cuest_densetmp(nbasis, nbasis)
+     double precision :: cuest_cotmp(nbasis, quick_molspec%nelec / 2)
+#endif
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   
   !---------------------------------------------------------------------
@@ -273,12 +278,28 @@ contains
   ! gradient kernel call (see gpu_get2e.cu) in GPU and MPI+GPU versions
   
 !#if !defined(GPU) && !defined(MPIV_GPU)
+
+#ifdef CUEST
+     ! correct density and coefficient matrices
+     cuest_densetmp = quick_qm_struct%dense
+     cuest_cotmp = quick_qm_struct%co
+     call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+     call cuest_correct_C(quick_qm_struct%co, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+#endif
+
 #ifdef OSHELL
     call get_oshell_oneen_grad
 #else
     call get_cshell_oneen_grad
 !    call gpu_get_oei_grad(quick_qm_struct%gradient, quick_qm_struct%ptchg_gradient)
 #endif
+
+#ifdef CUEST
+     ! undo correction
+     quick_qm_struct%dense = cuest_densetmp
+     quick_qm_struct%co = cuest_cotmp
+#endif
+
 !#endif
 
   !---------------------------------------------------------------------

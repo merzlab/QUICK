@@ -38,6 +38,6 @@ void cuest_correct_P (double *o, int8_t qspec);
  *   - CORRECT_NORM_QUICK_TO_CUEST; corrects normalization when `o` is given in QUICK convention
  *   - CORRECT_NORM_INV; inverts normalization coefficients
  */
-void cuest_correct_C (double *C, size_t nocc, int8_t qspec);
+void cuest_correct_C (double *C, int8_t qspec);
 
 #endif

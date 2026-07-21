@@ -251,7 +251,7 @@ cuest_correct_P (double *o, int8_t qspec)
 }
 
 void
-cuest_correct_C (double *C, size_t nocc, int8_t qspec)
+cuest_correct_C (double *C, int8_t qspec)
 {
     uint64_t nbasis = quick_cuest_data.nbasis;
     uint64_t nshell = quick_cuest_data.nshell;
@@ -277,17 +277,7 @@ cuest_correct_C (double *C, size_t nocc, int8_t qspec)
         kfxyz = SQRT_15;
     }
 
-#ifdef CUESTDEBUG
-    DEBUGLOG ("======== C from QUICK ========\n");
-    for (int i = 0; i < nocc; ++i) {
-        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
-            DEBUGLOG ("%f ", get (C, i, j, quick_cuest_data.nbasis));
-        DEBUGLOG ("\n");
-    }
-    DEBUGLOG ("====== end C from QUICK ======\n");
-#endif
-
-    const size_t endi = nocc * nbasis;
+    const size_t endi = quick_cuest_data.nocc * nbasis;
 
     if (norm) {
         if (reorder_from_quick) {
@@ -338,14 +328,4 @@ cuest_correct_C (double *C, size_t nocc, int8_t qspec)
                 reorder_f (C + firstf[j] + i);
         }
     }
-
-#ifdef CUESTDEBUG
-    DEBUGLOG ("======== C reordered ========\n");
-    for (int i = 0; i < nocc; ++i) {
-        for (int j = 0; j < quick_cuest_data.nbasis; ++j)
-            DEBUGLOG ("%f ", get (C, i, j, quick_cuest_data.nbasis));
-        DEBUGLOG ("\n");
-    }
-    DEBUGLOG ("====== end C reordered ======\n");
-#endif
 }

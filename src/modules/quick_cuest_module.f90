@@ -79,6 +79,14 @@ module quick_cuest_module
    end interface
 
    interface
+      subroutine cuest_correct_C(o, qspec) bind(c, name="cuest_correct_C")
+         use, intrinsic :: iso_c_binding, only: c_double, c_int8_t
+         real(c_double), intent(inout) :: o(*)
+         integer(c_int8_t), intent(in), value :: qspec
+      end subroutine
+   end interface
+
+   interface
       subroutine cuest_deinit_oei_plan() bind(c, name="cuest_deinit_oei_plan")
       end subroutine
    end interface
