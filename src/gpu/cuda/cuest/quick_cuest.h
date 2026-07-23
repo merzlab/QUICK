@@ -12,6 +12,9 @@
 #include <cuest.h>
 #endif
 
+// TODO: update when multigpu
+#define MPI_MAX_RANKS 1
+
 #define KTYPE_CART_S  1
 #define KTYPE_CART_P  3
 #define KTYPE_CART_SP 4
@@ -80,6 +83,13 @@ typedef struct {
 } quick_cuest_grad_mem_t;
 
 typedef struct {
+    void  *d_P[MPI_MAX_RANKS];
+    void  *d_C[MPI_MAX_RANKS];
+    size_t P_siz;
+    size_t C_siz;
+} quick_cuest_PC_buf_t;
+
+typedef struct {
     uint64_t natom;
     uint64_t nshell;
     uint64_t nbasis;
@@ -117,6 +127,7 @@ typedef struct {
 
 extern quick_cuest_struct_t      quick_cuest_struct;
 extern quick_cuest_compute_mem_t quick_cuest_compute_mem;
+extern quick_cuest_PC_buf_t      quick_cuest_PC_buf;
 extern quick_cuest_grad_mem_t    quick_cuest_grad_mem;
 extern quick_cuest_data_t        quick_cuest_data;
 extern quick_cuest_memchk_t      quick_cuest_memchk;

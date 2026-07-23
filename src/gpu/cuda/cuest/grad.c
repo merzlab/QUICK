@@ -35,6 +35,9 @@ cuest_init_S_grad ()
 
     MEMLOG_TMPWD ("S grad");
     quick_cuest_grad_mem.S_wksp = allocateWorkspace (tmpWD);
+
+    // allocate device P buf
+    cudaMallocChecked (&quick_cuest_PC_buf.d_P[0], quick_cuest_PC_buf.P_siz);
 }
 
 void
@@ -47,6 +50,9 @@ cuest_deinit_S_grad ()
     cudaFreeChecked (quick_cuest_grad_mem.d_dSdR);
     const size_t grad_siz = 3 * quick_cuest_data.natom * sizeof (double);
     free_dev_alloc (grad_siz);
+
+    cudaFreeChecked (quick_cuest_PC_buf.d_P[0]);
+    free_dev_alloc (quick_cuest_PC_buf.P_siz);
 }
 
 void
@@ -58,18 +64,14 @@ cuest_S_grad (double *dSdR, double *P)
     uint64_t                    nbasis    = quick_cuest_data.nbasis;
     uint64_t                    natom     = quick_cuest_data.natom;
 
-    void        *d_P;
+    void        *d_P      = quick_cuest_PC_buf.d_P[0];
     const size_t grad_siz = 3 * natom * sizeof (double);
-    const size_t P_siz    = nbasis * nbasis * sizeof (double);
-    cudaMallocChecked (&d_P, P_siz);
+    const size_t P_siz    = quick_cuest_PC_buf.P_siz;
     cudaMemcpyChecked (d_P, P, P_siz, cudaMemcpyHostToDevice);
 
     checkCuestErrors (cuestOverlapDerivativeCompute (
         handle, quick_cuest_struct.OEIntPlan, quick_cuest_grad_mem.S_par,
         quick_cuest_grad_mem.S_wksp, d_P, quick_cuest_grad_mem.d_dSdR));
-
-    cudaFreeChecked (d_P);
-    free_dev_alloc (P_siz);
 
     cudaMemcpyChecked (dSdR, quick_cuest_grad_mem.d_dSdR, grad_siz, cudaMemcpyDeviceToHost);
 }
@@ -219,6 +221,10 @@ cuest_init_JK_grad (int64_t dev_buf_siz)
 
     MEMLOG_TMPWD ("JK grad");
     quick_cuest_grad_mem.JK_wksp = allocateWorkspace (tmpWD);
+
+    // allocate P and C buf
+    cudaMallocChecked (&quick_cuest_PC_buf.d_P[0], quick_cuest_PC_buf.P_siz);
+    cudaMallocChecked (&quick_cuest_PC_buf.d_C[0], quick_cuest_PC_buf.C_siz);
 }
 
 void
@@ -231,6 +237,11 @@ cuest_deinit_JK_grad ()
     cudaFreeChecked (quick_cuest_grad_mem.d_dJKdR);
     const size_t grad_siz = 3 * quick_cuest_data.natom * sizeof (double);
     free_dev_alloc (grad_siz);
+
+    cudaFreeChecked (quick_cuest_PC_buf.d_P[0]);
+    cudaFreeChecked (quick_cuest_PC_buf.d_C[0]);
+    free_dev_alloc (quick_cuest_PC_buf.P_siz);
+    free_dev_alloc (quick_cuest_PC_buf.C_siz);
 }
 
 void
@@ -243,12 +254,11 @@ cuest_JK_grad (double *dJKdR, double *P, double *C)
     uint64_t                    natom     = quick_cuest_data.natom;
     uint64_t                    nocc      = quick_cuest_data.nocc;
 
-    void        *d_P, *d_C;
+    void        *d_P      = quick_cuest_PC_buf.d_P[0];
+    void        *d_C      = quick_cuest_PC_buf.d_C[0];
     const size_t grad_siz = 3 * natom * sizeof (double);
-    const size_t P_siz    = nbasis * nbasis * sizeof (double);
-    const size_t C_siz    = nbasis * nocc * sizeof (double);
-    cudaMallocChecked (&d_P, P_siz);
-    cudaMallocChecked (&d_C, C_siz);
+    const size_t P_siz    = quick_cuest_PC_buf.P_siz;
+    const size_t C_siz    = quick_cuest_PC_buf.C_siz;
     cudaMemcpyChecked (d_P, P, P_siz, cudaMemcpyHostToDevice);
     cudaMemcpyChecked (d_C, C, C_siz, cudaMemcpyHostToDevice);
 
@@ -257,11 +267,6 @@ cuest_JK_grad (double *dJKdR, double *P, double *C)
         handle, quick_cuest_struct.DFIntPlan, quick_cuest_grad_mem.JK_par,
         quick_cuest_grad_mem.JK_vbs, quick_cuest_grad_mem.JK_wksp, 0.5, d_P, -1.0, 1, &nocc, d_C,
         quick_cuest_grad_mem.d_dJKdR));
-
-    cudaFreeChecked (d_P);
-    cudaFreeChecked (d_C);
-    free_dev_alloc (P_siz);
-    free_dev_alloc (C_siz);
 
     cudaMemcpyChecked (dJKdR, quick_cuest_grad_mem.d_dJKdR, grad_siz, cudaMemcpyDeviceToHost);
 }

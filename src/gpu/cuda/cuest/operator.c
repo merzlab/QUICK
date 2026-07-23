@@ -194,6 +194,9 @@ cuest_init_eri_J ()
 
     MEMLOG_TMPWD ("Coulomb Integral Compute");
     quick_cuest_compute_mem.J_wksp = allocateWorkspace (tmpWD);
+
+    // allocate density matrix buffer
+    cudaMallocChecked (&quick_cuest_PC_buf.d_P[0], quick_cuest_PC_buf.P_siz);
 }
 
 void
@@ -207,6 +210,10 @@ cuest_deinit_eri_J ()
 
     cudaFreeChecked (quick_cuest_compute_mem.d_J);
     free_dev_alloc (nbasis * nbasis * sizeof (double));
+
+    // free P buffer
+    cudaFreeChecked (quick_cuest_PC_buf.d_P[0]);
+    free_dev_alloc (quick_cuest_PC_buf.P_siz);
 }
 
 void
@@ -217,9 +224,8 @@ cuest_get_eri_J (double *o, double *P)
     cuestAOBasis_t              basis  = quick_cuest_struct.basis;
     const uint64_t              nbasis = quick_cuest_data.nbasis;
 
-    void  *d_P;
-    size_t d_P_siz = nbasis * nbasis * sizeof (double);
-    cudaMallocChecked (&d_P, d_P_siz);
+    void  *d_P     = quick_cuest_PC_buf.d_P[0];
+    size_t d_P_siz = quick_cuest_PC_buf.P_siz;
     cudaMemcpyChecked (d_P, P, d_P_siz, cudaMemcpyHostToDevice);
 
     checkCuestErrors (
@@ -228,9 +234,6 @@ cuest_get_eri_J (double *o, double *P)
 
     // copy coulomb matrix to o
     cudaMemcpyChecked (o, quick_cuest_compute_mem.d_J, d_P_siz, cudaMemcpyDeviceToHost);
-
-    cudaFreeChecked (d_P);
-    free_dev_alloc (d_P_siz);
 }
 
 void
@@ -258,6 +261,9 @@ cuest_init_eri_K (int64_t devsiz)
 
     MEMLOG_TMPWD ("Exchange Integral Compute");
     quick_cuest_compute_mem.K_wksp = allocateWorkspace (tmpWD);
+
+    // allocate device C buffer
+    cudaMallocChecked (&quick_cuest_PC_buf.d_C[0], quick_cuest_PC_buf.C_siz);
 }
 
 void
@@ -274,6 +280,9 @@ cuest_deinit_eri_K ()
 
     cudaFreeChecked (quick_cuest_compute_mem.d_K);
     free_dev_alloc (nbasis * nbasis * sizeof (double));
+
+    cudaFreeChecked (quick_cuest_PC_buf.d_C[0]);
+    free_dev_alloc (quick_cuest_PC_buf.C_siz);
 }
 
 void
@@ -286,9 +295,8 @@ cuest_get_eri_K (double *o, double *C)
     uint64_t nbasis = quick_cuest_data.nbasis;
     uint64_t nocc   = quick_cuest_data.nocc;
 
-    void  *d_C;
-    size_t d_C_siz = nocc * nbasis * sizeof (double);
-    cudaMallocChecked (&d_C, d_C_siz);
+    void  *d_C     = quick_cuest_PC_buf.d_C[0];
+    size_t d_C_siz = quick_cuest_PC_buf.C_siz;
     cudaMemcpyChecked (d_C, C, d_C_siz, cudaMemcpyHostToDevice);
 
     checkCuestErrors (cuestDFSymmetricExchangeCompute (
@@ -302,7 +310,4 @@ cuest_get_eri_K (double *o, double *C)
 
     cudaMemcpyChecked (o, quick_cuest_compute_mem.d_K, nbasis * nbasis * sizeof (double),
                        cudaMemcpyDeviceToHost);
-
-    cudaFreeChecked (d_C);
-    free_dev_alloc (d_C_siz);
 }
