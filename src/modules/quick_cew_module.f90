@@ -402,7 +402,7 @@ contains
 
 
   subroutine quick_cew_prescf_quad()
-   use allmod
+   use allmod 
    use xc_f90_types_m
    use xc_f90_lib_m
    use quick_gridpoints_module, only : quick_dft_grid

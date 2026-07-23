@@ -44,7 +44,7 @@ contains
      use quick_calculated_module, only: quick_qm_struct
      use quick_method_module,only: quick_method
      use quick_timer_module, only:timer_begin, timer_end, timer_cumer
-     use quick_basis_module
+     use quick_basis_module, only: nbasis
 
      implicit double precision(a-h,o-z)
 
@@ -67,17 +67,25 @@ contains
   end subroutine get1eEnergy
 
 subroutine get1e(deltaO)
-   use allmod
+   use quick_basis_module, only: nbasis, jshell
+   use quick_timer_module, only: timer_begin, timer_end, timer_cumer
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_method_module, only: quick_method
+   use quick_files_module, only: iOutFile
 #ifdef CEW
    use quick_cew_module, only : quick_cew, quick_cew_prescf
 #endif
    use quick_mpi_module, only: master
 #if defined(MPIV)
-   use quick_mpi_module, only: bMPI, quick_comm_rank
+   use quick_basis_module, only: mpi_nbasis, mpi_nbasisn, mpi_jshell, mpi_jshelln
+   use quick_mpi_module, only: bMPI, quick_comm_rank, MIN_1E_MPI_BASIS
    use mpi
 #endif
    
-   implicit double precision(a-h,o-z)
+   implicit none
+
+   integer :: Ibas, IIsh, JJsh, i
+
    double precision :: temp2d(nbasis,nbasis)
    logical, intent(in) :: deltaO
 
@@ -262,9 +270,18 @@ subroutine kineticO(IBAS)
    !------------------------------------------------
    ! This subroutine is to get 1e integral Operator
    !------------------------------------------------
-   use allmod
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_basis_module, only: quick_basis, itype, dcoeff, aexp, ncontract, nbasis
+   use quick_method_module, only: quick_method
    use quick_overlap_module, only: gpt, opf
-   implicit double precision(a-h,o-z)
+   use quick_molspec_module, only: xyz
+
+   implicit none
+   
+   double precision :: ai, aj, F, OJI, xyzxi, xyzxj, xyzyi, xyzyj, xyzzi, xyzzj
+   double precision :: Px, Py, Pz
+   integer :: Icon, ix, iy, iz, Jbas, Jcon, jx, jy, jz
+
    integer Ibas 
    integer g_count
    double precision g_table(200)

@@ -13,7 +13,14 @@
 ! allocate variables, then again to assign the basis
 !
 subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ierr)
-   use allmod
+   use quick_method_module, only: quick_method
+   use quick_molspec_module, only: quick_molspec, natom
+   use quick_basis_module
+   use quick_scratch_module, only: quick_scratch, allocate_quick_scratch
+   use quick_files_module
+   use quick_constants_module, only: symbol, radii, radii2
+   use quick_mfcc_module
+   use quick_ecp_module
    use quick_gridpoints_module
    use quick_exception_module
 #ifdef CEW
@@ -357,7 +364,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    itype     = 0
    ncontract = 0
    
-   call alloc(quick_basis,natom,nshell,nbasis)
+   call allocate_quick_basis(quick_basis,natom,nshell,nbasis)
    
    do ixiao=1,nshell
       quick_basis%gcexpomin(ixiao)=99999.0d0
@@ -369,7 +376,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    !call allocate_quick_gridpoints(nbasis)
 
    ! xiao He may reconsider this
-   call alloc(quick_scratch,nbasis)
+   call allocate_quick_scratch(quick_scratch,nbasis)
 
    ! do this the stupid way for now
    jbasis=1

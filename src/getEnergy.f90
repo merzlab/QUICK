@@ -10,7 +10,11 @@
 !   This subroutine calculates and ouptus the energy.
 !
 subroutine getEnergy(isGuess, ierr)
-   use allMod
+   use quick_method_module, only: quick_method
+   use quick_molspec_module, only: quick_molspec, natom, xyz
+   use quick_calculated_module, only: quick_qm_struct, allocate_quick_qm_struct_fullx
+   use quick_basis_module, only: nbasis, NBSuse
+   use quick_files_module, only: ioutfile
    use quick_gridpoints_module
    use quick_scf_module
    use quick_uscf_module, only: uscf

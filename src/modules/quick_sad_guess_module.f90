@@ -34,7 +34,11 @@ end interface getSadDense
 contains
 
   subroutine getmolsad(ierr)
-     use allmod
+     use quick_molspec_module, only: natom, quick_molspec, xyz, quick_molspec_type
+     use quick_basis_module, only: nbasis, atombasis, atomdens, normalize_basis
+     use quick_method_module, only: quick_method, quick_method_type
+     use quick_calculated_module, only: quick_qm_struct, alloc, init, dealloc
+     use quick_constants_module, only : symbol, spinmult
      use quick_gridpoints_module
      use quick_files_module
      use quick_exception_module
