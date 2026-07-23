@@ -15,6 +15,10 @@ module quick_method_module
     use quick_constants_module
     use quick_input_parser_module  
 
+#ifdef CUEST
+    use, intrinsic :: iso_c_binding, only: c_int8_t
+#endif
+
     implicit none
 
     type quick_method_type
@@ -163,6 +167,11 @@ module quick_method_module
 #if defined(GPU) || defined(MPIV_GPU)
         logical :: bGPU                 ! if GPU is used here
 #endif
+
+#ifdef CUEST
+        integer(c_int8_t) :: cuest_fnl_code
+#endif
+        logical :: usecuest = .false.
 
     end type quick_method_type
 
@@ -554,6 +563,9 @@ module quick_method_module
             use quick_exception_module
             use quick_mpi_module
             use quick_files_module, only : write_molden
+#ifdef CUEST
+            use quick_cuest_module
+#endif
             implicit none
             character(len=300) :: keyWD
             character(len=300) :: tempstring
@@ -590,6 +602,11 @@ module quick_method_module
             endif
             if (index(keyWD,'GRADIENT').ne.0) self%grad=.true.
 
+#ifdef CUEST
+            ! set default value
+            self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
+#endif
+
             !Read dft functional keywords and set variable values
             if (index(keyWD,'LIBXC').ne.0) then
                 self%uselibxc=.true.
@@ -603,6 +620,9 @@ module quick_method_module
                 else
                   self%B3LYP=.true.
                   self%x_hybrid_coeff =0.2d0
+#ifdef CUEST
+                  self%cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
+#endif
                 endif
             elseif(index(keyWD,'BLYP').ne.0) then
                 self%uselibxc=.true.
@@ -648,6 +668,16 @@ module quick_method_module
                 call set_libxc_func_info(tempstring, self, ierr)
             endif
             CHECK_ERROR(ierr)
+
+#ifdef CUEST
+            self%usecuest = .not. self%DFT .or. self%cuest_fnl_code /= CUEST_FUNCTIONAL_UNKNOWN
+#else
+            self%usecuest = .false.
+#endif
+
+#ifdef CUEST
+            print *, "usecuest=", self%usecuest
+#endif
 
             if(self%B3LYP .or. self%BLYP .or. self%BPW91 .or. self%MPW91PW91 .or. &
                 self%MPW91LYP .or. self%uselibxc) self%DFT=.true.
@@ -902,6 +932,9 @@ module quick_method_module
         subroutine init_quick_method(self,ierr)
 
             use quick_exception_module
+#ifdef CUEST
+            use quick_cuest_module, only: CUEST_FUNCTIONAL_UNKNOWN
+#endif
             implicit none
             type(quick_method_type) self
             integer, intent(inout) :: ierr
@@ -1017,6 +1050,11 @@ module quick_method_module
 #if defined(GPU) || defined(MPIV_GPU)
             self%bGPU   = .true.
 #endif
+
+#ifdef CUEST
+            self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
+#endif
+            self%usecuest = .false.
         end subroutine init_quick_method
 
 
@@ -1136,6 +1174,9 @@ module quick_method_module
            use xc_f90_types_m
            use xc_f90_lib_m
            use quick_exception_module
+#ifdef CUEST
+           use quick_cuest_module
+#endif
 
            implicit none
            character(len=300), intent(in) :: f_keywd
@@ -1204,8 +1245,27 @@ module quick_method_module
           self%nof_functionals=nof_f
         else
           ierr=32
+#ifdef CUEST
+          self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
+#endif
           return
         endif
+
+#ifdef CUEST
+        select case (quick_method%functional_id(1))
+            case (106) ! GGA_X_B88,GGA_C_LYP
+                self%cuest_fnl_code = CUEST_FUNCTIONAL_BLYP
+            case (226) ! HYB_GGA_XC_B97
+                self%cuest_fnl_code = CUEST_FUNCTIONAL_B97
+            case (406) ! HYB_GGA_XC_PBEH
+                self%cuest_fnl_code = CUEST_FUNCTIONAL_PBE0
+            case (101) ! GGA_X_PBE (accompanied with GGA_C_PBE after)
+                self%cuest_fnl_code = CUEST_FUNCTIONAL_PBE
+            case default
+                print *, "CUEST: found unsupported libxc functional"
+                self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
+        end select
+#endif
         end subroutine set_libxc_func_info
 
 

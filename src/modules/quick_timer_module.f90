@@ -165,9 +165,11 @@ module quick_timer_module
             write (io,'("| INITIALIZATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TInitialize, &
                 timer_cumer%TInitialize/(timer_end%TTotal-timer_begin%TTotal)*100
 #endif
-#if defined(DEBUGTIME) && defined(CUDA) && defined(CUEST)
-            write (io,'("| CUEST INITIALIZATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TIniCuest, &
-                timer_cumer%TIniCuest/(timer_end%TTotal-timer_begin%TTotal)*100
+#ifdef CUEST
+            if (quick_method%usecuest) then
+               write (io,'("| CUEST INITIALIZATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TIniCuest, &
+                   timer_cumer%TIniCuest/(timer_end%TTotal-timer_begin%TTotal)*100
+            endif
 #endif
             write (io,'("| INITIAL GUESS TIME  =",F16.9,"( ",F5.2,"%)")') timer_cumer%TIniGuess, &
                 timer_cumer%TIniGuess/(timer_end%TTotal-timer_begin%TTotal)*100

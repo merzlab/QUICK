@@ -15,6 +15,7 @@ module quick_cuest_module
    integer(c_int8_t), protected :: CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK = 3
    integer(c_int8_t), protected :: CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST = 7
 
+   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_UNKNOWN = 127 ! cuEST unsupported functional
    integer(c_int8_t), protected :: CUEST_FUNCTIONAL_HF = 0
    integer(c_int8_t), protected :: CUEST_FUNCTIONAL_B3LYP = 1
    integer(c_int8_t), protected :: CUEST_FUNCTIONAL_B97 = 2

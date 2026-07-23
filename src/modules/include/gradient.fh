@@ -118,8 +118,10 @@ contains
      call getEnergy(.false.,ierr)
 
 #ifdef CUEST
-     call cuest_init_JK_grad(int(2000000000, c_int64_t))
-     if(quick_method%DFT) call cuest_init_xc_grad(int(2000000000, c_int64_t))
+     if (quick_method%usecuest) then
+        call cuest_init_JK_grad(int(2000000000, c_int64_t))
+        if(quick_method%DFT) call cuest_init_xc_grad(int(2000000000, c_int64_t))
+     endif
 #endif
 
      if (quick_method%analgrad) then
@@ -138,8 +140,10 @@ contains
 #endif
 
 #ifdef CUEST
-     call cuest_deinit_JK_grad
-     if(quick_method%DFT) call cuest_deinit_xc_grad
+     if (quick_method%usecuest) then
+        call cuest_deinit_JK_grad
+        if(quick_method%DFT) call cuest_deinit_xc_grad
+     endif
 #endif
   
 #ifdef MPIV
@@ -283,11 +287,13 @@ contains
 !#if !defined(GPU) && !defined(MPIV_GPU)
 
 #ifdef CUEST
-     ! correct density and coefficient matrices
-     cuest_densetmp = quick_qm_struct%dense
-     cuest_cotmp = quick_qm_struct%co
-     call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
-     call cuest_correct_C(quick_qm_struct%co, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+     if (quick_method%usecuest) then
+        ! correct density and coefficient matrices
+        cuest_densetmp = quick_qm_struct%dense
+        cuest_cotmp = quick_qm_struct%co
+        call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+        call cuest_correct_C(quick_qm_struct%co, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+     endif
 #endif
 
 #ifdef OSHELL
@@ -298,9 +304,11 @@ contains
 #endif
 
 #ifdef CUEST
-     ! undo correction
-     quick_qm_struct%dense = cuest_densetmp
-     quick_qm_struct%co = cuest_cotmp
+     if (quick_method%usecuest) then
+        ! undo correction
+        quick_qm_struct%dense = cuest_densetmp
+        quick_qm_struct%co = cuest_cotmp
+     endif
 #endif
 
 !#endif
@@ -910,21 +918,25 @@ contains
         call gpu_get_oshell_eri_grad(quick_qm_struct%gradient)
 #else
 #ifdef CUEST
-        call cuest_JK_grad(cuest_gradbuf, quick_qm_struct%dense, quick_qm_struct%co)
-        quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
+        if (quick_method%usecuest) then
+           call cuest_JK_grad(cuest_gradbuf, quick_qm_struct%dense, quick_qm_struct%co)
+           quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
 
 #ifdef CUESTDEBUG
-        call cuest_debuglog("======== dense ========")
-        call cuest_debuglog_PriSym(nbasis, quick_qm_struct%dense, "F12.7")
-        call cuest_debuglog("====== end dense ======")
-        call cuest_debuglog("======== cuest_JK_grad ========")
-        write (cuest_tmpstr, '(9F12.7)') cuest_gradbuf(1:9)
-        call cuest_debuglog(trim(cuest_tmpstr))
-        call cuest_debuglog("====== end cuest_JK_grad ======")
+           call cuest_debuglog("======== dense ========")
+           call cuest_debuglog_PriSym(nbasis, quick_qm_struct%dense, "F12.7")
+           call cuest_debuglog("====== end dense ======")
+           call cuest_debuglog("======== cuest_JK_grad ========")
+           write (cuest_tmpstr, '(9F12.7)') cuest_gradbuf(1:9)
+           call cuest_debuglog(trim(cuest_tmpstr))
+           call cuest_debuglog("====== end cuest_JK_grad ======")
 #endif
-#else
+        else
+           call gpu_get_cshell_eri_grad(quick_qm_struct%gradient)
+        endif
+#else ! ifdef CUEST
         call gpu_get_cshell_eri_grad(quick_qm_struct%gradient)
-#endif
+#endif ! ifdef CUEST
 #endif
   
      else
@@ -1099,14 +1111,18 @@ contains
         call gpu_get_oshell_xcgrad(quick_qm_struct%gradient)
 #else
 #ifdef CUEST
-        call cuest_get_xc_grad(cuest_gradbuf, quick_qm_struct%co)
-        quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
+        if (quick_method%usecuest) then
+           call cuest_get_xc_grad(cuest_gradbuf, quick_qm_struct%co)
+           quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
 #ifdef CUESTDEBUG
-        call cuest_debuglog("======== cuest xc gradient ========")
-        write (cuest_tmpstr, '(9F12.7)') cuest_gradbuf(1:9)
-        call cuest_debuglog(trim(cuest_tmpstr))
-        call cuest_debuglog("====== end cuest xc gradient ======")
-#endif ! #ifdef CUESTDEBUG
+           call cuest_debuglog("======== cuest xc gradient ========")
+           write (cuest_tmpstr, '(9F12.7)') cuest_gradbuf(1:9)
+           call cuest_debuglog(trim(cuest_tmpstr))
+           call cuest_debuglog("====== end cuest xc gradient ======")
+#endif
+        else
+           call gpu_get_cshell_xcgrad(quick_qm_struct%gradient)
+        endif
 #else ! #ifdef CUEST
         call gpu_get_cshell_xcgrad(quick_qm_struct%gradient)
 #endif ! #ifdef CUEST

@@ -175,7 +175,6 @@ subroutine fullx
    !
    use allmod
 #if defined(CUDA) && defined(CUEST)
-   ! TODO: probably remove this. using GPU is probably slower
    use quick_cuest_module, only: cuest_init_oei_plan, cuest_get_oei_S
 #ifdef CUESTDEBUG
    use quick_cuest_module, only: cuest_debuglog, cuest_correct_o, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
@@ -196,23 +195,25 @@ subroutine fullx
 #if defined(CUDA) && defined(CUEST)
    ! initialize oei plan (since overlap is computed before T and V)
    ! will be deinit after computing T and V
-   call cuest_init_oei_plan()
+   if (quick_method%usecuest) call cuest_init_oei_plan()
 #endif
 
    RECORD_TIME(timer_begin%T1eS)
 
    call allocfullx(quick_scratch,nbasis)
 
-#if defined(CUDA) && defined(CUEST)
-   call cuest_get_oei_S (quick_qm_struct%s)
+#ifdef CUEST
+   if (quick_method%usecuest) then
+      call cuest_get_oei_S (quick_qm_struct%s)
 #ifdef CUESTDEBUG
-   tmp2d = quick_qm_struct%s
-   call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
-   call cuest_debuglog("======== S ========")
-   call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
-   call cuest_debuglog("====== end S ======")
+      tmp2d = quick_qm_struct%s
+      call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+      call cuest_debuglog("======== S ========")
+      call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+      call cuest_debuglog("====== end S ======")
 #endif
-#else
+   else
+#endif ! #ifdef CUEST
    do Ibas=1,nbasis
       ii = itype(1,Ibas)
       jj = itype(2,Ibas)
@@ -248,6 +249,8 @@ subroutine fullx
          quick_qm_struct%s(Jbas,Ibas) = SJI
       enddo
    enddo
+#ifdef CUEST
+   endif
 #endif
 
    RECORD_TIME(timer_end%T1eS)

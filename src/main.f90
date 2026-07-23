@@ -76,7 +76,6 @@
     double precision :: t1_t, t2_t
 
 #if defined(CUDA) && defined(CUEST)
-    integer(c_int8_t) :: cuest_fnl_code
     integer(c_int64_t) :: cuest_xc_nradpts
     integer(c_int64_t) :: hostmax, hosttotal, hostallocs, devmax, devtotal, devallocs
     logical :: hasK
@@ -228,8 +227,9 @@
     timer_cumer%TIniGuess=timer_cumer%TIniGuess+timer_end%TIniGuess-timer_begin%TIniGuess &
                           -(timer_end%T2elb-timer_begin%T2elb)
     
-    ! cuEST initialize
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
+    ! init cuEST
+    if (quick_method%usecuest) then
     RECORD_TIME(timer_begin%TIniCuest)
 
     hasK = quick_method%x_hybrid_coeff /= 0.0d0
@@ -297,7 +297,8 @@
     RECORD_TIME(timer_end%TIniCuest)
     timer_cumer%TIniCuest=timer_cumer%TIniCuest+timer_end%TIniCuest-timer_begin%TIniCuest &
                           -(timer_end%T2elb-timer_begin%T2elb)
-#endif
+    endif
+#endif ! #ifdef CUEST
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         SAFE_CALL(getEnergy(.false.,ierr))
@@ -371,12 +372,14 @@
 
     endif
 
-#if defined(CUDA) && defined(CUEST)
-    ! deinit compute things
-    call cuest_deinit_eri_J
-    if (hasK) call cuest_deinit_eri_K
-    call cuest_deinit_df
-    if (quick_method%DFT) call cuest_deinit_xc
+#ifdef CUEST
+    if (quick_method%usecuest) then
+       ! deinit compute things
+       call cuest_deinit_eri_J
+       if (hasK) call cuest_deinit_eri_K
+       call cuest_deinit_df
+       if (quick_method%DFT) call cuest_deinit_xc
+    endif
 #endif
 
     ! Now at this point we have an energy and a geometry.  If this is
@@ -451,15 +454,17 @@
     ! 7.The final job is to output energy and many other infos
     !-----------------------------------------------------------------
 #if defined(CUDA) && defined(CUEST)
-    call cuest_print_memtrace(iOutFile)
+    if (quick_method%usecuest) call cuest_print_memtrace(iOutFile)
 #endif
 
 #if defined(GPU) || defined(MPIV_GPU)
     call delete(quick_method, ierr)
     call gpu_deallocate_scratch(quick_method%grad .or. quick_method%opt)
 #if defined(CUDA) && defined(CUEST)
-    call cuest_deinit_correct
-    call cuest_deinit
+    if (quick_method%usecuest) then
+        call cuest_deinit_correct
+        call cuest_deinit
+    endif
 #endif
 #if defined(MPIV_GPU)
     SAFE_CALL(delete_mgpu_setup(ierr))

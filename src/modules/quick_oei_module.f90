@@ -115,19 +115,23 @@ subroutine get1e(deltaO)
          ! O(I,J) =  F(I,J) = "KE(I,J)" + IJ
          !-----------------------------------------------------------------
          RECORD_TIME(timer_begin%T1eT)
-#if defined(CUDA) && defined(CUEST)
-         call cuest_get_oei_T (cuest_T);
+#ifdef CUEST
+         if (quick_method%usecuest) then
+            call cuest_get_oei_T (cuest_T);
 #ifdef CUESTDEBUG
-         tmp2d = cuest_T
-         call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
-         call cuest_debuglog("======== quick T ========")
-         call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
-         call cuest_debuglog("====== end quick T ======")
+            tmp2d = cuest_T
+            call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+            call cuest_debuglog("======== quick T ========")
+            call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+            call cuest_debuglog("====== end quick T ======")
 #endif
-#else
+         else
+#endif ! ifdef CUEST
          do Ibas=1,nbasis
             call kineticO(Ibas)
          enddo
+#ifdef CUEST
+         endif
 #endif
          RECORD_TIME(timer_end%T1eT)
 
@@ -137,25 +141,28 @@ subroutine get1e(deltaO)
          !-----------------------------------------------------------------
          RECORD_TIME(timer_begin%T1eV)
 
-#if defined(CUDA) && defined(CUEST)
-         ! compute V integral
-         call cuest_get_oei_V(cuest_V)
-         quick_qm_struct%o = cuest_T - cuest_V
+#ifdef CUEST
+         if (quick_method%usecuest) then
+            ! compute V integral
+            call cuest_get_oei_V(cuest_V)
+            quick_qm_struct%o = cuest_T - cuest_V
 
-         ! TODO: figure out what this is doing to prevent gradient from crashing
-         if(quick_method%grad) call gpu_get_oei(cuest_T)
+            ! TODO: figure out what this is doing to prevent gradient from crashing
+            if(quick_method%grad) call gpu_get_oei(cuest_T)
 
-         ! quick_qm_struct%o = quick_qm_struct%o - cuest_V
-         call cuest_deinit_oei_plan()
+            ! quick_qm_struct%o = quick_qm_struct%o - cuest_V
+            call cuest_deinit_oei_plan()
 
 #ifdef CUESTDEBUG
-         tmp2d = cuest_T - cuest_V
-         call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
-         call cuest_debuglog("======== T+V ========")
-         call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
-         call cuest_debuglog("====== end T+V ======")
+            tmp2d = cuest_T - cuest_V
+            call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+            call cuest_debuglog("======== T+V ========")
+            call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+            call cuest_debuglog("====== end T+V ======")
 #endif
-#elif defined(GPU)
+         else
+#endif ! ifdef CUEST
+#if defined(GPU)
          if(.not. quick_method%hasF) then
            call gpu_get_oei(quick_qm_struct%o)
          else
@@ -172,6 +179,9 @@ subroutine get1e(deltaO)
                call attrashell(IIsh,JJsh)
             enddo
          enddo
+#endif
+#ifdef CUEST
+         endif ! if(quick_method%usecuest)
 #endif
 
          RECORD_TIME(timer_end%T1eV)

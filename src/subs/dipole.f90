@@ -49,6 +49,8 @@
     ! Lowdin Charge of atom A = core charge A -
     ! - (Sum over u on A)[S^(1/2)PS^(1/2)](uu)
 
+    ! TODO: fix lowdin charges when cuEST DFT
+
     ! If there is no near-linear dependency, S^(-1/2) = X.  Thus we have to calculate
     ! XSPSX = S^(-1/2)SPSS^(-1/2)= S^(1/2)PS^(1/2)
     ! Currently, HOLD contains PS.  Use the fast multiplier to get SPS and place
@@ -146,8 +148,10 @@
     ENDDO
 
 #if defined(CUDA) && defined(CUEST)
-    densetmp = quick_qm_struct%dense
-    call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+    if (quick_method%usecuest) then
+       densetmp = quick_qm_struct%dense
+       call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+    endif
 #endif
 
     DO Ibas=1,nbasis
@@ -200,7 +204,7 @@
     ENDDO
 
 #if defined(CUDA) && defined(CUEST)
-    quick_qm_struct%dense = densetmp
+   if (quick_method%usecuest) quick_qm_struct%dense = densetmp
 #endif
 
     totdip = ((xdip*xdip+ydip*ydip+zdip*zdip)**.5d0)*2.541765d0
