@@ -293,7 +293,7 @@ contains
                ! convert density matrix back to cuEST form
                call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
            else
-               call cuest_get_Vxc(cuest_Vxc, cuest_Exc, quick_qm_struct%co)
+               call cuest_get_cshell_xc(cuest_Vxc, cuest_Exc, quick_qm_struct%co)
                quick_qm_struct%oxc = cuest_Vxc
                quick_qm_struct%o = quick_qm_struct%o + cuest_Vxc
                quick_qm_struct%Exc = cuest_Exc

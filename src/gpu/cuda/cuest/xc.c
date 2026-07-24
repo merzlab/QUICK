@@ -172,6 +172,11 @@ cuest_init_xc (int8_t fnl, int64_t devsiz)
 
     MEMLOG_TMPWD ("V_xc Compute");
     quick_cuest_compute_mem.Vxc_wksp = allocateWorkspace (tmpWD);
+
+    cudaMallocChecked (&quick_cuest_PC_buf.d_C[0], quick_cuest_PC_buf.C_siz);
+#ifdef OSHELL
+    cudaMallocChecked (&quick_cuest_PC_buf.d_Cb[0], quick_cuest_PC_buf.Cb_siz);
+#endif
 }
 
 void
@@ -192,39 +197,61 @@ cuest_deinit_xc ()
     freeWorkspace (quick_cuest_struct.persistXCGridWorkspace);
     checkCuestErrors (cuestXCIntPlanDestroy (quick_cuest_struct.XCIntPlan));
     freeWorkspace (quick_cuest_struct.persistXCIntPlanWorkspace);
+
+    cudaFreeChecked (quick_cuest_PC_buf.d_C[0]);
+    free_dev_alloc (quick_cuest_PC_buf.C_siz);
+#ifdef OSHELL
+    cudaFreeChecked (quick_cuest_PC_buf.d_Cb[0]);
+    free_dev_alloc (quick_cuest_PC_buf.Cb_siz);
+#endif
 }
 
+#ifdef OSHELL
 void
-cuest_get_Vxc (double *Vxc, double *Exc, double *C)
+cuest_get_oshell_xc (double *Vxc, double *Vxcb, double *Exc, double *C, double *Cb)
+#else
+void
+cuest_get_cshell_xc (double *Vxc, double *Exc, double *C)
+#endif
 {
     uint64_t natom  = quick_cuest_data.natom;
     uint64_t nbasis = quick_cuest_data.nbasis;
     uint64_t nocc   = quick_cuest_data.nocc;
+#ifdef OSHELL
+    uint64_t noccb = quick_cuest_data.noccb;
+#endif
 
     cuestHandle_t               handle = quick_cuest_struct.handle;
     cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
 
-    // ============================== //
-    // compute RKS XC Potential (Vxc) //
-    // ============================== //
-
-    double *d_C;
-    size_t  d_C_siz = nocc * nbasis * sizeof (double);
-    cudaMallocChecked ((void **)&d_C, d_C_siz);
+    void  *d_C     = quick_cuest_PC_buf.d_C[0];
+    size_t d_C_siz = quick_cuest_PC_buf.C_siz;
     cudaMemcpyChecked (d_C, C, d_C_siz, cudaMemcpyHostToDevice);
+#ifdef OSHELL
+    void  *d_Cb     = quick_cuest_PC_buf.d_Cb[0];
+    size_t d_Cb_siz = quick_cuest_PC_buf.Cb_siz;
+    cudaMemcpyChecked (d_Cb, Cb, d_Cb_siz, cudaMemcpyHostToDevice);
+#endif
 
+#ifdef OSHELL
+    checkCuestErrors (cuestXCPotentialUKSCompute (
+        handle, quick_cuest_struct.XCIntPlan, quick_cuest_compute_mem.Vxc_par,
+        quick_cuest_compute_mem.Vxc_vbs, quick_cuest_compute_mem.Vxc_wksp, nocc, noccb, d_C, d_Cb,
+        Exc, quick_cuest_compute_mem.d_Vxc, quick_cuest_compute_mem.d_Vxcb));
+#else
     checkCuestErrors (cuestXCPotentialRKSCompute (
         handle, quick_cuest_struct.XCIntPlan, quick_cuest_compute_mem.Vxc_par,
         quick_cuest_compute_mem.Vxc_vbs, quick_cuest_compute_mem.Vxc_wksp, nocc, d_C, Exc,
         quick_cuest_compute_mem.d_Vxc));
+#endif
 
     // copy to host
     cudaMemcpyChecked (Vxc, quick_cuest_compute_mem.d_Vxc, nbasis * nbasis * sizeof (double),
                        cudaMemcpyDeviceToHost);
-
-    // free memory
-    cudaFreeChecked (d_C);
-    free_dev_alloc (d_C_siz);
+#ifdef OSHELL
+    cudaMemcpyChecked (Vxcb, quick_cuest_compute_mem.d_Vxcb, nbasis * nbasis * sizeof (double),
+                       cudaMemcpyDeviceToHost);
+#endif
 }
 
 void
