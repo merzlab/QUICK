@@ -3,7 +3,10 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine calchessian(failed)
-  use allmod
+  use quick_method_module
+  use quick_molspec_module
+  use quick_calculated_module
+  use quick_files_module
   implicit double precision(a-h,o-z)
   logical failed
   
@@ -45,7 +48,10 @@ end subroutine calchessian
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine fdhessian(failed)
-  use allmod
+  use quick_method_module
+  use quick_molspec_module
+  use quick_calculated_module
+  use quick_files_module
   use quick_grad_cshell_module, only: cshell_gradient
   use quick_exception_module
   use quick_mpi_module, only: master
@@ -137,7 +143,12 @@ end subroutine fdhessian
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine HFHessian
-  use allmod
+  use quick_method_module
+  use quick_basis_module
+  use quick_molspec_module
+  use quick_calculated_module
+  use quick_files_module
+  use quick_SCRATCH_module
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic
 
@@ -2118,7 +2129,10 @@ end subroutine hfhessian
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine hess2elec(Ibas,Jbas,IIbas,JJbas,coeff)
-  use allmod
+  use quick_method_module
+  use quick_basis_module
+  use quick_molspec_module
+  use quick_calculated_module
   implicit double precision(a-h,o-z)
 
   dimension itype2(3,4)
@@ -3849,9 +3863,13 @@ end subroutine hess2elec
 
 
 subroutine hfdmxderuse(IDX)
-  use allmod
+  use quick_method_module
+  use quick_basis_module
+  use quick_molspec_module
+  use quick_calculated_module
   use quick_overlap_module, only: gpt
   use quick_oei_module, only: ekinetic
+  use quick_SCRATCH_module
   implicit double precision(a-h,o-z)
   dimension GRADIENT2(natom*3)
   double precision g_table(200),a,b
@@ -4344,7 +4362,10 @@ end subroutine hfdmxderuse
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine grad2elec(Ibas,Jbas,IIbas,JJbas,coeff)
-  use allmod
+  use quick_method_module
+  use quick_basis_module
+  use quick_molspec_module
+  use quick_calculated_module
   implicit double precision(a-h,o-z)
 
   dimension itype2(3,4)
@@ -4555,7 +4576,11 @@ end subroutine grad2elec
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine graddmx2elec(Ibas,Jbas,IIbas,JJbas,GRADIENT2)
-  use allmod
+  use quick_method_module
+  use quick_basis_module
+  use quick_molspec_module
+  use quick_calculated_module
+  use quick_SCRATCH_module
   implicit double precision(a-h,o-z)
 
   dimension GRADIENT2(natom*3)
@@ -4866,8 +4891,13 @@ end subroutine graddmx2elec
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine dmxderiv(IDX,BU)
-  use allmod
+  use quick_method_module
+  use quick_basis_module
+  use quick_molspec_module
+  use quick_calculated_module
+  use quick_files_module
   use quick_overlap_module, only: gpt, overlap
+  use quick_SCRATCH_module
   implicit double precision(a-h,o-z)
   double precision BU(*)
   double precision g_table(200),a,b
@@ -5269,9 +5299,14 @@ end function electricfld
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine ewtdmxder(IDX)
-  use allmod
+  use quick_method_module
+  use quick_basis_module
+  use quick_molspec_module
+  use quick_calculated_module
+  use quick_uscf_operator_module, only: uscf_operator
   use quick_overlap_module, only: gpt, overlap
   use quick_uscf_operator_module, only: uscf_operator
+  use quick_SCRATCH_module
   implicit double precision(a-h,o-z)
   dimension temp(nbasis,nbasis),ewtdmx(nbasis,nbasis)
   double precision g_table(200),a,b
@@ -5621,7 +5656,11 @@ end subroutine ewtdmxder
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine duhfoperatora(IDX)
-  use allmod
+  use quick_method_module
+  use quick_basis_module
+  use quick_molspec_module
+  use quick_calculated_module
+  use quick_SCRATCH_module
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic
   implicit double precision(a-h,o-z)
@@ -6502,9 +6541,13 @@ end subroutine duhfoperatora
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine duhfoperatorb(IDX)
-  use allmod
+  use quick_method_module
+  use quick_basis_module
+  use quick_molspec_module
+  use quick_calculated_module
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic
+  use quick_SCRATCH_module
   implicit double precision(a-h,o-z)
   dimension igrad(3)
   logical :: IonMove, JonMove, ConMove
@@ -7377,7 +7420,10 @@ end subroutine duhfoperatorb
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine move1twoe(Ibas,Jbas,IIbas,JJbas,Iatom,Imomentum,repint)
-  use allmod
+  use quick_method_module
+  use quick_basis_module
+  use quick_molspec_module
+  use quick_calculated_module
   implicit double precision(a-h,o-z)
 
   dimension itype2(3,4)
