@@ -45,14 +45,22 @@ subroutine cshell_eri_grad
 
    use allmod
 
-   Implicit double precision(a-h,o-z)
-   double precision P(3),Q(3),W(3),KAB,KCD
-   Parameter(NN=14)
-   double precision FM(0:14)
-   double precision RA(3),RB(3),RC(3),RD(3)
-
-   double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
-   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,NNABfirst,NNCDfirst
+   implicit none
+   integer, parameter :: NN = 14
+   double precision :: P(3), Q(3), W(3), KAB, KCD
+   double precision :: FM(0:14)
+   double precision :: RA(3), RB(3), RC(3), RD(3)
+   double precision :: Qtemp(3), WQtemp(3), CDtemp, ABcom, Ptemp(3), WPtemp(3), ABtemp, CDcom, ABCDtemp
+   integer :: II, JJ, KK, LL, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2
+   integer :: NNABfirst, NNCDfirst
+   ! Local loop indices and temporary variables
+   integer :: M, Nprij, Nprii, Npril, Nprik, iitemp
+   integer :: I, J, K, L, I1, I2, ITT
+   integer :: NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
+   integer :: NNAB, NNCD, NABCDTYPE, NNA, NNC, NABCD
+   double precision :: AB, CD, ABCD, ROU, RPQ, T, ABCDxiao, XXXtemp
+   double precision :: cutoffprim, cutoffprim1, ABtemp_local, CDtemp_local
+   
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 
    COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
@@ -209,28 +217,49 @@ subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
 
    use allmod
 
-   Implicit double precision(A-H,O-Z)
-   double precision store(120,120)
-
-   double precision storeaa(120,120)
-   double precision storebb(120,120)
-   double precision storecc(120,120)
-   double precision storedd(120,120)
-
-   INTEGER NA(3),NB(3),NC(3),ND(3)
-   double precision P(3),Q(3),W(3),KAB,KCD
-   Parameter(NN=14)
-   double precision FM(0:13)
-   double precision RA(3),RB(3),RC(3),RD(3)
-
-   double precision AA,BB,CC,DD
-
+   implicit none
+   ! Dummy arguments
+   integer, intent(in) :: I, J, K, L, NNA, NNC, NNAB, NNCD, NNABfirst, NNCDfirst
+   
+   ! Parameters
+   integer, parameter :: NN = 14
+   
+   ! Local arrays that go into common blocks (must be declared before common statements)
+   double precision :: store(120,120)
+   double precision :: storeaa(120,120)
+   double precision :: storebb(120,120)
+   double precision :: storecc(120,120)
+   double precision :: storedd(120,120)
+   integer :: NA(3), NB(3), NC(3), ND(3)
+   double precision :: P(3), Q(3), W(3), KAB, KCD
+   double precision :: FM(0:13)
+   double precision :: RA(3), RB(3), RC(3), RD(3)
+   double precision :: AA, BB, CC, DD, AB, CD, ROU, ABCD
+   
+   ! Local common block variables (must be declared before common statements)
+   integer :: II, JJ, KK, LL, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2
+   
+   ! Other local variables
+   double precision :: X2, cutoffprim, cutoffprim1
+   double precision :: Ytemp, YtempAA, YtempBB, YtempCC
+   double precision :: Agrad1, Agrad2, Agrad3, Bgrad1, Bgrad2, Bgrad3
+   double precision :: Cgrad1, Cgrad2, Cgrad3, Dgrad1, Dgrad2, Dgrad3
+   integer :: MM1, MM2, itemp_int
+   double precision :: constant
+   double precision :: DENSELK, DENSEJI, DENSEKIA, DENSEKJA, DENSELJA, DENSELIA
+   double precision :: DENSEKIB, DENSEKJB, DENSELJB, DENSELIB
+   double precision :: DENSEKI, DENSEKJ, DENSELJ, DENSELI
+   double precision :: DENSEJJ, DENSEII, DENSEJIA, DENSEJIB, DENSEJJA, DENSEJJB
+   double precision :: DENSEKK, DENSEIIA, DENSEIIB, DENSEKIA2, DENSEKJA2
+   integer :: iA, iB, iC, iD, iAstart, iBstart, iCstart, iDstart
+   integer :: ITT, Nprij, Nprii, Npril, Nprik
+   integer :: III1, III2, JJJ1, JJJ2, KKK1, KKK2, LLL1, LLL2
+   
    COMMON /COM1/RA,RB,RC,RD
    COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD
    COMMON /COM4/P,Q,W
    COMMON /COM5/FM
 
-   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /xiaostore/store
    common /xiaostoreopt/storeaa,storebb,storecc,storedd
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -271,8 +300,8 @@ subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
          !                           YtempAA=0.0d0
          !                           YtempBB=0.0d0
          !                           YtempCC=0.0d0
-         do itemp=1,ITT
-            Ytemp=Ytemp+quick_scratch%X44(itemp)*Yxiao(itemp,MM1,MM2)
+         do itemp_int=1,ITT
+            Ytemp=Ytemp+quick_scratch%X44(itemp_int)*Yxiao(itemp_int,MM1,MM2)
             !                           YtempAA=YtempAA+X44AA(itemp)*Yxiao(itemp,MM1,MM2)
             !                           YtempBB=YtempBB+X44BB(itemp)*Yxiao(itemp,MM1,MM2)
             !                           YtempCC=YtempCC+X44CC(itemp)*Yxiao(itemp,MM1,MM2)
@@ -291,10 +320,10 @@ subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
          YtempAA=0.0d0
          YtempBB=0.0d0
          YtempCC=0.0d0
-         do itemp=1,ITT
-            YtempAA=YtempAA+quick_scratch%X44AA(itemp)*Yxiao(itemp,MM1,MM2)
-            YtempBB=YtempBB+quick_scratch%X44BB(itemp)*Yxiao(itemp,MM1,MM2)
-            YtempCC=YtempCC+quick_scratch%X44CC(itemp)*Yxiao(itemp,MM1,MM2)
+         do itemp_int=1,ITT
+            YtempAA=YtempAA+quick_scratch%X44AA(itemp_int)*Yxiao(itemp_int,MM1,MM2)
+            YtempBB=YtempBB+quick_scratch%X44BB(itemp_int)*Yxiao(itemp_int,MM1,MM2)
+            YtempCC=YtempCC+quick_scratch%X44CC(itemp_int)*Yxiao(itemp_int,MM1,MM2)
 
             !                  if(II.eq.1.and.JJ.eq.1.and.KK.eq.13.and.LL.eq.13)then
             !                    print*,KKK-39,LLL-39,III+12,JJJ+12,itemp,X44AA(itemp),Yxiao(itemp,MM1,MM2)
