@@ -61,8 +61,10 @@ reorder_f (double *a)
 
 #define cudaMallocChecked(ptr, siz)                                                                \
     do {                                                                                           \
-        if (cudaMalloc (ptr, siz) != cudaSuccess) {                                                \
-            fprintf (stderr, "cudaMalloc failed at %s:%d\n", __func__, __LINE__ - 1);              \
+        cudaError_t tmp_errstat_88888888_ = cudaMalloc (ptr, siz);                                 \
+        if (tmp_errstat_88888888_ != cudaSuccess) {                                                \
+            fprintf (stderr, "cudaMalloc failed at %s:%d: %s\n", __func__, __LINE__ - 1,           \
+                     cudaGetErrorString (tmp_errstat_88888888_));                                  \
             exit (EXIT_FAILURE);                                                                   \
         }                                                                                          \
         add_dev_alloc (siz);                                                                       \
@@ -70,16 +72,20 @@ reorder_f (double *a)
 
 #define cudaMemcpyChecked(dst, src, siz, dirspec)                                                  \
     do {                                                                                           \
-        if (cudaMemcpy (dst, src, siz, dirspec) != cudaSuccess) {                                  \
-            fprintf (stderr, "cudaMemcpy failed at %s:%d\n", __func__, __LINE__ - 1);              \
+        cudaError_t tmp_errstat_88888888_ = cudaMemcpy (dst, src, siz, dirspec);                   \
+        if (tmp_errstat_88888888_ != cudaSuccess) {                                                \
+            fprintf (stderr, "cudaMemcpy failed at %s:%d: %s\n", __func__, __LINE__ - 1,           \
+                     cudaGetErrorString (tmp_errstat_88888888_));                                  \
             exit (EXIT_FAILURE);                                                                   \
         }                                                                                          \
     } while (0)
 
 #define cudaFreeChecked(ptr)                                                                       \
     do {                                                                                           \
-        if (cudaFree (ptr) != cudaSuccess) {                                                       \
-            fprintf (stderr, "cudaFree failed at %s:%d\n", __func__, __LINE__);                    \
+        cudaError_t tmp_errstat_88888888_ = cudaFree (ptr);                                        \
+        if (tmp_errstat_88888888_ != cudaSuccess) {                                                \
+            fprintf (stderr, "cudaFree failed at %s:%d: %s\n", __func__, __LINE__,                 \
+                     cudaGetErrorString (tmp_errstat_88888888_));                                  \
             exit (EXIT_FAILURE);                                                                   \
         }                                                                                          \
     } while (0)
