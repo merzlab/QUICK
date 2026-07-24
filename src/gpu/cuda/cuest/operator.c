@@ -194,9 +194,6 @@ cuest_init_eri_J ()
 
     MEMLOG_TMPWD ("Coulomb Integral Compute");
     quick_cuest_compute_mem.J_wksp = allocateWorkspace (tmpWD);
-
-    // allocate density matrix buffer
-    cudaMallocChecked (&quick_cuest_PC_buf.d_P[0], quick_cuest_PC_buf.P_siz);
 }
 
 void
@@ -210,10 +207,6 @@ cuest_deinit_eri_J ()
 
     cudaFreeChecked (quick_cuest_compute_mem.d_J);
     free_dev_alloc (nbasis * nbasis * sizeof (double));
-
-    // free P buffer
-    cudaFreeChecked (quick_cuest_PC_buf.d_P[0]);
-    free_dev_alloc (quick_cuest_PC_buf.P_siz);
 }
 
 void
@@ -261,9 +254,6 @@ cuest_init_eri_K (int64_t devsiz)
 
     MEMLOG_TMPWD ("Exchange Integral Compute");
     quick_cuest_compute_mem.K_wksp = allocateWorkspace (tmpWD);
-
-    // allocate device C buffer
-    cudaMallocChecked (&quick_cuest_PC_buf.d_C[0], quick_cuest_PC_buf.C_siz);
 }
 
 void
@@ -280,9 +270,6 @@ cuest_deinit_eri_K ()
 
     cudaFreeChecked (quick_cuest_compute_mem.d_K);
     free_dev_alloc (nbasis * nbasis * sizeof (double));
-
-    cudaFreeChecked (quick_cuest_PC_buf.d_C[0]);
-    free_dev_alloc (quick_cuest_PC_buf.C_siz);
 }
 
 void

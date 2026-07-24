@@ -172,11 +172,6 @@ cuest_init_xc (int8_t fnl, int64_t devsiz)
 
     MEMLOG_TMPWD ("V_xc Compute");
     quick_cuest_compute_mem.Vxc_wksp = allocateWorkspace (tmpWD);
-
-    cudaMallocChecked (&quick_cuest_PC_buf.d_C[0], quick_cuest_PC_buf.C_siz);
-#ifdef OSHELL
-    cudaMallocChecked (&quick_cuest_PC_buf.d_Cb[0], quick_cuest_PC_buf.Cb_siz);
-#endif
 }
 
 void
@@ -197,13 +192,6 @@ cuest_deinit_xc ()
     freeWorkspace (quick_cuest_struct.persistXCGridWorkspace);
     checkCuestErrors (cuestXCIntPlanDestroy (quick_cuest_struct.XCIntPlan));
     freeWorkspace (quick_cuest_struct.persistXCIntPlanWorkspace);
-
-    cudaFreeChecked (quick_cuest_PC_buf.d_C[0]);
-    free_dev_alloc (quick_cuest_PC_buf.C_siz);
-#ifdef OSHELL
-    cudaFreeChecked (quick_cuest_PC_buf.d_Cb[0]);
-    free_dev_alloc (quick_cuest_PC_buf.Cb_siz);
-#endif
 }
 
 #ifdef OSHELL
@@ -318,8 +306,4 @@ cuest_get_xc_grad (double *grad, double *C)
     // copy to host
     cudaMemcpyChecked (grad, quick_cuest_grad_mem.d_dxcdR, 3 * natom * sizeof (double),
                        cudaMemcpyDeviceToHost);
-
-    // free memory
-    cudaFreeChecked (d_C);
-    free_dev_alloc (d_C_siz);
 }

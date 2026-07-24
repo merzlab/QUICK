@@ -76,7 +76,7 @@ cuest_init
     quick_cuest_PC_buf.P_siz         = nbasis * nbasis * sizeof (double);
     quick_cuest_PC_buf.C_siz         = nocc * nbasis * sizeof (double);
 #ifdef OSHELL
-    quick_cuest_PC_buf.C_siz = noccb * nbasis * sizeof (double);
+    quick_cuest_PC_buf.Cb_siz = noccb * nbasis * sizeof (double);
 #endif
 
     // ensure iattype persists
@@ -116,6 +116,16 @@ cuest_init
     cudaMemcpyChecked (quick_cuest_data.allchg_gpu, chg, chg_siz, cudaMemcpyHostToDevice);
     cudaMemcpyChecked ((uint8_t *)quick_cuest_data.allchg_gpu + chg_siz, extchg, extchg_siz,
                        cudaMemcpyHostToDevice);
+
+    // ==================== //
+    // init compute buffers //
+    // ==================== //
+
+    cudaMallocChecked (&quick_cuest_PC_buf.d_P[0], quick_cuest_PC_buf.P_siz);
+    cudaMallocChecked (&quick_cuest_PC_buf.d_C[0], quick_cuest_PC_buf.C_siz);
+#ifdef OSHELL
+    cudaMallocChecked (&quick_cuest_PC_buf.d_Cb[0], quick_cuest_PC_buf.Cb_siz);
+#endif
 }
 
 void
@@ -181,4 +191,13 @@ cuest_deinit ()
 
     cudaFreeChecked (quick_cuest_data.allxyz_gpu);
     cudaFreeChecked (quick_cuest_data.allchg_gpu);
+
+    cudaFreeChecked (quick_cuest_PC_buf.d_P[0]);
+    cudaFreeChecked (quick_cuest_PC_buf.d_C[0]);
+    free_dev_alloc (quick_cuest_PC_buf.P_siz);
+    free_dev_alloc (quick_cuest_PC_buf.C_siz);
+#ifdef OSHELL
+    cudaFreeChecked (quick_cuest_PC_buf.d_Cb[0]);
+    free_dev_alloc (quick_cuest_PC_buf.Cb_siz);
+#endif
 }
