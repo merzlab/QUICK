@@ -7927,7 +7927,10 @@ end function elctfldrecurse
 ! PROGRAMMED BY S. L. DIXON, OCT., 1991.
 
 
-    use allmod
+    use quick_method_module, only: quick_method
+    use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+    use quick_molspec_module, only: quick_molspec, xyz, natom
+    use quick_calculated_module, only: quick_qm_struct
     IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 ! DIMENSION A(NDIM,*),V(3,*),EVAL1(*),IDEGEN1(*),EVEC1(NDIM,*)
     DIMENSION A(natom*3,natom*3),V(3,natom*3),EVAL1(natom*3), &
@@ -8034,7 +8037,10 @@ end function elctfldrecurse
 ! PROGRAMMED BY S. L. DIXON, OCT., 1991.
 
 
-    use allmod
+    use quick_method_module, only: quick_method
+    use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+    use quick_molspec_module, only: quick_molspec, xyz, natom
+    use quick_calculated_module, only: quick_qm_struct
     IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 ! DIMENSION A(NDIM,*),V(3,*)
     DIMENSION A(natom*3,natom*3),V(3,natom*3)
@@ -8157,7 +8163,10 @@ end function elctfldrecurse
 ! PROGRAMMED BY S. L. DIXON.
 
 
-    use allmod
+    use quick_method_module, only: quick_method
+    use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+    use quick_molspec_module, only: quick_molspec, xyz, natom
+    use quick_calculated_module, only: quick_qm_struct
     IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 ! DIMENSION A(NDIM,*),BETAH(3,*),EVAL1(*)
     DIMENSION A(natom*3,natom*3),BETAH(3,natom*3),EVAL1(natom*3)
@@ -8352,7 +8361,10 @@ end function elctfldrecurse
 
 ! IDEGEN1 = DEGENERACIES OF EIGENVALUES.
 
-    use allmod
+    use quick_method_module, only: quick_method
+    use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+    use quick_molspec_module, only: quick_molspec, xyz, natom
+    use quick_calculated_module, only: quick_qm_struct
     IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 ! DIMENSION EVAL1(*),IDEGEN1(*)
     DIMENSION EVAL1(natom*3),IDEGEN1(natom*3)
@@ -8433,7 +8445,10 @@ end function elctfldrecurse
 ! PROGRAMMED BY S. L. DIXON, OCT., 1991.
 
 
-    use allmod
+    use quick_method_module, only: quick_method
+    use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+    use quick_molspec_module, only: quick_molspec, xyz, natom
+    use quick_calculated_module, only: quick_qm_struct
     IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 ! DIMENSION A(NDIM,*),AWORK(3,*),EVAL1(*),IDEGEN1(*),EVEC1(NDIM,*)
     DIMENSION A(natom*3,natom*3),AWORK(3,natom*3),EVAL1(natom*3), &
@@ -8626,7 +8641,10 @@ end function elctfldrecurse
 ! PROGRAMMED BY S. L. DIXON.
 
 
-    use allmod
+    use quick_method_module, only: quick_method
+    use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+    use quick_molspec_module, only: quick_molspec, xyz, natom
+    use quick_calculated_module, only: quick_qm_struct
     IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 ! DIMENSION VECT(NDIM,*)
     DIMENSION VECT(natom*3,natom*3)
