@@ -14,12 +14,15 @@
 !-----------------------------------------------------------
 SUBROUTINE BNDANG(I,IA,IB,ANGLE)
   use allmod
-  IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+  implicit none
 
+  integer, intent(in) :: I, IA, IB
+  double precision, intent(out) :: ANGLE
 
   ! COMPUTES THE ANGLE IN RADIANS FORMED BY ATOMS I-IA-IB.  RETURNED
   ! IN ANGLE.
 
+  double precision :: X1, Y1, Z1, X2, Y2, Z2, VNORM1, VNORM2, COSINE
 
   ! FORM THE BOND VECTORS WITH VERTEX IA.
 
@@ -52,8 +55,16 @@ SUBROUTINE DIHEDR(XYZ,I,IA,IB,IC,DIH)
   ! ANGLE DIH IS POSITIVE IF IC IS LOCATED CLOCKWISE FROM I WHEN
   ! VIEWING FROM IA THROUGH IB.
 
-  IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-  DIMENSION XYZ(3,*)
+  implicit none
+  double precision, intent(in) :: XYZ(3,*)
+  integer, intent(in) :: I, IA, IB, IC
+  double precision, intent(out) :: DIH
+
+  ! Local variables
+  double precision :: AIIX, AIIY, AIIZ, BCX, BCY, BCZ, ABX, ABY, ABZ
+  double precision :: DOT1, ABSQR, PROJ1, DOT2, PROJ2
+  double precision :: AIBCX, AIBCY, AIBCZ, DOT3, DIREC, DOT4
+  double precision :: AILENG, BCLENG, COSINE
 
   ! SHIFT IA-I AND IB-IC BOND VECTORS TO A COMMON ORIGIN.
 

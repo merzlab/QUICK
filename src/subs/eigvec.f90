@@ -36,7 +36,7 @@ SUBROUTINE EIGVEC(NDIM,NEVEC1,A,AWORK,TOLERA,ANORM,EVAL1,IDEGEN1, &
 
 
   use allmod
-  IMPLICIT doUBLE PRECISION (A-H,O-Z)
+  implicit none
   ! DIMENSION A(NDIM,*),AWORK(3,*),EVAL1(*),IDEGEN1(*),EVEC1(NDIM,*)
   DIMENSION A(nbasis,nbasis),AWORK(3,nbasis),EVAL1(nbasis), &
        IDEGEN1(nbasis),EVEC1(nbasis,nbasis)
@@ -242,7 +242,7 @@ end SUBROUTINE EIGVEC
 
 
     use allmod
-    IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+    implicit none
 ! DIMENSION A(NDIM,*),BETAH(3,*),EVAL1(*)
     DIMENSION A(nbasis,nbasis),BETAH(3,nbasis),EVAL1(nbasis)
     IERROR = 0

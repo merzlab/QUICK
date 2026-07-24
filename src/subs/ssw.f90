@@ -10,7 +10,15 @@
 
 double precision function ssw(gridx,gridy,gridz,iparent)
   use allmod
-  implicit double precision(a-h,o-z)
+  implicit none
+  
+  double precision, intent(in) :: gridx, gridy, gridz
+  integer, intent(in) :: iparent
+  
+  double precision :: xparent, yparent, zparent, rig, rjg, Rij
+  double precision :: confocal, wofparent, wofiatm, frctn, frctnto3, frctnto5, frctnto7
+  double precision :: gofconfocal, totalw, xJatm, yJatm, zJatm, xIatm, yIatm, zIatm
+  integer :: Jatm, Iatm
 
   ! This subroutie calculates the Scuseria-Stratmann wieghts.  There are
   ! two conditions that cause the weights to be unity: If there is only

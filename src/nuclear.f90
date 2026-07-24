@@ -13,11 +13,14 @@
 !Vertical Recursion subroutines by hand, these parts can be optimized by MAPLE
 subroutine PSattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer i
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do i=1,3
@@ -29,11 +32,14 @@ end subroutine PSattra
 
 subroutine SPattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: i
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do i=1,3
@@ -45,11 +51,14 @@ end subroutine SPattra
 
 subroutine PPattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: itemp, jtemp
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do itemp=1,3
@@ -70,11 +79,14 @@ end subroutine PPattra
 
 subroutine DSattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: itemp, j, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do itemp=5,10
@@ -101,11 +113,14 @@ end subroutine DSattra
 
 subroutine SDattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: itemp, j, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do itemp=5,10
@@ -132,11 +147,14 @@ end subroutine SDattra
 
 subroutine DPattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, jj, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=5,10
@@ -169,11 +187,14 @@ end subroutine DPattra
 
 subroutine PDattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, jj, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=5,10
@@ -206,11 +227,14 @@ End subroutine PDattra
 
 subroutine DDattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3),Axiao(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, jj, ixiao, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=5,10
@@ -252,11 +276,14 @@ End subroutine DDattra
 
 subroutine FSattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: itemp, j, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do itemp=11,20
@@ -286,11 +313,14 @@ end subroutine FSattra
 
 subroutine SFattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: itemp, j, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do itemp=11,20
@@ -320,11 +350,14 @@ end subroutine SFattra
 
 subroutine FPattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, jj, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=11,20
@@ -357,11 +390,14 @@ end subroutine FPattra
 
 subroutine PFattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, jj, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=11,20
@@ -394,11 +430,14 @@ End subroutine PFattra
 
 subroutine FDattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3),Axiao(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, jj, ixiao, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=11,20
@@ -440,11 +479,14 @@ End subroutine FDattra
 
 subroutine DFattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3),Axiao(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, jj, ixiao, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=11,20
@@ -487,11 +529,14 @@ End subroutine DFattra
 
 subroutine FFattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3),Axiao(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, jj, ixiao, inewtemp, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=11,20
@@ -537,11 +582,14 @@ End subroutine FFattra
 
 subroutine GSattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: itemp, j, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do itemp=21,35
@@ -571,11 +619,14 @@ end subroutine GSattra
 
 subroutine SGattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: itemp, j, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do itemp=21,35
@@ -605,11 +656,14 @@ end subroutine SGattra
 
 subroutine GPattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, jj, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=21,35
@@ -642,11 +696,14 @@ end subroutine GPattra
 
 subroutine PGattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, jj, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=21,35
@@ -679,11 +736,14 @@ End subroutine PGattra
 
 subroutine GDattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3),Axiao(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, jj, ixiao, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=21,35
@@ -725,11 +785,14 @@ End subroutine GDattra
 
 subroutine DGattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3),Axiao(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, jj, ixiao, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=21,35
@@ -772,11 +835,14 @@ End subroutine DGattra
 
 subroutine GFattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3),Axiao(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, jj, ixiao, inewtemp, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=21,35
@@ -822,11 +888,14 @@ End subroutine GFattra
 
 subroutine FGattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3),Axiao(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, jj, ixiao, inewtemp, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=21,35
@@ -875,11 +944,14 @@ End subroutine FGattra
 
 subroutine GGattra(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3),Axiao(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, jj, ixiao, inewtemp, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=21,35
@@ -932,12 +1004,14 @@ subroutine nuclearattraenergy(Ips,Jps,IIsh,JJsh,NIJ1, &
       Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,iatom)
    use allmod
 
-   implicit double precision(a-h,o-z)
+   implicit none
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: Ips, Jps, IIsh, JJsh, NIJ1, iatom, Iang, Jang, NBI1, NBI2, NBJ1, NBJ2, III1, III2, JJJ1, JJJ2, III_temp, JJJ_local, itemp1, itemp2, itempt, itemp
+   double precision :: DenseJI, x1temp, xconstant
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    AA(1)=Ax
@@ -1161,19 +1235,19 @@ subroutine nuclearattraenergy(Ips,Jps,IIsh,JJsh,NIJ1, &
 
          Xconstant=X1temp*quick_basis%gccoeff(jps,quick_basis%ksumtype(JJsh)+Jang)
 
-         do III=III1,III2
-            itemp1=trans(quick_basis%KLMN(1,III),quick_basis%KLMN(2,III),quick_basis%KLMN(3,III))
-            do JJJ=max(III,JJJ1),JJJ2
+         do III_temp=III1,III2
+            itemp1=trans(quick_basis%KLMN(1,III_temp),quick_basis%KLMN(2,III_temp),quick_basis%KLMN(3,III_temp))
+            do JJJ_local=max(III_temp,JJJ1),JJJ2
 
                if (quick_method%UNRST) then
-                  DENSEJI=quick_qm_struct%dense(JJJ,III)+quick_qm_struct%denseb(JJJ,III)
+                  DENSEJI=quick_qm_struct%dense(JJJ_local,III_temp)+quick_qm_struct%denseb(JJJ_local,III_temp)
                else
-                  DENSEJI=quick_qm_struct%dense(JJJ,III)
+                  DENSEJI=quick_qm_struct%dense(JJJ_local,III_temp)
                endif
 
-               if(JJJ.ne.III)DENSEJI=DENSEJI*2.0d0
-               itemp2=trans(quick_basis%KLMN(1,JJJ),quick_basis%KLMN(2,JJJ),quick_basis%KLMN(3,JJJ))
-               quick_qm_struct%Eel=quick_qm_struct%Eel+DENSEJI*Xconstant*quick_basis%cons(III)*quick_basis%cons(JJJ)* &
+               if(JJJ_local.ne.III_temp)DENSEJI=DENSEJI*2.0d0
+               itemp2=trans(quick_basis%KLMN(1,JJJ_local),quick_basis%KLMN(2,JJJ_local),quick_basis%KLMN(3,JJJ_local))
+               quick_qm_struct%Eel=quick_qm_struct%Eel+DENSEJI*Xconstant*quick_basis%cons(III_temp)*quick_basis%cons(JJJ_local)* &
                      attraxiao(itemp1,itemp2,0)
             enddo
          enddo
@@ -1193,11 +1267,14 @@ End subroutine nuclearattraenergy
 !Vertical Recursion subroutines by hand, these parts can be optimized by MAPLE
 subroutine PSattraopt(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: i, idxiao
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do i=1,3
@@ -1215,11 +1292,14 @@ end subroutine PSattraopt
 
 subroutine SPattraopt(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: i, idxiao
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do i=1,3
@@ -1237,11 +1317,14 @@ end subroutine SPattraopt
 
 subroutine PPattraopt(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: itemp, jtemp, idxiao
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do itemp=1,3
@@ -1267,11 +1350,14 @@ end subroutine PPattraopt
 
 subroutine DSattraopt(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: itemp, idxiao, j, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do itemp=5,10
@@ -1305,11 +1391,14 @@ end subroutine DSattraopt
 
 subroutine SDattraopt(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: itemp, idxiao, j, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do itemp=5,10
@@ -1343,11 +1432,14 @@ end subroutine SDattraopt
 
 subroutine DPattraopt(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, idxiao, jj, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=5,10
@@ -1386,11 +1478,14 @@ end subroutine DPattraopt
 
 subroutine PDattraopt(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, idxiao, jj, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=5,10
@@ -1428,11 +1523,14 @@ End subroutine PDattraopt
 
 subroutine DDattraopt(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3),Axiao(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, idxiao, jj, ixiao, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=5,10
@@ -1483,11 +1581,14 @@ End subroutine DDattraopt
 
 subroutine FSattraopt(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: itemp, idxiao, j, itempnew, inewtemp
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do itemp=11,20
@@ -1524,11 +1625,14 @@ end subroutine FSattraopt
 
 subroutine SFattraopt(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: itemp, idxiao, j, itempnew, inewtemp
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do itemp=11,20
@@ -1565,11 +1669,14 @@ end subroutine SFattraopt
 
 subroutine FPattraopt(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, idxiao, jj, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=11,20
@@ -1609,11 +1716,14 @@ end subroutine FPattraopt
 
 subroutine PFattraopt(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, idxiao, jj, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=11,20
@@ -1653,11 +1763,14 @@ End subroutine PFattraopt
 
 subroutine FDattraopt(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3),Axiao(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, idxiao, jj, ixiao, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=11,20
@@ -1706,11 +1819,14 @@ End subroutine FDattraopt
 
 subroutine DFattraopt(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3),Axiao(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, idxiao, jj, ixiao, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=11,20
@@ -1760,11 +1876,14 @@ End subroutine DFattraopt
 
 subroutine FFattraopt(mtemp)
    use allmod
-   Implicit double precision(a-h,o-z)
+   implicit none
+   integer mtemp
+   double precision g
 
    double precision attra,aux(0:20)
    integer a(3),b(3),Axiao(3)
    double precision AA(3),BB(3),CC(3),PP(3)
+   integer :: jtemp, i, idxiao, jj, ixiao, inewtemp, itempnew
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
    do jtemp=11,20

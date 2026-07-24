@@ -20,7 +20,7 @@
 
 module quick_overlap_module
 
-  implicit double precision(a-h,o-z)
+  implicit none
   private  
   public :: fullx, overlap, overlap_core, ssoverlap, gpt, opf
 

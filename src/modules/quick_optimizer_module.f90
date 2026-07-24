@@ -16,7 +16,7 @@
 
 module quick_optimizer_module
 
-  implicit double precision(a-h,o-z)
+  implicit none
   private
   public :: lopt
 

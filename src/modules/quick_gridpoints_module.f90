@@ -24,7 +24,7 @@ module quick_gridpoints_module
 
     use quick_size_module
 
-    implicit double precision(a-h,o-z)
+    implicit none
 
     type quick_xc_grid_type
 
@@ -418,7 +418,7 @@ module quick_gridpoints_module
     subroutine allocate_sigrad_phi
         use quick_basis_module, only: nbasis, quick_basis, alloc
 
-        implicit double precision(a-h,o-z)
+        implicit none
 
         logical :: isDFT                 
 
@@ -435,7 +435,7 @@ module quick_gridpoints_module
     subroutine deallocate_sigrad_phi
         use quick_basis_module, only: quick_basis, dealloc
 
-        implicit double precision(a-h,o-z)
+        implicit none
 
         logical :: isDFT
 
@@ -449,10 +449,10 @@ module quick_gridpoints_module
     end subroutine deallocate_sigrad_phi
 
     ! Allocate memory for dft grid variables
-    subroutine alloc_grid_variables(self)
-        implicit none
+     subroutine alloc_grid_variables(self)
+         implicit none
 
-        type(quick_xc_grid_type) self
+         type(quick_xc_grid_type), intent(inout) :: self
 
         if (.not. allocated(self%gridxb)) allocate(self%gridxb(self%gridb_count))
         if (.not. allocated(self%gridyb)) allocate(self%gridyb(self%gridb_count))
@@ -530,12 +530,12 @@ module quick_gridpoints_module
 #endif
 
     ! Deallocate memory reserved for dft grid variables
-    subroutine dealloc_grid_variables(self)
-        use quick_mpi_module, only: bMPI
+     subroutine dealloc_grid_variables(self)
+         use quick_mpi_module, only: bMPI
 
-        implicit none
+         implicit none
 
-        type(quick_xc_grid_type) self
+         type(quick_xc_grid_type), intent(inout) :: self
 
         if (allocated(self%gridxb)) deallocate(self%gridxb)
         if (allocated(self%gridyb)) deallocate(self%gridyb)
@@ -563,10 +563,10 @@ module quick_gridpoints_module
     end subroutine
 
 
-    subroutine dealloc_xcg_tmp_variables(xcg_tmp)
-        implicit none
+     subroutine dealloc_xcg_tmp_variables(xcg_tmp)
+         implicit none
 
-        type(quick_xcg_tmp_type) xcg_tmp
+         type(quick_xcg_tmp_type), intent(inout) :: xcg_tmp
 
         if (allocated(xcg_tmp%init_grid_atm)) deallocate(xcg_tmp%init_grid_atm)
         if (allocated(xcg_tmp%init_grid_ptx)) deallocate(xcg_tmp%init_grid_ptx)
@@ -585,10 +585,10 @@ module quick_gridpoints_module
 
 
 #ifdef MPIV
-    subroutine dealloc_mpi_grid_variables(self)
-        implicit none
+     subroutine dealloc_mpi_grid_variables(self)
+         implicit none
 
-        type(quick_xc_grid_type) self
+         type(quick_xc_grid_type), intent(inout) :: self
 
         if (allocated(self%igridptul)) deallocate(self%igridptul)
         if (allocated(self%igridptll)) deallocate(self%igridptll)
@@ -596,15 +596,15 @@ module quick_gridpoints_module
 #endif
 
 
-   subroutine print_grid_information(self)
-     use quick_files_module
-     use quick_method_module
-     use quick_molspec_module, only: quick_molspec
-     use quick_basis_module
+    subroutine print_grid_information(self)
+      use quick_files_module
+      use quick_method_module
+      use quick_molspec_module, only: quick_molspec
+      use quick_basis_module
 
-     implicit none
+      implicit none
 
-     type(quick_xc_grid_type) self
+      type(quick_xc_grid_type), intent(in) :: self
 
      write (ioutfile,'(" OCTAGO: OCTree Algorithm for Grid Operations ")')
      write (ioutfile,'("   PRUNING CUTOFF       =",E10.3)') quick_method%XCCutoff
@@ -615,44 +615,48 @@ module quick_gridpoints_module
    end subroutine print_grid_information
 
 
-   subroutine get_sigrad
-      ! calculate the radius of the sphere of basis function signifigance.
-      ! (See Stratmann,Scuseria,and Frisch, Chem. Phys. Lett., 257, 1996, page 213-223 Section 5.)
-      ! Also, the radius of the sphere comes from the spherical average of
-      ! the basis function, from Perez-Jorda and Yang, Chem. Phys. Lett., 241,
-      ! 1995, pg 469-76.
-      ! The spherical average of a gaussian function is:
-   
-      ! (1 + 2 L)/4  (3 + 2 L)/4  L
-      ! 2            a            r
-      ! ave  = ---------------------------------
-      ! 2
-      ! a r                      3
-      ! E     Sqrt[Pi] Sqrt[Gamma[- + L]]
-      ! 2
-      ! where a is the most diffuse (smallest) orbital exponent and L is the
-      ! sum of the angular momentum exponents.  This code finds the r value where
-      ! the average is the signifigance threshold (signif) and this r value is
-      ! called the target below. Rearranging gives us:
-   
-      ! -(1 + 2 L)/4   -(3 + 2 L)/4                           3
-      !r^L E^-ar^2= 2               a           Sqrt[Pi] signif Sqrt[Gamma[- + L]]
-      ! 2
-      use quick_method_module, only: quick_method
-      use quick_basis_module, only: nbasis, ncontract, aexp, itype
+     subroutine get_sigrad
+        ! calculate the radius of the sphere of basis function signifigance.
+        ! (See Stratmann,Scuseria,and Frisch, Chem. Phys. Lett., 257, 1996, page 213-223 Section 5.)
+        ! Also, the radius of the sphere comes from the spherical average of
+        ! the basis function, from Perez-Jorda and Yang, Chem. Phys. Lett., 241,
+        ! 1995, pg 469-76.
+        ! The spherical average of a gaussian function is:
+     
+        ! (1 + 2 L)/4  (3 + 2 L)/4  L
+        ! 2            a            r
+        ! ave  = ---------------------------------
+        ! 2
+        ! a r                      3
+        ! E     Sqrt[Pi] Sqrt[Gamma[- + L]]
+        ! 2
+        ! where a is the most diffuse (smallest) orbital exponent and L is the
+        ! sum of the angular momentum exponents.  This code finds the r value where
+        ! the average is the signifigance threshold (signif) and this r value is
+        ! called the target below. Rearranging gives us:
+     
+        ! -(1 + 2 L)/4   -(3 + 2 L)/4                           3
+        !r^L E^-ar^2= 2               a           Sqrt[Pi] signif Sqrt[Gamma[- + L]]
+        ! 2
+        use quick_files_module
+        use quick_method_module, only: quick_method
+        use quick_basis_module, only: nbasis, ncontract, aexp, itype
 #ifdef MPIV
-      use quick_mpi_module, only: master
-      use mpi
+        use quick_mpi_module, only: master
+        use mpi
 #endif
 
-      implicit double precision(a-h,o-z)
-   
+        implicit none
+    
+       integer :: Ibas, Icon, i, L
+       double precision :: amin, gamma, gamma2pi, target, stepsize, radial, current
+    
 #ifdef MPIV
-      if(master) then
+       if(master) then
 #endif
-        if (quick_method%debug) write (iOutFile,'(/"RADII OF SIGNIFICANCE FOR THE BASIS FUNCTIONS")')
+         if (quick_method%debug) write (iOutFile,'(/"RADII OF SIGNIFICANCE FOR THE BASIS FUNCTIONS")')
 #ifdef MPIV
-      endif
+       endif
 #endif
    
       do Ibas=1,nbasis
@@ -718,22 +722,18 @@ module quick_gridpoints_module
    ! Gill PMW and CHIEN SH,JCC 24,732,2003
    ! EL-SHERBINY A and POIRIER RA JCC 25,1378,2004
    
-   subroutine gridformSG0(iitype,ILEB,iiang,RGRIDt,RWTt)
-      use quick_molspec_module, only: quick_molspec
+     subroutine gridformSG0(iitype,ILEB,iiang,RGRIDt,RWTt)
+        use quick_molspec_module, only: quick_molspec
 
-      implicit double precision(a-h,o-z)
+        implicit none
 
-      parameter(MAXGNUMBER=30)
-      double precision RGRIDt(MAXGNUMBER),RWTt(MAXGNUMBER)
-   
-      !      double precision :: ratomic(18)
-      !      data ratomic &
-            !      /1.30d0,0.0d0,1.95d0,2.20d0,1.45d0, 1.20d0,1.10d0 &
-            !      ,1.10d0,1.20d0,0.0d0,2.30d0,2.20d0,2.10d0,1.30d0,1.30d0,1.10d0,
-            !      &
-            !      1.45d0,0.0d0/
-   
-      double precision :: aa46(46),aa52(52)
+        integer, parameter :: MAXGNUMBER=30
+        integer, intent(in) :: iitype, ILEB
+        integer, intent(out) :: iiang
+        double precision, intent(out) :: RGRIDt(MAXGNUMBER),RWTt(MAXGNUMBER)
+     
+        integer :: i, N
+        double precision :: aa46(46),aa52(52)
       data aa46 &
             /0.001505892474584d0,0.19397997519818d0, &
             0.009949112846861d0,0.262363963659648d0, &
@@ -1119,12 +1119,16 @@ module quick_gridpoints_module
 
    ! Xiao HE 1/9/07
    ! SG-1 standard grid Peter MWG, Benny GJ and Pople JA, CPL 209,506,1993,
-   subroutine gridformnew(iitype,distance,iiang)
-      use quick_molspec_module, only: quick_molspec
+    subroutine gridformnew(iitype,distance,iiang)
+       use quick_molspec_module, only: quick_molspec
 
-      implicit double precision(a-h,o-z)
-   
-      double precision :: hpartpara(4),lpartpara(4),npartpara(4)
+       implicit none
+    
+       integer, intent(in) :: iitype
+       double precision, intent(in) :: distance
+       integer, intent(out) :: iiang
+       integer :: i, N
+       double precision :: hpartpara(4),lpartpara(4),npartpara(4)
    
       data hpartpara /0.2500d0,0.5000d0,1.0000d0,4.5000d0/
       data lpartpara /0.1667d0,0.5000d0,0.9000d0,3.5000d0/
@@ -1202,19 +1206,19 @@ module quick_gridpoints_module
    end subroutine gridformnew
 
 
-   subroutine gridformSG1
-      use allmod
+    subroutine gridformSG1
+       use allmod
 
-      implicit none
+       implicit none
 
-      integer itemp,i
-      itemp=50
-      do I=1,itemp
-         RGRID(I)=(I**2.d0)/dble((itemp+1-I)*(itemp+1-I))
-         RWT(I)=2.d0*dble(itemp+1)*(dble(I)**5.d0) &
-               *dble(itemp+1-I)**(-7.d0)
-      enddo
-   end subroutine gridformSG1
+       integer :: itemp, i
+       itemp=50
+       do i=1,itemp
+          RGRID(i)=(i**2.d0)/dble((itemp+1-i)*(itemp+1-i))
+          RWT(i)=2.d0*dble(itemp+1)*(dble(i)**5.d0) &
+                *dble(itemp+1-i)**(-7.d0)
+       enddo
+    end subroutine gridformSG1
    
 
 #include "./include/labedev.fh"

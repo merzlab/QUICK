@@ -7,8 +7,21 @@
 !-------------------------------------------------------
     subroutine dipole
     use allmod
-    implicit double precision(a-h,o-z)
+    implicit none
+    
+    interface
+        double precision function xmoment(a,b,i,j,k,ii,jj,kk, &
+        iux,iuy,iuz,Ax,Ay,Az, &
+        Bx,By,Bz,Cx,Cy,Cz)
+            double precision, intent(in) :: a, b, ax, ay, az, bx, by, bz, cx, cy, cz
+            integer, intent(in) :: i, j, k, ii, jj, kk, iux, iuy, iuz
+        end function xmoment
+    end interface
+    
     double precision xyzdipole(3,natom)
+    integer :: i, j, ibas, jbas, icon, jcon
+    double precision :: cmx, cmy, cmz, totweight, weight, xdip, ydip, zdip
+    double precision :: totdip, sx, sy, sz, denseji
 !-------------------------------------------------------
 ! The purpose of this subroutine is to generate the Mulliken and Lowdin
 ! charges, and then calculate the dipole moment.
@@ -211,7 +224,24 @@
     iux,iuy,iuz,Ax,Ay,Az, &
     Bx,By,Bz,Cx,Cy,Cz)
     use quick_constants_module
-    implicit double precision(a-h,o-z)
+    use quick_overlap_module, only: overlap
+    implicit none
+    
+    interface
+        recursive function xmomentrecurse(a,b, &
+        i,j,k,ii,jj,kk,iux,iuy,iuz, &
+        Ax,Ay,Az,Bx,By,Bz, &
+        Cx,Cy,Cz,Px,Py,Pz,g) &
+        result(xmomentrec)
+            double precision :: a, b, ax, ay, az, bx, by, bz, cx, cy, cz, px, py, pz, g
+            integer, intent(in) :: i, j, k, ii, jj, kk, iux, iuy, iuz
+            double precision :: xmomentrec
+        end function xmomentrecurse
+    end interface
+    
+    double precision, intent(in) :: a, b, ax, ay, az, bx, by, bz, cx, cy, cz
+    integer, intent(in) :: i, j, k, ii, jj, kk, iux, iuy, iuz
+    double precision :: g, px, py, pz, apass, bpass
 
     ! Variables needed later:
     !    pi=3.1415926535897932385
@@ -259,9 +289,14 @@
     result(xmomentrec)
     
     use quick_overlap_module, only: overlap
-    implicit double precision(a-h,o-z)
-    dimension iexponents(9),center(12)
-    double precision g_table(200)
+    implicit none
+    double precision :: a, b, ax, ay, az, bx, by, bz, cx, cy, cz, px, py, pz, g
+    integer, intent(in) :: i, j, k, ii, jj, kk, iux, iuy, iuz
+    integer, dimension(9) :: iexponents
+    double precision, dimension(12) :: center
+    double precision :: g_table(200)
+    integer :: l, ilownum, ilowex
+    double precision :: apass, bpass, temp, pc, pa, coeff
 
 ! The this is taken from the recursive relation found in Obara and Saika,
 ! J. Chem. Phys. 84 (7) 1986, 3963.

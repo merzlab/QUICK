@@ -20,7 +20,7 @@
 
 module quick_oei_module
 
-  implicit double precision(a-h,o-z)
+  implicit none
   private
 
   public :: get1eEnergy, get1e, attrashellopt, ekinetic, kineticO, attrashell
@@ -37,18 +37,19 @@ contains
   !------------------------------------------------
   ! get1eEnergy
   !------------------------------------------------
-  subroutine get1eEnergy(deltaO)
-     !------------------------------------------------
-     ! This subroutine is to get 1e integral
-     !------------------------------------------------
-     use quick_calculated_module, only: quick_qm_struct
-     use quick_method_module,only: quick_method
-     use quick_timer_module, only:timer_begin, timer_end, timer_cumer
-     use quick_basis_module, only: nbasis
+   subroutine get1eEnergy(deltaO)
+      !------------------------------------------------
+      ! This subroutine is to get 1e integral
+      !------------------------------------------------
+      use quick_calculated_module, only: quick_qm_struct
+      use quick_method_module,only: quick_method
+      use quick_timer_module, only:timer_begin, timer_end, timer_cumer
+      use quick_basis_module, only: nbasis
 
-     implicit double precision(a-h,o-z)
+      implicit none
 
-     logical, intent(in) :: deltaO
+      logical, intent(in) :: deltaO
+      double precision :: sum2mat
 
      RECORD_TIME(timer_begin%tE)
   

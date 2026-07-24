@@ -18,7 +18,7 @@ module quick_eri_oshell_module
 #else
 module quick_eri_cshell_module
 #endif
-   implicit double precision(a-h,o-z)
+   implicit none
 
    private
 #ifdef OSHELL
@@ -165,10 +165,12 @@ subroutine get_cshell_eri(II_arg)
 #endif
    use allmod
 
-   implicit double precision(a-h,o-z)
+   implicit none
 
    double precision testtmp,cutoffTest
    integer II_arg
+   integer :: II, JJ, KK, LL, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2
+   
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 
    II = II_arg
@@ -213,19 +215,27 @@ subroutine cshell
 #endif
    use allmod
 
-   Implicit double precision(a-h,o-z)
+   implicit none
 
-   double precision P(3),Q(3),W(3),KAB,KCD,AAtemp(3)
-   Parameter(NN=13)
-   double precision FM(0:13)
-   double precision RA(3),RB(3),RC(3),RD(3)
+   ! Local variables - excluding III, JJJ, KKK, LLL, II, JJ, KK, LL which are use-associated
+   integer :: NN, M, ITT, I, J, K, L
+   integer :: NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
+   integer :: NNA, NNC, NNAB, NNCD, NABCDTYPE, NABCD, IITEMP, I1, I2
+   integer :: Nprii, Nprij, Nprik, Npril
+    integer :: NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+    double precision :: AB, CD, ROU, RPQ, ABCDxiao, CUTOFFPRIM, CUTOFFPRIM1, ABCD
+    double precision :: ABtemp, CDtemp, ABcom, CDcom, ABCDtemp
+   double precision :: XXXtemp, T
+   double precision :: P(3),Q(3),W(3),KAB,KCD,AAtemp(3)
+   double precision :: FM(0:13)
+   double precision :: RA(3),RB(3),RC(3),RD(3)
 
-   double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
-   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   double precision :: Qtemp(3),WQtemp(3),Ptemp(3),WPtemp(3)
+   integer :: II,JJ,KK,LL
 
-   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-   COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
-   COMMON /COM1/RA,RB,RC,RD
+    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+    COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
+    COMMON /COM1/RA,RB,RC,RD
 
    do M=1,3
       RA(M)=xyz(M,quick_basis%katom(II))
@@ -454,31 +464,46 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
    use allmod
    use ISO_FORTRAN_ENV, only: int32
 
-   Implicit double precision(A-H,O-Z)
+   implicit none
 
-   double precision store(120,120)
-   INTEGER NA(3),NB(3),NC(3),ND(3)
-   double precision P(3),Q(3),W(3),KAB,KCD
-   Parameter(NN=13)
-   double precision FM(0:13)
-   double precision RA(3),RB(3),RC(3),RD(3)
-   double precision AAtemp(3)
-   double precision INTTMP(10000)
-   integer INTNUM, IINT
-   double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
+    ! Dummy arguments
+    integer, intent(in) :: I, J, K, L, NNA, NNC, NNAB, NNCD
+    
+    ! Local variables
+    integer :: NN, M, MM1, MM2, ITT, ITEMP
+    integer :: NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
+    integer :: III1, III2, JJJ1, JJJ2, KKK1, KKK2, LLL1, LLL2
+    integer :: NABCDTYPE, NABCD, Nprii, Nprij, Nprik, Npril
+    double precision :: AA, BB, CC, DD, AB, CD, ROU, ABCD
+    double precision :: X2, CUTOFFPRIM, CUTOFFPRIM1, YTEMP
+    double precision :: DENSEKI, DENSEKJ, DENSELJ, DENSELI, DENSELK, DENSEJI
+    double precision :: DENSEII, DENSEJJ, DENSEKK
+    double precision :: DENSEKIA, DENSEKJA, DENSELJA, DENSELIA
+    double precision :: DENSEKIB, DENSEKJB, DENSELJB, DENSELIB
+    double precision :: DENSEJIA, DENSEJIB, DENSEJJA, DENSEJJB, DENSEIIA, DENSEIIB
+    
+     double precision store(120,120)
+     INTEGER NA(3),NB(3),NC(3),ND(3)
+     double precision P(3),Q(3),W(3),KAB,KCD
+     double precision FM(0:13)
+     double precision RA(3),RB(3),RC(3),RD(3)
+    double precision AAtemp(3)
+    double precision INTTMP(10000)
+    integer INTNUM, IINT
+    double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
 
-   COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
+    COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
-   double precision X44(129600)
+    double precision X44(129600)
 
-   COMMON /COM1/RA,RB,RC,RD
-   COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD
-   COMMON /COM4/P,Q,W
-   COMMON /COM5/FM
-   integer(int32) :: A, B
-   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-   common /xiaostore/store
-   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+    COMMON /COM1/RA,RB,RC,RD
+    COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD
+    COMMON /COM4/P,Q,W
+    COMMON /COM5/FM
+    integer(int32) :: A, B
+    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+    common /xiaostore/store
+    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 
    do MM2 = NNC, NNCD
       do MM1 = NNA, NNAB
@@ -1069,9 +1094,11 @@ subroutine get_cshell_eri_energy
 #endif
    use allmod
 
-   implicit double precision(a-h,o-z)
+   implicit none
+   
+   double precision :: Sum2Mat
 
-   RECORD_TIME(timer_begin%TE)
+    RECORD_TIME(timer_begin%TE)
 #ifdef OSHELL
    quick_qm_struct%Eel=quick_qm_struct%Eel+Sum2Mat(quick_qm_struct%dense,quick_qm_struct%o,nbasis)+ &
                        Sum2Mat(quick_qm_struct%denseb,quick_qm_struct%ob,nbasis)

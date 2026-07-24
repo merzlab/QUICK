@@ -98,14 +98,17 @@ end subroutine schwarzoff
 
 
 subroutine shellcutoff(II,JJ,Ymax)
-  use quick_basis_module, only: quick_basis, Yxiao, Yxiaotemp, Yxiaoprim, cutprim, Apri, Ppri
-  use quick_molspec_module, only: xyz
-  use quick_params_module, only: Sumindex
+   use quick_basis_module, only: quick_basis, Yxiao, Yxiaotemp, Yxiaoprim, cutprim, Apri, Ppri
+   use quick_molspec_module, only: xyz
+   use quick_params_module, only: Sumindex
 
-  implicit integer(I-N), double precision(a-h,o-z)
+   implicit none
 
-  integer :: ii, jj
-  double precision :: Ymax
+   integer :: ii, jj, KK, LL, M, NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
+   integer :: NNAB, NNCD, NABCDTYPE, NNA, NNC, NABCD, ITT
+   integer :: JJJ, III, LLL, KKK, Nprij, Nprii, Nprik, Npril
+   integer :: iitemp, I2, I1, IIxiao, JJxiao, I, J, K, L
+   double precision :: Ymax, AB, CD, ROU, ABCD, ABCDxiao, RPQ, XXXtemp, T, Ymaxprim
 
   double precision P(3),Q(3),W(3),KAB,KCD
   integer, parameter :: NN = 13

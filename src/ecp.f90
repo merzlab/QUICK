@@ -15,7 +15,15 @@ Subroutine ecpoperator
    use quick_calculated_module
    use quick_files_module
    !
-   implicit double precision (a-h,o-z)
+   implicit none
+   
+   interface
+      integer function kp2(ii,jj) result(ind)
+         integer, intent(in) :: ii, jj
+      end function kp2
+   end interface
+   
+   integer :: i, j, ind
    !
    ! Add the proper ECP integral to the corresponding Fock matrix element
    !
@@ -52,12 +60,14 @@ Subroutine readecp
    !
    use allmod
 
-   implicit double precision(a-h,o-z)
+   implicit none
    character(len=80) :: line
    character(len=2)  :: atom
    character(len=3)  :: pot
    integer, dimension(0:92) :: klmaxecp,kelecp,kprimecp
    logical, dimension(0:92) :: warn
+   integer :: io, iofile, i, j, n, iat, ii, iatom, iprim, klmax, nelecore, jjcont, jecprim, nelec
+   double precision :: c1, c2
 
    open(iecpfile,file=ecpfilename,status='old')
 

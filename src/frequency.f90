@@ -4,11 +4,16 @@
 
     subroutine frequency
     use allmod
-    implicit double precision(a-h,o-z)
+    implicit none
 
 !    double precision :: kB
 ! dimension V(3,maxatm*3),HARMONIC(maxatm*3),EV(maxatm*3,maxatm*3)
-    dimension V(3,natom*3),HARMONIC(natom*3),EV(natom*3,natom*3)
+    double precision :: V(3,natom*3), HARMONIC(natom*3), EV(natom*3,natom*3)
+    
+    ! Undeclared variables
+    integer :: I, J, K, L, ISTART, JSTART, IERROR, non, ignore
+    double precision :: denom, TempK, convfact, ANGLE
+    double precision :: Ezp, Evib, Etrans, Erot, vibtemp, ratio
 
     call prtAct(ioutfile,"Begin Frequency calculation")
 !    pi=3.1415926535897932385d0

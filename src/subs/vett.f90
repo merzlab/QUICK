@@ -15,7 +15,8 @@
 !-----------------------------------------------------------
 Subroutine vett
   use quick_ecp_module
-  implicit double precision (a-h,o-z)
+  implicit none
+  integer :: i
   do i=1,nbf12
      kvett(i)=i*(i-1)/2
   end do

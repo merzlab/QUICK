@@ -19,7 +19,7 @@
 
 module quick_fmm_module
 
-  implicit double precision(a-h,o-z)
+  implicit none
   private  
   public :: fmmone
 
@@ -29,7 +29,7 @@ contains
       Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,iatom,constant2,a,b,xdistance)
   use allmod
 
-  implicit double precision(a-h,o-z)
+  implicit none
 
   integer a(3),b(3)
   double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g  
@@ -136,7 +136,7 @@ contains
 
 subroutine overlapone(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,fmmtemparray)
    use quick_constants_module
-   implicit double precision(a-h,o-z)
+   implicit none
 
    double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g
    double precision AA(3),BB(3),CC(3),PP(3)
@@ -393,7 +393,7 @@ end subroutine overlapone
 subroutine overlaptwo(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx, &
       By,Bz,fmmonearray)
    use quick_constants_module
-   implicit double precision(a-h,o-z)
+   implicit none
 
    double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g
    double precision AA(3),BB(3),CC(3),PP(3)
@@ -915,7 +915,7 @@ end subroutine overlaptwo
 
 subroutine overlapzero(a,b,fmmtemparray)
    use quick_constants_module
-   implicit double precision(a-h,o-z)
+   implicit none
 
    double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g
    double precision AA(3),BB(3),CC(3),PP(3)

@@ -32,20 +32,28 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    use mpi
 #endif
 
-   implicit double precision(a-h,o-z)
+   implicit none
 
+    integer, intent(in) :: natomxiao, natomstart, natomfinal
+    integer, intent(inout) :: nbasisstart, nbasisfinal, ierr
    character(len=120) :: line
-   character(len=2) :: atom,shell
+   character(len=2) :: atom, shell
    logical :: isatom
    logical :: isbasis ! If basis file contains info for a given element
-   integer, dimension(0:92)  :: kcontract,kbasis
-   logical, dimension(0:92)  :: atmbs,atmbs2
+   integer, dimension(0:92) :: kcontract, kbasis
+   logical, dimension(0:92) :: atmbs, atmbs2
    
-   double precision AA(MAXPRIM),BB(MAXPRIM),CC(MAXPRIM)
-   integer natomstart,natomfinal,nbasisstart,nbasisfinal
-   double precision, allocatable,save, dimension(:) :: aex,gcs,gcp,gcd,gcf,gcg
-   integer, intent(inout) :: ierr
+   double precision :: AA(MAXPRIM), BB(MAXPRIM), CC(MAXPRIM)
+   double precision, allocatable, save, dimension(:) :: aex, gcs, gcp, gcd, gcf, gcg
    logical :: blngr_test
+   
+    ! Loop and temporary variables
+    integer :: i, j, k, l, ll, jj
+    integer :: ii, iat, iatm, iatom, icont
+    integer :: io, iofile, iprim, iitemp, ixiao
+    double precision :: a, c1, c2, d, dnorm, xnewtemp
+    integer :: Ninitial, is
+    double precision, external :: xnorm, xnewnorm
 
    ! initialize the arra
 
