@@ -245,7 +245,7 @@ cuest_deinit_JK_grad ()
 }
 
 void
-cuest_JK_grad (double *dJKdR, double *P, double *C)
+cuest_get_JK_grad (double *dJKdR, double *P, double *C)
 {
     cuestHandle_t               handle    = quick_cuest_struct.handle;
     cuestWorkspaceDescriptor_t *persistWD = quick_cuest_struct.persistWD;

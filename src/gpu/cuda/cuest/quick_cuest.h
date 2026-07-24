@@ -189,7 +189,7 @@ void cuest_V_grad (double *dVdR_bas, double *dVdR_ptchg, double *P);
 
 void cuest_init_JK_grad (int64_t dev_buf_siz);
 void cuest_deinit_JK_grad ();
-void cuest_JK_grad (double *dJKdR, double *P, double *C);
+void cuest_get_JK_grad (double *dJKdR, double *P, double *C);
 
 void cuest_init_xc_grad (int64_t devsiz);
 void cuest_deinit_xc_grad ();

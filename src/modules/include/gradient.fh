@@ -884,7 +884,7 @@ contains
      use mpi
 #endif
 #ifdef CUEST
-     use quick_cuest_module, only: cuest_JK_grad, cuest_debuglog
+     use quick_cuest_module, only: cuest_get_JK_grad, cuest_debuglog
 #endif
      implicit double precision(a-h,o-z)
   
@@ -919,17 +919,17 @@ contains
 #else
 #ifdef CUEST
         if (quick_method%usecuest) then
-           call cuest_JK_grad(cuest_gradbuf, quick_qm_struct%dense, quick_qm_struct%co)
+           call cuest_get_JK_grad(cuest_gradbuf, quick_qm_struct%dense, quick_qm_struct%co)
            quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
 
 #ifdef CUESTDEBUG
            call cuest_debuglog("======== dense ========")
            call cuest_debuglog_PriSym(nbasis, quick_qm_struct%dense, "F12.7")
            call cuest_debuglog("====== end dense ======")
-           call cuest_debuglog("======== cuest_JK_grad ========")
+           call cuest_debuglog("======== cuest_get_JK_grad ========")
            write (cuest_tmpstr, '(9F12.7)') cuest_gradbuf(1:9)
            call cuest_debuglog(trim(cuest_tmpstr))
-           call cuest_debuglog("====== end cuest_JK_grad ======")
+           call cuest_debuglog("====== end cuest_get_JK_grad ======")
 #endif
         else
            call gpu_get_cshell_eri_grad(quick_qm_struct%gradient)

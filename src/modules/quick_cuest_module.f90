@@ -341,12 +341,12 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_JK_grad(dJKdR, P, C) bind(c, name="cuest_JK_grad")
+      subroutine cuest_get_JK_grad(dJKdR, P, C) bind(c, name="cuest_get_JK_grad")
          use, intrinsic :: iso_c_binding, only: c_double
          real(c_double), intent(out) :: dJKdR(*)
          real(c_double), intent(in) :: P(*)
          real(c_double), intent(in) :: C(*)
-      end subroutine cuest_JK_grad
+      end subroutine cuest_get_JK_grad
    end interface
 
    interface
