@@ -1085,7 +1085,8 @@ subroutine nuclearattraenergy(Ips,Jps,IIsh,JJsh,NIJ1, &
    integer a(3),b(3)
    double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g
    double precision AA(3),BB(3),CC(3),PP(3)
-   integer :: Ips, Jps, IIsh, JJsh, NIJ1, iatom, Iang, Jang, NBI1, NBI2, NBJ1, NBJ2, III1, III2, JJJ1, JJJ2, III_temp, JJJ_local, itemp1, itemp2, itempt, itemp
+   integer :: Ips, Jps, IIsh, JJsh, NIJ1, iatom, Iang, Jang, NBI1, NBI2, NBJ1, NBJ2
+   integer :: III1, III2, JJJ1, JJJ2, III_temp, JJJ_local, itemp1, itemp2, itempt, itemp
    double precision :: DenseJI, x1temp, xconstant
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
