@@ -17,12 +17,12 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    use quick_molspec_module, only: quick_molspec, natom
    use quick_basis_module
    use quick_scratch_module, only: quick_scratch, allocate_quick_scratch
-   use quick_files_module
+   use quick_files_module, only: iBasisFile, iBasisCustFile, basisfilename, basiscustname
    use quick_constants_module, only: symbol, radii, radii2
    use quick_mfcc_module
    use quick_ecp_module
-   use quick_gridpoints_module
-   use quick_exception_module
+   use quick_size_module, only: MAXPRIM
+   use quick_exception_module, only: RaiseException
 #ifdef CEW
    use quick_cew_module, only: quick_cew
 #endif

@@ -4,15 +4,13 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine calmp2
-  use quick_SCRATCH_module
+  use quick_scratch_module, only: quick_scratch
   use quick_basis_module
-  use quick_calculated_module
-  use quick_files_module
-  use quick_method_module
-  use quick_molspec_module
-  use quick_size_module
-  use quick_timer_module
-  use quick_gaussian_class_module
+  use quick_calculated_module, only: quick_qm_struct
+  use quick_files_module, only: iOutFile
+  use quick_method_module, only: quick_method
+  use quick_molspec_module, only: quick_molspec
+  use quick_timer_module, only: timer_begin, timer_cumer, timer_end
   use quick_cutoff_module, only: cshell_density_cutoff
 
   implicit none
@@ -271,22 +269,16 @@ end subroutine calmp2
 ! Xiao HE. September 14,2008
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 subroutine MPI_calmp2
-  use quick_mfcc_module
-  use quick_size_module
-  use quick_method_module
+  use quick_method_module, only: quick_method
   use quick_basis_module, only: nbasis, jshell, Ycutoff, quick_basis, &
         orbmp2, orbmp2i331, orbmp2j331, orbmp2k331, mpi_jshell, mpi_jshelln, dnmax
-  use quick_params_module
-  use quick_molspec_module
-  use quick_calculated_module
-  use quick_gaussian_class_module
-  use quick_SCRATCH_module
-  use quick_files_module
-  use quick_constants_module
-  use quick_ecp_module
-  use quick_divcon_module
-  use quick_electrondensity_module
-  use quick_timer_module
+  use quick_params_module, only: Sumindex
+  use quick_molspec_module, only: quick_molspec
+  use quick_calculated_module, only: quick_qm_struct
+  use quick_gaussian_class_module, only: gaussian, ncontract
+  use quick_scratch_module, only: quick_scratch 
+  use quick_files_module, only: iOutFile
+  use quick_timer_module, only: timer_begin, timer_cumer, timer_end
   use quick_cutoff_module, only: cshell_density_cutoff
   use quick_mpi_module, only: bMPI, master, quick_comm, quick_comm_rank, &
         quick_comm_size, quick_mpi_error, quick_mpi_status
@@ -638,15 +630,14 @@ end subroutine initialOrbmp2ij
 
 ! Vertical Recursion by Xiao HE 07/07/07 version
  subroutine shellmp2(nstepmp2s,nsteplength)
-    use quick_SCRATCH_module
+    use quick_scratch_module, only: quick_scratch
     use quick_basis_module
-    use quick_calculated_module
-    use quick_files_module
-    use quick_method_module
-    use quick_molspec_module
-    use quick_size_module
-    use quick_timer_module
-    use quick_params_module
+    use quick_calculated_module, only: quick_qm_struct
+    use quick_files_module, only: iOutFile
+    use quick_method_module, only: quick_method
+    use quick_molspec_module, only: quick_molspec, xyz
+    use quick_timer_module, only: timer_begin, timer_cumer, timer_end
+    use quick_params_module, only: Sumindex
 
     implicit none
    integer, intent(in) :: nstepmp2s, nsteplength
@@ -804,7 +795,7 @@ end subroutine shellmp2
 ! Horrizontal recursion and Fock matrix builder by Xiao HE 07/07/07 version
 subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
    ! subroutine class
-   use quick_SCRATCH_module
+   use quick_scratch_module
    use quick_basis_module
    use quick_calculated_module
    use quick_files_module

@@ -26,12 +26,12 @@
 
     use divPB_Private, only: initialize_DivPBVars
     use quick_cutoff_module, only: schwarzoff
-    use quick_exception_module
+    use quick_exception_module, only: RaiseException
     use quick_eri_cshell_module, only: getEriPrecomputables
     use quick_grad_cshell_module, only: cshell_gradient
     use quick_grad_oshell_module, only: oshell_gradient
     use quick_oeproperties_module, only: compute_oeprop
-    use quick_optimizer_module
+    use quick_optimizer_module, only: lopt
     use quick_sad_guess_module, only: getSadGuess
     use quick_calculated_module, only: quick_qm_struct
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
