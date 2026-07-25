@@ -27,7 +27,9 @@ contains
 
   subroutine fmmone(Ips,Jps,IIsh,JJsh,NIJ1, &
       Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,iatom,constant2,a,b,xdistance)
-  use allmod
+  use quick_basis_module
+  use quick_calculated_module
+  use quick_constants_module
 
   implicit none
 

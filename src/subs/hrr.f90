@@ -5,9 +5,11 @@
 ! subroutine hrrwhole(IJKLtype,III,JJJ,KKK,LLL,Y)
 !Horrizontal Recursion subroutines by hand, these parts can be optimized by MAPLE
 subroutine hrrwhole
-   use allmod
+   use quick_basis_module
+   use quick_params_module
 
    implicit none
+
    double precision store(120,120)
    INTEGER NA(3),NB(3),NC(3),ND(3)
    double precision RA(3),RB(3),RC(3),RD(3)
@@ -292,9 +294,11 @@ end subroutine hrrwhole
 
 subroutine lefthrr(RA,RB,KLMNA,KLMNB,IKnumber,coefangxiao,angxiao,numangular)
 
-   use allmod
+   use quick_basis_module
+   use quick_params_module
 
    implicit none
+
    INTEGER KLMNA(3),KLMNB(3),NA(3),NB(3)
    double precision RA(3),RB(3)
    Integer M1,M2,M3,M4
@@ -869,9 +873,11 @@ End subroutine lefthrr
 ! subroutine hrrwhole(IJKLtype,III,JJJ,KKK,LLL,Y)
 !Horrizontal Recursion subroutines by hand, these parts can be optimized by MAPLE
 subroutine hrrwholeopt
-   use allmod
+   use quick_basis_module
+   use quick_params_module
 
    implicit none
+
    double precision store(120,120)
    INTEGER NA(3),NB(3),NC(3),ND(3)
    double precision RA(3),RB(3),RC(3),RD(3)

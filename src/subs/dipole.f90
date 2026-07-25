@@ -6,7 +6,15 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 !-------------------------------------------------------
     subroutine dipole
-    use allmod
+    use quick_SCRATCH_module
+    use quick_basis_module
+    use quick_calculated_module
+    use quick_constants_module
+    use quick_files_module
+    use quick_method_module
+    use quick_molspec_module
+    use quick_size_module
+    use quick_timer_module
     implicit none
     
     interface

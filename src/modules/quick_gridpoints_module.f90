@@ -1207,7 +1207,13 @@ module quick_gridpoints_module
 
 
     subroutine gridformSG1
-       use allmod
+       use quick_basis_module
+       use quick_constants_module
+       use quick_files_module
+       use quick_method_module
+       use quick_molspec_module
+       use quick_size_module
+       use quick_timer_module
 
        implicit none
 

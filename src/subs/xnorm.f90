@@ -62,12 +62,12 @@ end function xnorm
 
 
 double precision function xnewnorm(i,j,k,nprim1,ddcoe,aaexp)
-  use allmod
+  use quick_constants_module
   implicit none
   
   ! INPUT PARAMTERS
   integer i,j,k,nprim1,Icon1,Icon2
-  double precision ddcoe(nprim1),aaexp(nprim)
+  double precision ddcoe(nprim1),aaexp(nprim1)
   
   ! INNER VARIBLES
   double precision xponent,gamma

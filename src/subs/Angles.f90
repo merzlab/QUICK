@@ -13,7 +13,7 @@
 ! Return bond ang
 !-----------------------------------------------------------
 SUBROUTINE BNDANG(I,IA,IB,ANGLE)
-  use allmod
+  use quick_molspec_module
   implicit none
 
   integer, intent(in) :: I, IA, IB

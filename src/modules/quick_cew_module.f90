@@ -402,7 +402,13 @@ contains
 
 
   subroutine quick_cew_prescf_quad()
-   use allmod 
+   use quick_basis_module
+   use quick_calculated_module
+   use quick_constants_module
+   use quick_files_module
+   use quick_method_module
+   use quick_molspec_module
+   use quick_size_module
    use xc_f90_types_m
    use xc_f90_lib_m
    use quick_gridpoints_module, only : quick_dft_grid
@@ -886,7 +892,13 @@ contains
 
 
   subroutine quick_cew_grad_quad()
-   use allmod
+   use quick_basis_module
+   use quick_calculated_module
+   use quick_constants_module
+   use quick_files_module
+   use quick_method_module
+   use quick_molspec_module
+   use quick_size_module
    use xc_f90_types_m
    use xc_f90_lib_m
    use quick_gridpoints_module, only : quick_dft_grid

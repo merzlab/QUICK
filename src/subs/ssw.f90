@@ -9,7 +9,8 @@
 !   Written by Ed Brothers. January 22, 2002
 
 double precision function ssw(gridx,gridy,gridz,iparent)
-  use allmod
+  use quick_molspec_module
+  use quick_size_module
   implicit none
   
   double precision, intent(in) :: gridx, gridy, gridz

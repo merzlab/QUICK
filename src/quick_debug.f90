@@ -17,7 +17,11 @@
 
 ! this subroutine is to output some infos in debug mode in SCF
 subroutine debug_SCF(jscf)
-   use allmod
+   use quick_basis_module
+   use quick_calculated_module
+   use quick_files_module
+   use quick_molspec_module
+   use quick_size_module
    use quick_overlap_module, only: overlap, gpt
    implicit none
    double precision total, g_table(200),Ax,Ay,Az,Bx,By,Bz, Px,Py,Pz,a,b
@@ -91,7 +95,11 @@ end subroutine debug_SCF
 ! debugElecdii()
 ! this subroutine is to output some infos in debug mode
 subroutine debugElecdii(jscf)
-   use allmod
+   use quick_basis_module
+   use quick_calculated_module
+   use quick_files_module
+   use quick_molspec_module
+   use quick_size_module
    implicit none
    integer jscf
 
@@ -106,7 +114,12 @@ end subroutine debugElecdii
 ! debugDivconNorm
 ! this subroutine is to output normalization info for divcon
 subroutine debugDivconNorm()
-   use allmod
+   use quick_basis_module
+   use quick_calculated_module
+   use quick_files_module
+   use quick_molspec_module
+   use quick_size_module
+   use quick_divcon_module
 
    implicit none
    double precision tmp
@@ -139,7 +152,11 @@ end subroutine debugDivconNorm
 
 ! debugBasis
 subroutine debugBasis
-   use allmod
+   use quick_basis_module
+   use quick_calculated_module
+   use quick_files_module
+   use quick_molspec_module
+   use quick_size_module
    implicit none
    integer i,j
    do I=1,nbasis
@@ -193,7 +210,11 @@ end subroutine debugBasis
 
 ! debugFullX
 subroutine debugFullX
-    use allmod
+    use quick_basis_module
+    use quick_calculated_module
+    use quick_files_module
+    use quick_molspec_module
+    use quick_size_module
     write(ioutfile,'("THE OVERLAP MATRIX")')
     call PriSym(iOutFile,nbasis,quick_qm_struct%s,'F18.10')
     call flush(iOutFile)
@@ -205,7 +226,11 @@ end subroutine debugFullX
 
 ! debugInitialGuess
 subroutine debugInitialGuess
-    use allmod
+    use quick_basis_module
+    use quick_calculated_module
+    use quick_files_module
+    use quick_molspec_module
+    use quick_size_module
          write(iOutFile,*) "DENSITY MATRIX AFTER INITIAL GUESS"
          call PriSym(iOutFile,nbasis,quick_qm_struct%dense,'f14.8')
 end subroutine

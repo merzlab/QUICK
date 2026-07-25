@@ -12,8 +12,10 @@
 
 subroutine denspt_new_imp(gridx, gridy, gridz, densitya, densityb, &
                   gax, gay, gaz, gbx, gby, gbz, Ibin)
-   use allmod
+   use quick_calculated_module
+   use quick_method_module
    use quick_gridpoints_module
+   use quick_basis_module, only: phixiao, dphidxxiao, dphidyxiao, dphidzxiao
    implicit none
    ! Given a point in space, this function calculates the densities and
    ! gradient  at that point.  The gradients are stored in the common block

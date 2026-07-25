@@ -292,7 +292,13 @@ contains
      !-------------------------------------------------------
      ! this subroutine is to do scf job for restricted system
      !-------------------------------------------------------
-     use allmod
+     use quick_SCRATCH_module
+     use quick_basis_module
+     use quick_calculated_module
+     use quick_files_module
+     use quick_method_module
+     use quick_molspec_module
+     use quick_size_module
      use quick_mpi_module, only: master
      use quick_overlap_module, only: fullx
 
@@ -341,7 +347,13 @@ contains
 
   subroutine sad_uelectdiis(jscf,verbose,ierr)
 
-     use allmod
+     use quick_SCRATCH_module
+     use quick_basis_module
+     use quick_calculated_module
+     use quick_files_module
+     use quick_method_module
+     use quick_molspec_module
+     use quick_size_module
      use quick_gridpoints_module
      use quick_scf_module
      use quick_oei_module, only: bCalc1e
@@ -876,7 +888,13 @@ contains
   !  possible basis. Note that the Fock matrix is symmetric.
   !  This code now also does all the HF energy calculation. Ed.
   !-------------------------------------------------------
-     use allmod
+     use quick_SCRATCH_module
+     use quick_basis_module
+     use quick_calculated_module
+     use quick_files_module
+     use quick_method_module
+     use quick_molspec_module
+     use quick_size_module
      use quick_cutoff_module, only: oshell_density_cutoff
      use quick_eri_oshell_module, only: getOshellEri, getOshellEriEnergy 
      use quick_oei_module, only:get1eEnergy, kineticO, attrashell

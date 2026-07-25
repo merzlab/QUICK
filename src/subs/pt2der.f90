@@ -3,7 +3,8 @@
     ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
     subroutine pt2der(gridx,gridy,gridz,dxdx,dxdy,dxdz,dydy,dydz,dzdz,Iphi,icount)
-    use allmod
+    use quick_basis_module
+    use quick_molspec_module
     use quick_gridpoints_module
     implicit none
 

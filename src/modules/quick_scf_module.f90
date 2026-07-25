@@ -113,7 +113,14 @@ contains
   ! Ed Brothers. November 27, 2001
   ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
   subroutine scf(ierr)
-     use allmod
+     use quick_SCRATCH_module
+     use quick_basis_module
+     use quick_calculated_module
+     use quick_files_module
+     use quick_method_module
+     use quick_molspec_module
+     use quick_size_module
+     use quick_timer_module
 
      implicit none
 
@@ -163,7 +170,14 @@ contains
   !-------------------------------------------------------
   ! 11/02/2010 Yipu Miao: Add parallel option for HF calculation
   subroutine electdiis(jscf,ierr)
-     use allmod
+     use quick_SCRATCH_module
+     use quick_basis_module
+     use quick_calculated_module
+     use quick_files_module
+     use quick_method_module
+     use quick_molspec_module
+     use quick_size_module
+     use quick_timer_module
      use quick_gridpoints_module
      use quick_scf_operator_module, only: scf_operator
      use quick_oei_module, only: bCalc1e 

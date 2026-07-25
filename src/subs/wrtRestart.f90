@@ -14,7 +14,10 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine wrtrestart
-  use allmod
+  use quick_files_module
+  use quick_method_module
+  use quick_molspec_module
+  use quick_size_module
   use quick_gridpoints_module
   implicit none
   integer istart,ifinal

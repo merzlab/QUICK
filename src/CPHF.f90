@@ -4,7 +4,11 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine formCPHFA(Ibas,Jbas,IIbas,JJbas)
-  use allmod
+  use quick_basis_module
+  use quick_calculated_module
+  use quick_method_module
+  use quick_molspec_module
+  use quick_size_module
   implicit none
 
   integer, intent(in) :: Ibas, Jbas, IIbas, JJbas
@@ -273,7 +277,11 @@ end subroutine formCPHFA
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine formCPHFB
-  use allmod
+  use quick_basis_module
+  use quick_calculated_module
+  use quick_method_module
+  use quick_molspec_module
+  use quick_size_module
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic
   implicit none
@@ -918,7 +926,11 @@ end subroutine formcphfb
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine CPHFB4cnt(Ibas,Jbas,IIbas,JJbas)
-  use allmod
+  use quick_basis_module
+  use quick_calculated_module
+  use quick_method_module
+  use quick_molspec_module
+  use quick_size_module
   use quick_overlap_module, only: gpt, overlap
   implicit none
 
@@ -1436,7 +1448,11 @@ end subroutine CPHFB4cnt
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine CPHFB2Egrad(Ibas,Jbas,IIbas,JJbas,deriv,icenter)
-  use allmod
+  use quick_basis_module
+  use quick_calculated_module
+  use quick_method_module
+  use quick_molspec_module
+  use quick_size_module
   implicit none
 
   integer, intent(in) :: Ibas, Jbas, IIbas, JJbas

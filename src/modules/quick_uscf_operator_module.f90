@@ -32,7 +32,12 @@ contains
   !  possible basis. Note that the Fock matrix is symmetric.
   !  This code now also does all the HF energy calculation. Ed.
   !-------------------------------------------------------
-     use allmod
+     use quick_SCRATCH_module
+     use quick_basis_module
+     use quick_calculated_module
+     use quick_method_module
+     use quick_size_module
+     use quick_timer_module
      use quick_cutoff_module, only: oshell_density_cutoff
      use quick_eri_oshell_module, only: getOshellEri, getOshellEriEnergy 
      use quick_oei_module, only: get1eEnergy, get1e
@@ -278,7 +283,12 @@ contains
   !  the gradient of the alpha density with the beta density.
   !  Grad(Phimu Phinu) is the gradient of Phimu times Phinu. 
   !----------------------------------------------------------------
-     use allmod
+     use quick_SCRATCH_module
+     use quick_basis_module
+     use quick_calculated_module
+     use quick_method_module
+     use quick_size_module
+     use quick_timer_module
      use quick_gridpoints_module
      use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
      use xc_f90_types_m

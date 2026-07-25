@@ -67,7 +67,14 @@ contains
   ! Ed Brothers. November 27, 2001
   ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
   subroutine uscf(ierr)
-     use allmod
+     use quick_SCRATCH_module
+     use quick_basis_module
+     use quick_calculated_module
+     use quick_files_module
+     use quick_method_module
+     use quick_molspec_module
+     use quick_size_module
+     use quick_timer_module
      use quick_molden_module, only: quick_molden, exportMO, exportSCF
 
      implicit none
@@ -132,7 +139,14 @@ contains
   ! 11/02/2010 Yipu Miao: Add paralle option for HF calculation
   subroutine uelectdiis(jscf,ierr)
   
-     use allmod
+     use quick_SCRATCH_module
+     use quick_basis_module
+     use quick_calculated_module
+     use quick_files_module
+     use quick_method_module
+     use quick_molspec_module
+     use quick_size_module
+     use quick_timer_module
      use quick_gridpoints_module
      use quick_uscf_operator_module, only: uscf_operator
      use quick_scf_module  

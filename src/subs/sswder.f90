@@ -3,7 +3,10 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
     subroutine sswder(gridx,gridy,gridz,Exc,quadwt,Iparent)
-    use allmod
+    use quick_calculated_module
+    use quick_method_module
+    use quick_molspec_module
+    use quick_size_module
     implicit none
 
     double precision, intent(in) :: gridx, gridy, gridz, Exc, quadwt

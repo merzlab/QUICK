@@ -3,7 +3,8 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
     subroutine pteval(gridx,gridy,gridz,phi,dphidx,dphidy,dphidz,Iphi)
-    use allmod
+    use quick_basis_module
+    use quick_molspec_module
     use quick_gridpoints_module
     implicit none
     

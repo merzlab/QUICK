@@ -4,7 +4,14 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine calmp2
-  use allmod
+  use quick_SCRATCH_module
+  use quick_basis_module
+  use quick_calculated_module
+  use quick_files_module
+  use quick_method_module
+  use quick_molspec_module
+  use quick_size_module
+  use quick_timer_module
   use quick_gaussian_class_module
   use quick_cutoff_module, only: cshell_density_cutoff
 
@@ -15,16 +22,18 @@ subroutine calmp2
   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   integer :: nelec,nelecb
 
-  ! Undeclared variables
-  double precision :: cutoffmp2, comax, atemp, atemp2, ttt
-  double precision :: ememorysum
-  integer :: iocc, ivir, nstep, nbasistemp, nstepmp2, nstepmp2s, nstepmp2f
-  integer :: nsteplength, ntemp, i, j, i3new, icycle, i3, k3, j3, l3, l3new
-  integer :: NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
-  integer :: II111, II112, JJ111, JJ112, KK111, KK112, LL111, LL112
-  integer :: IIInew, JJJnew
-  integer :: j33, j33new, k33
-  ! Note: III, JJJ, KKK, LLL are use-associated from modules and should not be redeclared
+   ! Undeclared variables
+   double precision :: cutoffmp2, comax, atemp, atemp2, ttt
+   double precision :: ememorysum
+   integer :: iocc, ivir, nstep, nbasistemp, nstepmp2, nstepmp2s, nstepmp2f
+   integer :: nsteplength, ntemp, i, j, i3new, icycle, i3, k3, j3, l3, l3new
+   integer :: NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
+   integer :: II111, II112, JJ111, JJ112, KK111, KK112, LL111, LL112
+   integer :: IIInew, JJJnew
+   integer :: j33, j33new, k33
+   ! Local allocatable arrays
+   integer, allocatable, dimension(:) :: mp2shell
+   ! Note: III, JJJ, KKK, LLL are use-associated from modules and should not be redeclared
 
   nelec = quick_molspec%nelec
   nelecb = quick_molspec%nelecb
@@ -628,10 +637,18 @@ subroutine initialOrbmp2ij(orbmp2i331,nstep,nsteplength,nbasis,nbasistemp,nbasis
 end subroutine initialOrbmp2ij
 
 ! Vertical Recursion by Xiao HE 07/07/07 version
-subroutine shellmp2(nstepmp2s,nsteplength)
-   use allmod
+ subroutine shellmp2(nstepmp2s,nsteplength)
+    use quick_SCRATCH_module
+    use quick_basis_module
+    use quick_calculated_module
+    use quick_files_module
+    use quick_method_module
+    use quick_molspec_module
+    use quick_size_module
+    use quick_timer_module
+    use quick_params_module
 
-   implicit none
+    implicit none
    integer, intent(in) :: nstepmp2s, nsteplength
    integer, parameter :: NN = 13
    double precision P(3),Q(3),W(3),KAB,KCD,AAtemp(3)
@@ -787,7 +804,14 @@ end subroutine shellmp2
 ! Horrizontal recursion and Fock matrix builder by Xiao HE 07/07/07 version
 subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
    ! subroutine class
-   use allmod
+   use quick_SCRATCH_module
+   use quick_basis_module
+   use quick_calculated_module
+   use quick_files_module
+   use quick_method_module
+   use quick_molspec_module
+   use quick_size_module
+   use quick_timer_module
 
    implicit none
    integer, parameter :: NN = 13

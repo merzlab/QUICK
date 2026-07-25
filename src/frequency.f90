@@ -3,7 +3,12 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
     subroutine frequency
-    use allmod
+    use quick_calculated_module
+    use quick_constants_module
+    use quick_files_module
+    use quick_method_module
+    use quick_molspec_module
+    use quick_size_module
     implicit none
 
 !    double precision :: kB

@@ -58,7 +58,13 @@ Subroutine readecp
    ! Subroutine to  read the Effective Core Potentials
    ! The total number of electrons and the nuclear charges are modified too
    !
-   use allmod
+   use quick_basis_module
+   use quick_calculated_module
+   use quick_files_module
+   use quick_molspec_module
+   use quick_size_module
+   use quick_ecp_module
+   use quick_constants_module
 
    implicit none
    character(len=80) :: line
@@ -89,8 +95,8 @@ Subroutine readecp
       read(iecpfile,'(A80)',iostat=iofile) line
       read(line,*,iostat=io) atom,ii
       if (io == 0 .and. ii == 0) then
-         do i=1,92
-            if (symbol(i) == atom) then
+          do i=1,92
+             if (SYMBOL(i) == atom) then
                iat=i
                warn(i)=.false.
             end if
@@ -147,8 +153,8 @@ Subroutine readecp
       do while (iofile == 0)
          read(iecpfile,'(A80)',iostat=iofile) line
          read(line,*,iostat=io) atom,ii
-         if (io == 0 .and. ii == 0) then
-            if (symbol(quick_molspec%iattype(i)) == atom) then
+          if (io == 0 .and. ii == 0) then
+             if (SYMBOL(quick_molspec%iattype(i)) == atom) then
                iatom=0
                do while (iatom==0)
                   read(iecpfile,'(A80)',iostat=iofile) line
@@ -178,10 +184,10 @@ Subroutine readecp
       !
       ! Check if the selected ECP exists for each atom in the molecule
       !
-      if (warn(quick_molspec%iattype(i))) then
-         write(ioutfile,'("  ")')
-         write(ioutfile,'("WARNING: NO ECP FOR ATOM ",A2,I4)') symbol(quick_molspec%iattype(i)),i
-      end if
+       if (warn(quick_molspec%iattype(i))) then
+          write(ioutfile,'("  ")')
+          write(ioutfile,'("WARNING: NO ECP FOR ATOM ",A2,I4)') SYMBOL(quick_molspec%iattype(i)),i
+       end if
       !
    end do
 
