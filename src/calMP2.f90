@@ -275,7 +275,7 @@ subroutine MPI_calmp2
   use quick_params_module, only: Sumindex
   use quick_molspec_module, only: quick_molspec
   use quick_calculated_module, only: quick_qm_struct
-  use quick_gaussian_class_module, only: gaussian, ncontract
+  use quick_gaussian_class_module, only: gaussian
   use quick_scratch_module, only: quick_scratch 
   use quick_files_module, only: iOutFile
   use quick_timer_module, only: timer_begin, timer_cumer, timer_end
@@ -301,6 +301,8 @@ subroutine MPI_calmp2
   integer :: II111, II112, JJ111, JJ112, KK111, KK112, LL111, LL112
   integer :: III, JJJ, KKK, LLL, IIInew, JJJnew
   integer :: j33, j33new, k33, i1, k1, j1, IERROR
+   ! Local allocatable arrays
+   integer, allocatable, dimension(:) :: mp2shell
 
     nelec = quick_molspec%nelec
     nelecb = quick_molspec%nelecb
