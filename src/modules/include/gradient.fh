@@ -25,6 +25,8 @@ module quick_grad_oshell_module
 #else
 module quick_grad_cshell_module
 #endif
+  use quick_timer_module
+  use quick_scratch_module
   implicit none
 
   private
@@ -47,6 +49,7 @@ contains
   subroutine allocate_quick_gradient()
     use quick_molspec_module, only : quick_molspec, natom
 
+    use quick_timer_module
     implicit none
 
     if(.not. allocated(tmp_grad)) allocate(tmp_grad(3*natom))
@@ -63,6 +66,7 @@ contains
   subroutine deallocate_quick_gradient()
     use quick_molspec_module, only : quick_molspec
 
+    use quick_timer_module
     implicit none
 
     if(allocated(tmp_grad)) deallocate(tmp_grad) 
@@ -93,6 +97,7 @@ contains
      use mpi
 #endif
 
+     use quick_timer_module
      implicit none
   
      integer, intent(inout) :: ierr
@@ -184,7 +189,13 @@ contains
 #else
   subroutine scf_gradient
 #endif
-    use allmod
+     use quick_basis_module
+   use quick_calculated_module
+   use quick_method_module
+   use quick_params_module
+   use quick_molspec_module
+   use quick_size_module
+   use quick_files_module
 #ifdef CEW
     use quick_cew_module
 #endif
@@ -196,6 +207,7 @@ contains
      use mpi
 #endif
 
+     use quick_timer_module
      implicit none
   
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,ierr
@@ -440,9 +452,16 @@ contains
 
 #ifndef OSHELL
   subroutine get_nuclear_repulsion_grad
-     use allmod
+      use quick_basis_module
+   use quick_calculated_module
+   use quick_method_module
+   use quick_params_module
+   use quick_molspec_module
+   use quick_size_module
+   use quick_files_module
      use quick_mpi_module, only: master
 
+     use quick_timer_module
      implicit none
   
      double precision, external :: rootSquare
@@ -529,7 +548,13 @@ contains
 #else
   subroutine get_cshell_oneen_grad
 #endif  
-    use allmod
+     use quick_basis_module
+   use quick_calculated_module
+   use quick_method_module
+   use quick_params_module
+   use quick_molspec_module
+   use quick_size_module
+   use quick_files_module
     use quick_oei_module, only:attrashellopt
 #ifdef OSHELL
     use quick_cutoff_module, only: oshell_density_cutoff
@@ -541,6 +566,7 @@ contains
     use mpi
 #endif
 
+    use quick_timer_module
     implicit none
 
     integer :: Iatm, Imomentum, IIsh, JJsh, i, j, nshell_mpi
@@ -700,7 +726,13 @@ contains
 #else
   subroutine get_cshell_kinetic_grad
 #endif 
-     use allmod
+      use quick_basis_module
+   use quick_calculated_module
+   use quick_method_module
+   use quick_params_module
+   use quick_molspec_module
+   use quick_size_module
+   use quick_files_module
 #ifdef OSHELL
      use quick_grad_cshell_module, only: get_ijbas_derivative
 #endif
@@ -709,6 +741,7 @@ contains
      use mpi
 #endif
 
+     use quick_timer_module
      implicit none
   
      integer I,II,J,JJ,K,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -849,7 +882,13 @@ contains
 #else
   subroutine get_cshell_eri_grad
 #endif
-     use allmod
+      use quick_basis_module
+   use quick_calculated_module
+   use quick_method_module
+   use quick_params_module
+   use quick_molspec_module
+   use quick_size_module
+   use quick_files_module
 #ifdef OSHELL
    use quick_cutoff_module, only: oshell_density_cutoff, oshell_dnscreen
    use quick_eri_grad_oshell_module, only: oshell_eri_grad
@@ -862,6 +901,7 @@ contains
    use mpi
 #endif
 
+     use quick_timer_module
      implicit none
   
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -1010,7 +1050,13 @@ contains
 #else
   subroutine get_cshell_xc_grad
 #endif
-     use allmod
+      use quick_basis_module
+   use quick_calculated_module
+   use quick_method_module
+   use quick_params_module
+   use quick_molspec_module
+   use quick_size_module
+   use quick_files_module
      use quick_gridpoints_module
      use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
      use quick_method_module, only: quick_method
@@ -1020,6 +1066,7 @@ contains
      use quick_mpi_module, only: bMPI, quick_comm_rank
 #endif
 
+     use quick_timer_module
      implicit none
   
      integer :: iatm, ibas, ibin, icount, ifunc, igp, jbas, jcount, ibasstart, irad_init, &
@@ -1440,10 +1487,17 @@ contains
   !  basis functions. For I basis functions, ijcon should be  true and should
   !  be false for J.  
   !-------------------------------------------------------------------------   
-     use allmod
+      use quick_basis_module
+   use quick_calculated_module
+   use quick_method_module
+   use quick_params_module
+   use quick_molspec_module
+   use quick_size_module
+   use quick_files_module
      use quick_overlap_module, only: gpt, opf, overlap
      use quick_oei_module, only: ekinetic
 
+     use quick_timer_module
      implicit none
      integer, intent(in) :: Imomentum, Ibas, Jbas, mbas, mstart
      double precision, intent(in) :: DENSEJI

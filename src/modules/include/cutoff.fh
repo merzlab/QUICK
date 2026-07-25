@@ -17,7 +17,13 @@ subroutine oshell_dnscreen(II, JJ, DNmax1)
 #else
 subroutine cshell_dnscreen(II, JJ, DNmax1)
 #endif
-  use allmod
+   use quick_basis_module
+   use quick_calculated_module
+   use quick_method_module
+   use quick_params_module
+   use quick_molspec_module
+   use quick_size_module
+   use quick_files_module
   use quick_basis_module, only: quick_basis
   use quick_calculated_module, only: quick_qm_struct
 
@@ -67,7 +73,13 @@ subroutine oshell_density_cutoff
 #else
 subroutine cshell_density_cutoff
 #endif
-   use allmod
+    use quick_basis_module
+   use quick_calculated_module
+   use quick_method_module
+   use quick_params_module
+   use quick_molspec_module
+   use quick_size_module
+   use quick_files_module
    use quick_basis_module, only: jshell, cutMatrix
 
    implicit none

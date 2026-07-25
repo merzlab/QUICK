@@ -25,7 +25,9 @@ module quick_eri_grad_oshell_module
 module quick_eri_grad_cshell_module
 #endif
 
-   implicit double precision(a-h,o-z)
+   use quick_timer_module
+   use quick_scratch_module
+   implicit none
 #ifdef OSHELL
    public  :: oshell_eri_grad
    private :: iclass_grad_oshell
@@ -43,7 +45,13 @@ subroutine oshell_eri_grad
 subroutine cshell_eri_grad
 #endif
 
-   use allmod
+    use quick_basis_module
+   use quick_calculated_module
+   use quick_method_module
+   use quick_params_module
+   use quick_molspec_module
+   use quick_size_module
+   use quick_files_module
 
    implicit none
    integer, parameter :: NN = 14
@@ -215,7 +223,13 @@ subroutine iclass_grad_oshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
 subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
 #endif
 
-   use allmod
+    use quick_basis_module
+   use quick_calculated_module
+   use quick_method_module
+   use quick_params_module
+   use quick_molspec_module
+   use quick_size_module
+   use quick_files_module
 
    implicit none
    ! Dummy arguments
