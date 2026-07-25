@@ -1,6 +1,14 @@
 cff-version: 1.2.0
 title: QUICK
-message: "If you use QUICK, please cite this software."
+version: "26.03"
+license: MPL-2.0
+repository-code: https://github.com/merzlab/quick
+url: https://quick-docs.readthedocs.io
+message: "If you use QUICK, please cite the software and relevant methodology papers."
+# TODO: Replace with Zenodo concept DOI after first release
+# doi: 10.5281/zenodo.xxxxxxx
+
+
 authors:
   - family-names: Manathunga
     given-names: Madu
@@ -26,5 +34,3 @@ authors:
     given-names: Andreas W.
   - family-names: Merz
     given-names: Kenneth M.
-repository-code: https://github.com/merzlab/quick
-license: MPL-2.0
