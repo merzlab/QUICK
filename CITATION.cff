@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+title: QUICK
+message: "If you use QUICK, please cite this software."
+authors:
+  - family-names: Manathunga
+    given-names: Madu
+  - family-names: O'Hearn
+    given-names: Kurt A.
+  - family-names: Shajan
+    given-names: Akhil
+  - family-names: Smith
+    given-names: Jamie
+  - family-names: Miao
+    given-names: Yipu
+  - family-names: He
+    given-names: Xiao
+  - family-names: Ayers
+    given-names: Ken
+  - family-names: Brothers
+    given-names: Ed
+  - family-names: Palos
+    given-names: Etienne
+  - family-names: Tripathy
+    given-names: Vikrant
+  - family-names: Götz
+    given-names: Andreas W.
+  - family-names: Merz
+    given-names: Kenneth M.
+repository-code: https://github.com/merzlab/quick
+license: MPL-2.0
