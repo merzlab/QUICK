@@ -15,12 +15,12 @@ subroutine getEnergy(isGuess, ierr)
    use quick_calculated_module, only: quick_qm_struct, allocate_quick_qm_struct_fullx
    use quick_basis_module, only: nbasis, NBSuse
    use quick_files_module, only: ioutfile
-   use quick_gridpoints_module
-   use quick_scf_module
+   use quick_gridpoints_module, only: quick_xcg_tmp, quick_dft_grid, form_dft_grid, print_grid_info
+   use quick_scf_module, only: scf
    use quick_uscf_module, only: uscf
    use quick_overlap_module, only: fullx
    use quick_dftd3_module, only: calculateDFTD3 
-   use quick_exception_module
+   use quick_exception_module, only: RaiseException
 #ifdef CEW
    use quick_cew_module, only : quick_cew
 #endif

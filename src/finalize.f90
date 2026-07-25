@@ -25,7 +25,6 @@ Subroutine deallocate_calculated
   use quick_basis_module, only: deallocate_quick_basis, quick_basis
   use quick_gridpoints_module, only: sigrad2
   use quick_scratch_module, only: deallocate_quick_scratch, quick_scratch
-  use quick_gridpoints_module
 
   if (allocated(Yxiao)) deallocate(Yxiao)
   if (allocated(Yxiaotemp)) deallocate(Yxiaotemp)
@@ -50,7 +49,7 @@ subroutine deallocateall(ierr)
   use quick_method_module, only: quick_method
   use quick_molspec_module, only: deallocate_quick_molspec, quick_molspec
   use quick_calculated_module, only: deallocate_quick_qm_struct, quick_qm_struct
-  use quick_gridpoints_module
+  use quick_gridpoints_module, only: quick_dft_grid, deform_dft_grid
 #ifdef CEW
   use quick_cew_module, only: quick_cew
   use quick_mpi_module, only: mpi_delete_atoms
@@ -84,7 +83,6 @@ end subroutine deallocateall
 subroutine finalize(io,ierr,option)
     use quick_files_module, only: write_molden
     use quick_timer_module, only: timer_end, timer_output
-    use quick_exception_module
     use quick_molden_module, only: finalizeExport, quick_molden
     use quick_mpi_module, only: bMPI, master, quick_mpi_error
 

@@ -18,8 +18,7 @@ subroutine getMol(ierr)
    use quick_calculated_module, only: quick_qm_struct, allocate_quick_qm_struct, init_quick_qm_struct
    use quick_basis_module, only: quick_basis, nbasis, cutprim, normalize_basis, allocate_basis, print_quick_basis
    use quick_files_module, only: iOutfile, iDataFile, inFile, inFileName, dataFileName, isTemplate
-   use quick_gridpoints_module
-   use quick_exception_module
+   use quick_exception_module, only: RaiseException
    use quick_io_module, only: chk_read, chk_read_opt_traj
    use quick_mpi_module, only: master
 #if defined(MPIV)
@@ -142,9 +141,8 @@ end subroutine getmol
 ! check mol spec and method
 !--------------------
 subroutine check_quick_method_and_molspec(io,quick_molspec_arg,quick_method_arg,ierr)
-   use quick_method_module
-   use quick_molspec_module
-   use quick_exception_module
+   use quick_method_module, only: quick_method_type
+   use quick_molspec_module, only: quick_molspec_type, natom
 
    implicit none
 
@@ -244,7 +242,6 @@ subroutine initialGuess(ierr)
    use quick_basis_module, only: nbasis
    use quick_files_module, only: iDataFile, dataFileName, iOutFile
    use quick_sad_guess_module, only: getSadDense
-   use quick_exception_module
    use quick_io_module, only: chk_read, read_real8_rank3
    use quick_mpi_module, only: master
 

@@ -3,12 +3,11 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
     subroutine frequency
-    use quick_calculated_module
-    use quick_constants_module
-    use quick_files_module
-    use quick_method_module
-    use quick_molspec_module
-    use quick_size_module
+    use quick_calculated_module, only: quick_qm_struct
+    use quick_files_module, only: iOutFile
+    use quick_method_module, only: quick_method
+    use quick_constants_module, only: pi, emass
+    use quick_molspec_module, only: quick_molspec, natom
     implicit none
 
 !    double precision :: kB

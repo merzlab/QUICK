@@ -10,10 +10,9 @@ Subroutine ecpoperator
    ! Suibroutine that adds the ECP integrals to the Fock operator
    ! for ECP calculations
    !
-   use quick_basis_module
-   use quick_ecp_module
-   use quick_calculated_module
-   use quick_files_module
+   use quick_basis_module, only: nbasis
+   use quick_ecp_module, only: ecp_int
+   use quick_calculated_module, only: quick_qm_struct
    !
    implicit none
    
@@ -40,7 +39,7 @@ end
 
 
 integer function kp2(ii,jj) result(ind)
-   use quick_ecp_module
+   use quick_ecp_module, only: kvett
    implicit none
    integer, intent(in)  :: ii,jj
    !
@@ -58,13 +57,10 @@ Subroutine readecp
    ! Subroutine to  read the Effective Core Potentials
    ! The total number of electrons and the nuclear charges are modified too
    !
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_files_module
-   use quick_molspec_module
-   use quick_size_module
+   use quick_files_module, only: iOutFile, iECPFile, ecpfilename
+   use quick_molspec_module, only: quick_molspec, natom
    use quick_ecp_module
-   use quick_constants_module
+   use quick_constants_module, only: SYMBOL
 
    implicit none
    character(len=80) :: line
