@@ -435,13 +435,13 @@ contains
       write (io, '("------------- cuEST MEMORY USAGE ---------------")')
       call get_memstr(int(hostmax, kind=8), mem, suf)
       write (io, '("| Peak Host Footprint = ",F8.2," ",A)') mem, suf
-      call get_memstr(int(hosttotal, kind=8), mem, suf)
-      write (io, '("| Total Host Footprint = ",F8.2," ",A)') mem, suf
+      ! call get_memstr(int(hosttotal, kind=8), mem, suf)
+      ! write (io, '("| Total Host Footprint = ",F8.2," ",A)') mem, suf
       write (io, '("| Host Allocations = ",I5)') hostallocs
       call get_memstr(int(devmax, kind=8), mem, suf)
       write (io, '("| Peak Device Footprint = ",F8.2," ",A)') mem, suf
-      call get_memstr(int(devtotal, kind=8), mem, suf)
-      write (io, '("| Total Device Footprint = ",F8.2," ",A)') mem, suf
+      ! call get_memstr(int(devtotal, kind=8), mem, suf)
+      ! write (io, '("| Total Device Footprint = ",F8.2," ",A)') mem, suf
       write (io, '("| Device Allocations = ",I5)') devallocs
       write (io, '("------------------------------------------------")')
       call PrtAct(io, "Finish Output cuEST Memory Footprint")
