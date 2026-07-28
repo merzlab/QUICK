@@ -30,26 +30,16 @@ module quick_cuest_module
    ! unless commented otherwise, C will not modify the memory a pointer points to
 
    interface
-      subroutine cuest_init &
-#ifdef OSHELL
-                           (natom, nshell, nbasis, nocca, noccb, nauxshell, maxcontract, maxcontract_aux, &
+      subroutine cuest_init (natom, nshell, nbasis, nocc, noccb, nauxshell, maxcontract, maxcontract_aux, &
                             iattype, xyz, chg, nextatom, extxyz, extchg) &
-#else
-                           (natom, nshell, nbasis, nocc, nauxshell, maxcontract, maxcontract_aux, &
-                            iattype, xyz, chg, nextatom, extxyz, extchg) &
-#endif
          bind(c, name="cuest_init")
          use, intrinsic::iso_c_binding, only: c_int64_t, c_int8_t, c_double, c_ptr
          implicit none
          integer(c_int64_t), intent(in), value :: natom
          integer(c_int64_t), intent(in), value :: nshell
          integer(c_int64_t), intent(in), value :: nbasis
-#ifdef OSHELL
-         integer(c_int64_t), intent(in), value :: nocca
-         integer(c_int64_t), intent(in), value :: noccb
-#else
          integer(c_int64_t), intent(in), value :: nocc
-#endif
+         integer(c_int64_t), intent(in), value :: noccb
          integer(c_int64_t), intent(in), value :: nauxshell
          integer(c_int64_t), intent(in), value :: maxcontract
          integer(c_int64_t), intent(in), value :: maxcontract_aux
@@ -250,20 +240,24 @@ module quick_cuest_module
    end interface
 
    interface
-#ifdef OSHELL
-      subroutine cuest_get_oshell_xc(Vxc, Vxcb, Exc, C, Cb) bind(c, name="cuest_get_oshell_xc")
-#else
       subroutine cuest_get_cshell_xc(Vxc, Exc, C) bind(c, name="cuest_get_cshell_xc")
-#endif
          use, intrinsic :: iso_c_binding, only: c_double
          implicit none
          real(c_double), intent(out) :: Vxc(*)
          real(c_double), intent(out) :: Exc
          real(c_double), intent(in) :: C(*)
-#ifdef OSHELL
+      end subroutine
+   end interface
+
+   interface
+      subroutine cuest_get_oshell_xc(Vxc, Vxcb, Exc, C, Cb) bind(c, name="cuest_get_oshell_xc")
+         use, intrinsic :: iso_c_binding, only: c_double
+         implicit none
+         real(c_double), intent(out) :: Vxc(*)
+         real(c_double), intent(out) :: Exc
+         real(c_double), intent(in) :: C(*)
          real(c_double), intent(out) :: Vxcb(*)
          real(c_double), intent(in) :: Cb(*)
-#endif
       end subroutine
    end interface
 

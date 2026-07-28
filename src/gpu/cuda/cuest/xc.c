@@ -194,20 +194,12 @@ cuest_deinit_xc ()
     freeWorkspace (quick_cuest_struct.persistXCIntPlanWorkspace);
 }
 
-#ifdef OSHELL
-void
-cuest_get_oshell_xc (double *Vxc, double *Vxcb, double *Exc, double *C, double *Cb)
-#else
 void
 cuest_get_cshell_xc (double *Vxc, double *Exc, double *C)
-#endif
 {
     uint64_t natom  = quick_cuest_data.natom;
     uint64_t nbasis = quick_cuest_data.nbasis;
     uint64_t nocc   = quick_cuest_data.nocc;
-#ifdef OSHELL
-    uint64_t noccb = quick_cuest_data.noccb;
-#endif
 
     cuestHandle_t               handle = quick_cuest_struct.handle;
     cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
@@ -215,31 +207,45 @@ cuest_get_cshell_xc (double *Vxc, double *Exc, double *C)
     void  *d_C     = quick_cuest_PC_buf.d_C[0];
     size_t d_C_siz = quick_cuest_PC_buf.C_siz;
     cudaMemcpyChecked (d_C, C, d_C_siz, cudaMemcpyHostToDevice);
-#ifdef OSHELL
-    void  *d_Cb     = quick_cuest_PC_buf.d_Cb[0];
-    size_t d_Cb_siz = quick_cuest_PC_buf.Cb_siz;
-    cudaMemcpyChecked (d_Cb, Cb, d_Cb_siz, cudaMemcpyHostToDevice);
-#endif
 
-#ifdef OSHELL
-    checkCuestErrors (cuestXCPotentialUKSCompute (
-        handle, quick_cuest_struct.XCIntPlan, quick_cuest_compute_mem.Vxc_par,
-        quick_cuest_compute_mem.Vxc_vbs, quick_cuest_compute_mem.Vxc_wksp, nocc, noccb, d_C, d_Cb,
-        Exc, quick_cuest_compute_mem.d_Vxc, quick_cuest_compute_mem.d_Vxcb));
-#else
     checkCuestErrors (cuestXCPotentialRKSCompute (
         handle, quick_cuest_struct.XCIntPlan, quick_cuest_compute_mem.Vxc_par,
         quick_cuest_compute_mem.Vxc_vbs, quick_cuest_compute_mem.Vxc_wksp, nocc, d_C, Exc,
         quick_cuest_compute_mem.d_Vxc));
-#endif
 
     // copy to host
     cudaMemcpyChecked (Vxc, quick_cuest_compute_mem.d_Vxc, nbasis * nbasis * sizeof (double),
                        cudaMemcpyDeviceToHost);
-#ifdef OSHELL
+}
+
+void
+cuest_get_oshell_xc (double *Vxc, double *Vxcb, double *Exc, double *C, double *Cb)
+{
+    uint64_t natom  = quick_cuest_data.natom;
+    uint64_t nbasis = quick_cuest_data.nbasis;
+    uint64_t nocc   = quick_cuest_data.nocc;
+    uint64_t noccb  = quick_cuest_data.noccb;
+
+    cuestHandle_t               handle = quick_cuest_struct.handle;
+    cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
+
+    void  *d_C     = quick_cuest_PC_buf.d_C[0];
+    size_t d_C_siz = quick_cuest_PC_buf.C_siz;
+    cudaMemcpyChecked (d_C, C, d_C_siz, cudaMemcpyHostToDevice);
+    void  *d_Cb     = quick_cuest_PC_buf.d_Cb[0];
+    size_t d_Cb_siz = quick_cuest_PC_buf.Cb_siz;
+    cudaMemcpyChecked (d_Cb, Cb, d_Cb_siz, cudaMemcpyHostToDevice);
+
+    checkCuestErrors (cuestXCPotentialUKSCompute (
+        handle, quick_cuest_struct.XCIntPlan, quick_cuest_compute_mem.Vxc_par,
+        quick_cuest_compute_mem.Vxc_vbs, quick_cuest_compute_mem.Vxc_wksp, nocc, noccb, d_C, d_Cb,
+        Exc, quick_cuest_compute_mem.d_Vxc, quick_cuest_compute_mem.d_Vxcb));
+
+    // copy to host
+    cudaMemcpyChecked (Vxc, quick_cuest_compute_mem.d_Vxc, nbasis * nbasis * sizeof (double),
+                       cudaMemcpyDeviceToHost);
     cudaMemcpyChecked (Vxcb, quick_cuest_compute_mem.d_Vxcb, nbasis * nbasis * sizeof (double),
                        cudaMemcpyDeviceToHost);
-#endif
 }
 
 void

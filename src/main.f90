@@ -248,12 +248,8 @@
         int(natom, c_int64_t),                           &
         int(nshell, c_int64_t),                          &
         int(nbasis, c_int64_t),                          &
-#ifdef OSHELL
         int(quick_molspec%nelec / 2, c_int64_t),         &
-        int(quick_molspec%nelecb / 2, c_int64_t),         &
-#else
-        int(quick_molspec%nelec / 2, c_int64_t),         &
-#endif
+        int(quick_molspec%nelecb / 2, c_int64_t),        &
         int(quick_aux_basis_sph%nshell, c_int64_t),      &
         int(maxcontract, c_int64_t),                     &
         int(quick_aux_basis_sph%maxcontract, c_int64_t), &

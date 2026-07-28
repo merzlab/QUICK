@@ -164,36 +164,38 @@ contains
                call cuest_correct_o(cuest_J, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
                call cuest_correct_o(cuest_Jb, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
                quick_qm_struct%o = quick_qm_struct%o + cuest_J
-               quick_qm_struct%ob = quick_qm_struct%o + cuest_Jb
+               quick_qm_struct%ob = quick_qm_struct%ob + cuest_Jb
   
                ! convert density matrix from QUICK to cuEST form
                ! needed for accumulating eri energy before DFT
                call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
                call cuest_correct_P(quick_qm_struct%denseb, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
            else
-                 call cuest_get_eri_J(cuest_J, quick_qm_struct%dense)
-                 call cuest_get_eri_J(cuest_Jb, quick_qm_struct%denseb)
-                 
-                 if (hasK) then
-                     call cuest_get_eri_K(cuest_K, quick_qm_struct%co)
-                     call cuest_get_eri_K(cuest_Kb, quick_qm_struct%cob)
-                     ! K fraction is applied in cuEST
-                     cuest_J = cuest_J - cuest_K
-                     cuest_Jb = cuest_Jb - cuest_Kb
-                 endif
+               call cuest_get_eri_J(cuest_J, quick_qm_struct%dense + quick_qm_struct%denseb)
 
-                 if (hasK .and. deltaO) then
-                    quick_qm_struct%o = quick_qm_struct%o + cuest_J + quick_qm_struct%cuest_prev_K
-                    quick_qm_struct%ob = quick_qm_struct%ob + cuest_Jb + quick_qm_struct%cuest_prev_Kb
-                 else
-                    quick_qm_struct%o = quick_qm_struct%o + cuest_J
-                    quick_qm_struct%ob = quick_qm_struct%ob + cuest_Jb
-                 endif
-                    
-                 if (hasK) then
-                     quick_qm_struct%cuest_prev_K = cuest_K
-                     quick_qm_struct%cuest_prev_Kb = cuest_Kb
-                 endif
+               ! Jb contains the beta JK contribution
+               if (hasK) then
+                   call cuest_get_eri_K(cuest_K, quick_qm_struct%co)
+                   call cuest_get_eri_K(cuest_Kb, quick_qm_struct%cob)
+                   ! K fraction is applied in cuEST
+                   cuest_Jb = cuest_J - cuest_Kb
+                   cuest_J = cuest_J - cuest_K
+               else
+                   cuest_Jb = cuest_J
+               endif
+ 
+               if (hasK .and. deltaO) then
+                  quick_qm_struct%o = quick_qm_struct%o + cuest_J + quick_qm_struct%cuest_prev_K
+                  quick_qm_struct%ob = quick_qm_struct%ob + cuest_Jb + quick_qm_struct%cuest_prev_Kb
+               else
+                  quick_qm_struct%o = quick_qm_struct%o + cuest_J
+                  quick_qm_struct%ob = quick_qm_struct%ob + cuest_Jb
+               endif
+                  
+               if (hasK) then
+                   quick_qm_struct%cuest_prev_K = cuest_K
+                   quick_qm_struct%cuest_prev_Kb = cuest_Kb
+               endif
            endif
         else
            call gpu_get_oshell_eri(deltaO, quick_qm_struct%o, quick_qm_struct%ob)

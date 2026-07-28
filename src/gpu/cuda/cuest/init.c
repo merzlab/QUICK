@@ -21,16 +21,9 @@
  *     - xyz
  */
 void
-cuest_init
-#ifdef OSHELL
-    (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t noccb, int64_t nauxshell,
-     int64_t maxcontract, int64_t maxcontract_aux, int8_t *iattype, double *xyz, double *chg,
-     int64_t nextatom, double *extxyz, double *extchg)
-#else
-    (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t nauxshell,
-     int64_t maxcontract, int64_t maxcontract_aux, int8_t *iattype, double *xyz, double *chg,
-     int64_t nextatom, double *extxyz, double *extchg)
-#endif
+cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t noccb,
+            int64_t nauxshell, int64_t maxcontract, int64_t maxcontract_aux, int8_t *iattype,
+            double *xyz, double *chg, int64_t nextatom, double *extxyz, double *extchg)
 {
     if ((quick_cuest_log_fp = fopen ("debug.cuest", "w")) == NULL) {
         perror ("cuest_init fopen debug.cuest error: ");
@@ -59,15 +52,12 @@ cuest_init
     // init info //
     // ========= //
 
-    quick_cuest_data.natom      = natom;
-    quick_cuest_data.ntotalatom = natom + nextatom;
-    quick_cuest_data.nshell     = nshell;
-#ifdef OSHELL
-    quick_cuest_data.nocc  = nocc;
-    quick_cuest_data.noccb = noccb;
-#else
-    quick_cuest_data.nocc = nocc;
-#endif
+    quick_cuest_data.natom           = natom;
+    quick_cuest_data.ntotalatom      = natom + nextatom;
+    quick_cuest_data.nshell          = nshell;
+    quick_cuest_data.nocc            = nocc;
+    quick_cuest_data.noccb           = noccb;
+    quick_cuest_data.nocc            = nocc;
     quick_cuest_data.nauxshell       = nauxshell;
     quick_cuest_data.maxcontract     = maxcontract;
     quick_cuest_data.maxcontract_aux = maxcontract_aux;
@@ -75,9 +65,7 @@ cuest_init
     quick_cuest_data.nbasis          = nbasis;
     quick_cuest_PC_buf.P_siz         = nbasis * nbasis * sizeof (double);
     quick_cuest_PC_buf.C_siz         = nocc * nbasis * sizeof (double);
-#ifdef OSHELL
-    quick_cuest_PC_buf.Cb_siz = noccb * nbasis * sizeof (double);
-#endif
+    quick_cuest_PC_buf.Cb_siz        = noccb * nbasis * sizeof (double);
 
     // ensure iattype persists
     const size_t iattype_siz = natom * sizeof (int8_t);
@@ -123,9 +111,7 @@ cuest_init
 
     cudaMallocChecked (&quick_cuest_PC_buf.d_P[0], quick_cuest_PC_buf.P_siz);
     cudaMallocChecked (&quick_cuest_PC_buf.d_C[0], quick_cuest_PC_buf.C_siz);
-#ifdef OSHELL
     cudaMallocChecked (&quick_cuest_PC_buf.d_Cb[0], quick_cuest_PC_buf.Cb_siz);
-#endif
 }
 
 void
@@ -196,8 +182,6 @@ cuest_deinit ()
     cudaFreeChecked (quick_cuest_PC_buf.d_C[0]);
     free_dev_alloc (quick_cuest_PC_buf.P_siz);
     free_dev_alloc (quick_cuest_PC_buf.C_siz);
-#ifdef OSHELL
     cudaFreeChecked (quick_cuest_PC_buf.d_Cb[0]);
     free_dev_alloc (quick_cuest_PC_buf.Cb_siz);
-#endif
 }

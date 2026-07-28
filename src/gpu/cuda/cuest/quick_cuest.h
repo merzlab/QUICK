@@ -1,9 +1,6 @@
 #ifndef QUICK_CUEST_QUICK_CUEST_H
 #define QUICK_CUEST_QUICK_CUEST_H
 
-// for lsp when debug
-// #define OSHELL
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -58,9 +55,7 @@ typedef struct {
     cuestWorkspaceDescriptor_t            *Vxc_vbs;
     cuestXCPotentialRKSComputeParameters_t Vxc_par;
     void                                  *d_Vxc;
-#ifdef OSHELL
-    void *d_Vxcb;
-#endif
+    void                                  *d_Vxcb;
 } quick_cuest_compute_mem_t;
 
 typedef struct {
@@ -93,10 +88,8 @@ typedef struct {
     void  *d_C[MPI_MAX_RANKS];
     size_t P_siz;
     size_t C_siz;
-#ifdef OSHELL
     void  *d_Cb[MPI_MAX_RANKS];
     size_t Cb_siz;
-#endif
 } quick_cuest_PC_buf_t;
 
 typedef struct {
@@ -104,9 +97,7 @@ typedef struct {
     uint64_t nshell;
     uint64_t nbasis;
     uint64_t nocc;
-#ifdef OSHELL
     uint64_t noccb;
-#endif
     uint64_t nauxshell;
     uint64_t maxcontract;
     uint64_t maxcontract_aux;
@@ -147,15 +138,13 @@ extern quick_cuest_memchk_t      quick_cuest_memchk;
 extern quick_cuest_memtrace_t    quick_cuest_memtrace;
 extern FILE                     *quick_cuest_log_fp;
 
-#ifdef OSHELL
 void cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocca, int64_t noccb,
                  int64_t nauxshell, int64_t maxcontract, int64_t maxcontract_aux, int8_t *iattype,
                  double *xyz, double *chg, int64_t nextatom, double *extxyz, double *extchg);
-#else
-void cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t nauxshell,
-                 int64_t maxcontract, int64_t maxcontract_aux, int8_t *iattype, double *xyz,
-                 double *chg, int64_t nextatom, double *extxyz, double *extchg);
-#endif
+// void cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t nauxshell,
+//                  int64_t maxcontract, int64_t maxcontract_aux, int8_t *iattype, double *xyz,
+//                  double *chg, int64_t nextatom, double *extxyz, double *extchg);
+
 /** Deinitializes the basis set, pair list, and DF integral plan */
 void cuest_deinit ();
 
@@ -190,11 +179,8 @@ void cuest_destroy_atom_grid ();
 
 void cuest_init_xc (int8_t fnl, int64_t devsiz);
 void cuest_deinit_xc ();
-#ifdef OSHELL
-void cuest_get_oshell_xc (double *Vxc, double *Vxcb, double *Exc, double *Ca, double *Cb);
-#else
+void cuest_get_oshell_xc (double *Vxc, double *Vxcb, double *Exc, double *C, double *Cb);
 void cuest_get_cshell_xc (double *Vxc, double *Exc, double *C);
-#endif
 
 // ======== //
 // Gradient //
