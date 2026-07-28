@@ -36,7 +36,6 @@ contains
      use quick_basis_module
      use quick_calculated_module
      use quick_method_module
-     use quick_size_module
      use quick_timer_module
      use quick_cutoff_module, only: oshell_density_cutoff
      use quick_eri_oshell_module, only: getOshellEri, getOshellEriEnergy 
@@ -287,7 +286,6 @@ contains
      use quick_basis_module
      use quick_calculated_module
      use quick_method_module
-     use quick_size_module
      use quick_timer_module
      use quick_gridpoints_module
      use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e

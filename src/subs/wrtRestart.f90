@@ -17,7 +17,6 @@ subroutine wrtrestart
   use quick_files_module
   use quick_method_module
   use quick_molspec_module
-  use quick_size_module
   use quick_gridpoints_module
   implicit none
   integer istart,ifinal

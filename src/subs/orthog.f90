@@ -23,7 +23,6 @@
 
 
     use quick_basis_module
-    use quick_size_module
     implicit none
 ! DIMENSION VECT(NDIM,*)
     integer, intent(in) :: ndim, nvect, jstart

@@ -123,7 +123,7 @@
     use quick_gridpoints_module
     use quick_mpi_module, only: quick_mpi_error, quick_comm
     use quick_ecp_module
-    use quick_params_module
+    use quick_params_module, only: At1prm, bndprm
     use mpi
 
     implicit none

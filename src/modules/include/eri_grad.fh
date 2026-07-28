@@ -25,7 +25,6 @@ module quick_eri_grad_oshell_module
 module quick_eri_grad_cshell_module
 #endif
 
-   use quick_timer_module
    use quick_scratch_module
    implicit none
 #ifdef OSHELL
@@ -50,8 +49,6 @@ subroutine cshell_eri_grad
    use quick_method_module
    use quick_params_module
    use quick_molspec_module
-   use quick_size_module
-   use quick_files_module
 
    implicit none
    integer, parameter :: NN = 14
@@ -228,8 +225,6 @@ subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
    use quick_method_module
    use quick_params_module
    use quick_molspec_module
-   use quick_size_module
-   use quick_files_module
 
    implicit none
    ! Dummy arguments

@@ -399,7 +399,6 @@ contains
     use quick_constants_module
     use quick_method_module
     use quick_calculated_module
-    use quick_scratch_module
 
     implicit none
 

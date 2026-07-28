@@ -201,7 +201,6 @@ subroutine write_mo(self, ierr)
 
     use quick_basis_module, only: quick_basis, nbasis
     use quick_calculated_module, only: quick_qm_struct
-    use quick_scratch_module
     use quick_molspec_module, only: quick_molspec
     use quick_method_module, only: quick_method
     implicit none

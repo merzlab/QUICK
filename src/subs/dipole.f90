@@ -13,7 +13,6 @@
     use quick_files_module
     use quick_method_module
     use quick_molspec_module
-    use quick_size_module
     use quick_timer_module
     implicit none
     

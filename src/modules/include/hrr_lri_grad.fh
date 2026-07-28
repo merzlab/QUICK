@@ -20,7 +20,6 @@
 subroutine hrr_lri_grad
 
   use quick_basis_module
-  use quick_params_module   
 
   implicit none
 

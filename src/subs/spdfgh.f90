@@ -6,19 +6,7 @@
       subroutine PSSS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -51,19 +39,7 @@
       subroutine SSPS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -96,19 +72,7 @@
       subroutine PSPS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -155,19 +119,7 @@
       subroutine DSSS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -224,19 +176,7 @@
       subroutine SSDS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -295,19 +235,7 @@
       subroutine DSPS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -373,19 +301,7 @@
       subroutine PSDS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -443,19 +359,7 @@
       subroutine DSDS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -527,19 +431,7 @@
       subroutine FSSS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -587,19 +479,7 @@
       subroutine SSFS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -647,19 +527,7 @@
       subroutine GSSS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -707,19 +575,7 @@
       subroutine SSGS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -768,19 +624,7 @@
       subroutine FSPS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -840,19 +684,7 @@
       subroutine PSFS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -905,19 +737,7 @@
       subroutine GSPS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -977,19 +797,7 @@
       subroutine PSGS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -1043,19 +851,7 @@
       subroutine FSDS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -1121,19 +917,7 @@
       subroutine DSFS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -1200,19 +984,7 @@
       subroutine GSDS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -1277,19 +1049,7 @@
       subroutine DSGS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -1354,19 +1114,7 @@
       subroutine FSFS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -1434,19 +1182,7 @@
       subroutine GSFS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -1516,19 +1252,7 @@
       subroutine FSGS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -1600,19 +1324,7 @@
       subroutine GSGS(mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: mtemp
       double precision mem(35,35,0:8)
@@ -1680,19 +1392,7 @@
       subroutine BSLS(IBxiao,ILxiao,mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: IBxiao, ILxiao, mtemp
       double precision mem(35,35,0:8)
@@ -1791,19 +1491,7 @@
       subroutine LSBS(ILxiao,IBxiao,mtemp)
       use quick_SCRATCH_module
       use quick_basis_module
-      use quick_calculated_module
-      use quick_constants_module
-      use quick_divcon_module
-      use quick_ecp_module
-      use quick_electrondensity_module
-      use quick_files_module
-      use quick_gaussian_class_module
-      use quick_method_module
-      use quick_mfcc_module
-      use quick_molspec_module
       use quick_params_module
-      use quick_size_module
-      use quick_timer_module
       implicit none
       integer, intent(in) :: IBxiao, ILxiao, mtemp
 

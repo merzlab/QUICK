@@ -36,7 +36,6 @@ SUBROUTINE EIGVEC(NDIM,NEVEC1,A,AWORK,TOLERA,ANORM,EVAL1,IDEGEN1, &
 
 
   use quick_basis_module
-  use quick_size_module
   implicit none
   ! DIMENSION A(NDIM,*),AWORK(3,*),EVAL1(*),IDEGEN1(*),EVEC1(NDIM,*)
   DIMENSION A(nbasis,nbasis),AWORK(3,nbasis),EVAL1(nbasis), &
@@ -243,7 +242,6 @@ end SUBROUTINE EIGVEC
 
 
     use quick_basis_module
-    use quick_size_module
     implicit none
 ! DIMENSION A(NDIM,*),BETAH(3,*),EVAL1(*)
     DIMENSION A(nbasis,nbasis),BETAH(3,nbasis),EVAL1(nbasis)
