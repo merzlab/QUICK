@@ -50,9 +50,6 @@ cuest_deinit_S_grad ()
     cudaFreeChecked (quick_cuest_grad_mem.d_dSdR);
     const size_t grad_siz = 3 * quick_cuest_data.natom * sizeof (double);
     free_dev_alloc (grad_siz);
-
-    cudaFreeChecked (quick_cuest_PC_buf.d_P[0]);
-    free_dev_alloc (quick_cuest_PC_buf.P_siz);
 }
 
 void
@@ -237,11 +234,6 @@ cuest_deinit_JK_grad ()
     cudaFreeChecked (quick_cuest_grad_mem.d_dJKdR);
     const size_t grad_siz = 3 * quick_cuest_data.natom * sizeof (double);
     free_dev_alloc (grad_siz);
-
-    cudaFreeChecked (quick_cuest_PC_buf.d_P[0]);
-    cudaFreeChecked (quick_cuest_PC_buf.d_C[0]);
-    free_dev_alloc (quick_cuest_PC_buf.P_siz);
-    free_dev_alloc (quick_cuest_PC_buf.C_siz);
 }
 
 void
