@@ -27,13 +27,11 @@ contains
 
   subroutine fmmone(Ips,Jps,IIsh,JJsh,NIJ1, &
       Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,iatom,constant2,a,b,xdistance)
-  use quick_basis_module
-  use quick_calculated_module
-  use quick_constants_module
+  use quick_basis_module, only: III, JJJ, quick_basis
+  use quick_calculated_module, only: quick_qm_struct
+   implicit none
 
-  implicit none
-
-  integer a(3),b(3)
+   integer a(3),b(3)
   double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g  
   double precision AA(3),BB(3),CC(3),PP(3)
   double precision fmmonearray(0:2,0:2,1:2)
@@ -137,7 +135,7 @@ contains
 
 
 subroutine overlapone(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,fmmtemparray)
-   use quick_constants_module
+   use quick_constants_module, only: FACT, PITO3HALF
    implicit none
 
    double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g
@@ -394,7 +392,7 @@ end subroutine overlapone
 
 subroutine overlaptwo(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx, &
       By,Bz,fmmonearray)
-   use quick_constants_module
+   use quick_constants_module, only: FACT, PITO3HALF
    implicit none
 
    double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g
@@ -916,7 +914,7 @@ subroutine overlaptwo(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx, &
 end subroutine overlaptwo 
 
 subroutine overlapzero(a,b,fmmtemparray)
-   use quick_constants_module
+   use quick_constants_module, only: PITO3HALF
    implicit none
 
    double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g

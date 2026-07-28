@@ -1,6 +1,6 @@
 
 module driver_parameter_module
-  use dlf_parameter_module
+  use dlf_parameter_module, only: rk
   ! variables for Mueller-Brown potential
   real(rk) :: acappar(4),apar(4),bpar(4),cpar(4),x0par(4),y0par(4)
   ! variables for Lennard-Jones potentials
@@ -66,7 +66,8 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
     neb_climb_test, neb_freeze_test, &
     nzero, coupled_states, qtsflag,&
     imicroiter, maxmicrocycle, micro_esp_fit)
-  use driver_parameter_module
+  use driver_parameter_module, only: Ebarr, V0, Va, Vb, X0, acappar, alpha, apar, bpar, cpar, dpar, epsilon, &
+       num_dim, rk, sigma, x0par, xvar, y0par, yvar
   use dlf_parameter_module, only: rk
   use quick_molspec_module, only: natom, xyz, quick_molspec
   use quick_constants_module, only: EMASS
@@ -298,7 +299,8 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   !  Mueller-Brown Potential
   !  see K Mueller and L. D. Brown, Theor. Chem. Acta 53, 75 (1979)
   !  taken from JCP 111, 9475 (1999)
-  use driver_parameter_module
+  use driver_parameter_module, only: Ebarr, V0, Va, Vb, X0, acappar, alpha, apar, bpar, cpar, dpar, epsilon, &
+       num_dim, rk, sigma, x0par, xvar, y0par, yvar
   use dlf_parameter_module, only: rk
   use dlf_stat, only: stat
   use quick_calculated_module, only: quick_qm_struct
@@ -366,7 +368,8 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
         quick_basis%first_shell_basis_function,quick_basis%last_shell_basis_function,&     
         quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &                       
         quick_basis%ktype, quick_basis%kprim,quick_basis%kshell,quick_basis%Ksumtype, &    
-        quick_basis%Qnumber, quick_basis%Qstart,quick_basis%Qfinal,quick_basis%Qsbasis, quick_basis%Qfbasis, &                                                                               
+        quick_basis%Qnumber, quick_basis%Qstart,quick_basis%Qfinal, &
+        quick_basis%Qsbasis, quick_basis%Qfbasis, &
         quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)        
                                                                                                   
   call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)                                           
@@ -420,8 +423,9 @@ end subroutine dlf_get_gradient
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 subroutine dlf_get_hessian(nvar,coords,hessian,status)
   !  get the hessian at a given geometry
-  use driver_parameter_module
-  use dlf_parameter_module
+  use driver_parameter_module, only: Ebarr, V0, Va, Vb, X0, acappar, alpha, apar, bpar, cpar, dpar, epsilon, &
+       num_dim, rk, sigma, x0par, xvar, y0par, yvar
+  use dlf_parameter_module, only: rk
   implicit none
   integer   ,intent(in)    :: nvar
   real(rk)  ,intent(in)    :: coords(nvar)
@@ -448,32 +452,48 @@ subroutine dlf_get_hessian(nvar,coords,hessian,status)
         posi=(iat-1)*3+1
         posj=(jat-1)*3+1
         ! off-diag
-        hessian(posi,posi+1)  =hessian(posi,posi+1)  + svar *(acoords(1,iat)-acoords(1,jat)) * (acoords(2,iat)-acoords(2,jat))
-        hessian(posi,posi+2)  =hessian(posi,posi+2)  + svar *(acoords(1,iat)-acoords(1,jat)) * (acoords(3,iat)-acoords(3,jat))
-        hessian(posi+1,posi)  =hessian(posi+1,posi)  + svar *(acoords(2,iat)-acoords(2,jat)) * (acoords(1,iat)-acoords(1,jat))
-        hessian(posi+1,posi+2)=hessian(posi+1,posi+2)+ svar *(acoords(2,iat)-acoords(2,jat)) * (acoords(3,iat)-acoords(3,jat))
-        hessian(posi+2,posi)  =hessian(posi+2,posi)  + svar *(acoords(3,iat)-acoords(3,jat)) * (acoords(1,iat)-acoords(1,jat))
-        hessian(posi+2,posi+1)=hessian(posi+2,posi+1)+ svar *(acoords(3,iat)-acoords(3,jat)) * (acoords(2,iat)-acoords(2,jat))
+        hessian(posi,posi+1)  =hessian(posi,posi+1)  + svar *(acoords(1,iat)-acoords(1,jat)) &
+             & * (acoords(2,iat)-acoords(2,jat))
+        hessian(posi,posi+2)  =hessian(posi,posi+2)  + svar *(acoords(1,iat)-acoords(1,jat)) &
+             & * (acoords(3,iat)-acoords(3,jat))
+        hessian(posi+1,posi)  =hessian(posi+1,posi)  + svar *(acoords(2,iat)-acoords(2,jat)) &
+             & * (acoords(1,iat)-acoords(1,jat))
+        hessian(posi+1,posi+2)=hessian(posi+1,posi+2)+ svar *(acoords(2,iat)-acoords(2,jat)) &
+             & * (acoords(3,iat)-acoords(3,jat))
+        hessian(posi+2,posi)  =hessian(posi+2,posi)  + svar *(acoords(3,iat)-acoords(3,jat)) &
+             & * (acoords(1,iat)-acoords(1,jat))
+        hessian(posi+2,posi+1)=hessian(posi+2,posi+1)+ svar *(acoords(3,iat)-acoords(3,jat)) &
+             & * (acoords(2,iat)-acoords(2,jat))
 
         do m=0,2
           do n=0,2
             if(m==n) cycle
-  hessian(posi+m,posj+n)=hessian(posi+m,posj+n)- svar *(acoords(M+1,iat)-acoords(M+1,jat)) * (acoords(N+1,iat)-acoords(N+1,jat))
-  hessian(posj+m,posi+n)=hessian(posj+m,posi+n)- svar *(acoords(M+1,iat)-acoords(M+1,jat)) * (acoords(N+1,iat)-acoords(N+1,jat))
+  hessian(posi+m,posj+n)=hessian(posi+m,posj+n)- svar *(acoords(M+1,iat)-acoords(M+1,jat)) &
+       & * (acoords(N+1,iat)-acoords(N+1,jat))
+  hessian(posj+m,posi+n)=hessian(posj+m,posi+n)- svar *(acoords(M+1,iat)-acoords(M+1,jat)) &
+       & * (acoords(N+1,iat)-acoords(N+1,jat))
           end do
         end do
         ! Diag for different atoms ...
         do m=0,2
-          hessian(posi+m,posj+m)=hessian(posi+m,posj+m) -24.D0*(svar2+1.D0/24.D0*svar* (acoords(m+1,iat)-acoords(M+1,jat))**2)
-          hessian(posj+m,posi+m)=hessian(posj+m,posi+m) -24.D0*(svar2+1.D0/24.D0*svar* (acoords(m+1,iat)-acoords(M+1,jat))**2)
+          hessian(posi+m,posj+m)=hessian(posi+m,posj+m) &
+            -24.D0*(svar2+1.D0/24.D0*svar* (acoords(m+1,iat)-acoords(M+1,jat))**2)
+          hessian(posj+m,posi+m)=hessian(posj+m,posi+m) &
+            -24.D0*(svar2+1.D0/24.D0*svar* (acoords(m+1,iat)-acoords(M+1,jat))**2)
         end do
 
-        hessian(posj,posj+1)  =hessian(posj,posj+1)  + svar * (acoords(1,iat)-acoords(1,jat)) * (acoords(2,iat)-acoords(2,jat))
-        hessian(posj,posj+2)  =hessian(posj,posj+2)  + svar * (acoords(1,iat)-acoords(1,jat)) * (acoords(3,iat)-acoords(3,jat))
-        hessian(posj+1,posj)  =hessian(posj+1,posj)  + svar * (acoords(2,iat)-acoords(2,jat)) * (acoords(1,iat)-acoords(1,jat))
-        hessian(posj+1,posj+2)=hessian(posj+1,posj+2)+ svar * (acoords(2,iat)-acoords(2,jat)) * (acoords(3,iat)-acoords(3,jat))
-        hessian(posj+2,posj)  =hessian(posj+2,posj)  + svar * (acoords(3,iat)-acoords(3,jat)) * (acoords(1,iat)-acoords(1,jat))
-        hessian(posj+2,posj+1)=hessian(posj+2,posj+1)+ svar * (acoords(3,iat)-acoords(3,jat)) * (acoords(2,iat)-acoords(2,jat))
+        hessian(posj,posj+1)  =hessian(posj,posj+1)  + svar * (acoords(1,iat)-acoords(1,jat)) &
+             & * (acoords(2,iat)-acoords(2,jat))
+        hessian(posj,posj+2)  =hessian(posj,posj+2)  + svar * (acoords(1,iat)-acoords(1,jat)) &
+             & * (acoords(3,iat)-acoords(3,jat))
+        hessian(posj+1,posj)  =hessian(posj+1,posj)  + svar * (acoords(2,iat)-acoords(2,jat)) &
+             & * (acoords(1,iat)-acoords(1,jat))
+        hessian(posj+1,posj+2)=hessian(posj+1,posj+2)+ svar * (acoords(2,iat)-acoords(2,jat)) &
+             & * (acoords(3,iat)-acoords(3,jat))
+        hessian(posj+2,posj)  =hessian(posj+2,posj)  + svar * (acoords(3,iat)-acoords(3,jat)) &
+             & * (acoords(1,iat)-acoords(1,jat))
+        hessian(posj+2,posj+1)=hessian(posj+2,posj+1)+ svar * (acoords(3,iat)-acoords(3,jat)) &
+             & * (acoords(2,iat)-acoords(2,jat))
         ! diag
         hessian(posi,posi)    =hessian(posi,posi)    + 24.D0*(svar2+1.D0/24.D0*svar* (acoords(1,iat)-acoords(1,jat))**2)
         hessian(posi+1,posi+1)=hessian(posi+1,posi+1)+ 24.D0*(svar2+1.D0/24.D0*svar* (acoords(2,iat)-acoords(2,jat))**2)
@@ -496,7 +516,8 @@ end subroutine dlf_get_hessian
 
 ! initialize parameters for the test potentials
 subroutine driver_init
-  use driver_parameter_module
+  use driver_parameter_module, only: Ebarr, V0, Va, Vb, X0, acappar, alpha, apar, bpar, cpar, dpar, epsilon, &
+       num_dim, rk, sigma, x0par, xvar, y0par, yvar
   implicit none
   real(rk) :: ebarr_
   integer :: icount
@@ -535,7 +556,7 @@ end subroutine driver_init
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 subroutine dlf_put_coords(nvar,mode,energy,coords,iam)
-  use dlf_parameter_module
+  use dlf_parameter_module, only: rk
   implicit none
   integer   ,intent(in)    :: nvar
   integer   ,intent(in)    :: mode
@@ -585,7 +606,7 @@ end subroutine dlf_update
 subroutine dlf_get_multistate_gradients(nvar,coords,energy,gradient,needscoupling,iimage,status)
   ! only a dummy routine up to now
   ! for conical intersection search
-  use dlf_parameter_module
+  use dlf_parameter_module, only: rk
   implicit none
   integer   ,intent(in)    :: nvar
   integer   ,intent(in)    :: coords(nvar)

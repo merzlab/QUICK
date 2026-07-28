@@ -41,7 +41,7 @@ contains
 
   
   subroutine CalcAngRenorm(n,fact)
-    use quick_basis_module
+    use quick_basis_module, only: itype
     implicit none
     integer,intent(in) :: n
     double precision,intent(out) :: fact(n)
@@ -77,7 +77,7 @@ contains
     ! using OSHGP algorithm.                                               ! 
     !______________________________________________________________________!
 
-    use quick_constants_module
+    use quick_constants_module, only: FACT, PI, X0
 
     implicit none
     double precision, intent(in) :: c_coords(3), c_zeta, c_chg
@@ -98,9 +98,9 @@ contains
 ! 0 is another gaussian with zero exponent.                            !
 !______________________________________________________________________!
   subroutine compute_lri(c_coords, c_zeta, c_chg)
-    use quick_basis_module
-    use quick_method_module, only: quick_method
+    use quick_basis_module, only: jshell
 #if defined(MPIV)
+    use quick_basis_module, only: mpi_jshell, mpi_jshelln
     use quick_mpi_module, only: bMPI, quick_comm_rank
 #endif
 
@@ -147,7 +147,7 @@ contains
 
   subroutine prescreen_compute_lri(II,c0c0)
 
-    use quick_basis_module
+    use quick_basis_module, only: Ycutoff, jshell
     use quick_method_module, only: quick_method
 
     implicit none
@@ -172,15 +172,15 @@ contains
   ! performs VRR and HRR.                                                !
   !______________________________________________________________________!
   subroutine compute_long_range_integral(II,JJ,c0c0)
-    use quick_basis_module
-    use quick_method_module
+    use quick_basis_module, only: Apri, Ppri, Yxiao, Yxiaotemp, quick_basis
     use quick_molspec_module, only: xyz
-    use quick_params_module
+    use quick_params_module, only: Sumindex
 
     integer, intent(in) :: II, JJ
     double precision, intent(in) :: c0c0
     integer :: M, LL, NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2, NNAB, NNCD, NABCDTYPE, &
-               NNA, NNC, NABCD, ITT, Nprij, Nprii, iitemp, I1, I2, I, J, K, L 
+               NNA, NNC, NABCD, ITT, Nprij, Nprii, iitemp, I1, I2, I, J, K, L
+    integer :: III, JJJ, KKK, LLL
     double precision :: P(3), AAtemp(3), Ptemp(3), Q(3), W(3), WQtemp(3), &
                         Qtemp(3), WPtemp(3), FM(0:13)
     double precision :: AA, AB, ABtemp, cutoffprim1, cutoffprim, CD, ABCD, ROU, RPQ, ABCDsqrt, &
@@ -395,10 +395,9 @@ contains
   ! core hamiltonian.                                                    !
   !______________________________________________________________________!
   subroutine iclass_lri(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
-    use quick_basis_module
-    use quick_constants_module
-    use quick_method_module
-    use quick_calculated_module
+    use quick_basis_module, only: IJKLtype, IJtype, KLtype, Y, Yxiao, quick_basis
+    use quick_constants_module, only: PI, X0
+    use quick_calculated_module, only: quick_qm_struct
 
     implicit none
 
@@ -406,6 +405,7 @@ contains
 
     integer :: ITT, Nprii, Nprij, MM1, MM2, itemp, III1, III2, JJJ1, JJJ2, KKK1, KKK2, &
                LLL1, LLL2, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2 
+    integer :: III, JJJ, KKK, LLL
     double precision :: X44(129600)
     double precision :: X2, Ytemp
 

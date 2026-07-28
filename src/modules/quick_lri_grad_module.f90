@@ -44,12 +44,9 @@ contains
   
   subroutine compute_lri_numgrad( c_coords, c_zeta, c_chg, c_idx )
     use quick_lri_module, only : computeLRI
-    use quick_basis_module
-    use quick_method_module
+    use quick_basis_module, only: nbasis
     use quick_molspec_module, only: xyz, natom
-    use quick_params_module
-    use quick_scratch_module
-    use quick_calculated_module
+    use quick_calculated_module, only: quick_qm_struct
     use quick_eri_cshell_module
     
     implicit none
@@ -129,9 +126,10 @@ contains
 ! 0 is another gaussian with zero exponent.                            !
 !______________________________________________________________________!
   subroutine compute_lri_grad(c_coords, c_zeta, c_chg, c_idx )
-    use quick_basis_module
+    use quick_basis_module, only: jshell
     use quick_lri_module, only: compute_c0c0 
 #if defined(MPIV)
+    use quick_basis_module, only: mpi_jshell, mpi_jshelln
     use quick_mpi_module, only: bMPI, quick_comm_rank
 #endif
     
@@ -179,7 +177,7 @@ contains
 
   subroutine prescreen_compute_lri_grad(II,c0c0)
 
-    use quick_basis_module
+    use quick_basis_module, only: Ycutoff, jshell
     use quick_method_module, only: quick_method
 
     implicit none
@@ -207,16 +205,16 @@ contains
     ! performs VRR and HRR.                                                !
     !______________________________________________________________________!
 
-    use quick_basis_module
-    use quick_method_module
+    use quick_basis_module, only: Apri, Ppri, Yxiao, Yxiaotemp, cutprim, dnmax, maxcontract, quick_basis
     use quick_molspec_module, only: xyz
-    use quick_params_module
-    use quick_scratch_module
+    use quick_scratch_module, only: quick_scratch, allocshellopt, deallocshellopt
+    use quick_params_module, only: Sumindex
 
     integer, intent(in) :: II, JJ
 
     integer :: M, LL, NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2, NNAB, NNABfirst, NNCD, NNCDfirst, &
                NABCDTYPE, NNA, NNC, NABCD, ITT, Nprij, Nprii, iitemp, I1, I2, I, J, K, L 
+    integer :: III, JJJ, KKK, LLL
     double precision :: P(3), AAtemp(3), Ptemp(3), Q(3), W(3), WQtemp(3), &
                         Qtemp(3), WPtemp(3), FM(0:14)
     double precision :: AA, AB, ABtemp, cutoffprim1, cutoffprim, CD, ABCD, ROU, RPQ, ABCDsqrt, &
@@ -455,12 +453,11 @@ contains
   ! gradient vector.                                                     !
   !______________________________________________________________________!
   subroutine iclass_lri_grad(I,J,K,L,II,JJ,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
-    use quick_basis_module
-    use quick_constants_module
-    use quick_method_module
-    use quick_calculated_module
+    use quick_basis_module, only: IJKLtype, IJtype, KLtype, Yaa, Ybb, Yxiao, III, JJJ, KKK, LLL, quick_basis
+    use quick_constants_module, only: PI, X0
+    use quick_calculated_module, only: quick_qm_struct
     use quick_molspec_module, only: natom
-    use quick_scratch_module
+    use quick_scratch_module, only: quick_scratch
 !    use quick_lri_module, only : angrenorm
 
     implicit none

@@ -347,7 +347,7 @@ end subroutine dlf_task
 !! SYNOPSIS
 subroutine dlf_task_set_l(label,value)
 !! SOURCE
-  use dlf_task_module
+  use dlf_task_module, only: tconverged
   implicit none
   character(*), intent(in) :: label
   logical     , intent(in) :: value

@@ -361,10 +361,9 @@ contains
    !----------------------
   subroutine read_quick_molspec(self,input,isTemplate, hasKeywd, apiKeywd,ierr)
 
-    use quick_constants_module
+    use quick_constants_module, only: SYMBOL
     use quick_exception_module
     use quick_method_module, only: quick_method
-    use quick_files_module, only : iDataFile, dataFileName
     use quick_io_module, only: chk_read
 
     implicit none
@@ -548,52 +547,52 @@ contains
    ! read external charge
    !----------------
    subroutine read_quick_molspec_2(self,input,ierr)
-      use quick_constants_module
-      use quick_exception_module
+       use quick_constants_module, only: A_TO_BOHRS, SYMBOL, SYMBOL_MAX
+       use quick_exception_module
 
-      implicit none
-      ! parameter
-      type (quick_molspec_type), intent(inout) :: self
-      integer input
-      integer, intent(inout) :: ierr
-      ! inner varibles
-      integer i,j,k,istart,ifinal
-      integer ierror
-      double precision temp
-      character(len=STR_LEN) keywd
+       implicit none
+       ! parameter
+       type (quick_molspec_type), intent(inout) :: self
+       integer input
+       integer, intent(inout) :: ierr
+       ! inner varibles
+       integer i,j,k,istart,ifinal
+       integer ierror
+       double precision temp
+       character(len=STR_LEN) keywd
 
 
-      rewind(input)
+       rewind(input)
 
-      call findBlock(input,1)
+       call findBlock(input,1)
 
-      do i=1,natom
+       do i=1,natom
 
-         istart=1
-         ifinal=80
+          istart=1
+          ifinal=80
 
-         read (input,'(A80)') keywd
-         call upcase(keywd,80)
-         call rdword(keywd,istart,ifinal)
+          read (input,'(A80)') keywd
+          call upcase(keywd,80)
+          call rdword(keywd,istart,ifinal)
 
-         !-----------------------------
-         ! First, find the atom type.
-         !-----------------------------
-         do k=1,SYMBOL_MAX
-             if (keywd(istart:ifinal) == symbol(k)) self%iattype(i)=k
+          !-----------------------------
+          ! First, find the atom type.
+          !-----------------------------
+          do k=1,SYMBOL_MAX
+              if (keywd(istart:ifinal) == symbol(k)) self%iattype(i)=k
+          enddo
+
+          !-----------------------------
+          ! Next, find the xyz coordinates of the atom and convert to bohr.
+          !-----------------------------
+          do k=1,3
+             istart=ifinal+1
+             ifinal=80
+             call rdword(keywd,istart,ifinal)
+             call rdnum(keywd,istart,temp,ierror)
+             xyz(k,i) = temp*A_TO_BOHRS
          enddo
-
-         !-----------------------------
-         ! Next, find the xyz coordinates of the atom and convert to bohr.
-         !-----------------------------
-         do k=1,3
-            istart=ifinal+1
-            ifinal=80
-            call rdword(keywd,istart,ifinal)
-            call rdnum(keywd,istart,temp,ierror)
-            xyz(k,i) = temp*A_TO_BOHRS
-        enddo
-      enddo
+       enddo
 
       self%xyz => xyz
 
@@ -609,7 +608,7 @@ contains
 
 
    subroutine read_quick_molespec_extcharges(self,input,ierr)
-       use quick_constants_module
+       use quick_constants_module, only: A_TO_BOHRS
        use quick_exception_module
 
        implicit none
@@ -650,7 +649,6 @@ contains
    end subroutine read_quick_molespec_extcharges
 
    subroutine read_quick_molespec_constrain(self,input,ierr)
-       use quick_constants_module
        use quick_exception_module
 
        implicit none
@@ -773,7 +771,7 @@ contains
    end subroutine read_quick_molespec_constrain
 
    subroutine read_quick_molespec_extgridpoints(self,input,ierr)
-     use quick_constants_module
+     use quick_constants_module, only: A_TO_BOHRS
      use quick_exception_module
 
      implicit none
@@ -830,7 +828,7 @@ contains
    subroutine print_quick_molspec(self,io,ierr)
 
       use quick_exception_module
-      use quick_constants_module
+      use quick_constants_module, only: BOHRS_TO_A, SYMBOL
       implicit none
        
       integer, intent(inout) :: ierr
@@ -840,7 +838,8 @@ contains
          write(io,'(/," =========== Molecule Input ==========")')
          write(io,'(" TOTAL MOLECULAR CHARGE  = ",I4,4x,"MULTIPLICITY                = ",I4)') self%molchg,self%imult
          write(io,'(" TOTAL ATOM NUMBER       = ",i4,4x,"NUMBER OF ATOM TYPES        = ",i4)') self%natom,self%iAtomType
-         write(io,'(" NUMBER OF HYDROGEN ATOM = ",i4,4x,"NUMBER OF NON-HYDROGEN ATOM = ",i4)') self%nhatom,self%nNonHAtom
+         write(io,'(" NUMBER OF HYDROGEN ATOM = &
+              & ",i4,4x,"NUMBER OF NON-HYDROGEN ATOM = ",i4)') self%nhatom,self%nNonHAtom
 
          if(self%nextatom.gt.0 )then
            write(io,'(" NUMBER OF EXTERNAL POINT CHARGES = ",i4)') self%nextatom
@@ -889,7 +888,6 @@ contains
    subroutine set_quick_molspec(self,ierr)
 
       use quick_exception_module
-      use quick_constants_module
 
       implicit none
 

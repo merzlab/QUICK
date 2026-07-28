@@ -366,7 +366,7 @@ contains
 
 
    subroutine normalize_basis()
-      use quick_constants_module
+      use quick_constants_module, only: PITO3HALF
 
       implicit none
 

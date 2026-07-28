@@ -21,7 +21,7 @@
 ! Ed Brothers. November 2, 2001
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 double precision function repulsion(gi,gj,gk,gl,pos1,pos2,pos3,pos4) result(repint)
-   use quick_gaussian_class_module
+   use quick_gaussian_class_module, only: gaussian
    implicit none
 
    type(gaussian) :: gi,gj,gk,gl

@@ -18,7 +18,7 @@
 !> This module contains the API to access DFT-D3 functionality.
 !!
 module dftd3_api
-  use dftd3_sizes
+  use dftd3_sizes, only: max_elem, maxc
   use dftd3_common
   use dftd3_core
   implicit none

@@ -39,8 +39,8 @@ contains
      use quick_method_module, only: quick_method, quick_method_type
      use quick_calculated_module, only: quick_qm_struct, alloc, init, dealloc
      use quick_constants_module, only : symbol, spinmult
-     use quick_gridpoints_module
-     use quick_files_module
+     use quick_gridpoints_module, only: MIN_SCF, gridformSG1
+     use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
      use quick_exception_module
 #ifdef CEW 
      use quick_cew_module, only : quick_cew
@@ -271,7 +271,7 @@ contains
   end subroutine get_sad_density_matrix
   
   subroutine allocate_mol_sad(n)
-     use quick_basis_module
+     use quick_basis_module, only: atombasis, atomdens
      integer n
   
      if(.not. allocated(atomDens))  allocate(atomDens(n,100,100))
@@ -280,7 +280,7 @@ contains
   end subroutine allocate_mol_sad
   
   subroutine deallocate_mol_sad()
-     use quick_basis_module
+     use quick_basis_module, only: atombasis, atomdens
   
      if (allocated(atomDens)) deallocate(atomDens)
      if (allocated(atomBasis)) deallocate(atomBasis)
@@ -292,13 +292,13 @@ contains
      !-------------------------------------------------------
      ! this subroutine is to do scf job for restricted system
      !-------------------------------------------------------
-     use quick_SCRATCH_module
-     use quick_basis_module
-     use quick_calculated_module
-     use quick_files_module
-     use quick_method_module
-     use quick_molspec_module
-     use quick_size_module
+     use quick_SCRATCH_module, only: alloc, dealloc, quick_scratch
+     use quick_basis_module, only: alloc, atombasis, atomdens, dealloc, jshell, nbasis, normalize_basis
+     use quick_calculated_module, only: alloc, dealloc, init, quick_qm_struct, read
+     use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
+     use quick_method_module, only: SPINMULT, SYMBOL, adjust_Cutoff, init, quick_method, quick_method_type, read
+     use quick_molspec_module, only: alloc, dealloc, init, natom, quick_molspec, quick_molspec_type, read, set, xyz
+     use quick_size_module, only: MIN_SCF
      use quick_mpi_module, only: master
      use quick_overlap_module, only: fullx
 
@@ -347,15 +347,15 @@ contains
 
   subroutine sad_uelectdiis(jscf,verbose,ierr)
 
-     use quick_SCRATCH_module
-     use quick_basis_module
-     use quick_calculated_module
-     use quick_files_module
-     use quick_method_module
-     use quick_molspec_module
-     use quick_size_module
-     use quick_gridpoints_module
-     use quick_scf_module
+     use quick_SCRATCH_module, only: alloc, dealloc, quick_scratch
+     use quick_basis_module, only: alloc, atombasis, atomdens, dealloc, jshell, nbasis, normalize_basis
+     use quick_calculated_module, only: alloc, dealloc, init, quick_qm_struct, read
+     use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
+     use quick_method_module, only: SPINMULT, SYMBOL, adjust_Cutoff, init, quick_method, quick_method_type, read
+     use quick_molspec_module, only: alloc, dealloc, init, natom, quick_molspec, quick_molspec_type, read, set, xyz
+     use quick_size_module, only: MIN_SCF
+     use quick_gridpoints_module, only: MIN_SCF, gridformSG1
+     use quick_scf_module, only: B, BCOPY, BSAVE, COEFF, RHS, W, allerror, alloperator, scf
      use quick_oei_module, only: bCalc1e
      use quick_uscf_module, only: allocate_quick_uscf,deallocate_quick_uscf,alloperatorB
 
@@ -888,13 +888,13 @@ contains
   !  possible basis. Note that the Fock matrix is symmetric.
   !  This code now also does all the HF energy calculation. Ed.
   !-------------------------------------------------------
-     use quick_SCRATCH_module
-     use quick_basis_module
-     use quick_calculated_module
-     use quick_files_module
-     use quick_method_module
-     use quick_molspec_module
-     use quick_size_module
+     use quick_SCRATCH_module, only: alloc, dealloc, quick_scratch
+     use quick_basis_module, only: alloc, atombasis, atomdens, dealloc, jshell, nbasis, normalize_basis
+     use quick_calculated_module, only: alloc, dealloc, init, quick_qm_struct, read
+     use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
+     use quick_method_module, only: SPINMULT, SYMBOL, adjust_Cutoff, init, quick_method, quick_method_type, read
+     use quick_molspec_module, only: alloc, dealloc, init, natom, quick_molspec, quick_molspec_type, read, set, xyz
+     use quick_size_module, only: MIN_SCF
      use quick_cutoff_module, only: oshell_density_cutoff
      use quick_eri_oshell_module, only: getOshellEri, getOshellEriEnergy 
      use quick_oei_module, only:get1eEnergy, kineticO, attrashell

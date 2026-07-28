@@ -27,7 +27,7 @@ module quick_overlap_module
 contains
 
 function overlap_core (a,b,i,j,k,ii,jj,kk,Ax,Ay,Az,Bx,By,Bz,Px,Py,Pz,g_table) result(ovlp_core)
-   use quick_constants_module
+   use quick_constants_module, only: FACT, PITO3HALF, ZERO
    implicit none
    ! INPUT PARAMETERS
    double precision a,b                 ! exponent of basis set 1 and 2
@@ -367,7 +367,7 @@ subroutine fullx
 end subroutine fullx
 
 double precision function ssoverlap(a,b,Ax,Ay,Az,Bx,By,Bz)
-   use quick_constants_module
+   use quick_constants_module, only: PITO3HALF
    implicit none
    double precision a,b,Ax,Ay,Az,Bx,By,Bz
 
@@ -382,7 +382,7 @@ xyzxj,xyzyj,xyzzj)
   ! This function computes the overlap prefactor 
   ! required for one electron integral prescreening
   !------------------------------------------------
-  use quick_constants_module
+  use quick_constants_module, only: PI
   implicit none
 
   double precision, intent(in) :: ai, aj, ci, cj, xyzxi, xyzyi, xyzzi, &
