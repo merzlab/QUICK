@@ -251,7 +251,7 @@ module quick_cuest_module
 
    interface
 #ifdef OSHELL
-      subroutine cuest_get_oshell_xc(Vxc, Exc, C) bind(c, name="cuest_get_oshell_xc")
+      subroutine cuest_get_oshell_xc(Vxc, Vxcb, Exc, C, Cb) bind(c, name="cuest_get_oshell_xc")
 #else
       subroutine cuest_get_cshell_xc(Vxc, Exc, C) bind(c, name="cuest_get_cshell_xc")
 #endif
@@ -260,6 +260,10 @@ module quick_cuest_module
          real(c_double), intent(out) :: Vxc(*)
          real(c_double), intent(out) :: Exc
          real(c_double), intent(in) :: C(*)
+#ifdef OSHELL
+         real(c_double), intent(out) :: Vxcb(*)
+         real(c_double), intent(in) :: Cb(*)
+#endif
       end subroutine
    end interface
 
