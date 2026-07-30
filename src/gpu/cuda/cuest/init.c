@@ -17,6 +17,8 @@
 #include "util.h"
 
 /**
+ * For restricted, set noccb <= 0
+ *
  * Requires persistent parameters:
  *     - xyz
  */

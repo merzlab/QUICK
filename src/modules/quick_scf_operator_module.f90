@@ -180,7 +180,7 @@ contains
                  call cuest_get_eri_J(cuest_J, quick_qm_struct%dense)
                  
                  if (hasK) then
-                     call cuest_get_eri_K(cuest_K, quick_qm_struct%co)
+                     call cuest_get_cshell_eri_K(cuest_K, quick_qm_struct%co)
                      cuest_J = cuest_J - cuest_K ! K fraction is applied in cuEST
                  endif
 

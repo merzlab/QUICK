@@ -196,12 +196,23 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_get_eri_K(o, C) bind(c, name="cuest_get_eri_K")
+      subroutine cuest_get_cshell_eri_K(o, C) bind(c, name="cuest_get_cshell_eri_K")
          use, intrinsic::iso_c_binding, only: c_double, c_int64_t
          implicit none
          real(c_double), intent(out) :: o(*)
          real(c_double), intent(in) :: C(*)
-      end subroutine cuest_get_eri_K
+      end subroutine cuest_get_cshell_eri_K
+   end interface
+
+   interface
+      subroutine cuest_get_oshell_eri_K(o, ob, C, Cb) bind(c, name="cuest_get_oshell_eri_K")
+         use, intrinsic::iso_c_binding, only: c_double, c_int64_t
+         implicit none
+         real(c_double), intent(out) :: o(*)
+         real(c_double), intent(out) :: ob(*)
+         real(c_double), intent(in) :: C(*)
+         real(c_double), intent(in) :: Cb(*)
+      end subroutine cuest_get_oshell_eri_K
    end interface
 
    interface

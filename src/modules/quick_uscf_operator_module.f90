@@ -183,8 +183,7 @@ contains
 
                ! Jb contains the beta JK contribution
                if (hasK) then
-                   call cuest_get_eri_K(cuest_K, quick_qm_struct%co)
-                   call cuest_get_eri_K(cuest_Kb, quick_qm_struct%cob)
+                   call cuest_get_oshell_eri_K(cuest_K, cuest_Kb, quick_qm_struct%co, quick_qm_struct%cob)
                    ! K fraction is applied in cuEST
                    cuest_Jb = cuest_J - cuest_Kb
                    cuest_J = cuest_J - cuest_K

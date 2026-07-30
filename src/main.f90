@@ -244,22 +244,41 @@
 #endif
 
     ! init cuest
-    call cuest_init(                                     &
-        int(natom, c_int64_t),                           &
-        int(nshell, c_int64_t),                          &
-        int(nbasis, c_int64_t),                          &
-        int(quick_molspec%nelec / 2, c_int64_t),         &
-        int(quick_molspec%nelecb / 2, c_int64_t),        &
-        int(quick_aux_basis_sph%nshell, c_int64_t),      &
-        int(maxcontract, c_int64_t),                     &
-        int(quick_aux_basis_sph%maxcontract, c_int64_t), &
-        int(quick_molspec%iattype, c_int8_t),            &
-        c_loc(xyz),                                      &
-        quick_molspec%chg,                               &
-        int(quick_molspec%nextatom, c_int64_t),          &
-        quick_molspec%extxyz,                            &
-        quick_molspec%extchg                             &
-    )
+    if (quick_method%UNRST) then
+        call cuest_init(                                     &
+            int(natom, c_int64_t),                           &
+            int(nshell, c_int64_t),                          &
+            int(nbasis, c_int64_t),                          &
+            int(quick_molspec%nelec, c_int64_t),             &
+            int(quick_molspec%nelecb, c_int64_t),            &
+            int(quick_aux_basis_sph%nshell, c_int64_t),      &
+            int(maxcontract, c_int64_t),                     &
+            int(quick_aux_basis_sph%maxcontract, c_int64_t), &
+            int(quick_molspec%iattype, c_int8_t),            &
+            c_loc(xyz),                                      &
+            quick_molspec%chg,                               &
+            int(quick_molspec%nextatom, c_int64_t),          &
+            quick_molspec%extxyz,                            &
+            quick_molspec%extchg                             &
+        )
+    else
+        call cuest_init(                                     &
+            int(natom, c_int64_t),                           &
+            int(nshell, c_int64_t),                          &
+            int(nbasis, c_int64_t),                          &
+            int(quick_molspec%nelec / 2, c_int64_t),         &
+            int(0, c_int64_t),                               &
+            int(quick_aux_basis_sph%nshell, c_int64_t),      &
+            int(maxcontract, c_int64_t),                     &
+            int(quick_aux_basis_sph%maxcontract, c_int64_t), &
+            int(quick_molspec%iattype, c_int8_t),            &
+            c_loc(xyz),                                      &
+            quick_molspec%chg,                               &
+            int(quick_molspec%nextatom, c_int64_t),          &
+            quick_molspec%extxyz,                            &
+            quick_molspec%extchg                             &
+        )
+    endif
     ! for testing; the following cuest functions should not be called here
     ! init primary (cartesian) basis
     call cuest_init_basis(                                &

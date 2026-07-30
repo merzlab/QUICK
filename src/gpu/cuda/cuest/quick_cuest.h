@@ -170,7 +170,8 @@ void cuest_get_eri_J (double *o, double *P);
 
 void cuest_init_eri_K (int64_t devsiz);
 void cuest_deinit_eri_K ();
-void cuest_get_eri_K (double *o, double *C);
+void cuest_get_cshell_eri_K (double *o, double *C);
+void cuest_get_oshell_eri_K (double *o, double *ob, double *C, double *Cb);
 
 // DFT
 void cuest_create_atom_grid_setup ();

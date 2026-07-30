@@ -250,7 +250,10 @@ cuest_init_eri_K (int64_t devsiz)
 
     checkCuestErrors (cuestDFSymmetricExchangeComputeWorkspaceQuery (
         quick_cuest_struct.handle, quick_cuest_struct.DFIntPlan, quick_cuest_compute_mem.K_par, vbs,
-        tmpWD, quick_cuest_data.nocc, NULL, quick_cuest_compute_mem.d_K));
+        tmpWD,
+        quick_cuest_data.nocc > quick_cuest_data.noccb ? quick_cuest_data.nocc
+                                                       : quick_cuest_data.noccb,
+        NULL, quick_cuest_compute_mem.d_K));
 
     MEMLOG_TMPWD ("Exchange Integral Compute");
     quick_cuest_compute_mem.K_wksp = allocateWorkspace (tmpWD);
@@ -272,29 +275,11 @@ cuest_deinit_eri_K ()
     free_dev_alloc (nbasis * nbasis * sizeof (double));
 }
 
-void
-cuest_get_eri_K (double *o, double *C)
-{
-    cuestHandle_t               handle = quick_cuest_struct.handle;
-    cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
-    cuestAOBasis_t              basis  = quick_cuest_struct.basis;
+#ifndef OSHELL
+#define OSHELL
+#endif
+#include "eri_subs.h"
+#undef OSHELL
 
-    uint64_t nbasis = quick_cuest_data.nbasis;
-    uint64_t nocc   = quick_cuest_data.nocc;
-
-    void  *d_C     = quick_cuest_PC_buf.d_C[0];
-    size_t d_C_siz = quick_cuest_PC_buf.C_siz;
-    cudaMemcpyChecked (d_C, C, d_C_siz, cudaMemcpyHostToDevice);
-
-    checkCuestErrors (cuestDFSymmetricExchangeCompute (
-        handle, quick_cuest_struct.DFIntPlan, quick_cuest_compute_mem.K_par,
-        quick_cuest_compute_mem.K_vbs, quick_cuest_compute_mem.K_wksp, nocc, d_C,
-        quick_cuest_compute_mem.d_K));
-
-    // ========================= //
-    // copy exchange matrix to o //
-    // ========================= //
-
-    cudaMemcpyChecked (o, quick_cuest_compute_mem.d_K, nbasis * nbasis * sizeof (double),
-                       cudaMemcpyDeviceToHost);
-}
+// cshell
+#include "eri_subs.h"
