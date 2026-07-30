@@ -398,7 +398,13 @@
        call cuest_deinit_eri_J
        if (hasK) call cuest_deinit_eri_K
        call cuest_deinit_df
-       if (quick_method%DFT) call cuest_deinit_xc
+       if (quick_method%DFT) then
+          if (quick_method%UNRST) then
+              call cuest_deinit_oshell_xc
+          else
+              call cuest_deinit_cshell_xc
+          endif
+       endif
     endif
 #endif
 

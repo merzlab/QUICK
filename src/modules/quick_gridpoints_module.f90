@@ -251,7 +251,11 @@ module quick_gridpoints_module
 
 #ifdef CUEST
     if (quick_method%usecuest) then
-       call cuest_init_xc(quick_method%cuest_fnl_code, int(2d9, c_int64_t))
+       if (quick_method%UNRST) then
+           call cuest_init_oshell_xc(quick_method%cuest_fnl_code, int(2d9, c_int64_t))
+       else
+           call cuest_init_cshell_xc(quick_method%cuest_fnl_code, int(2d9, c_int64_t))
+       endif
        call cuest_destroy_atom_grid
     endif
 #endif

@@ -620,10 +620,10 @@ module quick_method_module
                 else
                   self%B3LYP=.true.
                   self%x_hybrid_coeff =0.2d0
-#ifdef CUEST
-                  self%cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
-#endif
                 endif
+#ifdef CUEST
+                self%cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
+#endif
             elseif(index(keyWD,'BLYP').ne.0) then
                 self%uselibxc=.true.
                 tempstring='LIBXC=GGA_X_B88,GGA_C_LYP'

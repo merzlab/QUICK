@@ -237,17 +237,31 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_init_xc(fnl, devsiz) bind(c, name="cuest_init_xc")
+      subroutine cuest_init_cshell_xc(fnl, devsiz) bind(c, name="cuest_init_cshell_xc")
          use, intrinsic :: iso_c_binding, only: c_int8_t, c_int64_t
          implicit none
          integer(c_int8_t), intent(in), value :: fnl
          integer(c_int64_t), intent(in), value :: devsiz
-      end subroutine cuest_init_xc
+      end subroutine cuest_init_cshell_xc
    end interface
 
    interface
-      subroutine cuest_deinit_xc() bind(c, name="cuest_deinit_xc")
-      end subroutine cuest_deinit_xc
+      subroutine cuest_init_oshell_xc(fnl, devsiz) bind(c, name="cuest_init_oshell_xc")
+         use, intrinsic :: iso_c_binding, only: c_int8_t, c_int64_t
+         implicit none
+         integer(c_int8_t), intent(in), value :: fnl
+         integer(c_int64_t), intent(in), value :: devsiz
+      end subroutine cuest_init_oshell_xc
+   end interface
+
+   interface
+      subroutine cuest_deinit_cshell_xc() bind(c, name="cuest_deinit_cshell_xc")
+      end subroutine cuest_deinit_cshell_xc
+   end interface
+
+   interface
+      subroutine cuest_deinit_oshell_xc() bind(c, name="cuest_deinit_oshell_xc")
+      end subroutine cuest_deinit_oshell_xc
    end interface
 
    interface
