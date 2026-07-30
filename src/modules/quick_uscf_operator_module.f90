@@ -130,12 +130,20 @@ contains
      endif
   
      if(quick_method%printEnergy) then
-#if defined(CUDA) && defined(CUEST)
-         if (quick_method%usecuest .and. firstiter) call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
+#ifdef CUEST
+         if (quick_method%usecuest .and. firstiter) then
+            call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
+            call cuest_correct_P(quick_qm_struct%denseb, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
+         endif
 #endif
+
          call get1eEnergy(deltaO)
-#if defined(CUDA) && defined(CUEST)
-         if (quick_method%usecuest .and. firstiter) call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+    
+#ifdef CUEST
+         if (quick_method%usecuest .and. firstiter) then
+            call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+            call cuest_correct_P(quick_qm_struct%denseb, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+         endif
 #endif
      endif
 
