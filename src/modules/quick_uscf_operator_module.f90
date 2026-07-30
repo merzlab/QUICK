@@ -196,6 +196,28 @@ contains
                    quick_qm_struct%cuest_prev_K = cuest_K
                    quick_qm_struct%cuest_prev_Kb = cuest_Kb
                endif
+#ifdef CUESTDEBUG
+                 tmp2d = quick_qm_struct%dense
+                 call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+                 call cuest_debuglog("======== quick alpha density ========")
+                 call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+                 call cuest_debuglog("====== end quick alpha density ======")
+                 tmp2d = quick_qm_struct%denseb
+                 call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+                 call cuest_debuglog("======== quick beta density ========")
+                 call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+                 call cuest_debuglog("====== end quick beta density ======")
+                 tmp2d = cuest_J
+                 call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+                 call cuest_debuglog("======== quick J+K alpha ========")
+                 call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+                 call cuest_debuglog("====== end quick J+K alpha ======")
+                 tmp2d = cuest_Jb
+                 call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+                 call cuest_debuglog("======== quick J+K beta ========")
+                 call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+                 call cuest_debuglog("====== end quick J+K beta ======")
+#endif
            endif
         else
            call gpu_get_oshell_eri(deltaO, quick_qm_struct%o, quick_qm_struct%ob)
