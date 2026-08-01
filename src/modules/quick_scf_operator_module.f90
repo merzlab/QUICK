@@ -157,7 +157,6 @@ contains
         if (quick_method%bGPU) then          
 #if defined(CUDA) && defined(CUEST)
            if (quick_method%usecuest) then
-                 ! TODO: enforce order. Right now assumes that cuSolver/LAPACK is used ==> ascending order
               if (firstiter) then
 #ifdef CUESTDEBUG
                  call cuest_debuglog("======== guess density ========")
@@ -168,63 +167,44 @@ contains
                  tmp2d = quick_qm_struct%dense / 2.0d0
                  call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
                  call MAT_DIAG(tmp2d, nbasis, nbasis, tmp_eval, tmp_evec)
+                 ! TODO: enforce order. Right now assumes that cuSolver/LAPACK is used ==> ascending order
                  do j=1, min(nocc, nbasis)
                      quick_qm_struct%co(:, j) = tmp_evec(:, nbasis - j + 1)*sqrt(tmp_eval(nbasis - j + 1))
                  enddo
 
-#ifdef CUESTDEBUG
+                 ! recompute density using approximate coefficients
                  call MAT_DGEMM ('n', 't', nbasis, nbasis, nocc, 2.0d0, quick_qm_struct%co, &
-                                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, tmp2d, nbasis)         
-                 call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+                                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense, nbasis)
+#ifdef CUESTDEBUG
+                 call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
                  call cuest_debuglog("======== co computed density from diag ========")
-                 call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+                 call cuest_debuglog_PriSym(nbasis, quick_qm_struct%dense, "F12.7")
                  call cuest_debuglog("====== end co computed density from diag ======")
 #endif
               endif
-                 ! TODO: call cuEST K with tmp2d as C
 
-                 ! density matrix input to this is correctly in QUICK form
-                 ! because it came from the SAD guess and the compute uses gccoeff in QUICK form
+              ! delta density is handled correctly
+              call cuest_get_eri_J(cuest_J, quick_qm_struct%dense)
 
-!                  cuest_J = 0.0d0
-!                  call gpu_get_cshell_eri(deltaO, cuest_J)  
-!
-! #ifdef CUESTDEBUG
-!                  call cuest_debuglog("======== quick J+K first ========")
-!                  call cuest_debuglog_PriSym(nbasis, cuest_J, "F12.7")
-!                  call cuest_debuglog("======== end quick J+K first ========")
-! #endif
-!
-!                  ! correct output
-!                  call cuest_correct_o(cuest_J, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
-!                  quick_qm_struct%o = quick_qm_struct%o + cuest_J
-!                   
-!                  ! convert density matrix from QUICK to cuEST form
-!                  ! needed for accumulating eri energy before DFT
-!                  call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
+              if (hasK) then
+                  call cuest_get_cshell_eri_K(cuest_K, quick_qm_struct%co)
+                  cuest_J = cuest_J - cuest_K ! K fraction is applied in cuEST
+              endif
 
-                 ! delta density is handled correctly
-                 call cuest_get_eri_J(cuest_J, quick_qm_struct%dense)
-                 
-                 if (hasK) then
-                     call cuest_get_cshell_eri_K(cuest_K, quick_qm_struct%co)
-                     cuest_J = cuest_J - cuest_K ! K fraction is applied in cuEST
-                 endif
+              if (hasK .and. deltaO) then
+                 quick_qm_struct%o = quick_qm_struct%o + cuest_J + quick_qm_struct%cuest_prev_K
+              else
+                 quick_qm_struct%o = quick_qm_struct%o + cuest_J
+              endif
 
-                 if (hasK .and. deltaO) then
-                    quick_qm_struct%o = quick_qm_struct%o + cuest_J + quick_qm_struct%cuest_prev_K
-                 else
-                    quick_qm_struct%o = quick_qm_struct%o + cuest_J
-                 endif
-                    
-                 if (hasK) quick_qm_struct%cuest_prev_K = cuest_K
+              if (hasK) quick_qm_struct%cuest_prev_K = cuest_K
               
 #ifdef CUESTDEBUG
-                 tmp2d = cuest_J
-                 call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
-                 call cuest_debuglog("======== quick J+K ========")
-                 call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
-                 call cuest_debuglog("====== end quick J+K ======")
+              tmp2d = cuest_J
+              call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+              call cuest_debuglog("======== quick J+K ========")
+              call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+              call cuest_debuglog("====== end quick J+K ======")
 #endif
            else
               call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
