@@ -15,12 +15,37 @@
 subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ierr)
    use quick_method_module, only: quick_method
    use quick_molspec_module, only: quick_molspec, natom
-   use quick_basis_module
+   use quick_basis_module, only: quick_basis, ncontract, itype, aexp, dcoeff, &
+                                 Yxiao, Yxiaotemp, Yxiaoprim, attraxiao, attraxiaoopt, &
+                                 Ycutoff, cutmatrix, cutprim, &
+                                 nbasis, nShell, nprim, jshell, jbasis, maxcontract, &
+                                 IJKLtype, III, JJJ, KKK, LLL, IJtype, KLtype, &
+                                 allocate_quick_basis, normalize_basis
    use quick_scratch_module, only: quick_scratch, allocate_quick_scratch
    use quick_files_module, only: iBasisFile, iBasisCustFile, basisfilename, basiscustname
     use quick_constants_module, only: symbol
-    use quick_mfcc_module
-    use quick_ecp_module
+    use quick_mfcc_module, only: matombasef, matombasefcap, matombasefcon, matombasefcon2, &
+                                  matombasefconi, matombasefconj, matombases, matombasescap, &
+                                  matombasescon, matombasescon2, matombasesconi, matombasesconj, &
+                                  matomfinal, matomfinalcap, matomfinalcon, matomfinalcon2, &
+                                  matomstart, matomstartcap, matomstartcon, matomstartcon2, &
+                                  mfccatom, mfcccharge, npmfcc, IMFCC, kxiaoconnect, mfcccord, &
+                                  Ftmp, linetmp, mfccatomxiao, mfccstart, mfccfinal, mfccbases, mfccbasef, &
+                                  mfccatomcap, mfccchargecap, mfcccordcap, mfccatomxiaocap, &
+                                  mfccstartcap, mfccfinalcap, mfccbasescap, mfccbasefcap, &
+                                  mfccatomcon, mfccchargecon, mfcccordcon, mfccatomxiaocon, &
+                                  mfccstartcon, mfccfinalcon, mfccbasescon, mfccbasefcon, &
+                                  mfccatomcon2, mfccchargecon2, mfcccordcon2, mfccatomxiaocon2, &
+                                  mfccstartcon2, mfccfinalcon2, mfccbasescon2, mfccbasefcon2, &
+                                  mfccatomconi, mfccchargeconi, mfcccordconi, mfccatomxiaoconi, &
+                                  mfccstartconi, mfccfinalconi, mfccbasesconi, mfccbasefconi, &
+                                  mfccatomconj, mfccchargeconj, mfcccordconj, mfccatomxiaoconj, &
+                                  mfccstartconj, mfccfinalconj, mfccbasesconj, mfccbasefconj, &
+                                  mfccdens, mfccdenscap, mfccdenscon, mfccdenscon2, mfccdensconi, mfccdensconj
+    use quick_ecp_module, only: eta, nlp, nelecp, lmaxecp, necprim, zlm, dfac, factorial, clp, zlp, kvett, &
+                                kfirst, klast, lf, lmf, lml, lmx, lmy, lmz, mc, mr, dfaci, &
+                                kmin, kmax, ktypecp, ecp_int, gout, tolecp, thrshecp, itolecp, flmtx, fprod, &
+                                nbf12, mc1dim, lmxdim, len_fac, lfdim, lmfdim, len_dfac
     use quick_size_module, only: MAXPRIM
     use quick_exception_module, only: RaiseException
 
@@ -30,6 +55,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    use quick_mpi_module, only: master
 #if defined(MPIV)
    use quick_mpi_module, only: bMPI, quick_comm, quick_comm_size, quick_mpi_error
+   use quick_basis_module, only: mpi_jshelln, mpi_jshell, mpi_nbasisn, mpi_nbasis
    use mpi
 #endif
 
@@ -1066,10 +1092,10 @@ end subroutine
 
 
 subroutine store_basis_to_ecp()
-   use quick_basis_module
-   use quick_ecp_module
+   use quick_basis_module, only: quick_basis, nShell, dcoeff, itype
+   use quick_ecp_module, only: eta, nelecp, lmaxecp, zlm
 
-   integer :: iicont, icontb
+   integer :: iicont, icontb, i, j
 
    iicont=0
    icontb=1
