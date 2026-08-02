@@ -4244,7 +4244,7 @@ subroutine dlf_htst_rate
 !  use dlf_neb, only: neb,unitp,beta_hbar
 !  use dlf_qts
   use dlf_allocate, only: allocate,deallocate
-  use dlf_constants, only: dlf_constants_init,dlf_constants_get
+   use dlf_constants, only: dlf_constants_get
   implicit none
   ! user parameters
   integer   :: nat !  number of atoms TS

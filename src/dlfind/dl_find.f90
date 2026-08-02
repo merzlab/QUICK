@@ -74,7 +74,7 @@ subroutine dl_find (ierr2, master &
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stdout
   use dlf_stat, only: stat
-  use dlf_allocate, only: allocate_report,allocate,deallocate
+   use dlf_allocate, only: allocate,deallocate
   use dlf_store, only: store_delete_all
   use quick_molspec_module, only: natom, quick_molspec
 

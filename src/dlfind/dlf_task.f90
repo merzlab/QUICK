@@ -68,8 +68,8 @@ subroutine dlf_task(ierr2 &
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr,stdout,printl,printf
-  use dlf_stat, only: stat
-  use dlf_allocate, only: allocate,deallocate
+
+   use dlf_allocate, only: deallocate
   use dlf_task_module, only: tconverged
   use dlf_store
   implicit none

@@ -51,9 +51,10 @@ subroutine fdhessian(failed)
   use quick_method_module, only: quick_method
   use quick_molspec_module, only: quick_molspec, xyz, natom
   use quick_calculated_module, only: quick_qm_struct
-  use quick_files_module, only: ioutfile, iCPHFFile, CPHFFileName
-  use quick_grad_cshell_module, only: cshell_gradient
-  use quick_exception_module, only: RaiseException
+   use quick_files_module, only: ioutfile, iCPHFFile, CPHFFileName
+   use quick_grad_cshell_module, only: cshell_gradient
+   use quick_exception_module, only: RaiseException
+
   use quick_mpi_module, only: master
 
   implicit double precision(a-h,o-z)

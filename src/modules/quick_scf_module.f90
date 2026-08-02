@@ -181,7 +181,7 @@ contains
      use quick_gridpoints_module
      use quick_scf_operator_module, only: scf_operator
      use quick_oei_module, only: bCalc1e 
-     use quick_lri_module, only: computeLRI
+
      use quick_molden_module, only: quick_molden
 #ifdef CEW 
      use quick_cew_module, only : quick_cew

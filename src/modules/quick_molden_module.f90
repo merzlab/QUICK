@@ -114,7 +114,7 @@ end subroutine write_coordinates
 
 subroutine write_basis_info(self, ierr)
 
-    use quick_basis_module, only: quick_basis, nshell, nbasis, ncontract
+     use quick_basis_module, only: quick_basis, nshell, nbasis
     use quick_molspec_module, only: natom
     implicit none
     type (quick_molden_type), intent(in) :: self

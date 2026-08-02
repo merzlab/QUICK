@@ -287,7 +287,7 @@ contains
      use quick_calculated_module, only: quick_qm_struct
      use quick_method_module, only: quick_method
      use quick_gridpoints_module, only: quick_dft_grid
-     use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
+
      use xc_f90_types_m, only: xc_f90_pointer_t
       use xc_f90_lib_m, only: XC_FAMILY_GGA, XC_FAMILY_HYB_GGA, XC_FAMILY_LDA, XC_POLARIZED, xc_f90_func_end, &
           xc_f90_func_init, xc_f90_gga_exc_vxc, xc_f90_info_family, xc_f90_lda_exc_vxc, xc_f90_pointer_t

@@ -13,7 +13,7 @@
 ! Program for testing QUICK library API
   program test_quick_api
     use test_quick_api_module, only: loadTestData, printQuickOutput
-    use quick_api_module, only: setQuickJob, getQuickEnergy, getQuickEnergyGradients, deleteQuickJob 
+     use quick_api_module, only: setQuickJob, getQuickEnergyGradients, deleteQuickJob
     use quick_exception_module
 #if defined(MPIV)
     use test_quick_api_module, only: mpi_initialize, printQuickMPIOutput, mpi_exit

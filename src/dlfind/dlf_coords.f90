@@ -899,7 +899,7 @@ subroutine dlf_cartesian_itox(nat,nivar,nicore,massweight,icoords,xcoords)
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr
-  use quick_molspec_module, only: xyz, quick_molspec
+   use quick_molspec_module, only: quick_molspec
   implicit none
   integer ,intent(in)   :: nat,nivar,nicore
   logical ,intent(in)   :: massweight

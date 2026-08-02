@@ -275,7 +275,7 @@ subroutine MPI_calmp2
   use quick_params_module, only: Sumindex
   use quick_molspec_module, only: quick_molspec
   use quick_calculated_module, only: quick_qm_struct
-  use quick_gaussian_class_module, only: gaussian
+
   use quick_scratch_module, only: quick_scratch 
   use quick_files_module, only: iOutFile
   use quick_timer_module, only: timer_begin, timer_cumer, timer_end

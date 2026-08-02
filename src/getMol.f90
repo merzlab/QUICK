@@ -13,12 +13,13 @@ subroutine getMol(ierr)
    ! This subroutine is to get molecule information
    ! and assign basis function.
    use quick_method_module, only: quick_method
-   use quick_molspec_module, only: quick_molspec, natom, xyz, read_quick_molspec_2
-   use quick_molspec_module, only: set_quick_molspec, print_quick_molspec
-   use quick_calculated_module, only: quick_qm_struct, allocate_quick_qm_struct, init_quick_qm_struct
-   use quick_basis_module, only: quick_basis, nbasis, cutprim, normalize_basis, allocate_basis, print_quick_basis
-   use quick_files_module, only: iOutfile, iDataFile, inFile, inFileName, dataFileName, isTemplate
-   use quick_exception_module, only: RaiseException
+    use quick_molspec_module, only: quick_molspec, natom, xyz, read_quick_molspec_2
+    use quick_molspec_module, only: set_quick_molspec, print_quick_molspec
+    use quick_calculated_module, only: quick_qm_struct, allocate_quick_qm_struct, init_quick_qm_struct
+    use quick_basis_module, only: quick_basis, nbasis, cutprim, normalize_basis, allocate_basis, print_quick_basis
+    use quick_files_module, only: iOutfile, iDataFile, inFile, inFileName, dataFileName, isTemplate
+    use quick_exception_module, only: RaiseException
+
    use quick_io_module, only: chk_read, chk_read_opt_traj
    use quick_mpi_module, only: master
 #if defined(MPIV)
