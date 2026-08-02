@@ -14,7 +14,7 @@
 ! Subroutine to build up the array kvett, whose elemts are kvett(i)=i*(i-1)/2
 !-----------------------------------------------------------
 Subroutine vett
-  use quick_ecp_module
+  use quick_ecp_module, only: nbf12, kvett
   implicit none
   integer :: i
   do i=1,nbf12

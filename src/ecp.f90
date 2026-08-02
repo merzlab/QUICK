@@ -57,10 +57,10 @@ Subroutine readecp
    ! Subroutine to  read the Effective Core Potentials
    ! The total number of electrons and the nuclear charges are modified too
    !
-   use quick_files_module, only: iOutFile, iECPFile, ecpfilename
-   use quick_molspec_module, only: quick_molspec, natom
-   use quick_ecp_module
-   use quick_constants_module, only: SYMBOL
+    use quick_files_module, only: iOutFile, iECPFile, ecpfilename
+    use quick_molspec_module, only: quick_molspec, natom
+    use quick_ecp_module, only: nelecp, lmaxecp, necprim, clp, zlp, nlp, kfirst, klast, mxproj
+    use quick_constants_module, only: SYMBOL
 
    implicit none
    character(len=80) :: line

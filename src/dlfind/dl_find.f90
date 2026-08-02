@@ -354,10 +354,10 @@ subroutine dlf_run(ierr2 &
   use quick_method_module,only: quick_method
   use quick_files_module, only: write_molden
   use quick_molden_module, only: quick_molden
-  use quick_mpi_module, only: master
+   use quick_mpi_module, only: master
 #ifdef MPIV
-  use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
-  use mpi
+   use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
+   use mpi, only: MPI_BARRIER, MPI_BCAST, mpi_logical
 #endif
   use quick_io_module, only: chk_append_opt_traj
   implicit none

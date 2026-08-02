@@ -26,7 +26,7 @@ SUBROUTINE DEGEN(NDIM,EVAL1,TOLERA,ANORM,IDEGEN1)
 
   ! IDEGEN1 = DEGENERACIES OF EIGENVALUES.
 
-  use quick_basis_module
+  use quick_basis_module, only: nbasis
   implicit none
   
   ! Dummy arguments

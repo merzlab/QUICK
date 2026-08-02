@@ -22,7 +22,7 @@
 ! PROGRAMMED BY S. L. DIXON.
 
 
-    use quick_basis_module
+    use quick_basis_module, only: nbasis
     implicit none
 ! DIMENSION VECT(NDIM,*)
     integer, intent(in) :: ndim, nvect, jstart

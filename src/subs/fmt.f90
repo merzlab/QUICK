@@ -11,7 +11,7 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 Subroutine FmT(MaxM,X,vals)
-  use quick_constants_module
+  use quick_constants_module, only: PI
   implicit none
   integer, intent(in) :: maxm
   double precision, intent(in) :: x

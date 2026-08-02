@@ -15,7 +15,7 @@
 ! Yipu Miao: A bug is can't find elements with two letters like "CL". 
 !
     subroutine readpdb(inputfile)
-    use quick_files_module
+    use quick_files_module, only: inFileName, iPDBFile, PDBFileName, iOutFile
     implicit none
 !
 ! input- (integer) inputfile the QUICK-stype input file the this subroutine will port.

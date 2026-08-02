@@ -9,7 +9,7 @@
 !   Written by Ed Brothers. January 22, 2002
 
 double precision function ssw(gridx,gridy,gridz,iparent)
-  use quick_molspec_module
+  use quick_molspec_module, only: natom, xyz, quick_molspec
   implicit none
   
   double precision, intent(in) :: gridx, gridy, gridz

@@ -21,10 +21,9 @@ subroutine getMol(ierr)
     use quick_exception_module, only: RaiseException
 
    use quick_io_module, only: chk_read, chk_read_opt_traj
-   use quick_mpi_module, only: master
+    use quick_mpi_module, only: master
 #if defined(MPIV)
-   use quick_mpi_module, only: bMPI
-   use mpi
+    use quick_mpi_module, only: bMPI
 #endif
 
    implicit none
