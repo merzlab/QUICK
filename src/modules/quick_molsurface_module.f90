@@ -72,7 +72,7 @@ module quick_molsurface_module
   subroutine generate_MKS_surfaces()
     use quick_molspec_module, only: natom, quick_molspec
     use quick_method_module, only: quick_method
-     use quick_files_module, only: iVdwSurfFile
+
     use quick_exception_module, only: RaiseException
     use quick_constants_module, only: BOHRS_TO_A
     use quick_timer_module, only : timer_begin, timer_end, timer_cumer
