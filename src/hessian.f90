@@ -5232,8 +5232,7 @@ end subroutine dmxderiv
 double precision function electricfld(a,b,i,j,k,ii,jj,kk, &
      idx,idy,idz,Ax,Ay,Az, &
      Bx,By,Bz,Cx,Cy,Cz,Z)
-  use quick_constants_module, only: PI, BOHR
-  use quick_overlap_module, only: overlap
+   use quick_overlap_module, only: overlap
   implicit double precision(a-h,o-z)
   dimension aux(0:20)
   double precision :: g_table(200)

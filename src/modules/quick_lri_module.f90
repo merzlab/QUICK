@@ -77,7 +77,7 @@ contains
     ! using OSHGP algorithm.                                               ! 
     !______________________________________________________________________!
 
-    use quick_constants_module, only: FACT, PI, X0
+     use quick_constants_module, only: PI, X0
 
     implicit none
     double precision, intent(in) :: c_coords(3), c_zeta, c_chg
