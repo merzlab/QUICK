@@ -27,7 +27,8 @@ MODULE dlfhdlc_constraint
   use dlf_parameter_module, only: rk
   use dlf_global, only: printl,stdout!,pi
   use dlf_allocate, only: allocate, deallocate
-  USE dlfhdlc_matrixlib
+  USE dlfhdlc_matrixlib, only: matrix, matrix_create, matrix_set_column, matrix_dimension, matrix_destroy, &
+      matrix_get, matrix_set, matrix_get_column, matrix_get_row, matrix_set_row
   IMPLICIT NONE
 
 !------------------------------------------------------------------------------

@@ -20,7 +20,7 @@
 
 
 double precision function xnorm(a,i,j,k)
-  use quick_constants_module
+  use quick_constants_module, only: PI, PITO3HALF
   implicit none
   
   ! INPUT PARAMTERS
@@ -62,7 +62,7 @@ end function xnorm
 
 
 double precision function xnewnorm(i,j,k,nprim1,ddcoe,aaexp)
-  use quick_constants_module
+  use quick_constants_module, only: PI, PITO3HALF
   implicit none
   
   ! INPUT PARAMTERS

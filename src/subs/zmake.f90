@@ -6,8 +6,8 @@
 ! 34567890123456789012345678901234567890123345678901234567890123456789012<stop
 
     subroutine zmake
-    use quick_molspec_module
-    use quick_files_module
+    use quick_molspec_module, only: natom, xyz, quick_molspec
+    use quick_files_module, only: iOutFile
     use quick_constants_module, only : symbol
     implicit none
     double precision, dimension(3,natom) :: zmat
