@@ -1,3 +1,0 @@
-      subroutine dummyblas
-      return
-      end
