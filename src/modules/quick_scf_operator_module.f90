@@ -169,16 +169,18 @@ contains
                  call MAT_DIAG(tmp2d, nbasis, nbasis, tmp_eval, tmp_evec)
                  ! TODO: enforce order. Right now assumes that cuSolver/LAPACK is used ==> ascending order
                  do j=1, min(nocc, nbasis)
-                     quick_qm_struct%co(:, j) = tmp_evec(:, nbasis - j + 1)*sqrt(tmp_eval(nbasis - j + 1))
+                     jj = nbasis - j + 1
+                     if (tmp_eval(jj) > 0.0d0) then
+                         quick_qm_struct%co(:, j) = tmp_evec(:, jj)*sqrt(tmp_eval(jj))
+                     endif
                  enddo
 
-                 ! recompute density using approximate coefficients
-                 call MAT_DGEMM ('n', 't', nbasis, nbasis, nocc, 2.0d0, quick_qm_struct%co, &
-                                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense, nbasis)
 #ifdef CUESTDEBUG
-                 call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+                 call MAT_DGEMM ('n', 't', nbasis, nbasis, nocc, 2.0d0, quick_qm_struct%co, &
+                                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, tmp2d, nbasis)
+                 call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
                  call cuest_debuglog("======== co computed density from diag ========")
-                 call cuest_debuglog_PriSym(nbasis, quick_qm_struct%dense, "F12.7")
+                 call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
                  call cuest_debuglog("====== end co computed density from diag ======")
 #endif
               endif
