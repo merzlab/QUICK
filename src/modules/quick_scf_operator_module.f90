@@ -168,9 +168,8 @@ contains
         ! TODO: enforce order. Right now assumes that cuSolver/LAPACK is used ==> ascending order
         do j=1, min(nocc, nbasis)
             jj = nbasis - j + 1
-            if (tmp_eval(jj) > 0.0d0) then
-                quick_qm_struct%co(:, j) = tmp_evec(:, jj)*sqrt(tmp_eval(jj))
-            endif
+            if (tmp_eval(jj) <= 0.0d0) exit
+            quick_qm_struct%co(:, j) = tmp_evec(:, jj)*sqrt(tmp_eval(jj))
         enddo
 
 #ifdef CUESTDEBUG
