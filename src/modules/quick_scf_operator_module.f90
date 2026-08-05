@@ -61,7 +61,6 @@ contains
      double precision :: Sum2Mat
      double precision :: tmp2d(nbasis, nbasis)
      double precision :: tmp_eval(nbasis), tmp_evec(nbasis, nbasis)
-     integer :: nocc
 #endif
 #ifdef MPIV
      integer ierror
@@ -81,7 +80,6 @@ contains
      if (quick_method%usecuest) then
         firstiter = quick_qm_struct%co(1, 1) == 0
         hasK = quick_method%x_hybrid_coeff /= 0.0d0
-        nocc = quick_molspec%nelec / 2;
      endif
 #endif
   
@@ -164,16 +162,10 @@ contains
         quick_qm_struct%co = 0.0d0
         tmp2d = quick_qm_struct%dense / 2.0d0
         call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
-        call MAT_DIAG(tmp2d, nbasis, nbasis, tmp_eval, tmp_evec)
-        ! TODO: enforce order. Right now assumes that cuSolver/LAPACK is used ==> ascending order
-        do j=1, min(nocc, nbasis)
-            jj = nbasis - j + 1
-            if (tmp_eval(jj) <= 0.0d0) exit
-            quick_qm_struct%co(:, j) = tmp_evec(:, jj)*sqrt(tmp_eval(jj))
-        enddo
+        call mat_uut_eig_r(tmp2d, nbasis, quick_molspec%nelec/2, quick_qm_struct%co)
 
 #ifdef CUESTDEBUG
-        call MAT_DGEMM ('n', 't', nbasis, nbasis, nocc, 2.0d0, quick_qm_struct%co, &
+        call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
                         nbasis, quick_qm_struct%co, nbasis, 0.0d0, tmp2d, nbasis)
         call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
         call cuest_debuglog("======== co computed density from diag ========")
