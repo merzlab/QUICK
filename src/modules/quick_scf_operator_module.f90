@@ -153,39 +153,41 @@ contains
   !  Start the timer for 2e-integrals
      RECORD_TIME(timer_begin%T2e)
 
+#ifdef CUEST
+     ! approximate %co by diagonalizing density
+     if (quick_method%usecuest .and. firstiter) then
+#ifdef CUESTDEBUG
+        call cuest_debuglog("======== guess density ========")
+        call cuest_debuglog_PriSym(nbasis, quick_qm_struct%dense, "F12.7")
+        call cuest_debuglog("====== end guess density ======")
+#endif
+        quick_qm_struct%co = 0.0d0
+        tmp2d = quick_qm_struct%dense / 2.0d0
+        call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
+        call MAT_DIAG(tmp2d, nbasis, nbasis, tmp_eval, tmp_evec)
+        ! TODO: enforce order. Right now assumes that cuSolver/LAPACK is used ==> ascending order
+        do j=1, min(nocc, nbasis)
+            jj = nbasis - j + 1
+            if (tmp_eval(jj) > 0.0d0) then
+                quick_qm_struct%co(:, j) = tmp_evec(:, jj)*sqrt(tmp_eval(jj))
+            endif
+        enddo
+
+#ifdef CUESTDEBUG
+        call MAT_DGEMM ('n', 't', nbasis, nbasis, nocc, 2.0d0, quick_qm_struct%co, &
+                        nbasis, quick_qm_struct%co, nbasis, 0.0d0, tmp2d, nbasis)
+        call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+        call cuest_debuglog("======== co computed density from diag ========")
+        call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+        call cuest_debuglog("====== end co computed density from diag ======")
+#endif
+     endif
+#endif
+
 #if defined(GPU) || defined(MPIV_GPU)
         if (quick_method%bGPU) then          
 #if defined(CUDA) && defined(CUEST)
            if (quick_method%usecuest) then
-              if (firstiter) then
-#ifdef CUESTDEBUG
-                 call cuest_debuglog("======== guess density ========")
-                 call cuest_debuglog_PriSym(nbasis, quick_qm_struct%dense, "F12.7")
-                 call cuest_debuglog("====== end guess density ======")
-#endif
-                 quick_qm_struct%co = 0.0d0
-                 tmp2d = quick_qm_struct%dense / 2.0d0
-                 call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
-                 call MAT_DIAG(tmp2d, nbasis, nbasis, tmp_eval, tmp_evec)
-                 ! TODO: enforce order. Right now assumes that cuSolver/LAPACK is used ==> ascending order
-                 do j=1, min(nocc, nbasis)
-                     jj = nbasis - j + 1
-                     if (tmp_eval(jj) > 0.0d0) then
-                         quick_qm_struct%co(:, j) = tmp_evec(:, jj)*sqrt(tmp_eval(jj))
-                     endif
-                 enddo
-
-#ifdef CUESTDEBUG
-                 call MAT_DGEMM ('n', 't', nbasis, nbasis, nocc, 2.0d0, quick_qm_struct%co, &
-                                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, tmp2d, nbasis)
-                 call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
-                 call cuest_debuglog("======== co computed density from diag ========")
-                 call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
-                 call cuest_debuglog("====== end co computed density from diag ======")
-#endif
-              endif
-
-              ! delta density is handled correctly
               call cuest_get_eri_J(cuest_J, quick_qm_struct%dense)
 
               if (hasK) then
@@ -281,40 +283,39 @@ contains
   !  Calculate exchange correlation contribution & add to operator    
 #ifdef CUEST
         if (quick_method%usecuest) then
-           if (firstiter) then
-               ! convert to QUICK form to use QUICK xc compute
-               call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
-
-               ! use cuest_J and cuest_K as temp buffers
-               ! cuest_J <- %o_HF cuEST
-               cuest_J = quick_qm_struct%o
-               call get_xc(deltaO)
-               ! cuest_K <- %o_HF cuEST + %oxc QUICK - %o_HF cuEST = %oxc QUICK
-               cuest_K   =  quick_qm_struct%o        - cuest_J
-               
-               ! correct oxc addition to o
-               ! cuest_K <- correct(%oxc QUICK) = %oxc cuEST
-               call cuest_correct_o(cuest_K, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
-               !        %o cuEST = (%o_HF cuEST + %oxc QUICK) - %oxc QUICK          + %oxc cuEST
-               quick_qm_struct%o = quick_qm_struct%o          - quick_qm_struct%oxc + cuest_K
-
-               ! convert density matrix back to cuEST form
-               call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
-           else
+           ! if (firstiter) then
+           !     ! convert to QUICK form to use QUICK xc compute
+           !     call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+           !
+           !     ! use cuest_J and cuest_K as temp buffers
+           !     ! cuest_J <- %o_HF cuEST
+           !     cuest_J = quick_qm_struct%o
+           !     call get_xc(deltaO)
+           !     ! cuest_K <- %o_HF cuEST + %oxc QUICK - %o_HF cuEST = %oxc QUICK
+           !     cuest_K   =  quick_qm_struct%o        - cuest_J
+           !     
+           !     ! correct oxc addition to o
+           !     ! cuest_K <- correct(%oxc QUICK) = %oxc cuEST
+           !     call cuest_correct_o(cuest_K, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
+           !     !        %o cuEST = (%o_HF cuEST + %oxc QUICK) - %oxc QUICK          + %oxc cuEST
+           !     quick_qm_struct%o = quick_qm_struct%o          - quick_qm_struct%oxc + cuest_K
+           !
+           !     ! convert density matrix back to cuEST form
+           !     call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
+           ! else
                call cuest_get_cshell_xc(cuest_Vxc, cuest_Exc, quick_qm_struct%co)
                quick_qm_struct%oxc = cuest_Vxc
-               quick_qm_struct%o = quick_qm_struct%o + cuest_Vxc
+               quick_qm_struct%o   = quick_qm_struct%o + cuest_Vxc
                quick_qm_struct%Exc = cuest_Exc
                quick_qm_struct%Eel = quick_qm_struct%Eel + cuest_Exc
 
-               ! alpha and beta electron density
                if (deltaO) then
                   quick_qm_struct%aelec = Sum2Mat(quick_qm_struct%denseSave, quick_qm_struct%s, nbasis) / 2.0d0
                else
                   quick_qm_struct%aelec = Sum2Mat(quick_qm_struct%dense, quick_qm_struct%s, nbasis) / 2.0d0
                endif
                quick_qm_struct%belec = quick_qm_struct%aelec
-           endif
+           ! endif
         else
            call get_xc(deltaO)
         endif
