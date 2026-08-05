@@ -224,6 +224,7 @@ module quick_gridpoints_module
                cuest_w(Irad) = RWT(Irad)*rad3
                cuest_nang(Irad) = iiangt
             endif
+            continue
 #endif
             do Iang=1,iiangt
                 idx_grid=idx_grid+1
@@ -257,6 +258,8 @@ module quick_gridpoints_module
            call cuest_init_cshell_xc(quick_method%cuest_fnl_code, int(2d9, c_int64_t))
        endif
        call cuest_destroy_atom_grid
+       return
+       ! TODO: make this cleaner
     endif
 #endif
 
