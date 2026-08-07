@@ -28,7 +28,7 @@ subroutine getEnergy(isGuess, ierr)
    use quick_mpi_module, only: master
 #if defined(MPIV)
    use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
-   use mpi, only: MPI_BCAST, mpi_integer, mpi_double_precision
+   use mpi
 #endif
 
    implicit none

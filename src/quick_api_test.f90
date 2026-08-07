@@ -18,7 +18,7 @@
 #if defined(MPIV)
     use test_quick_api_module, only: mpi_initialize, printQuickMPIOutput, mpi_exit
     use quick_api_module, only: setQuickMPI
-    use mpi, only: MPI_BARRIER, MPI_COMM_WORLD
+    use mpi
 #endif
 
     implicit none

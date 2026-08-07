@@ -135,7 +135,7 @@ end subroutine finalize
 subroutine quick_exit(io, ierr)
 #if defined(MPIV)
    use quick_mpi_module, only: quick_comm, quick_mpi_error
-   use mpi, only: MPI_FINALIZE, mpi_abort
+   use mpi
 #endif
 
    implicit none

@@ -32,7 +32,7 @@
 !! SOURCE
 !!****
 module dlf_mpi_module
-  use mpi, only: mpi_double_precision, mpi_integer, MPI_COMM_WORLD, MPI_STATUS_IGNORE
+  use mpi
   save
 
   integer  :: global_comm      ! set to, and use instead of, mpi_comm_world
