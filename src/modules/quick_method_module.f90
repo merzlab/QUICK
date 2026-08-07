@@ -118,10 +118,10 @@ module quick_method_module
 
         ! following are some cutoff criteria
         double precision :: coreIntegralCutoff = 1.0d-12 ! cutoff for 1e integral prescreening
-        double precision :: integralCutoff = 1.0d-8   ! integral cutoff
+        double precision :: integralCutoff = 1.0d-10   ! integral cutoff
         double precision :: leastIntegralCutoff = LEASTCUTOFF  ! the smallest cutoff
         double precision :: maxIntegralCutoff = 1.0d-12
-        double precision :: primLimit      = 1.0d-9   ! prime cutoff
+        double precision :: primLimit      = 1.0d-11   ! prime cutoff
         double precision :: gradCutoff     = 1.0d-7   ! gradient cutoff
         double precision :: DMCutoff       = 1.0d-10  ! density matrix cutoff
         double precision :: XCCutoff       = 1.0d-8   ! exchange correlation cutoff
@@ -981,12 +981,12 @@ module quick_method_module
             self%iopt = 0
             self%ncyc = 3
 
-            self%integralCutoff = 1.0d-8   ! integral cutoff
+            self%integralCutoff = 1.0d-10   ! integral cutoff
             self%leastIntegralCutoff = LEASTCUTOFF
                                            ! smallest integral cutoff, used in conventional SCF
             self%maxIntegralCutoff = 1.0d-12
                                            ! smallest integral cutoff, used in conventional SCF
-            self%primLimit      = 1.0d-9   ! prime cutoff
+            self%primLimit      = 1.0d-11   ! prime cutoff
             self%gradCutoff     = 1.0d-7   ! gradient cutoff
             self%DMCutoff       = 1.0d-10  ! density matrix cutoff
             self%XCCutoff       = 1.0d-8   ! exchange correlation cutoff
@@ -1045,7 +1045,7 @@ module quick_method_module
 
             if(self%coarse_cutoff) then
                 self%pmaxrms=1.0d-5
-                self%integralCutoff=1.0d-7
+                self%integralCutoff=1.0d-8
                 self%primLimit=self%integralCutoff*1.0d-1
                 self%gradCutoff=1.0d-6
                 self%XCCutoff=1.0d-7
@@ -1054,7 +1054,7 @@ module quick_method_module
 
             if(self%tight_cutoff) then
                 self%pmaxrms=1.0d-7
-                self%integralCutoff=1.0d-10
+                self%integralCutoff=1.0d-12
                 self%primLimit=self%integralCutoff*1.0d-1
                 self%gradCutoff=1.0d-8
                 self%XCCutoff=1.0d-10
@@ -1076,7 +1076,7 @@ module quick_method_module
             ! tighten XCCutoff if diffuse functions exist
             if(self%diffuse_basis_funcs) then
                 if(self%isDefaultCutoff)then
-                    self%integralCutoff=self%integralCutoff*1.0d-2
+                    self%integralCutoff=self%integralCutoff*1.0d-1
                     self%primLimit=self%integralCutoff*1.0d-1
                 endif
                 if(self%DFT .and. self%isDefaultXCCutoff) self%XCCutoff=self%XCCutoff*1.0d-1
