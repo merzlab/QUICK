@@ -121,14 +121,15 @@ contains
  
      call get1e(deltaO)
 
+#ifdef CUEST
+     ! correct density here for get1eEnergy
+     if (quick_method%usecuest .and. firstiter) then
+         call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
+     endif
+#endif
+
      if(quick_method%printEnergy) then
-#if defined(CUDA) && defined(CUEST)
-         if (quick_method%usecuest .and. firstiter) call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
-#endif
          call get1eEnergy(deltaO)
-#if defined(CUDA) && defined(CUEST)
-         if (quick_method%usecuest .and. firstiter) call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
-#endif
      endif
 
 
@@ -160,9 +161,7 @@ contains
         call cuest_debuglog("====== end guess density ======")
 #endif
         quick_qm_struct%co = 0.0d0
-        tmp2d = quick_qm_struct%dense / 2.0d0
-        call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
-        call mat_uut_eig_r(tmp2d, nbasis, quick_molspec%nelec/2, quick_qm_struct%co)
+        call mat_uut_eig_r(quick_qm_struct%dense/2.0d0, nbasis, quick_molspec%nelec/2, quick_qm_struct%co)
 
 #ifdef CUESTDEBUG
         call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
