@@ -430,7 +430,7 @@ contains
       character(len=32) :: s
 
       write(s, fmt) x
-      call cuest_debuglog(s)
+      call cuest_debuglog(trim(s))
    end subroutine cuest_debuglog_PriD
 
    subroutine cuest_debuglog_PriD1D(v, n, fmt)
@@ -444,7 +444,7 @@ contains
 
       write(fmt2, '(A,A,A)') "(*(", fmt, "))"
       write(s, fmt2) v
-      call cuest_debuglog(s)
+      call cuest_debuglog(trim(s))
    end subroutine cuest_debuglog_PriD1D
 
    subroutine get_memstr(b, mem, suf)
