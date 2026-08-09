@@ -184,10 +184,10 @@ contains
         call MAT_DGEMM('n', 'n', nbasis, nbasis, nbasis, 1.0d0, tmp_evec, nbasis, tmp_hold, nbasis, 0.0d0, tmp2d, nbasis)
         ! tmp_hold = S^{1/2} = (U*A^{1/2})*U^T = tmp2d*tmp_evec
         call MAT_DGEMM('n', 't', nbasis, nbasis, nbasis, 1.0d0, tmp2d, nbasis, tmp_evec, nbasis, 0.0d0, tmp_hold, nbasis)
-        ! tmp_eval = S^{1/2}P = tmp_hold*(%dense)
-        call MAT_DGEMM('n', 'n', nbasis, nbasis, nbasis, 1.0d0, tmp_hold, nbasis, quick_qm_struct%dense/2.0d0, nbasis, 0.0d0, tmp_eval, nbasis)
-        ! tmp2d = (S^{1/2}P)S^{1/2} = tmp_eval*tmp_hold
-        call MAT_DGEMM('n', 'n', nbasis, nbasis, nbasis, 1.0d0, tmp_eval, nbasis, tmp_hold, nbasis, 0.0d0, tmp2d, nbasis)
+        ! tmp_evec = S^{1/2}P = tmp_hold*(%dense)
+        call MAT_DGEMM('n', 'n', nbasis, nbasis, nbasis, 1.0d0, tmp_hold, nbasis, quick_qm_struct%dense/2.0d0, nbasis, 0.0d0, tmp_evec, nbasis)
+        ! tmp2d = (S^{1/2}P)S^{1/2} = tmp_evec*tmp_hold
+        call MAT_DGEMM('n', 'n', nbasis, nbasis, nbasis, 1.0d0, tmp_evec, nbasis, tmp_hold, nbasis, 0.0d0, tmp2d, nbasis)
 
         call MAT_DIAG(tmp2d, nbasis, nbasis, tmp_eval, tmp_evec)
         call cuest_debuglog("<<<<<<<< eigenvalues <<<<<<<<")
