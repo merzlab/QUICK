@@ -295,6 +295,11 @@ module quick_cuest_module
    end interface
 
    interface
+      subroutine cuest_debuglog_flush() bind(c, name="cuest_debuglog_flush")
+      end subroutine cuest_debuglog_flush
+   end interface
+
+   interface
       subroutine cuest_get_memtrace(hostmax, hosttotal, hostallocs, devmax, devtotal, devallocs) bind(c, name="cuest_get_memtrace")
          use, intrinsic :: iso_c_binding, only: c_int64_t
          implicit none

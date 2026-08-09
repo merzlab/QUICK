@@ -209,5 +209,6 @@ void cuest_get_xc_grad (double *grad, double *C);
 
 // Other
 void cuest_debuglog (const char *str);
+void cuest_debuglog_flush ();
 
 #endif
