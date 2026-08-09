@@ -417,6 +417,31 @@ contains
       call cuest_debuglog_inner(str//c_null_char)
    end subroutine cuest_debuglog
 
+   subroutine cuest_debuglog_PriD(x, fmt)
+      ! fmt can take maximum 32 characters
+      implicit none
+      double precision, intent(in) :: x
+      character(len=6), intent(in) :: fmt
+      character(len=32) :: s
+
+      write(s, fmt) x
+      call cuest_debuglog(s)
+   end subroutine cuest_debuglog_PriD
+
+   subroutine cuest_debuglog_PriD1D(v, n, fmt)
+      ! fmt can take maximum 31 characters
+      implicit none
+      double precision, intent(in) :: v(n)
+      integer, intent(in) :: n
+      character(len=*), intent(in) :: fmt
+      character(len=32) :: fmt2
+      character(len=32*n) :: s
+
+      write(fmt2, '(A,A,A)') "(*(", fmt, "))"
+      write(s, fmt2) v
+      call cuest_debuglog(s)
+   end subroutine cuest_debuglog_PriD1D
+
    subroutine get_memstr(b, mem, suf)
       implicit none
       integer(kind=8), intent(in) :: b
