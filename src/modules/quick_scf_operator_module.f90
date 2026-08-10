@@ -190,9 +190,9 @@ contains
         call MAT_DGEMM('n', 'n', nbasis, nbasis, nbasis, 1.0d0, tmp_evec, nbasis, tmp_hold, nbasis, 0.0d0, tmp2d, nbasis)
 
         call MAT_DIAG(tmp2d, nbasis, nbasis, tmp_eval, tmp_evec)
-        call cuest_debuglog("<<<<<<<< eigenvalues <<<<<<<<")
+        call cuest_debuglog("<<<<<<<< eigenvalues of S^{1/2}PS^{1/2} <<<<<<<<")
         call cuest_debuglog_PriD1D(tmp_eval, nbasis, "F12.7")
-        call cuest_debuglog(">>>>>> end eigenvalues >>>>>>")
+        call cuest_debuglog(">>>>>> end eigenvalues of S^{1/2}PS^{1/2} >>>>>>")
 #endif
 
 #ifdef CUESTDEBUG
