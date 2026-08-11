@@ -426,7 +426,7 @@ contains
       ! fmt can take maximum 32 characters
       implicit none
       double precision, intent(in) :: x
-      character(len=6), intent(in) :: fmt
+      character(len=*), intent(in) :: fmt
       character(len=32) :: s
 
       write(s, fmt) x
