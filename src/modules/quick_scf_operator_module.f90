@@ -161,7 +161,7 @@ contains
         call cuest_debuglog("====== end guess density ======")
 #endif
         quick_qm_struct%co = 0.0d0
-        call mat_uut_eig_r(quick_qm_struct%dense/2.0d0, nbasis, quick_molspec%nelec/2, quick_qm_struct%co)
+        call mat_uut_eig_r(nbasis, quick_molspec%nelec/2, quick_qm_struct%dense/2.0d0, quick_qm_struct%co)
 
 #ifdef CUESTDEBUG
         ! --------------------------------------

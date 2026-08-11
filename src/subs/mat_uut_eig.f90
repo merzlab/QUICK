@@ -1,4 +1,4 @@
-subroutine mat_uut_eig_r(A, n, k, U)
+subroutine mat_uut_eig_r(n, k, A, U)
 
    ! For symmetric matrix A,
    ! this subroutine finds real orthogonal

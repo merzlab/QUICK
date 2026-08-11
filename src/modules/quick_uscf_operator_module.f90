@@ -167,12 +167,12 @@ contains
         ! alpha
         tmp2d = quick_qm_struct%dense
         call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
-        call mat_uut_eig_r(tmp2d, nbasis, quick_molspec%nelec, quick_qm_struct%co)
+        call mat_uut_eig_r(nbasis, quick_molspec%nelec, tmp2d, quick_qm_struct%co)
 
         ! beta
         tmp2d = quick_qm_struct%denseb
         call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
-        call mat_uut_eig_r(tmp2d, nbasis, quick_molspec%nelecb, quick_qm_struct%cob)
+        call mat_uut_eig_r(nbasis, quick_molspec%nelecb, tmp2d, quick_qm_struct%cob)
      endif
 #endif
 
