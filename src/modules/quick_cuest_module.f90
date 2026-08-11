@@ -427,9 +427,11 @@ contains
       implicit none
       double precision, intent(in) :: x
       character(len=*), intent(in) :: fmt
+      character(len=8) :: fmt2
       character(len=32) :: s
 
-      write(s, fmt) x
+      write(fmt2, '(A,A,A)') '(', fmt, ')'
+      write(s, fmt2) x
       call cuest_debuglog(trim(s))
    end subroutine cuest_debuglog_PriD
 
