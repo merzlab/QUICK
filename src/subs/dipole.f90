@@ -22,6 +22,11 @@
 
     call prtact(ioutfile,"Begin Charge and Dipole Calculation")
     RECORD_TIME(timer_begin%TDip)
+
+    ! ! TODO: deallocate?
+    ! if (.not. allocated(quick_scratch%hold)) allocate(quick_scratch%hold(nbasis, nbasis))
+    ! if (.not. allocated(quick_scratch%hold2)) allocate(quick_scratch%hold2(nbasis, nbasis))
+
     !-------------------------------------------------------
     ! Part 1. Mulliken and Lowdin charge
     !-------------------------------------------------------

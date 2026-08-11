@@ -165,12 +165,13 @@ contains
 #endif
 
 ! #ifdef CUESTDEBUG
-        ! --------------------------------------
+        ! -------------------------------------!
         ! print eigenvalues of S^{1/2}PS^{1/2} !
-        ! --------------------------------------
+        ! -------------------------------------!
 
         ! tmp_hold = S^{1/2}PS^{1/2}
-        call lowdin_orth(nbasis, quick_qm_struct%s, quick_qm_struct%dense/2.0d0, tmp_sqrtS, .true., tmp_sqrtSinv, tmp_hold)
+        call lowdin_orth(nbasis, quick_qm_struct%s, quick_qm_struct%dense/2.0d0, &
+                         tmp_sqrtS, .true., tmp_sqrtSinv, tmp_hold)
 
 #ifdef CUESTDEBUG
         call MAT_DIAG(tmp_hold, nbasis, nbasis, tmp_eval, tmp_evec)

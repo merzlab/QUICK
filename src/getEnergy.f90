@@ -177,4 +177,33 @@ subroutine getEnergy(isGuess, ierr)
   call MPI_BCAST(quick_qm_struct%Etot, 1, mpi_double_precision,0,MPI_COMM_WORLD,mpierror) 
 #endif
 
+   ! -----------------------------------  !
+   ! print eigenvalues of S^{1/2}PS^{1/2} !
+   ! -----------------------------------  !
+
+   ! if (quick_method%usecuest) then
+   !    if (.not. allocated(quick_scratch%hold2)) allocate(quick_scratch%hold2(nbasis, nbasis))
+   !    if (.not. allocated(quick_scratch%tmphold)) allocate(quick_scratch%tmphold(nbasis, nbasis))
+   !    if (.not. allocated(quick_scratch%Sminhalf)) allocate(quick_scratch%Sminhalf(nbasis))
+   !
+   !    ! %hold2 = S^{1/2}PS^{1/2}
+   !    ! %tmphold = S^{1/2}
+   !    call lowdin_orth(nbasis, quick_qm_struct%s, quick_qm_struct%dense/2.0d0, &
+   !                     quick_scratch%tmphold, .false., quick_scratch%tmphold, quick_scratch%hold2)
+   !    ! %Sminhalf = eigenvalues
+   !    ! %tmphold = eigenvector matrix (not needed)
+   !    call MAT_DIAG(quick_scratch%hold2, nbasis, nbasis, quick_scratch%Sminhalf, quick_scratch%hold2)
+   !
+   !    write (ioutfile,'(" EIGENVECTORS OF LOWDIN ORTHOGONALIZED DENSITY MATRIX: ")')
+   !    write (ioutfile,'(53("-"))')
+   !    do i=1, nbasis
+   !       write(ioutfile, '(F14.10)') quick_scratch%Sminhalf(i)
+   !    enddo
+   !    write (ioutfile,'(53("-"))')
+   !
+   !    deallocate(quick_scratch%hold2)
+   !    deallocate(quick_scratch%tmphold)
+   !    deallocate(quick_scratch%Sminhalf)
+   ! endif
+
 end subroutine getenergy
