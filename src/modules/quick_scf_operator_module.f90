@@ -164,50 +164,32 @@ contains
         call cuest_debuglog("====== end guess density ======")
 #endif
 
-#ifdef CUESTDEBUG
+! #ifdef CUESTDEBUG
         ! --------------------------------------
         ! print eigenvalues of S^{1/2}PS^{1/2} !
         ! --------------------------------------
 
-        ! tmp_hold = 0.0d0
-        ! tmp_eval = 0.0d0
-        ! tmp_evec = 0.0d0
-        ! call MAT_DIAG(quick_qm_struct%s, nbasis, nbasis, tmp_eval, tmp_evec)
-        ! ! S = UAU^T = tmp_evec*(tmp_hold)^2*tmp_evec^T
-        ! do j=1, nbasis
-        !     if (tmp_eval(j) < 0.0d0) then
-        !        tmp_hold(j,j) = 0
-        !     else
-        !        tmp_hold(j,j) = sqrt(tmp_eval(j))
-        !     endif
-        ! enddo
-        ! ! tmp2d = U*A^{1/2} = tmp_evec*tmp_hold
-        ! call MAT_DGEMM('n', 'n', nbasis, nbasis, nbasis, 1.0d0, tmp_evec, nbasis, tmp_hold, nbasis, 0.0d0, tmp2d, nbasis)
-        ! ! tmp_hold = S^{1/2} = (U*A^{1/2})*U^T = tmp2d*tmp_evec
-        ! call MAT_DGEMM('n', 't', nbasis, nbasis, nbasis, 1.0d0, tmp2d, nbasis, tmp_evec, nbasis, 0.0d0, tmp_hold, nbasis)
-        ! ! tmp_evec = S^{1/2}P = tmp_hold*(%dense)
-        ! call MAT_DGEMM('n', 'n', nbasis, nbasis, nbasis, 1.0d0, tmp_hold, nbasis, quick_qm_struct%dense/2.0d0, nbasis, 0.0d0, tmp_evec, nbasis)
-        ! ! tmp2d = (S^{1/2}P)S^{1/2} = tmp_evec*tmp_hold
-        ! call MAT_DGEMM('n', 'n', nbasis, nbasis, nbasis, 1.0d0, tmp_evec, nbasis, tmp_hold, nbasis, 0.0d0, tmp2d, nbasis)
-
         ! tmp_hold = S^{1/2}PS^{1/2}
         call lowdin_orth(nbasis, quick_qm_struct%s, quick_qm_struct%dense/2.0d0, tmp_sqrtS, .true., tmp_sqrtSinv, tmp_hold)
 
+#ifdef CUESTDEBUG
         call MAT_DIAG(tmp_hold, nbasis, nbasis, tmp_eval, tmp_evec)
         call cuest_debuglog("<<<<<<<< eigenvalues of S^{1/2}PS^{1/2} <<<<<<<<")
         call cuest_debuglog_PriD1D(tmp_eval, nbasis, "F12.7")
         call cuest_debuglog(">>>>>> end eigenvalues of S^{1/2}PS^{1/2} >>>>>>")
+#endif
 
         ! tmp2d = C'
         call mat_uut_eig_r(nbasis, quick_molspec%nelec/2, tmp_hold, tmp2d)
         quick_qm_struct%co = 0.0d0
         ! %co = S^{-1/2}C' = C
-        tmp_hold = matmul(tmp_sqrtSinv, tmp2d)
+        ! tmp_hold = matmul(tmp_sqrtSinv, tmp2d)
+        call MAT_DGEMM('n', 'n', nbasis, nocc, nbasis, 1.0d0, tmp_sqrtSinv, nbasis, tmp2d, nbasis, 0.0d0, tmp_hold, nbasis)
         quick_qm_struct%co(:, 1:nocc) = tmp_hold(:, 1:nocc)
-#else
-        quick_qm_struct%co = 0.0d0
-        call mat_uut_eig_r(nbasis, quick_molspec%nelec/2, quick_qm_struct%dense/2.0d0, quick_qm_struct%co)
-#endif
+! #else
+!         quick_qm_struct%co = 0.0d0
+!         call mat_uut_eig_r(nbasis, quick_molspec%nelec/2, quick_qm_struct%dense/2.0d0, quick_qm_struct%co)
+! #endif
 
 #ifdef CUESTDEBUG
         call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
