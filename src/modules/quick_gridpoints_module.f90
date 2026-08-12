@@ -22,7 +22,7 @@ module quick_gridpoints_module
 ! and weights of the radial grid points, which in use are sclaed by the
 ! radii and radii^3 of the atoms.
 
-    use quick_size_module
+    use quick_size_module, only: MAXANGGRID, MAXRADGRID
 
     implicit none
 
@@ -143,10 +143,11 @@ module quick_gridpoints_module
     contains
 
     subroutine form_xc_quadrature(self, xcg_tmp)
-    use quick_method_module
+    use quick_method_module, only: quick_method
     use quick_molspec_module, only: quick_molspec, xyz, natom
-    use quick_basis_module
-    use quick_timer_module
+    use quick_basis_module, only: ncontract, itype, aexp, dcoeff, nbasis, maxcontract, quick_basis
+    use quick_constants_module, only: RADII, RADII2
+    use quick_timer_module, only: timer_begin, timer_end, timer_cumer
 #if defined(MPIV)
     use quick_mpi_module, only: bMPI, master, quick_comm, quick_comm_rank
 #endif
@@ -597,10 +598,8 @@ module quick_gridpoints_module
 
 
     subroutine print_grid_information(self)
-      use quick_files_module
-      use quick_method_module
-      use quick_molspec_module, only: quick_molspec
-      use quick_basis_module
+      use quick_files_module, only: iOutFile
+      use quick_method_module, only: quick_method
 
       implicit none
 
@@ -638,7 +637,7 @@ module quick_gridpoints_module
         ! -(1 + 2 L)/4   -(3 + 2 L)/4                           3
         !r^L E^-ar^2= 2               a           Sqrt[Pi] signif Sqrt[Gamma[- + L]]
         ! 2
-        use quick_files_module
+        use quick_files_module, only: iOutFile
         use quick_method_module, only: quick_method
         use quick_basis_module, only: nbasis, ncontract, aexp, itype
 #ifdef MPIV
@@ -1207,14 +1206,6 @@ module quick_gridpoints_module
 
 
     subroutine gridformSG1
-       use quick_basis_module
-       use quick_constants_module
-       use quick_files_module
-       use quick_method_module
-       use quick_molspec_module
-       use quick_size_module
-       use quick_timer_module
-
        implicit none
 
        integer :: itemp, i

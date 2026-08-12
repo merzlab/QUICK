@@ -67,14 +67,9 @@ contains
   ! Ed Brothers. November 27, 2001
   ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
   subroutine uscf(ierr)
-     use quick_SCRATCH_module
-     use quick_basis_module
-     use quick_calculated_module
-     use quick_files_module
-     use quick_method_module
-     use quick_molspec_module
-     use quick_size_module
-     use quick_timer_module
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_files_module, only: write_molden
+     use quick_method_module, only: quick_method
      use quick_molden_module, only: quick_molden, exportMO, exportSCF
 
      implicit none
@@ -139,17 +134,18 @@ contains
   ! 11/02/2010 Yipu Miao: Add paralle option for HF calculation
   subroutine uelectdiis(jscf,ierr)
   
-     use quick_SCRATCH_module
-     use quick_basis_module
-     use quick_calculated_module
-     use quick_files_module
-     use quick_method_module
-     use quick_molspec_module
-     use quick_size_module
-     use quick_timer_module
-     use quick_gridpoints_module
+     use quick_SCRATCH_module, only: quick_scratch
+     use quick_basis_module, only: nbasis, NBSuse
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_files_module, only: iOutFile, write_molden
+     use quick_method_module, only: quick_method, adjust_Cutoff
+     use quick_molspec_module, only: quick_molspec
+     use quick_size_module, only: MIN_SCF
+     use quick_constants_module, only: AU_TO_EV
+     use quick_timer_module, only: timer_begin, timer_end, timer_cumer
+     use quick_gridpoints_module, only: quick_dft_grid, sigrad2
      use quick_uscf_operator_module, only: uscf_operator
-     use quick_scf_module  
+     use quick_scf_module, only: B, BSAVE, BCOPY, W, COEFF, RHS, allerror, alloperator
      use quick_oei_module, only: bCalc1e
      use quick_molden_module, only: quick_molden
      use quick_mpi_module, only: master

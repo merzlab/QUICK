@@ -39,13 +39,12 @@ contains
      use quick_molden_module, only: quick_molden
      use quick_files_module, only : write_molden, ioutfile
      use quick_constants_module, only : symbol
-     use quick_gridpoints_module
+     use quick_gridpoints_module, only: quick_dft_grid, deform_dft_grid
+     use quick_size_module, only: MLBFGS
      use quick_cutoff_module, only: schwarzoff
      use quick_eri_cshell_module, only: getEriPrecomputables
      use quick_grad_cshell_module, only: scf_gradient
      use quick_grad_oshell_module, only: uscf_gradient
-     use quick_exception_module
-     use quick_molden_module, only: quick_molden
      use quick_mpi_module, only: master
 #if defined(MPIV)
      use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
