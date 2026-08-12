@@ -6,14 +6,14 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 !-------------------------------------------------------
     subroutine dipole
-    use quick_SCRATCH_module
-    use quick_basis_module
-    use quick_calculated_module
-    use quick_constants_module
-    use quick_files_module
-    use quick_method_module
-    use quick_molspec_module
-    use quick_timer_module
+    use quick_SCRATCH_module, only: quick_scratch
+    use quick_basis_module, only: ncontract, itype, aexp, dcoeff, nbasis, NBSuse, quick_basis
+    use quick_calculated_module, only: quick_qm_struct
+    use quick_constants_module, only: EMASS, SYMBOL
+    use quick_files_module, only: iOutFile
+    use quick_method_module, only: quick_method
+    use quick_molspec_module, only: quick_molspec, xyz, natom
+    use quick_timer_module, only: timer_begin, timer_end, timer_cumer
     implicit none
     
     interface
@@ -230,7 +230,6 @@
     double precision function xmoment(a,b,i,j,k,ii,jj,kk, &
     iux,iuy,iuz,Ax,Ay,Az, &
     Bx,By,Bz,Cx,Cy,Cz)
-    use quick_constants_module
     use quick_overlap_module, only: overlap
     implicit none
     

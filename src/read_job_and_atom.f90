@@ -10,14 +10,16 @@
 
 ! this subroutine is to read job and atoms
 subroutine read_job_and_atom(ierr)
-   use quick_molspec_module
-   use quick_method_module
+   use quick_molspec_module, only: quick_molspec, read
+   use quick_method_module, only: quick_method, read, check, print
    use quick_mpi_module, only: bMPI, master
-   use quick_files_module
-   use quick_calculated_module
-   use quick_ecp_module
-   use quick_api_module
-   use quick_exception_module
+   use quick_files_module, only: inFileName, inFile, iOutFile, isTemplate, &
+                                 read_data_file, read_basis_file, print_data_file, &
+                                 print_basis_file, print_ecp_file
+   use quick_calculated_module, only: quick_qm_struct, read
+   use quick_ecp_module, only: tolecp, thrshecp, itolecp
+   use quick_api_module, only: quick_api
+   use quick_exception_module, only: RaiseException
 #ifdef CEW
    use quick_cew_module, only: quick_cew, print
 #endif

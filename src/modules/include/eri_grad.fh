@@ -25,7 +25,7 @@ module quick_eri_grad_oshell_module
 module quick_eri_grad_cshell_module
 #endif
 
-   use quick_scratch_module
+   use quick_scratch_module, only: quick_scratch, allocshellopt, deallocshellopt
    implicit none
 #ifdef OSHELL
    public  :: oshell_eri_grad
@@ -44,11 +44,11 @@ subroutine oshell_eri_grad
 subroutine cshell_eri_grad
 #endif
 
-    use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
-   use quick_molspec_module
+    use quick_basis_module, only: maxcontract, III, JJJ, KKK, LLL, dnmax, Apri, Kpri, Ppri, &
+                                  cutprim, Yxiao, Yxiaotemp, quick_basis
+   use quick_method_module, only: quick_method
+   use quick_params_module, only: Sumindex
+   use quick_molspec_module, only: xyz
 
    implicit none
    integer, parameter :: NN = 14
@@ -220,11 +220,11 @@ subroutine iclass_grad_oshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
 subroutine iclass_grad_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD,NNABfirst,NNCDfirst)
 #endif
 
-    use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
-   use quick_molspec_module
+    use quick_basis_module, only: IJKLtype, III, JJJ, KKK, LLL, IJtype, KLtype, dnmax, Yaa, Ybb, &
+                                  Ycc, cutprim, Yxiao, quick_basis
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_method_module, only: quick_method
+   use quick_constants_module, only: X0
 
    implicit none
    ! Dummy arguments
