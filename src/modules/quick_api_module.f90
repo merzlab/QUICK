@@ -172,7 +172,7 @@ end subroutine check_fqin
 subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
   use quick_files_module, only: iOutFile, outFileName, inFileName, isTemplate, print_quick_io_file, set_quick_files
   use quick_molspec_module, only : quick_molspec, alloc
-  use quick_exception_module
+  use quick_exception_module, only: RaiseException
   use quick_method_module, only: quick_method
 #if defined(GPU) || defined(MPIV_GPU)
   use quick_method_module, only: upload
@@ -443,7 +443,7 @@ subroutine run_quick(self,ierr)
   use quick_calculated_module, only: quick_qm_struct
   use quick_gridpoints_module, only: quick_dft_grid, deform_dft_grid
   use quick_cutoff_module, only: schwarzoff
-  use quick_exception_module
+  use quick_exception_module, only: RaiseException
   use quick_eri_cshell_module, only: getEriPrecomputables
   use quick_grad_cshell_module, only: cshell_gradient
   use quick_grad_oshell_module, only: oshell_gradient
@@ -799,7 +799,7 @@ end subroutine
 ! fialize quick and deallocate memory of quick_api internal arrays
 subroutine delete_quick_job(ierr)
   use quick_files_module, only: iOutFile
-  use quick_exception_module
+  use quick_exception_module, only: RaiseException
   use quick_method_module, only: quick_method
   use quick_mpi_module, only: master
 #if defined(GPU) || defined(MPIV_GPU)

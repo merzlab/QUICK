@@ -12,9 +12,9 @@
 
 subroutine denspt_new_imp(gridx, gridy, gridz, densitya, densityb, &
                   gax, gay, gaz, gbx, gby, gbz, Ibin)
-   use quick_calculated_module
-   use quick_method_module
-   use quick_gridpoints_module
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_method_module, only: quick_method
+   use quick_gridpoints_module, only: quick_dft_grid
    use quick_basis_module, only: phixiao, dphidxxiao, dphidyxiao, dphidzxiao
    implicit none
    ! Given a point in space, this function calculates the densities and
