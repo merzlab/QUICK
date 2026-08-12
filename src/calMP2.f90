@@ -5,7 +5,8 @@
 
 subroutine calmp2
   use quick_scratch_module, only: quick_scratch
-  use quick_basis_module
+  use quick_basis_module, only: quick_basis, jshell, nbasis, III, JJJ, KKK, LLL, &
+                                dnmax, Ycutoff, orbmp2, orbmp2i331, orbmp2j331, orbmp2k331
   use quick_calculated_module, only: quick_qm_struct
   use quick_files_module, only: iOutFile
   use quick_method_module, only: quick_method
@@ -31,7 +32,6 @@ subroutine calmp2
    integer :: j33, j33new, k33
    ! Local allocatable arrays
    integer, allocatable, dimension(:) :: mp2shell
-   ! Note: III, JJJ, KKK, LLL are use-associated from modules and should not be redeclared
 
   nelec = quick_molspec%nelec
   nelecb = quick_molspec%nelecb
@@ -633,7 +633,8 @@ end subroutine initialOrbmp2ij
 ! Vertical Recursion by Xiao HE 07/07/07 version
  subroutine shellmp2(nstepmp2s,nsteplength)
     use quick_scratch_module, only: quick_scratch
-    use quick_basis_module
+    use quick_basis_module, only: quick_basis, III, JJJ, KKK, LLL, dnmax, &
+                                  Apri, Ppri, cutprim, Yxiao, Yxiaotemp
     use quick_calculated_module, only: quick_qm_struct
     use quick_files_module, only: iOutFile
     use quick_method_module, only: quick_method
@@ -797,13 +798,11 @@ end subroutine shellmp2
 ! Horrizontal recursion and Fock matrix builder by Xiao HE 07/07/07 version
 subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
    ! subroutine class
-   use quick_scratch_module
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_files_module
-   use quick_method_module
-   use quick_molspec_module
-   use quick_timer_module
+   use quick_basis_module, only: quick_basis, IJtype, KLtype, IJKLtype, &
+                                 III, JJJ, KKK, LLL, dnmax, cutprim, Yxiao, Y, orbmp2i331
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_method_module, only: quick_method
+   use quick_constants_module, only: X0
 
    implicit none
    integer, parameter :: NN = 13
@@ -833,7 +832,7 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
     integer :: III1, III2, JJJ1, JJJ2, KKK1, KKK2, LLL1, LLL2
     integer :: IIInew, JJJnew
     double precision :: X2, cutoffprim1, cutoffprim, atemp, btemp, Ytemp
-    ! Note: X0, III, JJJ, KKK, LLL, IJtype, KLtype, IJKLtype, AB, CD, ROU, ABCD, Y are use-associated or in common blocks
+    ! Note: AB, CD, ROU, ABCD are in COMMON /COM2/.
 
    ITT=0
    do JJJ=1,quick_basis%kprim(JJ)

@@ -17,9 +17,8 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
    use quick_molspec_module, only: quick_molspec, natom
    use quick_basis_module, only: quick_basis, ncontract, itype, aexp, dcoeff, &
                                  Yxiao, Yxiaotemp, Yxiaoprim, attraxiao, attraxiaoopt, &
-                                 Ycutoff, cutmatrix, cutprim, &
+                                 Ycutoff, cutmatrix, cutprim, JJJ, &
                                  nbasis, nShell, nprim, jshell, jbasis, maxcontract, &
-                                 IJKLtype, III, JJJ, KKK, LLL, IJtype, KLtype, &
                                  allocate_quick_basis, normalize_basis
    use quick_scratch_module, only: quick_scratch, allocate_quick_scratch
    use quick_files_module, only: iBasisFile, iBasisCustFile, basisfilename, basiscustname
