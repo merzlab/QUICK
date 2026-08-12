@@ -6,11 +6,6 @@
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !
     subroutine initialize_quick_mpi()
-    use quick_basis_module
-    use quick_files_module
-    use quick_method_module
-    use quick_molspec_module
-    use quick_size_module
     use quick_mpi_module, only: bMPI, libMPImode, master, mpi_world_rank, mpi_world_size, &
         quick_comm, quick_comm_rank, quick_comm_size, &
         quick_mpi_error, namelen, pname, quick_mpi_status
@@ -54,12 +49,10 @@
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !
      subroutine mpi_setup_job(ierr)
-     use quick_basis_module
-     use quick_files_module
-     use quick_method_module
-     use quick_molspec_module
-     use quick_size_module
-     use quick_ecp_module
+     use quick_basis_module, only: nbasis
+     use quick_method_module, only: quick_method, broadcast
+     use quick_molspec_module, only: quick_molspec, natom
+     use quick_ecp_module, only: tolecp, thrshecp
      use quick_mpi_module, only: quick_comm, quick_mpi_error
      use mpi
 
@@ -86,12 +79,7 @@
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !
     subroutine mpi_setup_mol1(ierr)
-    use quick_basis_module
-    use quick_files_module
-    use quick_method_module
-    use quick_molspec_module
-    use quick_size_module
-    use quick_gridpoints_module
+    use quick_molspec_module, only: quick_molspec, xyz, natom, broadcast
     use quick_mpi_module, only: master, quick_comm, quick_comm_rank, &
             quick_comm_size, quick_mpi_error
     use mpi
@@ -115,14 +103,11 @@
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !
   subroutine mpi_setup_mol2(ierr)
-    use quick_basis_module
-    use quick_files_module
-    use quick_method_module
-    use quick_molspec_module
-    use quick_size_module
-    use quick_gridpoints_module
+    use quick_basis_module, only: dcoeff, nprim, nbasis, maxcontract
+    use quick_method_module, only: quick_method
+    use quick_molspec_module, only: quick_molspec, broadcast
     use quick_mpi_module, only: quick_mpi_error, quick_comm
-    use quick_ecp_module
+    use quick_ecp_module, only: eta
     use quick_params_module, only: At1prm, bndprm
     use mpi
 
@@ -162,13 +147,11 @@
 ! Yipu Miao 08/03/2010
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     subroutine mpi_setup_basis
-    use quick_basis_module
-    use quick_files_module
-    use quick_method_module
-    use quick_molspec_module
-    use quick_size_module
+    use quick_basis_module, only: quick_basis, ncontract, itype, aexp, dcoeff, nshell, nprim, jshell, jbasis, nbasis, maxcontract
+    use quick_method_module, only: quick_method
+    use quick_molspec_module, only: quick_molspec, natom
     use quick_mpi_module, only: quick_mpi_error, quick_comm
-    use quick_ecp_module
+    use quick_ecp_module, only: kmin, kmax, ktypecp
     use mpi
 
     implicit none
@@ -236,12 +219,9 @@
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 !
      subroutine mpi_setup_inidivcon(natomt)
-     use quick_basis_module
-     use quick_files_module
-     use quick_method_module
-     use quick_molspec_module
-     use quick_size_module
-     use quick_divcon_module
+     use quick_basis_module, only: jshell, nbasis
+     use quick_files_module, only: iOutFile
+     use quick_divcon_module, only: DCCore, DCBuffer1, DCBuffer2, DCSub, DCCoren, DCBuffer1n, DCBuffer2n, DCSubn, nBasisDC, nElecDCSub, DCOverlap, DCConnect, kShellS, kShellF, DCLogic, invDCOverlap, np, NNMax, npsaved, mpi_dc_fragn, mpi_dc_frag, mpi_dc_nbasis
      use quick_mpi_module, only: master, quick_mpi_error, quick_comm_size, quick_comm
      use mpi
 
@@ -325,11 +305,8 @@
 ! Yipu Miao 08/03/2010
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     subroutine MPI_setup_hfoperator()
-    use quick_basis_module
-    use quick_files_module
-    use quick_method_module
-    use quick_molspec_module
-    use quick_size_module
+    use quick_basis_module, only: jshell, nbasis, mpi_jshelln, mpi_jshell, mpi_nbasisn, mpi_nbasis
+    use quick_molspec_module, only: quick_molspec, natom
 #if defined(CEW)
     use quick_mpi_module, only: mpi_distribute_atoms
 #endif
@@ -436,12 +413,8 @@
 
 
  subroutine setup_xc_mpi_1
-   use quick_basis_module
-   use quick_files_module
-   use quick_method_module
-   use quick_molspec_module
-   use quick_size_module
-   use quick_gridpoints_module
+   use quick_method_module, only: quick_method
+   use quick_gridpoints_module, only: quick_dft_grid
    use quick_mpi_module, only: quick_mpi_error, quick_comm
    use mpi
 
@@ -461,12 +434,9 @@
 !  energy/gradient computations (i.e. get_xc & get_xc_grad methods).
 !  Madu Manathunga 01/03/2020
 !-----------------------------------------------------------------------------
-   use quick_basis_module
-   use quick_files_module
-   use quick_method_module
-   use quick_molspec_module
-   use quick_size_module
-   use quick_gridpoints_module
+   use quick_basis_module, only: quick_basis
+   use quick_molspec_module, only: quick_molspec
+   use quick_gridpoints_module, only: quick_dft_grid
    use quick_mpi_module, only: bMPI, master, quick_mpi_error, quick_comm_size, quick_comm
    use mpi
 
@@ -550,12 +520,7 @@
 
 
    subroutine setup_ssw_mpi
-   use quick_basis_module
-   use quick_files_module
-   use quick_method_module
-   use quick_molspec_module
-   use quick_size_module
-   use quick_gridpoints_module
+   use quick_gridpoints_module, only: quick_dft_grid, quick_xcg_tmp
    use quick_mpi_module, only: bMPI, master, quick_mpi_error, quick_comm_size, quick_comm
    use mpi
 
@@ -623,12 +588,7 @@
 
 
    subroutine get_mpi_ssw
-   use quick_basis_module
-   use quick_files_module
-   use quick_method_module
-   use quick_molspec_module
-   use quick_size_module
-   use quick_gridpoints_module
+   use quick_gridpoints_module, only: quick_dft_grid, quick_xcg_tmp
    use quick_mpi_module, only: master, quick_mpi_error, quick_comm_rank, &
            quick_comm_size, quick_comm, quick_mpi_status
    use mpi
