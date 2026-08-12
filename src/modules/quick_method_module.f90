@@ -12,7 +12,7 @@
 
 
 module quick_method_module
-    use quick_constants_module
+    use quick_constants_module, only: LEASTCUTOFF
     use quick_input_parser_module, only: read
 
     implicit none
@@ -210,7 +210,6 @@ module quick_method_module
         ! Broadcast quick_method
         !------------------------
         subroutine broadcast_quick_method(self, ierr)
-            use quick_exception_module            
             use quick_mpi_module, only: quick_comm, quick_mpi_error
             use mpi
 
@@ -554,7 +553,7 @@ module quick_method_module
         ! read quick_method
         !------------------------
         subroutine read_quick_method(self,keywd,ierr)
-            use quick_exception_module
+            use quick_exception_module, only: RaiseException
             use quick_mpi_module, only: master
             use quick_files_module, only : write_molden
 
@@ -906,7 +905,6 @@ module quick_method_module
         !------------------------
         subroutine init_quick_method(self,ierr)
 
-            use quick_exception_module
             implicit none
             type(quick_method_type) self
             integer, intent(inout) :: ierr
@@ -1029,7 +1027,6 @@ module quick_method_module
         ! check quick_method
         !------------------------
         subroutine check_quick_method(self,io,ierr)
-            use quick_exception_module
             implicit none
             type(quick_method_type) self
             integer io

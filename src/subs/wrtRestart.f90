@@ -14,10 +14,11 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine wrtrestart
-  use quick_files_module
-  use quick_method_module
-  use quick_molspec_module
-  use quick_gridpoints_module
+  use quick_files_module, only: inFile, inFileName, iRstFile, rstFileName, iOutFile
+  use quick_method_module, only: quick_method
+  use quick_molspec_module, only: quick_molspec, xyz, natom
+  use quick_gridpoints_module, only: iregion
+  use quick_constants_module, only: BOHRS_TO_A, SYMBOL
   implicit none
   integer istart,ifinal
   integer i

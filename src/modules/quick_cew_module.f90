@@ -405,8 +405,6 @@ contains
    use quick_calculated_module, only: quick_qm_struct
    use quick_method_module, only: quick_method
    use quick_molspec_module, only: quick_molspec
-   use xc_f90_types_m
-   use xc_f90_lib_m
    use quick_gridpoints_module, only : quick_dft_grid
 #if defined(MPIV)
    use quick_mpi_module, only: bMPI, quick_comm_rank
@@ -891,8 +889,6 @@ contains
    use quick_calculated_module, only: quick_qm_struct
    use quick_method_module, only: quick_method
    use quick_molspec_module, only: natom, quick_molspec, xyz
-   use xc_f90_types_m
-   use xc_f90_lib_m
    use quick_gridpoints_module, only : quick_dft_grid
 #if defined(MPIV)
    use quick_mpi_module, only: bMPI, quick_comm_rank

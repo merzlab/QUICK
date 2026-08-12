@@ -297,7 +297,8 @@ contains
      use quick_basis_module, only: alloc, atombasis, atomdens, dealloc, jshell, nbasis, normalize_basis
      use quick_calculated_module, only: alloc, dealloc, init, quick_qm_struct, read
      use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
-     use quick_method_module, only: SPINMULT, SYMBOL, adjust_Cutoff, init, quick_method, quick_method_type, read
+     use quick_method_module, only: adjust_Cutoff, init, quick_method, quick_method_type, read
+     use quick_constants_module, only: SPINMULT, SYMBOL
      use quick_molspec_module, only: alloc, dealloc, init, natom, quick_molspec, quick_molspec_type, read, set, xyz
      use quick_size_module, only: MIN_SCF
      use quick_mpi_module, only: master
@@ -352,7 +353,8 @@ contains
      use quick_basis_module, only: alloc, atombasis, atomdens, dealloc, jshell, nbasis, normalize_basis
      use quick_calculated_module, only: alloc, dealloc, init, quick_qm_struct, read
      use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
-     use quick_method_module, only: SPINMULT, SYMBOL, adjust_Cutoff, init, quick_method, quick_method_type, read
+     use quick_method_module, only: adjust_Cutoff, init, quick_method, quick_method_type, read
+     use quick_constants_module, only: SPINMULT, SYMBOL
      use quick_molspec_module, only: alloc, dealloc, init, natom, quick_molspec, quick_molspec_type, read, set, xyz
      use quick_size_module, only: MIN_SCF
      use quick_gridpoints_module, only: gridformSG1
@@ -893,7 +895,8 @@ contains
      use quick_basis_module, only: alloc, atombasis, atomdens, dealloc, jshell, nbasis, normalize_basis
      use quick_calculated_module, only: alloc, dealloc, init, quick_qm_struct, read
      use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
-     use quick_method_module, only: SPINMULT, SYMBOL, adjust_Cutoff, init, quick_method, quick_method_type, read
+     use quick_method_module, only: adjust_Cutoff, init, quick_method, quick_method_type, read
+     use quick_constants_module, only: SPINMULT, SYMBOL
      use quick_molspec_module, only: alloc, dealloc, init, natom, quick_molspec, quick_molspec_type, read, set, xyz
      use quick_size_module, only: MIN_SCF
      use quick_cutoff_module, only: oshell_density_cutoff
