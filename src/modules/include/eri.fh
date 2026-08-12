@@ -18,7 +18,6 @@ module quick_eri_oshell_module
 #else
 module quick_eri_cshell_module
 #endif
-   use quick_timer_module
    implicit none
 
    private
@@ -72,7 +71,7 @@ contains
  ! Recurrence Relations. J. Chem. Phys. 1988, 89, 5777–5786.
  !__________________________________________________________________
 subroutine get_eri_precomputables
-   use quick_basis_module
+   use quick_basis_module, only: jshell, jbasis, Apri, Kpri, Ppri, quick_basis
    use quick_molspec_module, only: xyz
    use quick_mpi_module, only: master
 #if defined(MPIV)
@@ -80,7 +79,6 @@ subroutine get_eri_precomputables
    use mpi
 #endif
 
-   use quick_timer_module
    implicit none
 
    integer ics,ips,jcs,jps,itemp,itemp2,i
@@ -165,14 +163,9 @@ subroutine get_oshell_eri(II_arg)
 #else
 subroutine get_cshell_eri(II_arg)
 #endif
-    use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
-   use quick_molspec_module
-   use quick_files_module
+    use quick_basis_module, only: jshell, Ycutoff, cutmatrix, dnmax
+   use quick_method_module, only: quick_method
 
-   use quick_timer_module
    implicit none
 
    double precision testtmp,cutoffTest
@@ -221,14 +214,12 @@ subroutine oshell
 #else
 subroutine cshell
 #endif
-    use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
-   use quick_molspec_module
-   use quick_files_module
+    use quick_basis_module, only: III, JJJ, KKK, LLL, dnmax, Apri, Ppri, cutprim, Yxiao, &
+                                  Yxiaotemp, quick_basis
+   use quick_method_module, only: quick_method
+   use quick_params_module, only: Sumindex
+   use quick_molspec_module, only: xyz
 
-   use quick_timer_module
    implicit none
 
    ! Local variables - excluding III, JJJ, KKK, LLL, II, JJ, KK, LL which are use-associated
@@ -475,15 +466,14 @@ subroutine iclass_oshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
 #else
 subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
 #endif
-    use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
-   use quick_molspec_module
-   use quick_files_module
+    use quick_basis_module, only: nbasis, IJKLtype, III, JJJ, KKK, LLL, IJtype, KLtype, Y, &
+                                  dnmax, cutprim, Yxiao, quick_basis
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_method_module, only: quick_method
+   use quick_molspec_module, only: xyz
+   use quick_constants_module, only: X0
    use ISO_FORTRAN_ENV, only: int32
 
-   use quick_timer_module
    implicit none
 
     ! Dummy arguments
@@ -1112,16 +1102,11 @@ subroutine get_oshell_eri_energy
 #else
 subroutine get_cshell_eri_energy
 #endif
-    use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
-   use quick_molspec_module
-   use quick_files_module
-
-   use quick_timer_module
+    use quick_basis_module, only: nbasis
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_timer_module, only: timer_begin, timer_end, timer_cumer
    implicit none
-   
+
    double precision :: Sum2Mat
 
     RECORD_TIME(timer_begin%TE)
@@ -1144,7 +1129,6 @@ end subroutine get_cshell_eri_energy
 #ifdef COMPILE_AOINT
 ! Drivers to dump integrals into files. Currently not working.
 subroutine writeInt(iIntFile, intDim, a, b, int)
-   use quick_timer_module
    Implicit none
 
    integer i,intDim, iIntFile
@@ -1160,7 +1144,6 @@ end subroutine writeInt
 
 
 subroutine readInt(iIntFile, intDim, a, b, int)
-   use quick_timer_module
    Implicit none
 
    integer, parameter :: llInt = selected_int_kind (16)
@@ -1176,13 +1159,12 @@ subroutine aoint(ierr)
    !------------------------------
    !  This subroutine is used to store 2e-integral into files
    !------------------------------
-    use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
-   use quick_molspec_module
-   use quick_files_module
-   use quick_timer_module
+    use quick_basis_module, only: jshell, dnmax, Ycutoff, intIndex, bufferSize, bufferInt, &
+                                  intBuffer, aBuffer, bBuffer, incoreInt, incoreIndex, &
+                                  intIncore, aIncore, bIncore
+   use quick_method_module, only: quick_method
+   use quick_files_module, only: intFileName, iOutFile, iIntFile
+   use quick_timer_module, only: timer_begin, timer_end, timer_cumer
    Implicit none
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,INTNUM, INTBEG, INTTOT, I, J
    double precision leastIntegralCutoff, t1, t2
@@ -1271,15 +1253,15 @@ end subroutine aoint
 
 
 subroutine addInt
-    use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
-   use quick_molspec_module
-   use quick_files_module
+    use quick_basis_module, only: jshell, nbasis, IJKLtype, III, JJJ, KKK, LLL, Y, dnmax, &
+                                  Ycutoff, cutmatrix, longLongInt, intIndex, bufferSize, &
+                                  intBuffer, aBuffer, bBuffer, incoreInt, incoreIndex, &
+                                  intIncore, aIncore, bIncore
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_method_module, only: quick_method
+   use quick_files_module, only: intFileName, iIntFile
    use ISO_FORTRAN_ENV, only: int32
 
-   use quick_timer_module
    Implicit none
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,INTNUM, INTBEG, INTTOT
