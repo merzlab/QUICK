@@ -12,10 +12,7 @@
 !*Lesson1,angular momentum;2,angular momentum factor;3.All possibilties in order.
 !Vertical Recursion subroutines by hand, these parts can be optimized by MAPLE
 subroutine PSattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
    implicit none
    integer mtemp
    double precision g
@@ -34,10 +31,7 @@ end subroutine PSattra
 
 
 subroutine SPattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
    implicit none
    integer mtemp
    double precision g
@@ -56,10 +50,7 @@ end subroutine SPattra
 
 
 subroutine PPattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
    implicit none
    integer mtemp
    double precision g
@@ -87,10 +78,8 @@ end subroutine PPattra
 
 
 subroutine DSattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -124,10 +113,8 @@ end subroutine DSattra
 
 
 subroutine SDattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -161,10 +148,8 @@ end subroutine SDattra
 
 
 subroutine DPattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -204,10 +189,8 @@ end subroutine DPattra
 
 
 subroutine PDattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -247,10 +230,8 @@ End subroutine PDattra
 
 
 subroutine DDattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -299,10 +280,8 @@ subroutine DDattra(mtemp)
 End subroutine DDattra
 
 subroutine FSattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -339,10 +318,8 @@ end subroutine FSattra
 
 
 subroutine SFattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -379,10 +356,8 @@ end subroutine SFattra
 
 
 subroutine FPattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -422,10 +397,8 @@ end subroutine FPattra
 
 
 subroutine PFattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -465,10 +438,8 @@ End subroutine PFattra
 
 
 subroutine FDattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -517,10 +488,8 @@ subroutine FDattra(mtemp)
 End subroutine FDattra
 
 subroutine DFattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -570,10 +539,8 @@ End subroutine DFattra
 
 
 subroutine FFattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -626,10 +593,8 @@ End subroutine FFattra
 
 
 subroutine GSattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -666,10 +631,8 @@ end subroutine GSattra
 
 
 subroutine SGattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -706,10 +669,8 @@ end subroutine SGattra
 
 
 subroutine GPattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -749,10 +710,8 @@ end subroutine GPattra
 
 
 subroutine PGattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -792,10 +751,8 @@ End subroutine PGattra
 
 
 subroutine GDattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -844,10 +801,8 @@ subroutine GDattra(mtemp)
 End subroutine GDattra
 
 subroutine DGattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -897,10 +852,8 @@ End subroutine DGattra
 
 
 subroutine GFattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -953,10 +906,8 @@ End subroutine GFattra
 
 
 subroutine FGattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -1012,10 +963,8 @@ End subroutine FGattra
 
 
 subroutine GGattra(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -1074,10 +1023,10 @@ End subroutine GGattra
 ! nuclearspdf.f90
 subroutine nuclearattraenergy(Ips,Jps,IIsh,JJsh,NIJ1, &
       Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,iatom)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: quick_basis, attraxiao
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_method_module, only: quick_method
+   use quick_params_module, only: trans
 
    implicit none
 
@@ -1342,10 +1291,7 @@ End subroutine nuclearattraenergy
 !*Lesson1,angular momentum;2,angular momentum factor;3.All possibilties in order.
 !Vertical Recursion subroutines by hand, these parts can be optimized by MAPLE
 subroutine PSattraopt(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao, attraxiaoopt
    implicit none
    integer mtemp
    double precision g
@@ -1370,10 +1316,7 @@ end subroutine PSattraopt
 
 
 subroutine SPattraopt(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao, attraxiaoopt
    implicit none
    integer mtemp
    double precision g
@@ -1398,10 +1341,7 @@ end subroutine SPattraopt
 
 
 subroutine PPattraopt(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao, attraxiaoopt
    implicit none
    integer mtemp
    double precision g
@@ -1434,10 +1374,8 @@ end subroutine PPattraopt
 
 
 subroutine DSattraopt(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao, attraxiaoopt
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -1478,10 +1416,8 @@ end subroutine DSattraopt
 
 
 subroutine SDattraopt(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao, attraxiaoopt
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -1522,10 +1458,8 @@ end subroutine SDattraopt
 
 
 subroutine DPattraopt(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao, attraxiaoopt
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -1571,10 +1505,8 @@ end subroutine DPattraopt
 
 
 subroutine PDattraopt(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao, attraxiaoopt
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -1619,10 +1551,8 @@ End subroutine PDattraopt
 
 
 subroutine DDattraopt(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao, attraxiaoopt
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -1680,10 +1610,8 @@ subroutine DDattraopt(mtemp)
 End subroutine DDattraopt
 
 subroutine FSattraopt(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao, attraxiaoopt
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -1727,10 +1655,8 @@ end subroutine FSattraopt
 
 
 subroutine SFattraopt(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao, attraxiaoopt
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -1774,10 +1700,8 @@ end subroutine SFattraopt
 
 
 subroutine FPattraopt(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao, attraxiaoopt
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -1824,10 +1748,8 @@ end subroutine FPattraopt
 
 
 subroutine PFattraopt(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao, attraxiaoopt
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -1874,10 +1796,8 @@ End subroutine PFattraopt
 
 
 subroutine FDattraopt(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao, attraxiaoopt
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -1933,10 +1853,8 @@ subroutine FDattraopt(mtemp)
 End subroutine FDattraopt
 
 subroutine DFattraopt(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao, attraxiaoopt
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
@@ -1993,10 +1911,8 @@ End subroutine DFattraopt
 
 
 subroutine FFattraopt(mtemp)
-   use quick_basis_module
-   use quick_calculated_module
-   use quick_method_module
-   use quick_params_module
+   use quick_basis_module, only: attraxiao, attraxiaoopt
+   use quick_params_module, only: trans, Mcal
    implicit none
    integer mtemp
    double precision g
