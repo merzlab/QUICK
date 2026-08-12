@@ -1162,7 +1162,7 @@ subroutine aoint(ierr)
     use quick_basis_module, only: jshell, dnmax, Ycutoff, intIndex, bufferSize, bufferInt, &
                                   intBuffer, aBuffer, bBuffer, incoreInt, incoreIndex, &
                                   intIncore, aIncore, bIncore
-   use quick_method_module, only: quick_method
+   use quick_method_module, only: quick_method, obtain_leastIntCutoff
    use quick_files_module, only: intFileName, iOutFile, iIntFile
    use quick_timer_module, only: timer_begin, timer_end, timer_cumer
    Implicit none
