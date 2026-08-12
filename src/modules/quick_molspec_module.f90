@@ -139,7 +139,6 @@ contains
    ! allocate
    !-------------------
    subroutine allocate_quick_molspec(self, readxyz, ierr)
-      use quick_exception_module
 
       implicit none
 
@@ -204,7 +203,6 @@ contains
 
    subroutine reallocate_quick_molspec(self,ierr)
 
-     use quick_exception_module
 
      implicit none
      
@@ -251,7 +249,6 @@ contains
    ! set initial value
    !-------------------
    subroutine init_quick_molspec(self,ierr)
-      use quick_exception_module
       implicit none
 
       type (quick_molspec_type), intent(inout) :: self
@@ -276,7 +273,6 @@ contains
    ! deallocate
    !-------------------
    subroutine deallocate_quick_molspec(self,ierr)
-      use quick_exception_module
       implicit none
 
       type (quick_molspec_type), intent(inout) :: self
@@ -311,7 +307,6 @@ contains
    ! broadcast variable list
    !-------------------
    subroutine broadcast_quick_molspec(self,ierr)
-      use quick_exception_module
       use quick_mpi_module, only: quick_comm, quick_mpi_error
       use mpi
 
@@ -362,7 +357,6 @@ contains
   subroutine read_quick_molspec(self,input,isTemplate, hasKeywd, apiKeywd,ierr)
 
     use quick_constants_module, only: SYMBOL
-    use quick_exception_module
     use quick_method_module, only: quick_method
     use quick_io_module, only: chk_read
 
@@ -548,7 +542,6 @@ contains
    !----------------
    subroutine read_quick_molspec_2(self,input,ierr)
        use quick_constants_module, only: A_TO_BOHRS, SYMBOL, SYMBOL_MAX
-       use quick_exception_module
 
        implicit none
        ! parameter
@@ -609,7 +602,6 @@ contains
 
    subroutine read_quick_molespec_extcharges(self,input,ierr)
        use quick_constants_module, only: A_TO_BOHRS
-       use quick_exception_module
 
        implicit none
 
@@ -649,7 +641,6 @@ contains
    end subroutine read_quick_molespec_extcharges
 
    subroutine read_quick_molespec_constrain(self,input,ierr)
-       use quick_exception_module
 
        implicit none
 
@@ -772,7 +763,6 @@ contains
 
    subroutine read_quick_molespec_extgridpoints(self,input,ierr)
      use quick_constants_module, only: A_TO_BOHRS
-     use quick_exception_module
 
      implicit none
 
@@ -812,7 +802,6 @@ contains
    ! check if molecular specifications are correct
    subroutine check_quick_molspec(self, ierr)
 
-     use quick_exception_module
      implicit none
 
      type (quick_molspec_type), intent(in) :: self
@@ -827,7 +816,6 @@ contains
    !-------------------
    subroutine print_quick_molspec(self,io,ierr)
 
-      use quick_exception_module
       use quick_constants_module, only: BOHRS_TO_A, SYMBOL
       implicit none
        
@@ -887,7 +875,6 @@ contains
 
    subroutine set_quick_molspec(self,ierr)
 
-      use quick_exception_module
 
       implicit none
 
