@@ -18,7 +18,7 @@ subroutine mat_uut_eig_r(n, k, A, U)
    implicit none
    integer, intent(in) :: n, k
    double precision, intent(in) :: A(n, n)
-   double precision, intent(out) :: U(n, min(n, k))
+   double precision, intent(out) :: U(n, k)
    double precision :: eval(n), evec(n, n)
    integer :: j, jj
 
@@ -34,10 +34,10 @@ subroutine mat_uut_eig_r(n, k, A, U)
 #endif
 
    ! TODO: enforce order. Right now assumes that cuSolver/LAPACK is used ==> ascending order
-   do j = 1, min(n, k)
+   do j = 1, k
       jj = n - j + 1
       if (eval(jj) <= 0.0d0) exit
-      U(:, j) = evec(:, jj)*sqrt(eval(jj))
+      U(:, j) = evec(:, jj)!*sqrt(eval(jj))
    end do
 
 end subroutine mat_uut_eig_r

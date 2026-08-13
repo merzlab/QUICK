@@ -169,7 +169,7 @@ contains
         ! print eigenvalues of S^{1/2}PS^{1/2} !
         ! -------------------------------------!
 
-        ! tmp_hold = S^{1/2}PS^{1/2}
+        ! tmp_hold = S^{1/2}PS^{1/2} =: P'
         call lowdin_orth(nbasis, quick_qm_struct%s, quick_qm_struct%dense/2.0d0, &
                          tmp_sqrtS, .true., tmp_sqrtSinv, tmp_hold)
 
@@ -180,7 +180,7 @@ contains
         call cuest_debuglog(">>>>>> end eigenvalues of S^{1/2}PS^{1/2} >>>>>>")
 #endif
 
-        ! tmp2d = C'
+        ! tmp2d =: C', where P' = C'C'^T
         call mat_uut_eig_r(nbasis, quick_molspec%nelec/2, tmp_hold, tmp2d)
         quick_qm_struct%co = 0.0d0
         ! %co = S^{-1/2}C' = C
