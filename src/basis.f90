@@ -29,7 +29,8 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                                   matomfinal, matomfinalcap, matomfinalcon, matomfinalcon2, &
                                   matomstart, matomstartcap, matomstartcon, matomstartcon2, &
                                   mfccatom, mfcccharge, npmfcc, IMFCC, kxiaoconnect, mfcccord, &
-                                  Ftmp, linetmp, mfccatomxiao, mfccstart, mfccfinal, mfccbases, mfccbasef, &
+                                  Ftmp, linetmp, mfccatomxiao, mfccstart, mfccfinal, &
+                                  mfccbases, mfccbasef, &
                                   mfccatomcap, mfccchargecap, mfcccordcap, mfccatomxiaocap, &
                                   mfccstartcap, mfccfinalcap, mfccbasescap, mfccbasefcap, &
                                   mfccatomcon, mfccchargecon, mfcccordcon, mfccatomxiaocon, &
@@ -40,10 +41,13 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                                   mfccstartconi, mfccfinalconi, mfccbasesconi, mfccbasefconi, &
                                   mfccatomconj, mfccchargeconj, mfcccordconj, mfccatomxiaoconj, &
                                   mfccstartconj, mfccfinalconj, mfccbasesconj, mfccbasefconj, &
-                                  mfccdens, mfccdenscap, mfccdenscon, mfccdenscon2, mfccdensconi, mfccdensconj
-    use quick_ecp_module, only: eta, nlp, nelecp, lmaxecp, necprim, zlm, dfac, factorial, clp, zlp, kvett, &
+                                  mfccdens, mfccdenscap, mfccdenscon, mfccdenscon2, &
+                                  mfccdensconi, mfccdensconj
+    use quick_ecp_module, only: eta, nlp, nelecp, lmaxecp, necprim, zlm, dfac, factorial, &
+                                clp, zlp, kvett, &
                                 kfirst, klast, lf, lmf, lml, lmx, lmy, lmz, mc, mr, dfaci, &
-                                kmin, kmax, ktypecp, ecp_int, gout, tolecp, thrshecp, itolecp, flmtx, fprod, &
+                                kmin, kmax, ktypecp, ecp_int, gout, tolecp, thrshecp, &
+                                itolecp, flmtx, fprod, &
                                 nbf12, mc1dim, lmxdim, len_fac, lfdim, lmfdim, len_dfac
     use quick_size_module, only: MAXPRIM
     use quick_exception_module, only: RaiseException

@@ -24,7 +24,8 @@
 MODULE dlfhdlc_primitive
   use dlf_parameter_module, only: rk
   use dlf_global, only: printl,stdout,pi
-  USE dlfhdlc_matrixlib, only: matrix, int_matrix, int_matrix_create, matrix_get, int_matrix_set_column
+  USE dlfhdlc_matrixlib, only: matrix, int_matrix, int_matrix_create, matrix_get, &
+      int_matrix_set_column
   use dlf_allocate, only: allocate, deallocate
   IMPLICIT NONE
 

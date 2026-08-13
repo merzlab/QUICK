@@ -147,7 +147,8 @@
 ! Yipu Miao 08/03/2010
 !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     subroutine mpi_setup_basis
-    use quick_basis_module, only: quick_basis, ncontract, itype, aexp, dcoeff, nshell, nprim, jshell, jbasis, nbasis, maxcontract
+    use quick_basis_module, only: quick_basis, ncontract, itype, aexp, dcoeff, nshell, nprim, &
+                                   jshell, jbasis, nbasis, maxcontract
     use quick_method_module, only: quick_method
     use quick_molspec_module, only: quick_molspec, natom
     use quick_mpi_module, only: quick_mpi_error, quick_comm
@@ -221,7 +222,10 @@
      subroutine mpi_setup_inidivcon(natomt)
      use quick_basis_module, only: jshell, nbasis
      use quick_files_module, only: iOutFile
-     use quick_divcon_module, only: DCCore, DCBuffer1, DCBuffer2, DCSub, DCCoren, DCBuffer1n, DCBuffer2n, DCSubn, nBasisDC, nElecDCSub, DCOverlap, DCConnect, kShellS, kShellF, DCLogic, invDCOverlap, np, NNMax, npsaved, mpi_dc_fragn, mpi_dc_frag, mpi_dc_nbasis
+     use quick_divcon_module, only: DCCore, DCBuffer1, DCBuffer2, DCSub, DCCoren, DCBuffer1n, &
+                                     DCBuffer2n, DCSubn, nBasisDC, nElecDCSub, DCOverlap, &
+                                     DCConnect, kShellS, kShellF, DCLogic, invDCOverlap, np, &
+                                     NNMax, npsaved, mpi_dc_fragn, mpi_dc_frag, mpi_dc_nbasis
      use quick_mpi_module, only: master, quick_mpi_error, quick_comm_size, quick_comm
      use mpi
 

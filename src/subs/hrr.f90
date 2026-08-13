@@ -872,7 +872,8 @@ End subroutine lefthrr
 ! subroutine hrrwhole(IJKLtype,III,JJJ,KKK,LLL,Y)
 !Horrizontal Recursion subroutines by hand, these parts can be optimized by MAPLE
 subroutine hrrwholeopt
-   use quick_basis_module, only: quick_basis, IJKLtype, III, JJJ, KKK, LLL, IJtype, KLtype, Yaa, Ybb, Ycc
+   use quick_basis_module, only: quick_basis, IJKLtype, III, JJJ, KKK, LLL, IJtype, KLtype, &
+                                  Yaa, Ybb, Ycc
    use quick_params_module, only: trans
 
    implicit none
