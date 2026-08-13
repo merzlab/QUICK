@@ -63,7 +63,7 @@ double precision function repulsion_prim(a, b, c, d, &
                                          Bx, By, Bz, &
                                          Cx, Cy, Cz, &
                                          Dx, Dy, Dz) result(repulsion)
-   use quick_constants_module
+   use quick_constants_module, only: PI
    use quick_overlap_module, only: ssoverlap
    implicit none
    
@@ -556,7 +556,7 @@ end
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 double precision function attraction(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az, &
       Bx,By,Bz,Cx,Cy,Cz,Z)
-   use quick_constants_module
+   use quick_constants_module, only: PI
    use quick_overlap_module, only: gpt, overlap
    implicit none
    

@@ -3,9 +3,8 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
     subroutine sswder(gridx,gridy,gridz,Exc,quadwt,Iparent)
-    use quick_calculated_module
-    use quick_method_module
-    use quick_molspec_module
+    use quick_calculated_module, only: quick_qm_struct
+    use quick_molspec_module, only: xyz, natom
     implicit none
 
     double precision, intent(in) :: gridx, gridy, gridz, Exc, quadwt

@@ -47,7 +47,7 @@ contains
     use quick_basis_module, only: nbasis
     use quick_molspec_module, only: xyz, natom
     use quick_calculated_module, only: quick_qm_struct
-    use quick_eri_cshell_module
+    use quick_eri_cshell_module, only: getEriPrecomputables
     
     implicit none
     

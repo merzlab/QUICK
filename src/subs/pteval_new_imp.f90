@@ -3,9 +3,9 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
     subroutine pteval_new_imp(gridx,gridy,gridz,phi,dphidx,dphidy,dphidz,Iphi,icount)
-    use quick_basis_module
-    use quick_molspec_module
-    use quick_gridpoints_module
+    use quick_basis_module, only: quick_basis, itype, dcoeff, aexp
+    use quick_molspec_module, only: xyz
+    use quick_gridpoints_module, only: sigrad2, quick_dft_grid
     implicit none
 
     double precision, intent(in) :: gridx, gridy, gridz

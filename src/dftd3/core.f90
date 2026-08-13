@@ -27,9 +27,9 @@
 !
 
 module dftd3_core
-  use dftd3_sizes
-  use dftd3_common
-  use dftd3_pars
+  use dftd3_sizes, only: max_elem, maxc, nlines
+  use dftd3_common, only: wp, int64, k1, k2, k3, autoang, autokcal, autoev, limit
+  use dftd3_pars, only: pars, init_pars
   implicit none
 
 
