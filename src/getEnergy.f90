@@ -74,14 +74,12 @@ subroutine getEnergy(isGuess, ierr)
          call lowdin_orth(nbasis, quick_qm_struct%s, quick_qm_struct%dense, &
                           quick_scratch%tmphold, .true., quick_scratch%hold3, quick_scratch%hold)
 
-         ! %hold2 =: C', where P' = C'NC'^T; N = diag(1,...,1,0,...,0)
+         ! %hold2 =: C', where P' = C'NC'^T
          call mat_uut_eig_r(nbasis, quick_molspec%nelec/2, quick_scratch%hold, quick_scratch%hold2)
          quick_qm_struct%co = 0.0d0
-         ! %co = S^{-1/2}C' = C
-         ! %hold = matmul(%hold3, %hold2)
+         ! %co = (%hold3)*(%hold2) S^{-1/2}C' = C
          call MAT_DGEMM('n', 'n', nbasis, quick_molspec%nelec/2, nbasis, 1.0d0, quick_scratch%hold3, nbasis, &
-                        quick_scratch%hold2, nbasis, 0.0d0, quick_scratch%hold, nbasis)
-         quick_qm_struct%co(:, 1:quick_molspec%nelec/2) = quick_scratch%hold(:, 1:quick_molspec%nelec/2)
+                        quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%co, nbasis)
 
          call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
                          nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense, nbasis)
