@@ -57,6 +57,36 @@ subroutine getEnergy(isGuess, ierr)
       ! Build a transformation matrix X and overlap matrix
       call fullX
 
+      ! ------------------!
+      ! force idempotency !
+      ! ------------------!
+      if (.true.) then
+         ! TODO: update for unrst
+
+         if (.not. allocated(quick_scratch%hold)) allocate(quick_scratch%hold(nbasis, nbasis))
+         if (.not. allocated(quick_scratch%hold2)) allocate(quick_scratch%hold2(nbasis, nbasis))
+         if (.not. allocated(quick_scratch%hold3)) allocate(quick_scratch%hold3(nbasis, nbasis))
+         if (.not. allocated(quick_scratch%tmphold)) allocate(quick_scratch%tmphold(nbasis, nbasis))
+
+         ! %hold    = S^{1/2}PS^{1/2} =: P'
+         ! %tmphold = S^{1/2}
+         ! %hold3   = S^{-1/2}
+         call lowdin_orth(nbasis, quick_qm_struct%s, quick_qm_struct%dense, &
+                          quick_scratch%tmphold, .true., quick_scratch%hold3, quick_scratch%hold)
+
+         ! %hold2 =: C', where P' = C'NC'^T; N = diag(1,...,1,0,...,0)
+         call mat_uut_eig_r(nbasis, quick_molspec%nelec/2, quick_scratch%hold, quick_scratch%hold2)
+         quick_qm_struct%co = 0.0d0
+         ! %co = S^{-1/2}C' = C
+         ! %hold = matmul(%hold3, %hold2)
+         call MAT_DGEMM('n', 'n', nbasis, quick_molspec%nelec/2, nbasis, 1.0d0, quick_scratch%hold3, nbasis, &
+                        quick_scratch%hold2, nbasis, 0.0d0, quick_scratch%hold, nbasis)
+         quick_qm_struct%co(:, 1:quick_molspec%nelec/2) = quick_scratch%hold(:, 1:quick_molspec%nelec/2)
+
+         call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
+                         nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense, nbasis)
+      endif
+
       ! if it's a div-con calculate, construct Div & Con matrices, Overlap,X, and PDC
       !if (quick_method%DivCon) then
       !   call DivideS
