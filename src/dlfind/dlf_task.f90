@@ -71,7 +71,7 @@ subroutine dlf_task(ierr2 &
 
    use dlf_allocate, only: deallocate
   use dlf_task_module, only: tconverged
-  use dlf_store
+  use dlf_store, only: store_allocate, store_set, store_get, store_delete
   implicit none
 #ifdef GAMESS
   real(rk) :: core(*) ! GAMESS memory, not used in DL-FIND

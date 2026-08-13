@@ -34,7 +34,7 @@ contains
     use quick_method_module, only: quick_method
     use quick_calculated_module, only: quick_qm_struct
     use quick_timer_module, only: timer_begin, timer_cumer, timer_end
-    use quick_exception_module
+    use quick_exception_module, only: RaiseException
     use quick_mpi_module, only: master
 
     implicit none

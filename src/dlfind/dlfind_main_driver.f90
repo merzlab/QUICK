@@ -307,7 +307,7 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   use quick_basis_module, only: quick_basis, aexp, cutPrim, dcoeff, itype, jbasis, Ycutoff
   use quick_basis_module, only: jshell, maxcontract, nbasis, ncontract, nprim, nshell
   use quick_timer_module, only: timer_begin, timer_end, timer_cumer
-  use quick_gridpoints_module
+  use quick_gridpoints_module, only: quick_dft_grid, deform_dft_grid
   use quick_molspec_module, only: natom, xyz, quick_molspec
   use quick_cutoff_module, only: schwarzoff
   use quick_eri_cshell_module, only: getEriPrecomputables

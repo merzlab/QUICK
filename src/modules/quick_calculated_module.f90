@@ -365,7 +365,6 @@ contains
 
    subroutine reallocate_quick_qm_struct(self,ierr)
 
-     use quick_exception_module
      use quick_molspec_module, only: quick_molspec
 
      implicit none

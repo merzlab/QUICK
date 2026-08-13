@@ -35,7 +35,7 @@ contains
 
 
 subroutine allocate_quick_cutoff
-  use quick_basis_module
+  use quick_basis_module, only: maxcontract
 
   implicit none
   

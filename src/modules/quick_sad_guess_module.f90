@@ -42,7 +42,7 @@ contains
      use quick_gridpoints_module, only: gridformSG1
      use quick_size_module, only: MIN_SCF
      use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
-     use quick_exception_module
+     use quick_exception_module, only: RaiseException
 #ifdef CEW
      use quick_cew_module, only : quick_cew
 #endif

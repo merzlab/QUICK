@@ -19,7 +19,7 @@
 
 subroutine hrr_lri_grad
 
-  use quick_basis_module
+  use quick_basis_module, only: quick_basis, III, JJJ, IJtype, Yaa, Ybb, Ycc
 
   implicit none
 

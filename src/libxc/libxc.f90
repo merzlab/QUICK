@@ -64,7 +64,6 @@ end module xc_f90_types_m
 module xc_f90_lib_m
 
   use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
-  use libxc_funcs_m
 
   implicit none
 

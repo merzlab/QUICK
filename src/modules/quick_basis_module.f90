@@ -208,7 +208,7 @@ contains
    ! Allocate quick basis
    !----------------
    subroutine allocate_quick_basis(self,natom_arg,nshell_arg,nbasis_arg)
-        use quick_size_module
+        use quick_size_module, only: MAXPRIM
 
         implicit none
 
