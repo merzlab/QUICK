@@ -32,6 +32,7 @@ subroutine getEnergy(isGuess, ierr)
    logical, intent(in) :: isGuess
    integer, intent(inout) :: ierr
    logical :: verbose
+   integer nocc,alpha
 
    verbose = .true.
    if ( isGuess .and. (.not. quick_method%writeSAD) ) verbose = .false.
@@ -61,19 +62,18 @@ subroutine getEnergy(isGuess, ierr)
       ! force idempotency !
       ! ------------------!
       if (quick_method%sadmo) then
-         ! TODO: update for unrst
-
          if (.not. allocated(quick_scratch%hold)) allocate(quick_scratch%hold(nbasis, nbasis))
          if (.not. allocated(quick_scratch%hold2)) allocate(quick_scratch%hold2(nbasis, nbasis))
          if (.not. allocated(quick_scratch%hold3)) allocate(quick_scratch%hold3(nbasis, nbasis))
+         if (.not. allocated(quick_scratch%hold4)) allocate(quick_scratch%hold4(nbasis, nbasis))
          if (.not. allocated(quick_scratch%tmphold)) allocate(quick_scratch%tmphold(nbasis, nbasis))
          if (.not. allocated(quick_scratch%Sminhalf)) allocate(quick_scratch%Sminhalf(nbasis))
 
-         ! %hold    = S^{1/2}PS^{1/2} =: P'
-         ! %tmphold = S^{1/2}
-         ! %hold3   = S^{-1/2}
+         ! %hold  = S^{1/2}PS^{1/2} =: P'
+         ! %hold4 = S^{1/2}  (do not modify)
+         ! %hold3 = S^{-1/2} (do not modify)
          call lowdin_orth(nbasis, quick_qm_struct%s, quick_qm_struct%dense, &
-                          quick_scratch%tmphold, .true., quick_scratch%hold3, quick_scratch%hold)
+                          quick_scratch%hold4, .true., quick_scratch%hold3, quick_scratch%hold)
 
          ! %hold2 =: C', where P' = C'NC'^T, N = diag(1,...,1,0,...0)
          call MAT_DIAG(quick_scratch%hold, nbasis, nbasis, quick_scratch%Sminhalf, quick_scratch%tmphold)
@@ -81,14 +81,49 @@ subroutine getEnergy(isGuess, ierr)
             quick_scratch%hold2(:, j) = quick_scratch%tmphold(:, nbasis - j + 1)
          enddo
 
+         ! set (alpha) Nocc
+         if (quick_method%unrst) then
+            nocc = quick_molspec%nelec
+            alpha = 1
+         else
+            nocc = quick_molspec%nelec/2
+            alpha = 2
+         endif
+
          quick_qm_struct%co = 0.0d0
          ! %co = (%hold3)*(%hold2) S^{-1/2}C' = C
-         call MAT_DGEMM('n', 'n', nbasis, quick_molspec%nelec/2, nbasis, 1.0d0, quick_scratch%hold3, nbasis, &
+         call MAT_DGEMM('n', 'n', nbasis, nocc, nbasis, 1.0d0, quick_scratch%hold3, nbasis, &
                         quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%co, nbasis)
 
          ! %dense = (%co)*(%co)^T = CNC^T
-         call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
+         call MAT_DGEMM ('n', 't', nbasis, nbasis, nocc, dble(alpha), quick_qm_struct%co, &
                          nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense, nbasis)
+
+         if (quick_method%unrst) then
+            ! %hold2 = (%hold4)*(%denseb) = S^{1/2}P
+            call MAT_DGEMM('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold4, nbasis, &
+                           quick_qm_struct%denseb, nbasis, 0.0d0, quick_scratch%hold2, nbasis)
+            ! %hold = (%hold2)*(%hold4) = S^{1/2}PS^{1/2}
+            call MAT_DGEMM('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, nbasis, &
+                           quick_scratch%hold4, nbasis, 0.0d0, quick_scratch%hold, nbasis)
+            ! C' = %hold2
+            call MAT_DIAG(quick_scratch%hold, nbasis, nbasis, quick_scratch%Sminhalf, quick_scratch%tmphold)
+            do j = 1, nbasis
+               quick_scratch%hold2(:, j) = quick_scratch%tmphold(:, nbasis - j + 1)
+            enddo
+
+            quick_qm_struct%cob = 0.0d0
+            call MAT_DGEMM('n', 'n', nbasis, quick_molspec%nelecb, nbasis, 1.0d0, quick_scratch%hold3, nbasis, &
+                           quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%cob, nbasis)
+
+            call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelecb, dble(alpha), quick_qm_struct%cob, &
+                            nbasis, quick_qm_struct%cob, nbasis, 0.0d0, quick_qm_struct%denseb, nbasis)
+         endif
+
+         deallocate(quick_scratch%hold4)
+         deallocate(quick_scratch%hold3)
+         deallocate(quick_scratch%tmphold)
+         deallocate(quick_scratch%Sminhalf)
       endif
 
       ! if it's a div-con calculate, construct Div & Con matrices, Overlap,X, and PDC
