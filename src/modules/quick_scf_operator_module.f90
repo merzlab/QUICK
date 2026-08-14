@@ -78,7 +78,7 @@ contains
      quick_qm_struct%o = 0.0d0
      quick_qm_struct%Eel=0.0d0
 
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
      if (quick_method%usecuest) then
         firstiter = quick_qm_struct%co(1, 1) == 0
         hasK = quick_method%x_hybrid_coeff /= 0.0d0
@@ -154,54 +154,6 @@ contains
   !-----------------------------------------------------------------
   !  Start the timer for 2e-integrals
      RECORD_TIME(timer_begin%T2e)
-
-#ifdef CUEST
-     ! approximate %co by diagonalizing density
-     if (quick_method%usecuest .and. firstiter) then
-#ifdef CUESTDEBUG
-        call cuest_debuglog("======== guess density ========")
-        call cuest_debuglog_PriSym(nbasis, quick_qm_struct%dense, "F12.7")
-        call cuest_debuglog("====== end guess density ======")
-#endif
-
-! #ifdef CUESTDEBUG
-        ! -------------------------------------!
-        ! print eigenvalues of S^{1/2}PS^{1/2} !
-        ! -------------------------------------!
-
-        ! tmp_hold = S^{1/2}PS^{1/2} =: P'
-        call lowdin_orth(nbasis, quick_qm_struct%s, quick_qm_struct%dense/2.0d0, &
-                         tmp_sqrtS, .true., tmp_sqrtSinv, tmp_hold)
-
-#ifdef CUESTDEBUG
-        call MAT_DIAG(tmp_hold, nbasis, nbasis, tmp_eval, tmp_evec)
-        call cuest_debuglog("<<<<<<<< eigenvalues of S^{1/2}PS^{1/2} <<<<<<<<")
-        call cuest_debuglog_PriD1D(tmp_eval, nbasis, "F12.7")
-        call cuest_debuglog(">>>>>> end eigenvalues of S^{1/2}PS^{1/2} >>>>>>")
-#endif
-
-        ! tmp2d =: C', where P' = C'C'^T
-        call mat_uut_eig_r(nbasis, quick_molspec%nelec/2, tmp_hold, tmp2d)
-        quick_qm_struct%co = 0.0d0
-        ! %co = S^{-1/2}C' = C
-        ! tmp_hold = matmul(tmp_sqrtSinv, tmp2d)
-        call MAT_DGEMM('n', 'n', nbasis, nocc, nbasis, 1.0d0, tmp_sqrtSinv, nbasis, tmp2d, nbasis, 0.0d0, tmp_hold, nbasis)
-        quick_qm_struct%co(:, 1:nocc) = tmp_hold(:, 1:nocc)
-! #else
-!         quick_qm_struct%co = 0.0d0
-!         call mat_uut_eig_r(nbasis, quick_molspec%nelec/2, quick_qm_struct%dense/2.0d0, quick_qm_struct%co)
-! #endif
-
-#ifdef CUESTDEBUG
-        call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
-                        nbasis, quick_qm_struct%co, nbasis, 0.0d0, tmp2d, nbasis)
-        call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
-        call cuest_debuglog("======== co computed density from diag ========")
-        call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
-        call cuest_debuglog("====== end co computed density from diag ======")
-#endif
-     endif
-#endif
 
 #if defined(GPU) || defined(MPIV_GPU)
         if (quick_method%bGPU) then          
@@ -302,26 +254,6 @@ contains
   !  Calculate exchange correlation contribution & add to operator    
 #ifdef CUEST
         if (quick_method%usecuest) then
-           ! if (firstiter) then
-           !     ! convert to QUICK form to use QUICK xc compute
-           !     call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
-           !
-           !     ! use cuest_J and cuest_K as temp buffers
-           !     ! cuest_J <- %o_HF cuEST
-           !     cuest_J = quick_qm_struct%o
-           !     call get_xc(deltaO)
-           !     ! cuest_K <- %o_HF cuEST + %oxc QUICK - %o_HF cuEST = %oxc QUICK
-           !     cuest_K   =  quick_qm_struct%o        - cuest_J
-           !     
-           !     ! correct oxc addition to o
-           !     ! cuest_K <- correct(%oxc QUICK) = %oxc cuEST
-           !     call cuest_correct_o(cuest_K, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
-           !     !        %o cuEST = (%o_HF cuEST + %oxc QUICK) - %oxc QUICK          + %oxc cuEST
-           !     quick_qm_struct%o = quick_qm_struct%o          - quick_qm_struct%oxc + cuest_K
-           !
-           !     ! convert density matrix back to cuEST form
-           !     call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
-           ! else
                call cuest_get_cshell_xc(cuest_Vxc, cuest_Exc, quick_qm_struct%co)
                quick_qm_struct%oxc = cuest_Vxc
                quick_qm_struct%o   = quick_qm_struct%o + cuest_Vxc
