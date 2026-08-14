@@ -66,9 +66,13 @@ subroutine getEnergy(isGuess, ierr)
       ! ------------------!
       if (quick_method%sadmo) then
 #ifdef CUEST
-         call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
+         if (quick_method%usecuest) then
+            call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
+            if (quick_method%unrst) then
+               call cuest_correct_P(quick_qm_struct%denseb, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
+            endif
+         endif
 #endif
-
 
          if (.not. allocated(quick_scratch%hold)) allocate(quick_scratch%hold(nbasis, nbasis))
          if (.not. allocated(quick_scratch%hold2)) allocate(quick_scratch%hold2(nbasis, nbasis))

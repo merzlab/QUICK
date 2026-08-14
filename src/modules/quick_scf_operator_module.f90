@@ -57,12 +57,11 @@ contains
      double precision :: cuest_K(nbasis, nbasis)
      double precision :: cuest_Vxc(nbasis, nbasis)
      double precision :: cuest_Exc
-     logical :: firstiter, hasK
+     logical :: hasK
      double precision :: Sum2Mat
      double precision :: tmp2d(nbasis, nbasis)
      double precision :: tmp_eval(nbasis), tmp_evec(nbasis, nbasis), tmp_hold(nbasis, nbasis)
      double precision :: tmp_sqrtS(nbasis, nbasis), tmp_sqrtSinv(nbasis, nbasis)
-     integer :: nocc
 #endif
 #ifdef MPIV
      integer ierror
@@ -80,9 +79,7 @@ contains
 
 #ifdef CUEST
      if (quick_method%usecuest) then
-        firstiter = quick_qm_struct%co(1, 1) == 0
         hasK = quick_method%x_hybrid_coeff /= 0.0d0
-        nocc = quick_molspec%nelec/2
      endif
 #endif
   
@@ -123,13 +120,6 @@ contains
 #endif
  
      call get1e(deltaO)
-
-#ifdef CUEST
-     ! correct density here for get1eEnergy
-     if (quick_method%usecuest .and. firstiter) then
-         call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
-     endif
-#endif
 
      if(quick_method%printEnergy) then
          call get1eEnergy(deltaO)

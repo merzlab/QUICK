@@ -57,7 +57,7 @@ contains
      double precision :: cuest_K(nbasis, nbasis), cuest_Kb(nbasis, nbasis)
      double precision :: cuest_Vxc(nbasis, nbasis), cuest_Vxcb(nbasis, nbasis)
      double precision :: cuest_Exc
-     logical :: firstiter, hasK
+     logical :: hasK
      double precision :: Sum2Mat
      double precision :: tmp2d(nbasis, nbasis)
 #endif
@@ -79,7 +79,6 @@ contains
 
 #if defined(CUDA) && defined(CUEST)
      if (quick_method%usecuest) then
-        firstiter = quick_qm_struct%co(1, 1) == 0
         hasK = quick_method%x_hybrid_coeff /= 0.0d0
      endif
 #endif
@@ -128,14 +127,6 @@ contains
      if (.not. deltaO) then
        quick_qm_struct%ob(:,:) = quick_qm_struct%o(:,:)
      endif
-
-#ifdef CUEST
-     ! correct here for get1eEnergy
-     if (quick_method%usecuest .and. firstiter) then
-        call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
-        call cuest_correct_P(quick_qm_struct%denseb, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
-     endif
-#endif
   
      if(quick_method%printEnergy) then
          call get1eEnergy(deltaO)
