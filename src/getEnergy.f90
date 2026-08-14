@@ -23,6 +23,9 @@ subroutine getEnergy(isGuess, ierr)
 #ifdef MPIV
    use mpi
 #endif
+#ifdef CUEST
+   use quick_cuest_module, only: cuest_correct_P, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST
+#endif
 
    implicit none
 
@@ -62,6 +65,11 @@ subroutine getEnergy(isGuess, ierr)
       ! force idempotency !
       ! ------------------!
       if (quick_method%sadmo) then
+#ifdef CUEST
+         call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
+#endif
+
+
          if (.not. allocated(quick_scratch%hold)) allocate(quick_scratch%hold(nbasis, nbasis))
          if (.not. allocated(quick_scratch%hold2)) allocate(quick_scratch%hold2(nbasis, nbasis))
          if (.not. allocated(quick_scratch%hold3)) allocate(quick_scratch%hold3(nbasis, nbasis))
