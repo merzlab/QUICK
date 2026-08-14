@@ -157,7 +157,7 @@ contains
 
 #if defined(GPU) || defined(MPIV_GPU)
         if (quick_method%bGPU) then          
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
            if (quick_method%usecuest) then
               call cuest_get_eri_J(cuest_J, quick_qm_struct%dense)
 
@@ -254,19 +254,18 @@ contains
   !  Calculate exchange correlation contribution & add to operator    
 #ifdef CUEST
         if (quick_method%usecuest) then
-               call cuest_get_cshell_xc(cuest_Vxc, cuest_Exc, quick_qm_struct%co)
-               quick_qm_struct%oxc = cuest_Vxc
-               quick_qm_struct%o   = quick_qm_struct%o + cuest_Vxc
-               quick_qm_struct%Exc = cuest_Exc
-               quick_qm_struct%Eel = quick_qm_struct%Eel + cuest_Exc
+           call cuest_get_cshell_xc(cuest_Vxc, cuest_Exc, quick_qm_struct%co)
+           quick_qm_struct%oxc = cuest_Vxc
+           quick_qm_struct%o   = quick_qm_struct%o + cuest_Vxc
+           quick_qm_struct%Exc = cuest_Exc
+           quick_qm_struct%Eel = quick_qm_struct%Eel + cuest_Exc
 
-               if (deltaO) then
-                  quick_qm_struct%aelec = Sum2Mat(quick_qm_struct%denseSave, quick_qm_struct%s, nbasis) / 2.0d0
-               else
-                  quick_qm_struct%aelec = Sum2Mat(quick_qm_struct%dense, quick_qm_struct%s, nbasis) / 2.0d0
-               endif
-               quick_qm_struct%belec = quick_qm_struct%aelec
-           ! endif
+           if (deltaO) then
+              quick_qm_struct%aelec = Sum2Mat(quick_qm_struct%denseSave, quick_qm_struct%s, nbasis) / 2.0d0
+           else
+              quick_qm_struct%aelec = Sum2Mat(quick_qm_struct%dense, quick_qm_struct%s, nbasis) / 2.0d0
+           endif
+           quick_qm_struct%belec = quick_qm_struct%aelec
         else
            call get_xc(deltaO)
         endif
