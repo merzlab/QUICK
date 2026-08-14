@@ -671,12 +671,12 @@ module quick_method_module
             CHECK_ERROR(ierr)
 
 #ifdef CUEST
-            self%usecuest = .not. self%DFT .or. self%cuest_fnl_code /= CUEST_FUNCTIONAL_UNKNOWN
-#else
-            self%usecuest = .false.
-#endif
-
-#ifdef CUEST
+            if (index(keyWD, 'CUEST').ne.0) then
+               if (.not. self%DFT .or. self%cuest_fnl_code /= CUEST_FUNCTIONAL_UNKNOWN) then
+                  self%usecuest = .true.
+                  self%sadmo = .true.
+               endif
+            endif
             print *, "usecuest=", self%usecuest
 #endif
 
