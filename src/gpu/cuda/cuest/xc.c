@@ -156,17 +156,18 @@ cuest_get_xc_grid_npoint (int64_t *npoint)
                                   quick_cuest_struct.molgrid, CUEST_MOLECULARGRID_NUM_POINT,
                                   &quick_cuest_data.npoint, sizeof (uint64_t)));
     *npoint = quick_cuest_data.npoint;
+
+#ifdef CUESTDEBUG
+    DEBUGLOG ("Number of grid points: %lld\n", *npoint);
+#endif
 }
 
 void
 cuest_get_xc_grid_weight (int8_t weightspec, double *w)
 {
-    static bool    called = false;
-    static double *wsave;
-
-    if (called) {
+    if (quick_cuest_compute_mem.weights_saved) {
         // npoint must have been populated already
-        memcpy (w, wsave, quick_cuest_data.npoint * sizeof (double));
+        memcpy (w, quick_cuest_compute_mem.weights_save, quick_cuest_data.npoint * sizeof (double));
         return;
     }
 
@@ -209,8 +210,9 @@ cuest_get_xc_grid_weight (int8_t weightspec, double *w)
                                                        weight_type, par, wksp, d_w));
 
     cudaMemcpyChecked (w, d_w, w_siz, cudaMemcpyDeviceToHost);
-    memcpy (wsave, w, w_siz);
-    called = true;
+    quick_cuest_compute_mem.weights_save = malloc (w_siz);
+    memcpy (quick_cuest_compute_mem.weights_save, w, w_siz);
+    quick_cuest_compute_mem.weights_saved = true;
 
     cudaFreeChecked (d_w);
     free_dev_alloc (w_siz);
@@ -306,7 +308,7 @@ cuest_get_xc_nelec (double *C, double *nelec)
     cuest_get_xc_grid_npoint (&npoint);
     uint64_t ndim = quick_cuest_compute_mem.rho_ndim; // set by xc_dense init
 
-    double *chk_rho_w = malloc (npoint * (ndim + 1));
+    double *chk_rho_w = malloc (npoint * (ndim + 1) * sizeof (double));
     double *w         = chk_rho_w;
     double *rho       = w + npoint;
 
@@ -315,7 +317,9 @@ cuest_get_xc_nelec (double *C, double *nelec)
 
     double n = 0;
     for (size_t i = 0; i < npoint; ++i)
-        n += w[i] * rho[i];
+        n += w[i] * rho[i * ndim];
 
     *nelec = n;
+
+    free (chk_rho_w);
 }

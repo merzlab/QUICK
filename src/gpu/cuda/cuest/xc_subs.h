@@ -141,6 +141,8 @@ cuest_init_cshell_xc (int8_t fnl, int64_t devsiz)
 #endif
 
     quick_cuest_compute_mem.Vxc_wksp = allocateWorkspace (tmpWD);
+
+    quick_cuest_compute_mem.weights_saved = false;
 }
 
 void
@@ -156,6 +158,8 @@ cuest_deinit_cshell_xc ()
     free_dev_alloc (nbasis * nbasis * sizeof (double));
 
     free (quick_cuest_compute_mem.Vxc_vbs);
+    if (quick_cuest_compute_mem.weights_saved)
+        free (quick_cuest_compute_mem.weights_save);
     free_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
     freeWorkspace (quick_cuest_compute_mem.Vxc_wksp);
 #ifdef OSHELL

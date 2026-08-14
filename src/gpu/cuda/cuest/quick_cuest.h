@@ -68,6 +68,9 @@ typedef struct {
     cuestXCAdvancedComputeParametersApproximation_t rho_approx;
     void                                           *d_rho;
     uint64_t                                        rho_ndim;
+
+    double *weights_save;
+    bool    weights_saved;
 } quick_cuest_compute_mem_t;
 
 typedef struct {

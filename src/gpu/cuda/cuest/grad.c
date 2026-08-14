@@ -218,10 +218,6 @@ cuest_init_JK_grad (int64_t dev_buf_siz)
 
     MEMLOG_TMPWD ("JK grad");
     quick_cuest_grad_mem.JK_wksp = allocateWorkspace (tmpWD);
-
-    // allocate P and C buf
-    cudaMallocChecked (&quick_cuest_PC_buf.d_P[0], quick_cuest_PC_buf.P_siz);
-    cudaMallocChecked (&quick_cuest_PC_buf.d_C[0], quick_cuest_PC_buf.C_siz);
 }
 
 void
