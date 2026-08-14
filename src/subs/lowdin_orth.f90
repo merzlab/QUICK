@@ -1,6 +1,10 @@
+!
+!	lowdin_orth.f90
+!
+
 subroutine lowdin_orth(n, S, P, sqrtS, wantsqrtSinv, sqrtSinv, out)
 
-   ! Gives S^{1/2}PS^{1/2} and writes to `out`
+   ! Writes S^{1/2}PS^{1/2} to `out`
 
    integer, intent(in) :: n
    double precision, intent(in) :: S(n, n), P(n, n)
@@ -11,7 +15,7 @@ subroutine lowdin_orth(n, S, P, sqrtS, wantsqrtSinv, sqrtSinv, out)
    double precision :: eval(n), evec(n, n)
    double precision :: hold1(n, n), hold2(n, n), hold3(n, n)
 
-   ! assumes ascending order eigenvalues (cuSOLVER/LAPACK)
+   ! assumes ascending order eigenvalues
    call MAT_DIAG(S, n, n, eval, evec)
 
    hold1 = 0.0d0

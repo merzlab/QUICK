@@ -60,13 +60,14 @@ subroutine getEnergy(isGuess, ierr)
       ! ------------------!
       ! force idempotency !
       ! ------------------!
-      if (.true.) then
+      if (quick_method%sadmo) then
          ! TODO: update for unrst
 
          if (.not. allocated(quick_scratch%hold)) allocate(quick_scratch%hold(nbasis, nbasis))
          if (.not. allocated(quick_scratch%hold2)) allocate(quick_scratch%hold2(nbasis, nbasis))
          if (.not. allocated(quick_scratch%hold3)) allocate(quick_scratch%hold3(nbasis, nbasis))
          if (.not. allocated(quick_scratch%tmphold)) allocate(quick_scratch%tmphold(nbasis, nbasis))
+         if (.not. allocated(quick_scratch%Sminhalf)) allocate(quick_scratch%Sminhalf(nbasis))
 
          ! %hold    = S^{1/2}PS^{1/2} =: P'
          ! %tmphold = S^{1/2}
@@ -74,13 +75,18 @@ subroutine getEnergy(isGuess, ierr)
          call lowdin_orth(nbasis, quick_qm_struct%s, quick_qm_struct%dense, &
                           quick_scratch%tmphold, .true., quick_scratch%hold3, quick_scratch%hold)
 
-         ! %hold2 =: C', where P' = C'NC'^T
-         call mat_uut_eig_r(nbasis, quick_molspec%nelec/2, quick_scratch%hold, quick_scratch%hold2)
+         ! %hold2 =: C', where P' = C'NC'^T, N = diag(1,...,1,0,...0)
+         call MAT_DIAG(quick_scratch%hold, nbasis, nbasis, quick_scratch%Sminhalf, quick_scratch%tmphold)
+         do j = 1, nbasis
+            quick_scratch%hold2(:, j) = quick_scratch%tmphold(:, nbasis - j + 1)
+         enddo
+
          quick_qm_struct%co = 0.0d0
          ! %co = (%hold3)*(%hold2) S^{-1/2}C' = C
          call MAT_DGEMM('n', 'n', nbasis, quick_molspec%nelec/2, nbasis, 1.0d0, quick_scratch%hold3, nbasis, &
                         quick_scratch%hold2, nbasis, 0.0d0, quick_qm_struct%co, nbasis)
 
+         ! %dense = (%co)*(%co)^T = CNC^T
          call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
                          nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense, nbasis)
       endif
