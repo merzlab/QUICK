@@ -66,6 +66,7 @@ cuest_init_cshell_xc (int8_t fnl, int64_t devsiz)
     checkCuestErrors (cuestParametersCreate (CUEST_XCINTPLAN_PARAMETERS, &xcIntPlan_param));
 
     // TODO: add support for other functionals supported by cuEST
+    quick_cuest_struct.fnl = fnl;
     cuestXCIntPlanParametersFunctional_t functional;
     switch (fnl) {
         case CUEST_FUNCTIONAL_B3LYP:

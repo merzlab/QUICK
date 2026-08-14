@@ -21,6 +21,10 @@
 #define KTYPE_CART_D  6
 #define KTYPE_CART_F  10
 
+#define WEIGHTSPEC_TOTAL      0
+#define WEIGHTSPEC_BECKE      1
+#define WEIGHTSPEC_QUADRATURE 2
+
 typedef struct {
     cuestHandle_t               handle;
     cuestWorkspaceDescriptor_t *persistWD;
@@ -39,6 +43,7 @@ typedef struct {
     cuestMolecularGrid_t        molgrid;
     cuestWorkspace_t           *persistXCIntPlanWorkspace;
     cuestXCIntPlan_t            XCIntPlan;
+    uint16_t                    fnl;
 } quick_cuest_struct_t;
 
 typedef struct {
@@ -56,6 +61,13 @@ typedef struct {
     cuestXCPotentialRKSComputeParameters_t Vxc_par;
     void                                  *d_Vxc;
     void                                  *d_Vxcb;
+
+    cuestWorkspace_t                               *rho_wksp;
+    cuestWorkspaceDescriptor_t                     *rho_vbs;
+    cuestXCDensityComputeParameters_t               rho_par;
+    cuestXCAdvancedComputeParametersApproximation_t rho_approx;
+    void                                           *d_rho;
+    uint64_t                                        rho_ndim;
 } quick_cuest_compute_mem_t;
 
 typedef struct {
@@ -108,6 +120,7 @@ typedef struct {
     double  *allchg_gpu;
     size_t  *ifshell;
     int8_t  *iattype;
+    uint64_t npoint;
 } quick_cuest_data_t;
 
 typedef struct {
@@ -184,6 +197,13 @@ void cuest_deinit_cshell_xc ();
 void cuest_deinit_oshell_xc ();
 void cuest_get_cshell_xc (double *Vxc, double *Exc, double *C);
 void cuest_get_oshell_xc (double *Vxc, double *Vxcb, double *Exc, double *C, double *Cb);
+
+void cuest_get_xc_grid_npoint (int64_t *npoint);
+void cuest_get_xc_grid_weight (int8_t weightspec, double *w);
+void cuest_init_xc_dense (int64_t devsiz);
+void cuest_deinit_xc_dense ();
+void cuest_get_xc_dense (double *C, double *rho);
+void cuest_get_xc_nelec (double *C, double *nelec);
 
 // ======== //
 // Gradient //

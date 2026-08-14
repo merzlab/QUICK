@@ -250,11 +250,8 @@ contains
            quick_qm_struct%Exc = cuest_Exc
            quick_qm_struct%Eel = quick_qm_struct%Eel + cuest_Exc
 
-           if (deltaO) then
-              quick_qm_struct%aelec = Sum2Mat(quick_qm_struct%denseSave, quick_qm_struct%s, nbasis) / 2.0d0
-           else
-              quick_qm_struct%aelec = Sum2Mat(quick_qm_struct%dense, quick_qm_struct%s, nbasis) / 2.0d0
-           endif
+           call cuest_get_xc_nelec(quick_qm_struct%co, quick_qm_struct%aelec)
+           quick_qm_struct%aelec = quick_qm_struct%aelec/2.0d0
            quick_qm_struct%belec = quick_qm_struct%aelec
         else
            call get_xc(deltaO)

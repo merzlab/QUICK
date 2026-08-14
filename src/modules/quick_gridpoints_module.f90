@@ -258,6 +258,7 @@ module quick_gridpoints_module
            call cuest_init_cshell_xc(quick_method%cuest_fnl_code, int(2d9, c_int64_t))
        endif
        call cuest_destroy_atom_grid
+       call cuest_init_xc_dense(int(2d9, c_int64_t))
        return
        ! TODO: make this cleaner
     endif

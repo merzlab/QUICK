@@ -278,14 +278,8 @@ contains
             quick_qm_struct%Exc = cuest_Exc
             quick_qm_struct%Eel = quick_qm_struct%Eel + cuest_Exc
 
-            ! alpha and beta electron density
-            if (deltaO) then
-               quick_qm_struct%aelec = Sum2Mat(quick_qm_struct%denseSave, quick_qm_struct%s, nbasis)
-               quick_qm_struct%belec = Sum2Mat(quick_qm_struct%densebSave, quick_qm_struct%s, nbasis)
-            else
-               quick_qm_struct%aelec = Sum2Mat(quick_qm_struct%dense, quick_qm_struct%s, nbasis)
-               quick_qm_struct%belec = Sum2Mat(quick_qm_struct%denseb, quick_qm_struct%s, nbasis)
-            endif
+            call cuest_get_xc_nelec(quick_qm_struct%co, quick_qm_struct%aelec)
+            call cuest_get_xc_nelec(quick_qm_struct%cob, quick_qm_struct%belec)
         else
             call get_oshell_xc(deltaO)
         endif

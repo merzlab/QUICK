@@ -412,6 +412,49 @@ module quick_cuest_module
       end subroutine cuest_get_xc_grad
    end interface
 
+   interface
+      subroutine cuest_get_xc_grid_npoint(npoint) bind(c, name="cuest_get_xc_grid_npoint")
+         use, intrinsic :: iso_c_binding, only: c_int64_t
+         integer(c_int64_t), intent(out) :: npoint
+      end subroutine cuest_get_xc_grid_npoint
+   end interface
+
+   interface
+      subroutine cuest_get_xc_grid_weight(weightspec, w) bind(c, name="cuest_get_xc_grid_weight")
+         use, intrinsic :: iso_c_binding, only: c_int8_t, c_double
+         integer(c_int8_t), intent(in), value :: weightspec
+         real(c_double), intent(out) :: w
+      end subroutine cuest_get_xc_grid_weight
+   end interface
+
+   interface
+      subroutine cuest_init_xc_dense(devsiz) bind(c, name="cuest_init_xc_dense")
+         use, intrinsic :: iso_c_binding, only: c_int64_t
+         integer(c_int64_t), intent(in), value :: devsiz
+      end subroutine cuest_init_xc_dense
+   end interface
+
+   interface
+      subroutine cuest_deinit_xc_dense() bind(c, name="cuest_deinit_xc_dense")
+      end subroutine cuest_deinit_xc_dense
+   end interface
+
+   interface
+      subroutine cuest_get_xc_dense(C, rho) bind(c, name="cuest_get_xc_dense")
+         use, intrinsic :: iso_c_binding, only: c_double
+         real(c_double), intent(in) :: C(*)
+         real(c_double), intent(out) :: rho(*)
+      end subroutine cuest_get_xc_dense
+   end interface
+
+   interface
+      subroutine cuest_get_xc_nelec(C, nelec) bind(c, name="cuest_get_xc_nelec")
+         use, intrinsic :: iso_c_binding, only: c_double
+         real(c_double), intent(in) :: C(*)
+         real(c_double), intent(out) :: nelec
+      end subroutine cuest_get_xc_nelec
+   end interface
+
 contains
 
    subroutine cuest_debuglog(str)

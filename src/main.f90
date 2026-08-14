@@ -402,6 +402,7 @@
           if (quick_method%UNRST) then
               call cuest_deinit_oshell_xc
           else
+              call cuest_deinit_xc_dense
               call cuest_deinit_cshell_xc
           endif
        endif
