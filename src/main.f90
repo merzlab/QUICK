@@ -230,6 +230,7 @@
 #ifdef CUEST
     ! init cuEST
     if (quick_method%usecuest) then
+    call prtact(ioutfile, "Begin cuEST Initialization")
     RECORD_TIME(timer_begin%TIniCuest)
 
     hasK = quick_method%x_hybrid_coeff /= 0.0d0
@@ -317,6 +318,7 @@
     RECORD_TIME(timer_end%TIniCuest)
     timer_cumer%TIniCuest=timer_cumer%TIniCuest+timer_end%TIniCuest-timer_begin%TIniCuest &
                           -(timer_end%T2elb-timer_begin%T2elb)
+    call prtact(ioutfile, "End cuEST Initialization")
     endif
 #endif ! #ifdef CUEST
 
