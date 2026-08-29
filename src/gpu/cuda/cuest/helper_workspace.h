@@ -88,6 +88,10 @@ static cuestWorkspace_t* allocateWorkspace(const cuestWorkspaceDescriptor_t* wor
             fprintf(stderr, "Failed to allocate device buffer: %s\n", cudaGetErrorString(err));
             if (workspace->hostBuffer) free((void*) workspace->hostBuffer);
             free(workspace);
+
+            // MODIFY
+            OOMLOG(workspace->deviceBufferSizeInBytes);
+
             exit(EXIT_FAILURE);
         }
         add_dev_alloc(workspace->deviceBufferSizeInBytes); // MODIFY

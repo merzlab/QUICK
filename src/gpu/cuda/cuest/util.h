@@ -57,6 +57,16 @@ reorder_f (double *a)
                  quick_cuest_struct.tmpWD->deviceBufferSizeInBytes / 1e9);                         \
     } while (0)
 
+#define OOMLOG(siz)                                                                                \
+    do {                                                                                           \
+        fputs ("--------------------\n", stderr);                                                  \
+        fprintf (stderr, "| cuEST peak device bytes alloced: %zu\n", quick_cuest_memtrace.devmax); \
+        fprintf (stderr, "| cuEST bytes requested:           %zu\n", siz);                         \
+        fprintf (stderr, "| cuEST total bytes needed:        %zu\n",                               \
+                 quick_cuest_memtrace.devmax + siz);                                               \
+        fputs ("--------------------\n", stderr);                                                  \
+    } while (0)
+
 #define DEBUGLOG(...) fprintf (quick_cuest_log_fp, __VA_ARGS__);
 
 #define cudaMallocChecked(ptr, siz)                                                                \
@@ -65,6 +75,7 @@ reorder_f (double *a)
         if (tmp_errstat_88888888_ != cudaSuccess) {                                                \
             fprintf (stderr, "cudaMalloc failed at %s:%d: %s\n", __func__, __LINE__ - 1,           \
                      cudaGetErrorString (tmp_errstat_88888888_));                                  \
+            OOMLOG (siz);                                                                          \
             exit (EXIT_FAILURE);                                                                   \
         }                                                                                          \
         add_dev_alloc (siz);                                                                       \
