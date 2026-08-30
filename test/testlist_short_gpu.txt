@@ -21,7 +21,6 @@ grad_wat_b3lyp_ccpvdz               #Water: DFT point charge gradient test: s an
 grad_c10h9o2s_b3lyp_def2svp         #C10H9O2S: DFT point charge gradient test: s and p and d basis functions
 grad_daspi_meoh_b3lyp_6-31g         #DASPI-DCM: DFT point charge gradient test: s and p basis functions
 grad_rpsb_meoh_rhf_321g             #RPSB-MeOH: RHF point charge gradient test: s and p basis functions
-grad_ohrad_b3lyp_631gss             #OH radical: UDFT B3LYP gradient test
 opt_wat_rhf_631g	            #Water: RHF geometry optimization test: s and p basis functions (Legacy optimizer)
 opt_wat_rhf_ccpvdz	            #Water: RHF geometry optimization test: s, p and d basis functions (Legacy optimizer)
 opt_nh4_pbe0_def2svp                #NH4+: DFT geometry optimization test: s, p and d basis functions (Legacy optimizer)
