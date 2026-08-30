@@ -22,11 +22,11 @@ module quick_gridpoints_module
 ! and weights of the radial grid points, which in use are sclaed by the
 ! radii and radii^3 of the atoms.
 
-    use quick_size_module, only: MAXANGGRID, MAXRADGRID
+  use quick_size_module, only: MAXANGGRID, MAXRADGRID
+  
+  implicit none
 
-    implicit none
-
-    type quick_xc_grid_type
+  type quick_xc_grid_type
 
     !Binned grid point coordinates
     double precision,dimension(:), allocatable   :: gridxb
@@ -82,10 +82,10 @@ module quick_gridpoints_module
     integer, dimension(:), allocatable :: igridptul
     integer, dimension(:), allocatable :: igridptll
 #endif
-    end type quick_xc_grid_type
+ end type quick_xc_grid_type
 
 
-    type quick_xcg_tmp_type
+ type quick_xcg_tmp_type
 
     integer, dimension(:), allocatable :: init_grid_atm
 
@@ -115,34 +115,34 @@ module quick_gridpoints_module
 
     integer :: ang_gps = 194
 
-    end type quick_xcg_tmp_type
+ end type quick_xcg_tmp_type
 
 
-    type(quick_xc_grid_type), save :: quick_dft_grid
-    type(quick_xcg_tmp_type), save :: quick_xcg_tmp
+ type(quick_xc_grid_type), save :: quick_dft_grid
+ type(quick_xcg_tmp_type), save :: quick_xcg_tmp
 
-    double precision ::  XANG(MAXANGGRID),YANG(MAXANGGRID), &
-    ZANG(MAXANGGRID),WTANG(MAXANGGRID),RGRID(MAXRADGRID), &
-    RWT(MAXRADGRID)
-    double precision,  dimension(:), allocatable :: sigrad2
-    integer :: iradial(0:10), iangular(10),iregion
+ double precision ::  XANG(MAXANGGRID),YANG(MAXANGGRID), &
+      ZANG(MAXANGGRID),WTANG(MAXANGGRID),RGRID(MAXRADGRID), &
+      RWT(MAXRADGRID)
+ double precision,  dimension(:), allocatable :: sigrad2
+ integer :: iradial(0:10), iangular(10),iregion
 
 
-    interface form_dft_grid
-        module procedure form_xc_quadrature
-    end interface form_dft_grid
+ interface form_dft_grid
+    module procedure form_xc_quadrature
+ end interface form_dft_grid
 
-    interface deform_dft_grid
-        module procedure dealloc_grid_variables
-    end interface deform_dft_grid
+ interface deform_dft_grid
+    module procedure dealloc_grid_variables
+ end interface deform_dft_grid
 
-    interface print_grid_info
-        module procedure print_grid_information
-    end interface print_grid_info
+ interface print_grid_info
+    module procedure print_grid_information
+ end interface print_grid_info
 
-    contains
+contains
 
-    subroutine form_xc_quadrature(self, xcg_tmp)
+  subroutine form_xc_quadrature(self, xcg_tmp)
     use quick_method_module, only: quick_method
     use quick_molspec_module, only: quick_molspec, xyz, natom
     use quick_basis_module, only: ncontract, itype, aexp, dcoeff, nbasis, maxcontract, quick_basis
@@ -169,18 +169,18 @@ module quick_gridpoints_module
     xcg_tmp%weight = 0.0d0
 
 #ifdef MPIV
-   if(master) then
+    if(master) then
 #endif
-   if (quick_method%iSG.eq.1) call gridformSG1() 
+    if (quick_method%iSG.eq.1) call gridformSG1() 
 
 #ifdef MPIV
-  endif
+    endif
 
-   call alloc_mpi_grid_variables(self)
+    call alloc_mpi_grid_variables(self)
 
-   call mpi_bcast_grid_vars()
+    call mpi_bcast_grid_vars()
 
-   if(master) then
+    if(master) then
 #endif
     RECORD_TIME(timer_begin%TDFTGrdGen)
 
@@ -230,7 +230,7 @@ module quick_gridpoints_module
     RECORD_TIME(timer_begin%TDFTGrdWt)
 
 #ifdef MPIV
-   endif
+    endif
 #endif
 
     ! allocate memory for data structures holding radius of significance, phi,
@@ -249,47 +249,47 @@ module quick_gridpoints_module
 #else
 
 #if defined(MPIV) && !defined(MPIV_GPU)
-   if(bMPI) then
-      call setup_ssw_mpi
+    if(bMPI) then
+       call setup_ssw_mpi
 
-      ist=self%igridptll(quick_comm_rank+1)
-      iend=self%igridptul(quick_comm_rank+1)
-   else
-      ist=1
-      iend = idx_grid
-   endif
+       ist=self%igridptll(quick_comm_rank+1)
+       iend=self%igridptul(quick_comm_rank+1)
+    else
+       ist=1
+       iend = idx_grid
+    endif
 
-   do idx = ist, iend
+    do idx = ist, iend
 #else
-   do idx = 1, idx_grid
+    do idx = 1, idx_grid
 #endif
-        xcg_tmp%sswt(idx) = SSW(xcg_tmp%init_grid_ptx(idx), xcg_tmp%init_grid_pty(idx), &
-                xcg_tmp%init_grid_ptz(idx), xcg_tmp%init_grid_atm(idx))
-        xcg_tmp%weight(idx) = xcg_tmp%sswt(idx) * xcg_tmp%arr_wtang(idx) * xcg_tmp%arr_rwt(idx) &
-                * xcg_tmp%arr_rad3(idx)
+       xcg_tmp%sswt(idx) = SSW(xcg_tmp%init_grid_ptx(idx), xcg_tmp%init_grid_pty(idx), &
+            xcg_tmp%init_grid_ptz(idx), xcg_tmp%init_grid_atm(idx))
+       xcg_tmp%weight(idx) = xcg_tmp%sswt(idx) * xcg_tmp%arr_wtang(idx) * xcg_tmp%arr_rwt(idx) &
+            * xcg_tmp%arr_rad3(idx)
     enddo
 
 #if defined(MPIV) && !defined(MPIV_GPU)
-   if(bMPI) then
-      call get_mpi_ssw
-   endif
+    if(bMPI) then
+       call get_mpi_ssw
+    endif
 #endif
 #endif
 
 #if defined(MPIV)
-   if(master) then
+    if(master) then
 #endif
     !Measure time to pack grid points
     RECORD_TIME(timer_end%TDFTGrdWt)
     timer_cumer%TDFTGrdWt = timer_cumer%TDFTGrdWt + timer_end%TDFTGrdWt - timer_begin%TDFTGrdWt
     RECORD_TIME(timer_begin%TDFTGrdPck)
 #if defined(MPIV)
-   endif
+    endif
 #endif
 
     ! octree run and grid point packing are currently done using a single gpu
 #if defined(MPIV_GPU)
-   if(master) then
+    if(master) then
 #endif
     ! initialize cpp data structure for octree and grid point packing
 #if defined(MPIV) && !defined(MPIV_GPU)
@@ -321,17 +321,17 @@ module quick_gridpoints_module
 #endif
 
 #ifdef MPIV
-   call setup_xc_mpi_1
+    call setup_xc_mpi_1
 #endif
-   ! allocate f90 memory for pruned grid info from cpp side
-   call alloc_grid_variables(self)
+    ! allocate f90 memory for pruned grid info from cpp side
+    call alloc_grid_variables(self)
 
 #ifdef MPIV
     if(master) then
 #endif
 #if defined(GPU) || defined(MPIV_GPU)
 #if defined(MPIV_GPU)
-   if(master) then
+    if(master) then
 #endif
      ! save packed grid information into f90 data structures
      call get_gpu_grid_info(self%gridxb, self%gridyb, self%gridzb, self%gridb_sswt, self%gridb_weight, self%gridb_atm, &
@@ -386,7 +386,7 @@ module quick_gridpoints_module
 
     ! relinquish memory allocated for octree and grid point packing
 #if defined(MPIV_GPU)
-   if(master) then
+    if(master) then
 #endif
     call gpack_finalize()
 #if defined(MPIV_GPU)
@@ -614,48 +614,48 @@ module quick_gridpoints_module
    end subroutine print_grid_information
 
 
-     subroutine get_sigrad
-        ! calculate the radius of the sphere of basis function signifigance.
-        ! (See Stratmann,Scuseria,and Frisch, Chem. Phys. Lett., 257, 1996, page 213-223 Section 5.)
-        ! Also, the radius of the sphere comes from the spherical average of
-        ! the basis function, from Perez-Jorda and Yang, Chem. Phys. Lett., 241,
-        ! 1995, pg 469-76.
-        ! The spherical average of a gaussian function is:
+   subroutine get_sigrad
+      ! calculate the radius of the sphere of basis function signifigance.
+      ! (See Stratmann,Scuseria,and Frisch, Chem. Phys. Lett., 257, 1996, page 213-223 Section 5.)
+      ! Also, the radius of the sphere comes from the spherical average of
+      ! the basis function, from Perez-Jorda and Yang, Chem. Phys. Lett., 241,
+      ! 1995, pg 469-76.
+      ! The spherical average of a gaussian function is:
      
-        ! (1 + 2 L)/4  (3 + 2 L)/4  L
-        ! 2            a            r
-        ! ave  = ---------------------------------
-        ! 2
-        ! a r                      3
-        ! E     Sqrt[Pi] Sqrt[Gamma[- + L]]
-        ! 2
-        ! where a is the most diffuse (smallest) orbital exponent and L is the
-        ! sum of the angular momentum exponents.  This code finds the r value where
-        ! the average is the signifigance threshold (signif) and this r value is
-        ! called the target below. Rearranging gives us:
+      ! (1 + 2 L)/4  (3 + 2 L)/4  L
+      ! 2            a            r
+      ! ave  = ---------------------------------
+      ! 2
+      ! a r                      3
+      ! E     Sqrt[Pi] Sqrt[Gamma[- + L]]
+      ! 2
+      ! where a is the most diffuse (smallest) orbital exponent and L is the
+      ! sum of the angular momentum exponents.  This code finds the r value where
+      ! the average is the signifigance threshold (signif) and this r value is
+      ! called the target below. Rearranging gives us:
      
-        ! -(1 + 2 L)/4   -(3 + 2 L)/4                           3
-        !r^L E^-ar^2= 2               a           Sqrt[Pi] signif Sqrt[Gamma[- + L]]
-        ! 2
-        use quick_files_module, only: iOutFile
-        use quick_method_module, only: quick_method
-        use quick_basis_module, only: nbasis, ncontract, aexp, itype
+      ! -(1 + 2 L)/4   -(3 + 2 L)/4                           3
+      !r^L E^-ar^2= 2               a           Sqrt[Pi] signif Sqrt[Gamma[- + L]]
+      ! 2
+      use quick_files_module, only: iOutFile
+      use quick_method_module, only: quick_method
+      use quick_basis_module, only: nbasis, ncontract, aexp, itype
 #ifdef MPIV
-        use quick_mpi_module, only: master
-        use mpi
+      use quick_mpi_module, only: master
+      use mpi
 #endif
 
-        implicit none
+      implicit none
     
-       integer :: Ibas, Icon, i, L
-       double precision :: amin, gamma, gamma2pi, target, stepsize, radial, current
+      integer :: Ibas, Icon, i, L
+      double precision :: amin, gamma, gamma2pi, target, stepsize, radial, current
     
 #ifdef MPIV
-       if(master) then
+      if(master) then
 #endif
-         if (quick_method%debug) write (iOutFile,'(/"RADII OF SIGNIFICANCE FOR THE BASIS FUNCTIONS")')
+        if (quick_method%debug) write (iOutFile,'(/"RADII OF SIGNIFICANCE FOR THE BASIS FUNCTIONS")')
 #ifdef MPIV
-       endif
+      endif
 #endif
    
       do Ibas=1,nbasis
@@ -721,18 +721,18 @@ module quick_gridpoints_module
    ! Gill PMW and CHIEN SH,JCC 24,732,2003
    ! EL-SHERBINY A and POIRIER RA JCC 25,1378,2004
    
-     subroutine gridformSG0(iitype,ILEB,iiang,RGRIDt,RWTt)
-        use quick_molspec_module, only: quick_molspec
-
-        implicit none
-
-        integer, parameter :: MAXGNUMBER=30
-        integer, intent(in) :: iitype, ILEB
-        integer, intent(out) :: iiang
-        double precision, intent(out) :: RGRIDt(MAXGNUMBER),RWTt(MAXGNUMBER)
-     
-        integer :: i, N
-        double precision :: aa46(46),aa52(52)
+   subroutine gridformSG0(iitype,ILEB,iiang,RGRIDt,RWTt)
+      use quick_molspec_module, only: quick_molspec
+      
+      implicit none
+      
+      integer, parameter :: MAXGNUMBER=30
+      integer, intent(in) :: iitype, ILEB
+      integer, intent(out) :: iiang
+      double precision, intent(out) :: RGRIDt(MAXGNUMBER),RWTt(MAXGNUMBER)
+      
+      integer :: i, N
+      double precision :: aa46(46),aa52(52)
       data aa46 &
             /0.001505892474584d0,0.19397997519818d0, &
             0.009949112846861d0,0.262363963659648d0, &
@@ -1118,16 +1118,16 @@ module quick_gridpoints_module
 
    ! Xiao HE 1/9/07
    ! SG-1 standard grid Peter MWG, Benny GJ and Pople JA, CPL 209,506,1993,
-    subroutine gridformnew(iitype,distance,iiang)
-       use quick_molspec_module, only: quick_molspec
+   subroutine gridformnew(iitype,distance,iiang)
+      use quick_molspec_module, only: quick_molspec
 
-       implicit none
+      implicit none
     
-       integer, intent(in) :: iitype
-       double precision, intent(in) :: distance
-       integer, intent(out) :: iiang
-       integer :: i, N
-       double precision :: hpartpara(4),lpartpara(4),npartpara(4)
+      integer, intent(in) :: iitype
+      double precision, intent(in) :: distance
+      integer, intent(out) :: iiang
+      integer :: i, N
+      double precision :: hpartpara(4),lpartpara(4),npartpara(4)
    
       data hpartpara /0.2500d0,0.5000d0,1.0000d0,4.5000d0/
       data lpartpara /0.1667d0,0.5000d0,0.9000d0,3.5000d0/
@@ -1205,17 +1205,17 @@ module quick_gridpoints_module
    end subroutine gridformnew
 
 
-    subroutine gridformSG1
-       implicit none
+   subroutine gridformSG1
+      implicit none
 
-       integer :: itemp, i
-       itemp=50
-       do i=1,itemp
-          RGRID(i)=(i**2.d0)/dble((itemp+1-i)*(itemp+1-i))
-          RWT(i)=2.d0*dble(itemp+1)*(dble(i)**5.d0) &
-                *dble(itemp+1-i)**(-7.d0)
-       enddo
-    end subroutine gridformSG1
+      integer :: itemp, i
+      itemp=50
+      do i=1,itemp
+         RGRID(i)=(i**2.d0)/dble((itemp+1-i)*(itemp+1-i))
+         RWT(i)=2.d0*dble(itemp+1)*(dble(i)**5.d0) &
+              *dble(itemp+1-i)**(-7.d0)
+      enddo
+   end subroutine gridformSG1
    
 
 #include "./include/labedev.fh"
