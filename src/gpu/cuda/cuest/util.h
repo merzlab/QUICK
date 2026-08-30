@@ -60,10 +60,12 @@ reorder_f (double *a)
 #define OOMLOG(siz)                                                                                \
     do {                                                                                           \
         fputs ("--------------------\n", stderr);                                                  \
-        fprintf (stderr, "| cuEST peak device bytes alloced: %zu\n", quick_cuest_memtrace.devmax); \
-        fprintf (stderr, "| cuEST bytes requested:           %zu\n", siz);                         \
-        fprintf (stderr, "| cuEST total bytes needed:        %zu\n",                               \
-                 quick_cuest_memtrace.devmax + siz);                                               \
+        fprintf (stderr, "OOM at %s:%d\n", __FILE__, __LINE__);                                    \
+        fprintf (stderr, "| cuEST peak device alloced: %.3f GB\n",                                 \
+                 quick_cuest_memtrace.devmax / 1e9);                                               \
+        fprintf (stderr, "| cuEST amount requested:    %.3f GB\n", siz / 1e9);                     \
+        fprintf (stderr, "| cuEST total needed:        %.3f GB\n",                                 \
+                 (quick_cuest_memtrace.devmax + siz) / 1e9);                                       \
         fputs ("--------------------\n", stderr);                                                  \
     } while (0)
 
