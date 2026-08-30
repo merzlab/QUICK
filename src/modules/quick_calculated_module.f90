@@ -614,15 +614,16 @@ contains
 
 
    subroutine read_quick_qm_struct(self,keywd)
+      use quick_input_parser_module, only: read, found_keyword
+
       implicit none
       character(len=200) :: keyWD
-      double precision :: rdnml
       type (quick_qm_struct_type) self
 
       call upcase(keyWD,200)
 
       ! Experimental Solvantion energy
-      if (index(keywd,'GSOL=') /= 0) self%Gsolexp = rdnml(keywd,'GSOL')
+      if(found_keyword(keywd,'GSOL')) call read(keywd,'GSOL',self%Gsolexp)
 
    end subroutine read_quick_qm_struct
 
