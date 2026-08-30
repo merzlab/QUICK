@@ -359,6 +359,7 @@ contains
     use quick_constants_module, only: SYMBOL
     use quick_method_module, only: quick_method
     use quick_io_module, only: chk_read
+    use quick_input_parser_module, only: read, found_keyword
 
     implicit none
 
@@ -366,14 +367,14 @@ contains
 
     type (quick_molspec_type), intent(inout) :: self
     integer, intent(inout) :: ierr
-    integer :: input,rdinml,i,j,k
+    integer :: input,i,j,k
     integer :: ierror
     integer :: iAtomType
     integer :: nextatom
     integer :: nextpoint
     integer :: nconsatom
     integer :: nfreezeatom
-    double precision :: temp,rdnml
+    double precision :: temp
     character(len=STR_LEN) :: keywd
     character(len=STR_LEN) :: tempstring
     logical :: is_extcharge = .false.
@@ -406,25 +407,25 @@ contains
     call upcase(keywd,STR_LEN)
 
     ! Read Charge
-    if (index(keywd,'CHARGE=') /= 0) self%molchg = rdinml(keywd,'CHARGE')
+    if(found_keyword(keywd,'CHARGE')) call read(keywd,'CHARGE', self%molchg)
 
     ! read multipilicity
-    if (index(keywd,'MULT=') /= 0) self%imult = rdinml(keywd,'MULT')
+    if(found_keyword(keywd,'MULT')) call read(keywd,'MULT', self%imult)
 
     ! determine if external charge exists
-    if (index(keywd,'EXTCHARGES') /= 0) is_extcharge=.true.
+    if (found_keyword(keywd,'EXTCHARGES')) is_extcharge=.true.
 
     ! determine if external grid points exist
-    if (index(keywd,'ESP_GRID') /= 0) is_extgrid=.true.
+    if (found_keyword(keywd,'ESP_GRID')) is_extgrid=.true.
    
     ! determine if external grid points exist
-    if (index(keywd,'EFIELD_GRID') /= 0) is_extgrid=.true.
+    if (found_keyword(keywd,'EFIELD_GRID')) is_extgrid=.true.
    
     ! determine if external grid points exist
-    if (index(keywd,'EFG_GRID') /= 0) is_extgrid=.true.
+    if (found_keyword(keywd,'EFG_GRID')) is_extgrid=.true.
 
     ! determine if constraints exists
-    if (index(keywd,'CONSTRAIN') /= 0) is_constrain=.true.
+    if (found_keyword(keywd,'CONSTRAIN')) is_constrain=.true.
 
     ! get the atom number, type and number of external charges
 

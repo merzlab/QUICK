@@ -45,7 +45,7 @@ set(QUICK_SUBS_FORTRAN_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	order.f90 orthog.f90 PriCol.f90 PriSym.f90
 	PrtAct.f90 PrtDat.f90 PrtErr.f90 PrtLab.f90
 	PrtMsg.f90 PrtTim.f90 PrtWrn.f90 pteval.f90 QuickErr.f90
-	quick_open.f90 random.f90 rdinum.f90 rdnml.f90
+	quick_open.f90 random.f90 rdinum.f90
 	rdnum.f90 rdword.f90 readPDB.f90 spdfgh.f90
 	ssw.f90 sum2Mat.f90 symmetrize.f90 transpose.f90
         upcase.f90 vett.f90 whatis.f90 whole.f90
