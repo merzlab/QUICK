@@ -19,6 +19,16 @@ subroutine allocate_MFCC()
    allocate(MFCCDensConJ(40,200,200))
 end subroutine
 
+subroutine deallocate_MFCC()
+   use allmod
+   if (allocated(MFCCDens))     deallocate(MFCCDens)
+   if (allocated(MFCCDensCap))  deallocate(MFCCDensCap)
+   if (allocated(MFCCDensCon))  deallocate(MFCCDensCon)
+   if (allocated(MFCCDensCon2)) deallocate(MFCCDensCon2)
+   if (allocated(MFCCDensConI)) deallocate(MFCCDensConI)
+   if (allocated(MFCCDensConJ)) deallocate(MFCCDensConJ)
+end subroutine
+
 subroutine MFCC_initial_guess
    use allmod
    do i=1,nbasis

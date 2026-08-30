@@ -101,6 +101,7 @@ gpu_libxc_info** init_gpu_libxc(int * const num_of_funcs, int * arr_func_id,
                 ldawp = (gpu_lda_work_params*)malloc(sizeof(gpu_lda_work_params));
                 get_gpu_work_params(&func, (void*)ldawp);
                 unkptr = gpu_upload_libxc_info(&func, (void*)ldawp, arr_mix_coeffs_[i], 1);
+                free(ldawp);
                 break;
 
             case(XC_FAMILY_GGA):
@@ -111,6 +112,7 @@ gpu_libxc_info** init_gpu_libxc(int * const num_of_funcs, int * arr_func_id,
                         ggaxwp = (gpu_ggax_work_params*) malloc(sizeof(gpu_ggax_work_params));
                         get_gpu_work_params(&func, (void*)ggaxwp);
                         unkptr = gpu_upload_libxc_info(&func, (void*)ggaxwp, arr_mix_coeffs_[i], 1);
+                        free(ggaxwp);
                         break;
 
                     case(XC_CORRELATION):
@@ -120,6 +122,7 @@ gpu_libxc_info** init_gpu_libxc(int * const num_of_funcs, int * arr_func_id,
                         get_gpu_work_params(&func, (void*)ggacwp);
 
                         unkptr = gpu_upload_libxc_info(&func, (void*)ggacwp, arr_mix_coeffs_[i], 1);
+                        free(ggacwp);
                         break;
 
                     default:

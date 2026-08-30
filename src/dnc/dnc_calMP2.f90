@@ -379,7 +379,9 @@ subroutine calmp2divcon
      if (allocated(orbmp2dcsub)) deallocate(orbmp2dcsub)
      if (allocated(orbmp2k331dcsub)) deallocate(orbmp2k331dcsub)
 
-  enddo
+   enddo
+
+   if (allocated(wtospoint)) deallocate(wtospoint)
 
 999 return
 end subroutine calmp2divcon

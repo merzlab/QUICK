@@ -169,9 +169,9 @@ extern "C" void gpu_get_cshell_eri_grad_(QUICKDouble* grad)
     if (gpu -> gpu_sim.method == HF) {
         gpu->grad->DownloadSum(grad);
 
-        delete gpu->grad;
+        SAFE_DELETE(gpu->grad);
 #if defined(USE_LEGACY_ATOMICS)
-        delete gpu->gradULL;
+        SAFE_DELETE(gpu->gradULL);
 #endif
         delete gpu->gpu_calculated->dense;
 
@@ -320,9 +320,9 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
     delete gpu->cew_grad;
 #endif
 
-    delete gpu->grad;
+    SAFE_DELETE(gpu->grad);
 #if defined(USE_LEGACY_ATOMICS)
-    delete gpu->gradULL;
+    SAFE_DELETE(gpu->gradULL);
 #endif
     delete gpu->gpu_calculated->dense;
 

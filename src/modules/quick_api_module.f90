@@ -811,6 +811,9 @@ subroutine delete_quick_job(ierr)
 #if defined(MPIV_GPU)
   SAFE_CALL(delete_mgpu_setup(ierr))
 #endif
+#if defined(COMPILE_GPU_AOINT)
+  SAFE_CALL(gpu_delete_addint(ierr))
+#endif
   SAFE_CALL(gpu_delete(ierr))
 #endif
 
