@@ -52,7 +52,7 @@ contains
 
     if(.not. allocated(tmp_grad)) allocate(tmp_grad(3*natom))
     tmp_grad = 0.0d0
-
+    
     if(quick_molspec%nextatom.gt.0) then
       if(.not. allocated(tmp_ptchg_grad)) allocate(tmp_ptchg_grad(3*quick_molspec%nextatom))    
       tmp_ptchg_grad = 0.0d0
@@ -184,10 +184,10 @@ contains
 #else
   subroutine scf_gradient
 #endif
-     use quick_calculated_module, only: quick_qm_struct
-   use quick_method_module, only: quick_method
-   use quick_molspec_module, only: quick_molspec, natom
-   use quick_files_module, only: iOutFile
+    use quick_calculated_module, only: quick_qm_struct
+    use quick_method_module, only: quick_method
+    use quick_molspec_module, only: quick_molspec, natom
+    use quick_files_module, only: iOutFile
 #ifdef CEW
     use quick_cew_module, only: quick_cew
 #if defined(GPU) || defined(MPIV_GPU)
@@ -538,11 +538,11 @@ contains
 #else
   subroutine get_cshell_oneen_grad
 #endif  
-     use quick_basis_module, only: jshell, cutmatrix
-   use quick_calculated_module, only: quick_qm_struct
-   use quick_method_module, only: quick_method
-   use quick_molspec_module, only: natom
-   use quick_files_module, only: iOutFile
+    use quick_basis_module, only: jshell, cutmatrix
+    use quick_calculated_module, only: quick_qm_struct
+    use quick_method_module, only: quick_method
+    use quick_molspec_module, only: natom
+    use quick_files_module, only: iOutFile
     use quick_oei_module, only:attrashellopt
 #ifdef OSHELL
     use quick_cutoff_module, only: oshell_density_cutoff
@@ -715,11 +715,11 @@ contains
 #else
   subroutine get_cshell_kinetic_grad
 #endif 
-      use quick_basis_module, only: nbasis, quick_basis
-   use quick_calculated_module, only: quick_qm_struct
-   use quick_method_module, only: quick_method
-   use quick_molspec_module, only: quick_molspec
-   use quick_files_module, only: iOutFile
+     use quick_basis_module, only: nbasis, quick_basis
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_method_module, only: quick_method
+     use quick_molspec_module, only: quick_molspec
+     use quick_files_module, only: iOutFile
 #ifdef OSHELL
      use quick_grad_cshell_module, only: get_ijbas_derivative
 #endif
@@ -869,22 +869,22 @@ contains
 #else
   subroutine get_cshell_eri_grad
 #endif
-      use quick_basis_module, only: jshell, quick_basis, Ycutoff, cutmatrix, dnmax
-   use quick_calculated_module, only: quick_qm_struct
-   use quick_method_module, only: quick_method
-   use quick_molspec_module, only: natom
-   use quick_files_module, only: iOutFile
+     use quick_basis_module, only: jshell, quick_basis, Ycutoff, cutmatrix, dnmax
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_method_module, only: quick_method
+     use quick_molspec_module, only: natom
+     use quick_files_module, only: iOutFile
 #ifdef OSHELL
-   use quick_cutoff_module, only: oshell_density_cutoff, oshell_dnscreen
-   use quick_eri_grad_oshell_module, only: oshell_eri_grad
+     use quick_cutoff_module, only: oshell_density_cutoff, oshell_dnscreen
+     use quick_eri_grad_oshell_module, only: oshell_eri_grad
 #else
-   use quick_cutoff_module, only:cshell_density_cutoff, cshell_dnscreen
-   use quick_eri_grad_cshell_module, only: cshell_eri_grad
+     use quick_cutoff_module, only:cshell_density_cutoff, cshell_dnscreen
+     use quick_eri_grad_cshell_module, only: cshell_eri_grad
 #endif
 #if defined(MPIV)
-   use quick_basis_module, only: mpi_jshelln, mpi_jshell
-   use quick_mpi_module, only: bMPI, quick_mpi_error, quick_comm_rank, quick_comm
-   use mpi
+     use quick_basis_module, only: mpi_jshelln, mpi_jshell
+     use quick_mpi_module, only: bMPI, quick_mpi_error, quick_comm_rank, quick_comm
+     use mpi
 #endif
 
      implicit none
@@ -905,9 +905,9 @@ contains
   !  arise as these are both the exchange and correlation integrals.
 
 #ifdef OSHELL
-      call oshell_density_cutoff
+     call oshell_density_cutoff
 #else
-      call cshell_density_cutoff
+     call cshell_density_cutoff
 #endif
   
 #if defined(GPU) || defined(MPIV_GPU)
@@ -1035,11 +1035,11 @@ contains
 #else
   subroutine get_cshell_xc_grad
 #endif
-      use quick_basis_module, only: quick_basis, phixiao, dphidxxiao, dphidyxiao, dphidzxiao
-   use quick_calculated_module, only: quick_qm_struct
-   use quick_method_module, only: quick_method
-   use quick_molspec_module, only: natom, xyz
-   use quick_files_module, only: iOutFile
+     use quick_basis_module, only: quick_basis, phixiao, dphidxxiao, dphidyxiao, dphidzxiao
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_method_module, only: quick_method
+     use quick_molspec_module, only: natom, xyz
+     use quick_files_module, only: iOutFile
      use quick_gridpoints_module, only: quick_dft_grid
      use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
      use xc_f90_types_m, only: xc_f90_pointer_t
@@ -1471,10 +1471,10 @@ contains
   !  basis functions. For I basis functions, ijcon should be  true and should
   !  be false for J.  
   !-------------------------------------------------------------------------   
-      use quick_basis_module, only: quick_basis, itype, ncontract, aexp, dcoeff
-   use quick_calculated_module, only: quick_qm_struct
-   use quick_method_module, only: quick_method
-   use quick_molspec_module, only: xyz
+     use quick_basis_module, only: quick_basis, itype, ncontract, aexp, dcoeff
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_method_module, only: quick_method
+     use quick_molspec_module, only: xyz
      use quick_overlap_module, only: gpt, opf, overlap
      use quick_oei_module, only: ekinetic
 
