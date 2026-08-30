@@ -32,6 +32,8 @@ extern "C" {
 
 #ifdef CUESTAPI
 
+#define allocateWorkspace(wd) allocateWorkspace_ (wd, __FILE__, __LINE__)
+
 /**
  * Allocates and initializes a cuestWorkspace_t structure based on a cuestWorkspaceDescriptor_t.
  *
@@ -46,7 +48,7 @@ extern "C" {
  *         for freeing all resources using freeWorkspace().
  *
  */
-static cuestWorkspace_t* allocateWorkspace(const cuestWorkspaceDescriptor_t* workspaceDescriptor)
+static cuestWorkspace_t* allocateWorkspace_(const cuestWorkspaceDescriptor_t* workspaceDescriptor, const char *caller_file, int caller_line)
 {
     /* Check that a valid workspace descriptor has been provided. */
     if (workspaceDescriptor == NULL) {
@@ -90,7 +92,7 @@ static cuestWorkspace_t* allocateWorkspace(const cuestWorkspaceDescriptor_t* wor
             free(workspace);
 
             // MODIFY
-            OOMLOG(workspace->deviceBufferSizeInBytes);
+            OOMLOG_MANUAL(workspace->deviceBufferSizeInBytes, caller_file, caller_line);
 
             exit(EXIT_FAILURE);
         }

@@ -57,10 +57,10 @@ reorder_f (double *a)
                  quick_cuest_struct.tmpWD->deviceBufferSizeInBytes / 1e9);                         \
     } while (0)
 
-#define OOMLOG(siz)                                                                                \
+#define OOMLOG_MANUAL(siz, file, line)                                                             \
     do {                                                                                           \
         fputs ("--------------------\n", stderr);                                                  \
-        fprintf (stderr, "OOM at %s:%d\n", __FILE__, __LINE__);                                    \
+        fprintf (stderr, "OOM at %s:%d\n", file, line);                                            \
         fprintf (stderr, "| cuEST peak device alloced: %.3f GB\n",                                 \
                  quick_cuest_memtrace.devmax / 1e9);                                               \
         fprintf (stderr, "| cuEST amount requested:    %.3f GB\n", siz / 1e9);                     \
@@ -68,6 +68,8 @@ reorder_f (double *a)
                  (quick_cuest_memtrace.devmax + siz) / 1e9);                                       \
         fputs ("--------------------\n", stderr);                                                  \
     } while (0)
+
+#define OOMLOG(siz) OOMLOG_MANUAL (siz, __FILE__, __LINE__)
 
 #define DEBUGLOG(...) fprintf (quick_cuest_log_fp, __VA_ARGS__);
 
