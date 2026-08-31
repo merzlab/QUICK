@@ -20,7 +20,7 @@ subroutine read_job_and_atom(ierr)
    use quick_ecp_module, only: tolecp, thrshecp, itolecp
    use quick_api_module, only: quick_api
    use quick_exception_module, only: RaiseException
-   use quick_input_parser_module, only: found_keyword
+   use quick_input_parser_module, only: index_keyword, found_keyword
 #ifdef CEW
    use quick_cew_module, only: quick_cew, print
 #endif
