@@ -12,8 +12,8 @@
 
 
 module quick_method_module
-    use quick_constants_module
-    use quick_input_parser_module  
+    use quick_constants_module, only: LEASTCUTOFF
+    use quick_input_parser_module, only: read
 
     implicit none
 
@@ -68,7 +68,8 @@ module quick_method_module
         logical :: freq =  .false.     ! Frenquency calculation
         logical :: zmat = .false.      ! Z-matrix
         logical :: dipole = .false.    ! Dipole Momenta
-        logical :: printEnergy = .true.! Print Energy each cycle, since it's cheap but useful, set it's true for default.
+        logical :: printEnergy = &
+             & .true.! Print Energy each cycle, since it's cheap but useful, set it's true for default.
         logical :: hasF= .false.       ! If f functions present
         logical :: calcDens = .false.  ! calculate density
         logical :: calcDensLap = .false. !calculate density lap
@@ -81,7 +82,8 @@ module quick_method_module
         logical :: PDB = .false.       ! PDB input
         logical :: extCharges = .false.! external charge (x,y,z,q)
         logical :: ext_grid = .false.  ! external grid points (x,y,z)
-        logical :: extgrid_angstrom =  .false.  ! will print external X, Y, Z points in Angstrom as opposed to Bohr in properties file
+        logical :: extgrid_angstrom = &
+             & .false.  ! will print external X, Y, Z points in Angstrom as opposed to Bohr in properties file
 
 
         ! those methods are mostly for research use
@@ -209,7 +211,6 @@ module quick_method_module
         ! Broadcast quick_method
         !------------------------
         subroutine broadcast_quick_method(self, ierr)
-            use quick_exception_module            
             use quick_mpi_module, only: quick_comm, quick_mpi_error
             use mpi
 
@@ -307,9 +308,11 @@ module quick_method_module
         ! print quick_method
         !------------------------
         subroutine print_quick_method(self,io,ierr)
-            use xc_f90_types_m
-            use xc_f90_lib_m
-            use quick_exception_module
+            use xc_f90_types_m, only: xc_f90_pointer_t
+            use xc_f90_lib_m, only: XC_CORRELATION, XC_EXCHANGE, XC_EXCHANGE_CORRELATION, XC_FAMILY_GGA, &
+                XC_FAMILY_HYB_GGA, XC_FAMILY_LDA, XC_FAMILY_MGGA, XC_FAMILY_HYB_MGGA, XC_KINETIC, &
+                XC_POLARIZED, XC_UNPOLARIZED, xc_f90_func_init, xc_f90_info_family, xc_f90_info_kind, &
+                xc_f90_info_name, xc_f90_version
 #if (defined(HIP) || defined(HIP_MPIV)) && defined(WITH_MAGMA)
             use quick_magma_module, only: magmaPrintInfo
 #endif
@@ -551,7 +554,7 @@ module quick_method_module
         ! read quick_method
         !------------------------
         subroutine read_quick_method(self,keywd,ierr)
-            use quick_exception_module
+            use quick_exception_module, only: RaiseException
             use quick_mpi_module, only: master
             use quick_files_module, only : write_molden
             use quick_input_parser_module, only: found_keyword
@@ -903,7 +906,6 @@ module quick_method_module
         !------------------------
         subroutine init_quick_method(self,ierr)
 
-            use quick_exception_module
             implicit none
             type(quick_method_type) self
             integer, intent(inout) :: ierr
@@ -1027,7 +1029,6 @@ module quick_method_module
         ! check quick_method
         !------------------------
         subroutine check_quick_method(self,io,ierr)
-            use quick_exception_module
             implicit none
             type(quick_method_type) self
             integer io
@@ -1085,12 +1086,11 @@ module quick_method_module
 
 
         subroutine obtain_leastIntCutoff(self,ierr)
-            use quick_constants_module
-            use quick_exception_module
+            use quick_constants_module, only: LEASTCUTOFF, TEN_TO_MINUS10, TEN_TO_MINUS3, TEN_TO_MINUS4, &
+                TEN_TO_MINUS5, TEN_TO_MINUS8, TEN_TO_MINUS9
             implicit none
             type(quick_method_type) self
             integer, intent(inout) :: ierr
-            
 
             self%leastIntegralCutoff = LEASTCUTOFF
 
@@ -1109,8 +1109,8 @@ module quick_method_module
 
 
         subroutine adjust_Cutoff(PRMS,PCHANGE,self,ierr)
-            use quick_constants_module
-            use quick_exception_module
+            use quick_constants_module, only: TEN_TO_MINUS10, TEN_TO_MINUS11, TEN_TO_MINUS5, TEN_TO_MINUS6, &
+                TEN_TO_MINUS7, TEN_TO_MINUS9
             implicit none
             double precision prms,pchange
             type(quick_method_type) self
@@ -1137,9 +1137,12 @@ module quick_method_module
         !This subroutine set the functional id and  x_hybrid_coeff
         subroutine set_libxc_func_info(f_keywd, self,ierr)
 
-           use xc_f90_types_m
-           use xc_f90_lib_m
-           use quick_exception_module
+           use xc_f90_types_m, only: xc_f90_pointer_t
+            use xc_f90_lib_m, only: XC_CORRELATION, XC_EXCHANGE, XC_EXCHANGE_CORRELATION, XC_FAMILY_GGA, &
+                XC_FAMILY_HYB_GGA, XC_FAMILY_HYB_MGGA, XC_FAMILY_LDA, XC_FAMILY_MGGA, XC_KINETIC, XC_POLARIZED, &
+                XC_UNPOLARIZED, xc_f90_func_end, xc_f90_func_init, xc_f90_functional_get_name, &
+                xc_f90_functional_get_number, xc_f90_hyb_exx_coef, xc_f90_info_family, xc_f90_info_kind, &
+                xc_f90_info_name, xc_f90_pointer_t, xc_f90_version
 
            implicit none
            character(len=300), intent(in) :: f_keywd

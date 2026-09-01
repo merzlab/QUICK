@@ -3,12 +3,21 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
     subroutine sswder(gridx,gridy,gridz,Exc,quadwt,Iparent)
-    use allmod
-    implicit double precision(a-h,o-z)
+    use quick_calculated_module, only: quick_qm_struct
+    use quick_molspec_module, only: xyz, natom
+    implicit none
 
+    double precision, intent(in) :: gridx, gridy, gridz, Exc, quadwt
+    integer, intent(in) :: Iparent
+    
 ! dimension UW(maxatm),wtgrad(3*maxatm)
-    dimension uw(natom),wtgrad(3*natom)
-
+    double precision, dimension(natom) :: uw
+    double precision, dimension(3*natom) :: wtgrad
+    
+    double precision :: rig, rjg, Rij, confocal, frctn, frctnto3, frctnto5, frctnto7
+    double precision :: gofconfocal, sumuw, a, dmudx, dmudy, dmudz, u, t
+    double precision :: rlg, rjl, xIatm, yIatm, zIatm
+    integer :: i, iatm, jatm, latm, istart, jstart
 
     DO I=1,natom
        UW(I) = 1.d0

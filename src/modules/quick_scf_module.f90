@@ -49,9 +49,8 @@ contains
 
 ! This subroutine allocates memory for quick_scf type and initializes them to zero. 
   subroutine allocate_quick_scf(ierr)
-    use quick_method_module
-    use quick_basis_module
-    use quick_molspec_module
+    use quick_method_module, only: quick_method
+    use quick_basis_module, only: nbasis, NBSuse
     use quick_scratch_module, only: quick_scratch
 
     implicit none 
@@ -113,7 +112,7 @@ contains
   ! Ed Brothers. November 27, 2001
   ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
   subroutine scf(ierr)
-     use allmod
+     use quick_method_module, only: quick_method
 
      implicit none
 
@@ -163,11 +162,19 @@ contains
   !-------------------------------------------------------
   ! 11/02/2010 Yipu Miao: Add parallel option for HF calculation
   subroutine electdiis(jscf,ierr)
-     use allmod
-     use quick_gridpoints_module
+     use quick_SCRATCH_module, only: quick_scratch
+     use quick_basis_module, only: nbasis, NBSuse
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_files_module, only: iOutFile, write_molden
+     use quick_method_module, only: quick_method, adjust_Cutoff
+     use quick_molspec_module, only: quick_molspec
+     use quick_size_module, only: MIN_SCF
+     use quick_constants_module, only: AU_TO_EV
+     use quick_timer_module, only: timer_begin, timer_end, timer_cumer
+     use quick_gridpoints_module, only: quick_dft_grid, sigrad2
      use quick_scf_operator_module, only: scf_operator
      use quick_oei_module, only: bCalc1e 
-     use quick_lri_module, only: computeLRI
+
      use quick_molden_module, only: quick_molden
 #ifdef CEW 
      use quick_cew_module, only : quick_cew

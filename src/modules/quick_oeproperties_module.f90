@@ -82,7 +82,7 @@ module quick_oeproperties_module
  end Subroutine
 
  Subroutine compute_oeprop_grid(npoints,xyz_points)
-   use quick_exception_module
+   use quick_exception_module, only: RaiseException
    use quick_files_module, only: iESPFile, espFileName, iVdwSurfFile, VdwSurfFileName
    use quick_method_module, only: quick_method
    use quick_timer_module, only : timer_begin, timer_end, timer_cumer
@@ -526,7 +526,7 @@ module quick_oeproperties_module
  !----------------------------------------------------------------------------------!
  subroutine compute_efield()
   use quick_basis_module, only: jshell
-  use quick_exception_module
+  use quick_exception_module, only: RaiseException
   use quick_files_module, only: iEFIELDFile, efieldFileName
   use quick_molspec_module, only: quick_molspec
   use quick_timer_module, only: timer_begin, timer_end, timer_cumer

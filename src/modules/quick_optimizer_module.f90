@@ -16,7 +16,7 @@
 
 module quick_optimizer_module
 
-  implicit double precision(a-h,o-z)
+  implicit none
   private
   public :: lopt
 
@@ -30,14 +30,21 @@ contains
 ! Ed Brothers. August 18,2002.
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
    subroutine optimize(ierr)
-     use allmod
-     use quick_gridpoints_module
+     use quick_method_module, only: quick_method
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_molspec_module, only: quick_molspec, natom, xyz
+     use quick_basis_module, only: quick_basis, aexp, dcoeff, cutPrim, itype, jbasis, jshell
+     use quick_basis_module, only: nbasis, ncontract, nprim, nshell, maxcontract, Ycutoff
+     use quick_timer_module, only: timer_begin, timer_end, timer_cumer
+     use quick_molden_module, only: quick_molden
+     use quick_files_module, only : write_molden, ioutfile
+     use quick_constants_module, only : symbol
+     use quick_gridpoints_module, only: quick_dft_grid, deform_dft_grid
+     use quick_size_module, only: MLBFGS
      use quick_cutoff_module, only: schwarzoff
      use quick_eri_cshell_module, only: getEriPrecomputables
      use quick_grad_cshell_module, only: scf_gradient
      use quick_grad_oshell_module, only: uscf_gradient
-     use quick_exception_module
-     use quick_molden_module, only: quick_molden
      use quick_mpi_module, only: master
 #if defined(MPIV)
      use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
@@ -45,12 +52,13 @@ contains
 #endif
      use quick_io_module, only: chk_append_opt_traj
 
-     implicit double precision(a-h,o-z)
+     implicit none
 
      logical :: done,diagco
      character(len=1) cartsym(3)
-     dimension W(3*natom*(2*MLBFGS+1)+2*MLBFGS)
-     dimension coordsnew(natom*3),hdiag(natom*3),iprint(2)
+     double precision W(3*natom*(2*MLBFGS+1)+2*MLBFGS)
+     double precision coordsnew(natom*3),hdiag(natom*3), GTOL, STPMIN, STPMAX
+     integer iprint(2), I, J, K, MP, LP, Iatm, IFLAG, Imomentum
      EXTERNAL LB2
      COMMON /LB3/MP,LP,GTOL,STPMIN,STPMAX
 
@@ -59,6 +67,8 @@ contains
      double precision gnorm,dnorm,diagter,safeDX,gntest,gtest,sqnpar,accls,oldGrad(3*natom),coordsold(natom*3)
      double precision EChg
      integer, intent(inout) :: ierr
+
+     double precision :: diagterm, EPS, error, geomax, georms, gradmax, gradnorm, Elast, temp, tempgeo, XTOL
 
      !---------------------------------------------------------
      ! This subroutine optimizes the geometry of the molecule. It has a

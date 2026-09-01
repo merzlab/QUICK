@@ -29,15 +29,13 @@ contains
 
 
   subroutine calculate_dispersion_energy(ierr)
-    use dftd3_api
+    use dftd3_api, only: dftd3_calc, dftd3_dispersion, dftd3_init, dftd3_input, dftd3_set_functional
     use quick_molspec_module, only: quick_molspec, xyz
     use quick_method_module, only: quick_method
     use quick_calculated_module, only: quick_qm_struct
-    use quick_timer_module
-    use quick_exception_module
-#if defined(MPIV)
+    use quick_timer_module, only: timer_begin, timer_cumer, timer_end
+    use quick_exception_module, only: RaiseException
     use quick_mpi_module, only: master
-#endif
 
     implicit none
 

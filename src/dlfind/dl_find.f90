@@ -74,7 +74,7 @@ subroutine dl_find (ierr2, master &
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stdout
   use dlf_stat, only: stat
-  use dlf_allocate, only: allocate_report,allocate,deallocate
+   use dlf_allocate, only: allocate,deallocate
   use dlf_store, only: store_delete_all
   use quick_molspec_module, only: natom, quick_molspec
 
@@ -354,10 +354,10 @@ subroutine dlf_run(ierr2 &
   use quick_method_module,only: quick_method
   use quick_files_module, only: write_molden
   use quick_molden_module, only: quick_molden
-  use quick_mpi_module, only: master
+   use quick_mpi_module, only: master
 #ifdef MPIV
-  use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
-  use mpi
+   use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
+   use mpi
 #endif
   use quick_io_module, only: chk_append_opt_traj
   implicit none

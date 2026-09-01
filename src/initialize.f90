@@ -20,10 +20,9 @@
 !  most of them are called from interface "init". See modules' files to
 !  see detailed implementation
 subroutine initialize1(ierr)
-   use quick_molspec_module
-   use quick_method_module
-   use quick_timer_module
-   use quick_exception_module
+   use quick_molspec_module, only: quick_molspec, init_quick_molspec
+   use quick_method_module, only: quick_method, init_quick_method
+   use quick_timer_module, only: timer_begin
 
    implicit none
 
@@ -39,8 +38,8 @@ subroutine initialize1(ierr)
    !------------------- End MPI  -----------------------------------
 #endif
 
-   call init(quick_method, ierr)     !initialize quick_method namelist
-   call init(quick_molspec, ierr)    !initialize quick_molspec namelist
+   call init_quick_method(quick_method, ierr)     !initialize quick_method namelist
+   call init_quick_molspec(quick_molspec, ierr)    !initialize quick_molspec namelist
 
    RECORD_TIME(timer_begin%TTotal) !Trigger time counter
    RECORD_TIME(timer_begin%Tinitialize) !Trigger time counter
@@ -49,7 +48,6 @@ end subroutine initialize1
 
 !  Output Copyright information
 subroutine outputCopyright(io,ierr)
-   use quick_exception_module
 
    implicit none
 

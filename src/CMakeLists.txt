@@ -25,7 +25,7 @@ set(QUICK_MODULES_SOURCES
 	quick_divcon_module.f90 quick_ecp_module.f90 quick_electrondensity_module.f90
 	quick_files_module.f90 quick_timer_module.f90 quick_gridpoints_module.f90
 	quick_mfcc_module.f90 quick_params_module.f90 quick_pb_module.f90
-	quick_scratch_module.f90 quick_all_module.f90 quick_scf_module.f90
+	quick_scratch_module.f90 quick_scf_module.f90
 	quick_grad_cshell_module.f90 quick_api_module.f90 quick_api_test_module.f90
 	quick_cutoff_module.f90 quick_exception_module.f90 quick_input_parser_module.f90
 	quick_eri_cshell_module.f90 quick_eri_grad_cshell_module.f90 quick_oei_module.f90

@@ -4,11 +4,25 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine formCPHFA(Ibas,Jbas,IIbas,JJbas)
-  use allmod
-  implicit double precision(a-h,o-z)
+  use quick_basis_module, only: quick_basis, nbasis, aexp, ncontract, itype, dcoeff
+  use quick_calculated_module, only: quick_qm_struct
+  use quick_method_module, only: quick_method
+  use quick_molspec_module, only: quick_molspec, xyz
+  implicit none
 
-  dimension isame(4,8)
+  integer, intent(in) :: Ibas, Jbas, IIbas, JJbas
+  integer, dimension(4,8) :: isame
+  integer :: iA, iB, iC, iD
+  integer :: Icon, Jcon, IIcon, JJcon
+  integer :: Icheck, Jcheck, Iblank
+  integer :: Iunique, Ival, Jval, IIval, JJval
+  integer :: lastAocc, lastBocc, iBetastart
+  integer :: iAvirt, iAocc, iAvirt2, iAocc2
+  integer :: jbCPHFA, iaCPHFA
+  integer :: iBvirt, iBocc, iBvirt2, iBocc2
+  double precision :: AOint
   logical :: same
+  double precision, external :: repulsion_prim
 
   ! The purpose of the subroutine is to calculate an AO repulsion
   ! integral, determine it's contribution to an MO repulsion integral,
@@ -262,12 +276,32 @@ end subroutine formCPHFA
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine formCPHFB
-  use allmod
+  use quick_basis_module, only: quick_basis, nbasis, aexp, ncontract, itype, dcoeff
+  use quick_calculated_module, only: quick_qm_struct
+  use quick_method_module, only: quick_method
+  use quick_molspec_module, only: quick_molspec, xyz, natom
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic
-  implicit double precision(a-h,o-z)
-   double precision g_table(200)
-   integer i,j,k,ii,jj,kk,g_count
+  implicit none
+
+  double precision :: g_table(200)
+  integer :: i, j, k, ii, jj, kk, g_count
+  integer :: Ibas, Jbas, Imomentum, Icon, Jcon
+  integer :: ISTART, JSTART
+  double precision :: Ax, Ay, Az, Bx, By, Bz
+  double precision :: dSI, dSJ, dKEI, dKEJ
+  double precision :: a, b, Px, Py, Pz
+  integer :: iAvirt, iAocc, iAvirt2, iAocc2, iaCPHF
+  integer :: iBvirt, iBocc, iBvirt2, iBocc2
+  integer :: lastAocc, lastBocc, iBetastart
+  integer :: iC, iCSTART, iA, iB
+  double precision :: dNAIX, dNAIY, dNAIZ, dNAJX, dNAJY, dNAJZ
+  double precision :: dNACX, dNACY, dNACZ
+  integer :: Kbas, Lbas, Kcon, Lcon
+   double precision :: denom
+  integer :: IDX
+  integer :: Iatom, L
+  double precision, external :: repulsion_prim, attraction, electricfld
 
   ! First some quick setup.
 
@@ -890,14 +924,36 @@ end subroutine formcphfb
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine CPHFB4cnt(Ibas,Jbas,IIbas,JJbas)
-  use allmod
+  use quick_basis_module, only: quick_basis, nbasis, aexp, ncontract, itype, dcoeff
+  use quick_calculated_module, only: quick_qm_struct
+  use quick_method_module, only: quick_method
+  use quick_molspec_module, only: quick_molspec, xyz, natom
   use quick_overlap_module, only: gpt, overlap
-  implicit double precision(a-h,o-z)
+  implicit none
 
-  dimension isame(4,8),deriv(4,3),icenter(4)
+  integer, intent(in) :: Ibas, Jbas, IIbas, JJbas
+  integer, dimension(4,8) :: isame
+  integer, dimension(4,3) :: deriv
+  integer, dimension(4) :: icenter
   logical :: same
-   double precision g_table(200)
-   integer i,j,k,ii,jj,kk,g_count
+  double precision :: g_table(200)
+  integer :: i, j, k, ii, jj, kk, g_count
+  integer :: iA, iB, iC, iD
+  integer :: Icon, Jcon, IIcon, JJcon
+  integer :: Icheck, Jcheck, Iblank
+  integer :: Iunique, Ival, Jval, IIval, JJval
+  integer :: lastAocc, lastBocc, iBetastart
+  integer :: iAocc, iAocc2, iAocc3, iAvirt, iAvirt2
+  integer :: iBocc, iBocc2, iBocc3, iBvirt, iBvirt2
+  integer :: iaCPHF, jbCPHFA
+  double precision :: AOint, Skl, dSK
+  integer :: Iatom, Imomentum, Kbas, Lbas, Kcon, Lcon
+  double precision :: Ax, Ay, Az, Bx, By, Bz, Px, Py, Pz
+  double precision :: a, b
+  integer :: ISTART
+  double precision :: currderiv
+  double precision :: DENSEKL, DENSEAKJ, DENSEBKJ
+  double precision, external :: repulsion_prim
 
   ! The purpose of the subroutine is to calculate an AO repulsion
   ! integral, determine it's contribution to an MO repulsion integral,
@@ -1389,11 +1445,22 @@ end subroutine CPHFB4cnt
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine CPHFB2Egrad(Ibas,Jbas,IIbas,JJbas,deriv,icenter)
-  use allmod
-  implicit double precision(a-h,o-z)
+  use quick_basis_module, only: quick_basis, nbasis, aexp, ncontract, itype, dcoeff
+  use quick_calculated_module, only: quick_qm_struct
+  use quick_method_module, only: quick_method
+  use quick_molspec_module, only: quick_molspec, xyz
+  implicit none
 
-  dimension deriv(4,3),icenter(4)
-  dimension itype2(3,4)
+  integer, intent(in) :: Ibas, Jbas, IIbas, JJbas
+  integer, dimension(4,3), intent(out) :: deriv
+  integer, dimension(4), intent(inout) :: icenter
+  integer, dimension(3,4) :: itype2
+  integer :: iA, iB, iC, iD
+  integer :: Imomentum, Icon, Jcon, IIcon, JJcon
+  double precision :: Agrad, Bgrad, Cgrad, Dgrad
+  double precision :: cntrctcoeff, temp
+  integer :: I, J, K
+  double precision, external :: repulsion_prim
 
   ! The purpose of this subroutine is to calculate the gradient of
   ! the 2-electron 4-center integrals used in forming the B array of the

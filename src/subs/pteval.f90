@@ -3,9 +3,20 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
     subroutine pteval(gridx,gridy,gridz,phi,dphidx,dphidy,dphidz,Iphi)
-    use allmod
-    use quick_gridpoints_module
-    implicit double precision(a-h,o-z)
+    use quick_basis_module, only: quick_basis, itype, dcoeff, aexp, ncontract
+    use quick_molspec_module, only: xyz
+    use quick_gridpoints_module, only: sigrad2
+    implicit none
+    
+    double precision, intent(in) :: gridx, gridy, gridz
+    double precision, intent(out) :: phi, dphidx, dphidy, dphidz
+    integer, intent(in) :: iphi
+    double precision :: x1, y1, z1, rsquared
+    double precision :: x1imin1, x1i, x1iplus1
+    double precision :: y1imin1, y1i, y1iplus1
+    double precision :: z1imin1, z1i, z1iplus1
+    double precision :: xtype, ytype, ztype, temp
+    integer :: icon
 
     ! Given a point in space, this function calculates the value of basis
     ! function I and the value of its cartesian derivatives in all three

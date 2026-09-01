@@ -19,8 +19,12 @@
 !   variables.  Large sized arrays should only be allocated when
 !   they are needed.  Eventually someone will deal with this.
 Subroutine deallocate_calculated
-  use allmod
-  use quick_gridpoints_module
+  use quick_basis_module, only: Yxiao, Yxiaotemp, Yxiaoprim, attraxiao
+  use quick_basis_module, only: attraxiaoopt, Ycutoff, cutmatrix, itype
+  use quick_basis_module, only: ncontract, aexp, dcoeff
+  use quick_basis_module, only: deallocate_quick_basis, quick_basis
+  use quick_gridpoints_module, only: sigrad2
+  use quick_scratch_module, only: deallocate_quick_scratch, quick_scratch
 
   if (allocated(Yxiao)) deallocate(Yxiao)
   if (allocated(Yxiaotemp)) deallocate(Yxiaotemp)
@@ -31,8 +35,8 @@ Subroutine deallocate_calculated
   if (allocated(cutmatrix)) deallocate(cutmatrix)
   if (allocated(sigrad2)) deallocate(sigrad2)
 
-  call dealloc(quick_scratch)
-  call dealloc(quick_basis)
+  call deallocate_quick_scratch(quick_scratch)
+  call deallocate_quick_basis(quick_basis)
 
   if (allocated(itype)) deallocate(itype)
   if (allocated(ncontract)) deallocate(ncontract)
@@ -42,8 +46,10 @@ end subroutine deallocate_calculated
 
 
 subroutine deallocateall(ierr)
-  use allmod
-  use quick_gridpoints_module
+  use quick_method_module, only: quick_method
+  use quick_molspec_module, only: deallocate_quick_molspec, quick_molspec
+  use quick_calculated_module, only: deallocate_quick_qm_struct, quick_qm_struct
+  use quick_gridpoints_module, only: quick_dft_grid, deform_dft_grid
 #ifdef CEW
   use quick_cew_module, only: quick_cew
   use quick_mpi_module, only: mpi_delete_atoms
@@ -53,8 +59,8 @@ subroutine deallocateall(ierr)
 
   integer, intent(inout) :: ierr
 
-    call  dealloc(quick_molspec,ierr)
-    call  dealloc(quick_qm_struct)
+    call  deallocate_quick_molspec(quick_molspec,ierr)
+    call  deallocate_quick_qm_struct(quick_qm_struct)
     call  deallocate_calculated
 
     if (quick_method%DFT &
@@ -75,8 +81,8 @@ end subroutine deallocateall
 ! Finialize programs
 !----------------------
 subroutine finalize(io,ierr,option)
-    use allmod
-    use quick_exception_module
+    use quick_files_module, only: write_molden
+    use quick_timer_module, only: timer_end, timer_output
     use quick_molden_module, only: finalizeExport, quick_molden
     use quick_mpi_module, only: bMPI, master, quick_mpi_error
 
@@ -127,7 +133,6 @@ end subroutine finalize
 ! Fatal exit subroutine
 !-----------------------
 subroutine quick_exit(io, ierr)
-   use allmod
 #if defined(MPIV)
    use quick_mpi_module, only: quick_comm, quick_mpi_error
    use mpi
