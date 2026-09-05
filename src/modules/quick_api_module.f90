@@ -545,7 +545,7 @@ subroutine run_quick(self,ierr)
                            - (timer_end%T2elb-timer_begin%T2elb)
 
   ! compute energy
-  if ( .not. quick_method%opt .and. .not. quick_method%grad) then
+  if ( .not. quick_method%opt) then
     SAFE_CALL(getEnergy(.false.,ierr))
   endif
 

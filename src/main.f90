@@ -213,23 +213,26 @@
     timer_cumer%TIniGuess=timer_cumer%TIniGuess+timer_end%TIniGuess-timer_begin%TIniGuess &
                           -(timer_end%T2elb-timer_begin%T2elb)
 
-    if (.not.quick_method%opt .and. .not.quick_method%grad) then
+    if (.not.quick_method%opt) then
         SAFE_CALL(getEnergy(.false.,ierr))
 
         ! One electron properties (ESP, EField)
-        call compute_oeprop()
+        if (.not.quick_method%grad) then
+           call compute_oeprop()
 
-        if (master .and. quick_method%writechk) then
-            call chk_write('xyz', 3, natom, quick_molspec%xyz)
-            call chk_write('iattype', natom, quick_molspec%iattype)
+           if (master .and. quick_method%writechk) then
+              call chk_write('xyz', 3, natom, quick_molspec%xyz)
+              call chk_write('iattype', natom, quick_molspec%iattype)
 #if !defined(RESTART_HDF5)
-            call chk_write('dense', nbasis, nbasis, quick_qm_struct%dense)
-            if (quick_method%UNRST) then
-                call chk_write('denseb', nbasis, nbasis, quick_qm_struct%denseb)
-            end if
-            call chk_close()
+              call chk_write('dense', nbasis, nbasis, quick_qm_struct%dense)
+              if (quick_method%UNRST) then
+                 call chk_write('denseb', nbasis, nbasis, quick_qm_struct%denseb)
+              end if
+              call chk_close()
 #endif
-        endif
+           endif
+        end if
+                   
     endif
 
     !------------------------------------------------------------------
