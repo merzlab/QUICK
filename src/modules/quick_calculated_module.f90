@@ -32,8 +32,11 @@ module quick_calculated_module
    ! the elements will be introduced following
    type quick_qm_struct_type
 
-      ! Basis Set Number
+      ! number of basis functions
       integer,pointer :: nbasis
+
+      ! number of basis functions accounting for near-linear dependency
+      integer,pointer :: NBSuse
 
       ! overlap matrix, will be calculated once, independent on
       ! orbital coefficent. Its dimension is nbasis*nbasis
@@ -48,6 +51,12 @@ module quick_calculated_module
 
       ! operator matrix, the dimension is nbasis*nbasis. For HF, it's Fock Matrix
       double precision,dimension(:,:), allocatable :: o
+
+      ! effective operator matrix if basis functions are eliminated to remove near-linear dependency
+      double precision,dimension(:,:), allocatable :: oeff
+
+      ! effective beta operator matrix if basis functions are eliminated to remove near-linear dependency
+      double precision,dimension(:,:), allocatable :: oeffb
 
       ! matrix for saving XC potential, required for incremental KS build
       double precision,dimension(:,:), allocatable :: oxc 
@@ -77,6 +86,14 @@ module quick_calculated_module
       ! the dimension is nbasis*nbasis.
       double precision,dimension(:,:), allocatable :: vec
 
+      ! matrix to hold eigenvectors for level shifting,
+      ! the dimension is NBSuse*NBSuse.
+      double precision,dimension(:,:), allocatable :: oldvec
+
+      ! matrix to hold beta eigenvectors for level shifting,
+      ! the dimension is NBSuse*NBSuse.
+      double precision,dimension(:,:), allocatable :: oldvecb
+
       ! Density matrix, when it's unrestricted system, it presents alpha density
       ! the dimension is nbasis*nbasis.
       double precision,dimension(:,:), allocatable :: dense
@@ -84,6 +101,12 @@ module quick_calculated_module
       ! when it's unrestricted system, it presents beta density
       ! the dimension is nbasis*nbasis.
       double precision,dimension(:,:), allocatable :: denseb
+
+      ! when calculating properties of unrestricted systems, this is
+      ! the total density. Only computed after SCF has converged.
+      ! Using this density if efficient for property calculation.
+      ! the dimension is nbasis*nbasis.
+      double precision,dimension(:,:), allocatable :: denseab
 
       ! saved density matrix
       ! the dimension is nbasis*nbasis.
@@ -175,7 +198,7 @@ module quick_calculated_module
 
    end type quick_qm_struct_type
 
-   type (quick_qm_struct_type) quick_qm_struct
+   type (quick_qm_struct_type), target :: quick_qm_struct
 
    !----------------------
    ! Interface
@@ -205,21 +228,66 @@ module quick_calculated_module
       module procedure init_quick_qm_struct
    end interface init
 
-   interface dat
-      module procedure dat_quick_qm_struct
-   end interface dat
-
    !----------------------
    ! Inner subroutines
    !----------------------
 contains
 
-   !--------------
+   !--------------------------------------
+   ! subroutine to allocate arrays whose
+   ! dimensions depend on near-linear
+   ! dependency
+   !--------------------------------------
+   subroutine allocate_quick_qm_struct_fullx(self)
+       use quick_molspec_module, only: quick_molspec
+       use quick_method_module,  only: quick_method
+
+       implicit none
+
+       type (quick_qm_struct_type) self
+
+       ! alpha fields
+       if(self%NBSuse.ne.self%nbasis) then
+           if(.not. allocated(self%oeff)) allocate(self%oeff(self%NBSuse,self%NBSuse))
+           self%oeff = 0.0d0
+       endif
+       if(.not. allocated(self%x))      allocate(self%x(self%nbasis,self%NBSuse))
+       if(.not. allocated(self%vec))    allocate(self%vec(self%NBSuse,self%NBSuse))
+       if(.not. allocated(self%oldvec)) allocate(self%oldvec(self%NBSuse,self%NBSuse))
+       if(.not. allocated(self%co))     allocate(self%co(self%nbasis,self%NBSuse))
+       if(.not. allocated(self%E))      allocate(self%E(self%NBSuse))
+
+       self%x      = 0.0d0
+       self%vec    = 0.0d0
+       self%oldvec = 0.0d0
+       self%co     = 0.0d0
+       self%E      = 0.0d0
+
+       ! beta fields (unrestricted only): cob and Eb are resized to NBSuse here;
+       ! oeffb is only needed when NBSuse < nbasis; oldvecb is always needed.
+       if(quick_method%unrst) then
+          if(self%NBSuse.ne.self%nbasis)then
+             if(.not. allocated(self%oeffb)) allocate(self%oeffb(self%NBSuse,self%NBSuse))
+             self%oeffb = 0.0d0
+          endif
+          if(.not. allocated(self%cob))     allocate(self%cob(self%nbasis,self%NBSuse))
+          if(.not. allocated(self%Eb))      allocate(self%Eb(self%NBSuse))
+          if(.not. allocated(self%oldvecb)) allocate(self%oldvecb(self%NBSuse,self%NBSuse))
+
+          self%cob     = 0.0d0
+          self%Eb      = 0.0d0
+          self%oldvecb = 0.0d0
+       endif
+
+   end subroutine
+
+   !--------------------------------------
    ! subroutine to allocate variables
-   !--------------
+   !---------------------------------------
    subroutine allocate_quick_qm_struct(self)
-      use quick_method_module,only: quick_method
-      use quick_molspec_module,only: quick_molspec
+      use quick_method_module, only: quick_method
+      use quick_molspec_module, only: quick_molspec
+
       implicit none
 
       integer nbasis
@@ -241,16 +309,12 @@ contains
 
       ! those matrices is necessary for all calculation or the basic of other calculation
       if(.not. allocated(self%s)) allocate(self%s(nbasis,nbasis))
-      if(.not. allocated(self%x)) allocate(self%x(nbasis,nbasis))
       if(.not. allocated(self%oneElecO)) allocate(self%oneElecO(nbasis,nbasis))
       if(.not. allocated(self%o)) allocate(self%o(nbasis,nbasis))
       if(.not. allocated(self%oSave)) allocate(self%oSave(nbasis,nbasis))
-      if(.not. allocated(self%co)) allocate(self%co(nbasis,nbasis))
-      if(.not. allocated(self%vec)) allocate(self%vec(nbasis,nbasis))
       if(.not. allocated(self%dense)) allocate(self%dense(nbasis,nbasis))
       if(.not. allocated(self%denseSave)) allocate(self%denseSave(nbasis,nbasis))
       if(.not. allocated(self%denseOld)) allocate(self%denseOld(nbasis,nbasis))
-      if(.not. allocated(self%E)) allocate(self%E(nbasis))
       if(.not. allocated(self%iDegen)) allocate(self%iDegen(nbasis))
 
       if(.not. allocated(self%Mulliken)) allocate(self%Mulliken(natom))
@@ -310,14 +374,13 @@ contains
          if(.not. allocated(self%CPHFB)) allocate(self%CPHFB(idimA,natom*3))
       endif
 
-      ! if unrestricted, some more varibles is required to be allocated
+      ! if unrestricted, some more variables need to be allocated
       if (quick_method%unrst) then
          if(.not. allocated(self%ob)) allocate(self%ob(nbasis,nbasis))
          if(.not. allocated(self%obSave)) allocate(self%obSave(nbasis,nbasis))
+         if(.not. allocated(self%denseab)) allocate(self%denseab(nbasis,nbasis))
          if(.not. allocated(self%densebSave)) allocate(self%densebSave(nbasis,nbasis))
          if(.not. allocated(self%densebOld)) allocate(self%densebOld(nbasis,nbasis))
-         if(.not. allocated(self%cob)) allocate(self%cob(nbasis,nbasis))
-         if(.not. allocated(self%Eb)) allocate(self%Eb(nbasis))
       endif
 
       if (quick_method%unrst .or. quick_method%DFT) then
@@ -345,7 +408,7 @@ contains
    subroutine reallocate_quick_qm_struct(self,ierr)
 
      use quick_exception_module
-     use quick_molspec_module,only: quick_molspec
+     use quick_molspec_module, only: quick_molspec
 
      implicit none
 
@@ -353,80 +416,34 @@ contains
      integer, intent(inout) :: ierr
      integer :: current_size     
 
-     if(quick_molspec%nextatom .gt. 0) then
-       if(allocated(self%ptchg_gradient)) current_size= size(self%ptchg_gradient)
-       if(current_size /= quick_molspec%nextatom*3) then
+     if (quick_molspec%nextatom > 0) then
+       if (allocated(self%ptchg_gradient)) then
+         current_size = size(self%ptchg_gradient)
+       else
+         current_size = 0
+       endif
+       ! if size changes at all, be safe and reallocate to avoid mismatches in array operations with external codes;
+       ! this can be potentially revisited in the future during optimization efforts
+       if (current_size /= 3*quick_molspec%nextatom) then
          deallocate(self%ptchg_gradient, stat=ierr)
          allocate(self%ptchg_gradient(3*quick_molspec%nextatom), stat=ierr)
-         self%ptchg_gradient=0.0d0
        endif
+       self%ptchg_gradient=0.0d0
      endif
 
    end subroutine reallocate_quick_qm_struct
-
-   !--------------
-   ! subroutine to write data to dat file
-   !--------------
-
-   subroutine dat_quick_qm_struct(self, idatafile)
-
-      use quick_method_module,only: quick_method
-      use quick_molspec_module,only: quick_molspec
-      logical fail
-
-      integer nbasis
-      integer natom
-      integer nelec
-      integer idimA
-      integer nelecb
-
-      
-      integer idatafile
-      type (quick_qm_struct_type) self
-
-      nbasis=self%nbasis
-      natom=quick_molspec%natom
-      nelec=quick_molspec%nelec
-      nelecb=quick_molspec%nelecb
-
-
-      call wchk_int(idatafile, "nbasis", nbasis, fail)
-      call wchk_int(idatafile, "natom",  natom,  fail)
-      call wchk_int(idatafile, "nelec",  nelec,  fail)
-      call wchk_int(idatafile, "nelecb", nelecb, fail)
-      call wchk_darray(idatafile, "s",        nbasis, nbasis, 1, self%s,        fail)
-      call wchk_darray(idatafile, "x",        nbasis, nbasis, 1, self%x,        fail)
-      call wchk_darray(idatafile, "o",        nbasis, nbasis, 1, self%o,        fail)
-      call wchk_darray(idatafile, "co",       nbasis, nbasis, 1, self%co,       fail)
-      call wchk_darray(idatafile, "vec",      nbasis, nbasis, 1, self%vec,      fail)
-      call wchk_darray(idatafile, "dense",    nbasis, nbasis, 1, self%dense,    fail)
-      call wchk_darray(idatafile, "E",        nbasis, 1,      1, self%E,        fail)
-      call wchk_darray(idatafile, "iDegen",   nbasis, 1,      1, self%iDegen,   fail)
-      call wchk_darray(idatafile, "Mulliken", nbasis, 1,      1, self%Mulliken, fail)
-      call wchk_darray(idatafile, "Lowdin",   nbasis, 1,      1, self%Lowdin,   fail)
-
-      ! if unrestricted, some more varibles is required to be allocated
-      if (quick_method%unrst) then
-         call wchk_darray(idatafile, "cob", nbasis, nbasis, 1, self%cob, fail)
-         call wchk_darray(idatafile, "Eb", nbasis, 1, 1, self%Eb, fail)
-      endif
-
-      if (quick_method%unrst .or. quick_method%DFT) then
-         call wchk_darray(idatafile, "denseb", nbasis, 1, 1, self%denseb, fail)
-      endif
-
-
-   end subroutine dat_quick_qm_struct
 
    !--------------
    ! subroutine to deallocate variables
    !--------------
    subroutine deallocate_quick_qm_struct(self)
       use quick_method_module,only: quick_method
+
       implicit none
+
       integer io
 
-      integer nbasis
+      integer nbasis, NBSuse
       integer natom
       integer nelec
       integer idimA
@@ -435,14 +452,19 @@ contains
       type (quick_qm_struct_type) self
 
       nullify(self%nbasis)
+      nullify(self%NBSuse)
       ! those matrices is necessary for all calculation or the basic of other calculation
       if (allocated(self%s)) deallocate(self%s)
       if (allocated(self%x)) deallocate(self%x)
       if (allocated(self%oneElecO)) deallocate(self%oneElecO)
       if (allocated(self%o)) deallocate(self%o)
+      if (allocated(self%oeff)) deallocate(self%oeff)
+      if (allocated(self%oeffb)) deallocate(self%oeffb)
       if (allocated(self%oSave)) deallocate(self%oSave)
       if (allocated(self%co)) deallocate(self%co)
       if (allocated(self%vec)) deallocate(self%vec)
+      if (allocated(self%oldvec)) deallocate(self%oldvec)
+      if (allocated(self%oldvecb)) deallocate(self%oldvecb)
       if (allocated(self%dense)) deallocate(self%dense)
       if (allocated(self%denseSave)) deallocate(self%denseSave)
       if (allocated(self%denseOld)) deallocate(self%denseOld)
@@ -475,10 +497,11 @@ contains
          if (allocated(self%CPHFB)) deallocate(self%CPHFB)
       endif
 
-      ! if unrestricted, some more varibles is required to be allocated
+      ! if unrestricted, some more variables need to be allocated
       if (quick_method%unrst) then
          if(allocated(self%ob)) deallocate(self%ob)
          if(allocated(self%obSave)) deallocate(self%obSave)
+         if(allocated(self%denseab)) deallocate(self%denseab)
          if(allocated(self%densebSave)) deallocate(self%densebSave)
          if(allocated(self%densebOld)) deallocate(self%densebOld)
          if (allocated(self%cob)) deallocate(self%cob)
@@ -502,11 +525,13 @@ contains
    ! broadcast variable list
    !-------------------
    subroutine broadcast_quick_qm_struct(self)
-      use quick_mpi_module
-      use quick_method_module,only: quick_method
-      use quick_molspec_module,only: quick_molspec
+      use quick_method_module, only: quick_method
+      use quick_molspec_module, only: quick_molspec
+      use quick_mpi_module, only: quick_comm, quick_mpi_error
       use mpi
+
       implicit none
+
       type (quick_qm_struct_type) self
       integer natom
       integer nbasis,nbasis2
@@ -519,70 +544,66 @@ contains
       nelec=quick_molspec%nelec
       nelecb=quick_molspec%nelecb
 
-      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%s,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%x,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%oneElecO,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%o,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%oSave,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%co,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%vec,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%dense,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%denseSave,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%denseOld,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%iDegen,nbasis,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BARRIER(quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%nbasis,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%s,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%oneElecO,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%o,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%oSave,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%dense,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%denseSave,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%denseOld,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%iDegen,nbasis,mpi_integer,0,quick_comm,quick_mpi_error)
 
-      call MPI_BCAST(self%Mulliken,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%Lowdin,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%Mulliken,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%Lowdin,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
 
-      call MPI_BCAST(self%EEl,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%Exc,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%ECore,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%ECharge,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%ETot,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%EEl,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%Exc,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%ECore,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%ECharge,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%ETot,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
 
       if (quick_method%PBSOL) then
-         call MPI_BCAST(self%EElVac,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%EElSol,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%EElPb,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%gsolexp,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%EElVac,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%EElSol,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%EElPb,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%gsolexp,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
       endif
 
       if (quick_method%unrst) then
-         call MPI_BCAST(self%cob,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%denseb,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%Eb,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%aElec,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%bElec,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%denseab,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%denseb,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%aElec,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%bElec,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
       endif
 
       if (quick_method%grad) then
-         call MPI_BCAST(self%gradient,3*natom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%gradient,3*natom,mpi_double_precision,0,quick_comm,quick_mpi_error)
       endif
 
       if (quick_method%MP2) then
-         call MPI_BCAST(self%gradient,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%gradient,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
       endif
 
       if (quick_method%analHess) then
-         call MPI_BCAST(self%hessian,3*natom*3*natom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%hessian,3*natom*3*natom,mpi_double_precision,0,quick_comm,quick_mpi_error)
          if (quick_method%unrst) then
             idimA = (nbasis-nelec)*nelec + (nbasis-nelecB)*nelecB
          else
             idimA = 2*(nbasis-(nelec/2))*(nelec/2)
          endif
-         call MPI_BCAST(self%cphfa,idimA*idimA,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%cphfb,idimA*natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%cphfa,idimA*idimA,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%cphfb,idimA*natom*3,mpi_double_precision,0,quick_comm,quick_mpi_error)
       endif
 
    end subroutine broadcast_quick_qm_struct
 #endif
 
    subroutine init_quick_qm_struct(self)
-      use quick_method_module,only: quick_method
-      use quick_molspec_module,only: quick_molspec
+      use quick_method_module, only: quick_method
+      use quick_molspec_module, only: quick_molspec
+
       implicit none
 
       integer nbasis
@@ -599,16 +620,12 @@ contains
       nelecb=quick_molspec%nelecb
 
       call zeroMatrix(self%s,nbasis)
-      call zeroMatrix(self%x,nbasis)
       call zeroMatrix(self%oneElecO,nbasis)
       call zeroMatrix(self%o,nbasis)
       call zeroMatrix(self%oSave,nbasis)
-      call zeroMatrix(self%co,nbasis)
-      call zeroMatrix(self%vec,nbasis)
       call zeroMatrix(self%dense,nbasis)
       call zeroMatrix(self%denseSave,nbasis)
       call zeroMatrix(self%denseOld,nbasis)
-      call zeroVec(self%E,nbasis)
       call zeroiVec(self%iDegen,nbasis)
       call zeroVec(self%Mulliken,natom)
       call zeroVec(self%Lowdin,natom)
@@ -637,26 +654,28 @@ contains
          call zeroMatrix2(self%CPHFA,idimA,natom*3)
       endif
 
-      ! if unrestricted, some more varibles is required to be allocated
+      ! if unrestricted, some more variables need to be allocated
       if (quick_method%unrst) then
-         call zeroMatrix(self%cob,nbasis)
+         if (allocated(self%cob))  call zeroMatrix(self%cob,nbasis)
+         call zeroMatrix(self%denseab,nbasis)
          call zeroMatrix(self%denseb,nbasis)
-         call zeroVec(self%Eb,nbasis)
+         if (allocated(self%Eb))   call zeroVec(self%Eb,self%NBSuse)
       endif
 
    end subroutine
 
 
    subroutine read_quick_qm_struct(self,keywd)
+      use quick_input_parser_module, only: read, found_keyword
+
       implicit none
       character(len=200) :: keyWD
-      double precision :: rdnml
       type (quick_qm_struct_type) self
 
       call upcase(keyWD,200)
 
       ! Experimental Solvantion energy
-      if (index(keywd,'GSOL=') /= 0) self%Gsolexp = rdnml(keywd,'GSOL')
+      if(found_keyword(keywd,'GSOL')) call read(keywd,'GSOL',self%Gsolexp)
 
    end subroutine read_quick_qm_struct
 

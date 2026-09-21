@@ -20,12 +20,9 @@ module quick_scf_module
   private
 
   public :: allocate_quick_scf, deallocate_quick_scf, scf 
-  public :: V2, B, BSAVE, BCOPY, W, COEFF, RHS, allerror, alloperator
+  public :: B, BSAVE, BCOPY, W, COEFF, RHS, allerror, alloperator
 
 !  type quick_scf_type
-
-    ! a workspace matrix of size 3,nbasis to be passed into the diagonalizer 
-    double precision, allocatable, dimension(:,:) :: V2
 
     ! matrices required for diis procedure
     double precision, allocatable, dimension(:,:)   :: B
@@ -52,26 +49,33 @@ contains
 
 ! This subroutine allocates memory for quick_scf type and initializes them to zero. 
   subroutine allocate_quick_scf(ierr)
-
     use quick_method_module
     use quick_basis_module
+    use quick_molspec_module
+    use quick_scratch_module, only: quick_scratch
 
     implicit none 
 
     integer, intent(inout) :: ierr
 
-    if(.not. allocated(V2))          allocate(V2(3, nbasis), stat=ierr)
     if(.not. allocated(B))           allocate(B(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1), stat=ierr)
     if(.not. allocated(BSAVE))       allocate(BSAVE(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1), stat=ierr)
     if(.not. allocated(BCOPY))       allocate(BCOPY(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1), stat=ierr)
     if(.not. allocated(W))           allocate(W(quick_method%maxdiisscf+1), stat=ierr)
     if(.not. allocated(COEFF))       allocate(COEFF(quick_method%maxdiisscf+1), stat=ierr)
     if(.not. allocated(RHS))         allocate(RHS(quick_method%maxdiisscf+1), stat=ierr)
-    if(.not. allocated(allerror))    allocate(allerror(nbasis, nbasis, quick_method%maxdiisscf), stat=ierr)
+    if(.not. allocated(allerror))    allocate(allerror(NBSuse, NBSuse, quick_method%maxdiisscf), stat=ierr)
     if(.not. allocated(alloperator)) allocate(alloperator(nbasis, nbasis, quick_method%maxdiisscf), stat=ierr)
 
+     ! hold3, hold4 are only needed in case of near-linear dependency
+     ! path where NBSuse < nbasis.  In the standard case NBSuse == nbasis and hold/hold2
+     ! (already nbasis x nbasis) are reused as intermediates, so these arrays are skipped.
+     if(NBSuse .ne. nbasis) then
+        if(.not. allocated(quick_scratch%hold3)) allocate(quick_scratch%hold3(nbasis, NBSuse))
+        if(.not. allocated(quick_scratch%hold4)) allocate(quick_scratch%hold4(NBSuse, NBSuse))
+     end if
+
     !initialize values to zero
-    V2          = 0.0d0
     B           = 0.0d0
     BSAVE       = 0.0d0
     BCOPY       = 0.0d0
@@ -80,16 +84,15 @@ contains
     RHS         = 0.0d0
     allerror    = 0.0d0
     alloperator = 0.0d0
-
   end subroutine allocate_quick_scf 
 
-  subroutine deallocate_quick_scf(ierr)
 
+  subroutine deallocate_quick_scf(ierr)
+    use quick_scratch_module, only: quick_scratch
     implicit none
 
     integer, intent(inout) :: ierr
 
-    if(allocated(V2))          deallocate(V2, stat=ierr)
     if(allocated(B))           deallocate(B, stat=ierr)
     if(allocated(BSAVE))       deallocate(BSAVE, stat=ierr)
     if(allocated(BCOPY))       deallocate(BCOPY, stat=ierr)
@@ -99,22 +102,29 @@ contains
     if(allocated(allerror))    deallocate(allerror, stat=ierr)
     if(allocated(alloperator)) deallocate(alloperator, stat=ierr)
 
+    if(allocated(quick_scratch%hold3)) deallocate(quick_scratch%hold3)
+    if(allocated(quick_scratch%hold4)) deallocate(quick_scratch%hold4)
   end subroutine deallocate_quick_scf
 
+
+  !-------------------------------------------------------
+  ! this subroutine is to do scf job for restricted system
+  !-------------------------------------------------------
   ! Ed Brothers. November 27, 2001
   ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
   subroutine scf(ierr)
-     !-------------------------------------------------------
-     ! this subroutine is to do scf job for restricted system
-     !-------------------------------------------------------
      use allmod
-     use quick_molden_module, only: quick_molden
+
      implicit none
+
+     integer, intent(inout) :: ierr
   
      logical :: done
-     integer, intent(inout) :: ierr
-     integer :: jscf,ierr1
-     done=.false.
+     integer :: jscf
+     integer :: fail
+     integer :: ierr1
+
+     done = .false.
 
      if (quick_method%QCint) then
         call quick_open(iIntFile,intFileName,'U','F','R',.false.,ierr1)
@@ -136,7 +146,6 @@ contains
      ! number of scfcycles has been reached.
      jscf=0
   
-  
      ! Alessandro GENONI 03/21/2007
      ! ECP integrals computation exploiting Alexander V. Mitin Subroutine
      ! Note: the integrals are stored in the array ecp_int that corresponds
@@ -146,54 +155,44 @@ contains
      ! if not direct SCF, generate 2e int file
      ! if (quick_method%nodirect) call aoint
   
-     if (quick_method%diisscf .and. .not. quick_method%divcon) call electdiis(jscf,ierr) ! normal scf
+     if (quick_method%diisscf .and. .not. quick_method%divcon) call electdiis(jscf,ierr)  ! normal scf
      if (quick_method%diisscf .and. quick_method%divcon) call electdiisdc(jscf,ierr)     ! div & con scf
-     if (quick_method%diisscf .and. quick_method%dcmp2only) call electdiisdc(jscf,ierr)  ! perform one DC-SCF step 
+     if (quick_method%diisscf .and. quick_method%dcmp2only) call electdiisdc(jscf,ierr)  ! perform one DC-SCF step
      ! In case of DCMP2only method program needs to finish canonical SCF cycle first and
-     ! then perform one DC-SCF step to get subsystem orbitals for DC-MP2.
-  
-     jscf=jscf+1
+     ! then perform one DC-SCF step to get subsystem orbitals for DC-MP2.     jscf=jscf+1
   
      if (quick_method%debug)  call debug_SCF(jscf)
-  
   end subroutine scf
   
+
   ! electdiis
   !-------------------------------------------------------
-  ! 11/02/2010 Yipu Miao: Add paralle option for HF calculation
+  ! 11/02/2010 Yipu Miao: Add parallel option for HF calculation
   subroutine electdiis(jscf,ierr)
-  
      use allmod
      use quick_gridpoints_module
      use quick_scf_operator_module, only: scf_operator
      use quick_oei_module, only: bCalc1e 
      use quick_lri_module, only: computeLRI
      use quick_molden_module, only: quick_molden
-
 #ifdef CEW 
      use quick_cew_module, only : quick_cew
 #endif
-
-#if defined HIP || defined HIP_MPIV
-     use quick_rocblas_module, only: rocDGEMM
-#if defined WITH_MAGMA
-     use quick_magma_module, only: magmaDIAG
-#else
-#if defined WITH_ROCSOLVER
-     use quick_rocsolver_module, only: rocDIAG
-#endif
-#endif
-#endif
-#ifdef MPIV
+     use quick_mpi_module, only: master
+#if defined(MPIV)
+     use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
      use mpi
 #endif
+     use quick_io_module, only: chk_update
 
      implicit none
-  
+ 
      ! variable inputed to return
-     integer :: jscf                ! scf interation
+     integer :: jscf                ! scf iteration
      integer, intent(inout) :: ierr
   
+     logical :: LShift = .false.    ! flag if level shifting is being performed
+
      logical :: diisdone = .false.  ! flag to indicate if diis is done
      logical :: deltaO   = .false.  ! delta Operator
      integer :: idiis = 0           ! diis iteration
@@ -201,13 +200,22 @@ contains
      integer :: lsolerr = 0
      integer :: IDIIS_Error_Start, IDIIS_Error_End
      double precision :: BIJ,DENSEJI,errormax,OJK,temp
-     double precision :: Sum2Mat,rms
-     integer :: I,J,K,L,IERROR
+     double precision :: Sum2Mat,rms, shift, bandgap
+     integer :: I,J,K,L,IERROR, homo, fail
   
-     double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
-     double precision :: PRMS,PCHANGE, tmp
+      double precision :: oldEnergy=0.0d0,E1e ! energy for last iteration, and 1e-energy
+      double precision :: PRMS,PCHANGE, tmp
 
-     double precision :: c_coords(3),c_zeta,c_chg
+      double precision :: c_coords(3),c_zeta,c_chg
+
+      ! Pointers to select the correct operator and scratch arrays depending on
+      ! whether near-linear dependency has reduced the basis (NBSuse < nbasis).
+      ! operator_ptr -> oeff (NBSuse x NBSuse) or o (nbasis x nbasis, used as NBSuse x NBSuse)
+      ! scratch_sq   -> hold4 or hold2  (NBSuse x NBSuse square scratch)
+      ! scratch_rect -> hold3 or hold   (nbasis x NBSuse rectangular scratch)
+      double precision, pointer :: operator_ptr(:,:)
+      double precision, pointer :: scratch_sq(:,:)
+      double precision, pointer :: scratch_rect(:,:)
 
      ! For QC output
      integer :: npair,ns8,ijkl, ijkl2
@@ -251,7 +259,22 @@ contains
      ! As in scf.F, each step wil be reviewed as we pass through the code.
      !---------------------------------------------------------------------------
   
-     call allocate_quick_scf(ierr)
+     if(master) call allocate_quick_scf(ierr)
+
+     ! Set up pointers so the DIIS loop uses a single code path regardless of
+     ! whether near-linear dependency has reduced the basis (NBSuse < nbasis):
+     !   operator_ptr -> oeff (NBSuse x NBSuse) or o  (treated as NBSuse x NBSuse)
+     !   scratch_sq   -> hold4 or hold2  (NBSuse x NBSuse square scratch)
+     !   scratch_rect -> hold3 or hold   (nbasis x NBSuse rectangular scratch)
+     if(NBSuse .ne. nbasis) then
+        operator_ptr  => quick_qm_struct%oeff
+        scratch_sq    => quick_scratch%hold4
+        scratch_rect  => quick_scratch%hold3
+     else
+        operator_ptr  => quick_qm_struct%o
+        scratch_sq    => quick_scratch%hold2
+        scratch_rect  => quick_scratch%hold
+     end if
   
      if(master) then
         write(ioutfile,'(40x," SCF ENERGY")')
@@ -277,21 +300,21 @@ contains
      if (bMPI) call MPI_setup_hfoperator
      !-------------- END MPI / ALL NODE -----------
 #endif
-  
+
 #ifdef MPIV
      if (bMPI) then
-  !      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+  !      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_qm_struct%co,nbasis*NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_qm_struct%E,NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BARRIER(quick_comm,quick_mpi_error)
      endif
 #endif
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-     if(quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+     if(quick_method%bGPU) then
   
         if (quick_method%DFT &
 #ifdef CEW
@@ -306,7 +329,7 @@ contains
         quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2, quick_method%DMCutoff, &
         quick_method%XCCutoff)
   
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
         call mgpu_get_xclb_time(timer_cumer%TDFTlb)
 #endif
   
@@ -323,8 +346,7 @@ contains
 !
 !     call computeLRI(c_coords,c_zeta,c_chg)
 !-----------------------------------------------
-
-  
+ 
      bCalc1e = .true.
      diisdone = .false.
      deltaO = .false.
@@ -337,8 +359,7 @@ contains
         !--------------------------------------------
         ! 1)  Form the operator matrix for step i, O(i).
         !--------------------------------------------
-        !temp=Sum2Mat(quick_qm_struct%dense,quick_qm_struct%s,nbasis)
-  
+
         ! Determine dii cycle and scf cycle
         idiis=idiis+1
         jscf=jscf+1
@@ -349,6 +370,9 @@ contains
            IDIISfinal=quick_method%maxdiisscf; iidiis=1
         endif
 
+        ! Level shift is not performed by default
+        LShift = .false.
+  
         !-----------------------------------------------
         ! Before Delta Densitry Matrix, normal operator is implemented here
         !-----------------------------------------------
@@ -401,79 +425,52 @@ contains
            !-----------------------------------------------
            ! The matrix multiplier comes from Steve Dixon. It calculates
            ! C = Transpose(A) B.  Thus to utilize this we have to make sure that the
-           ! A matrix is symetric. First, calculate DENSE*S and store in the scratch
-           ! matrix hold.Then calculate O*(DENSE*S).  As the operator matrix is symmetric, the
-           ! above code can be used. Store this (the ODS term) in the all error
-           ! matrix.
+           ! A matrix is symmetric. First, calculate DENSE*S and store in the scratch
+           ! matrix hold. Then calculate O*(DENSE*S). Store this (the ODS term) in hold2.
   
            ! The first part is ODS
-  
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-                 nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-  
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#else
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-                 nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-  
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#endif
-  
-           allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
-  
-           ! Calculate D O. then calculate S (do) and subtract that from the allerror matrix.
-           ! This means we now have the e(i) matrix.
-           ! allerror=ODS-SDO
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-                 nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-  
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#else
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-                 nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#endif
-  
+
+           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
+                 nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold, nbasis)
+   
+           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
+                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2, nbasis)
+
+            ! Calculate D O, then calculate -S*(DO) and add to hold2.
+            ! This means we now have the e(i) matrix.
+            ! hold2 = ODS (stored above); we add -SDO below to get e = ODS - SDO
+            call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
+                  nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold, nbasis)
+            call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, -1.0d0, quick_qm_struct%s, &
+                  nbasis, quick_scratch%hold, nbasis, 1.0d0, quick_scratch%hold2, nbasis)
+
+           ! hold2 now contains e(i) = ODS - SDO
            errormax = 0.d0
            do I=1,nbasis
               do J=1,nbasis
-                 allerror(J,I,iidiis) = allerror(J,I,iidiis) - quick_scratch%hold2(J,I) !e=ODS=SDO
-                 errormax = max(allerror(J,I,iidiis),errormax)
+                 errormax = max(quick_scratch%hold2(J,I), errormax)
               enddo
            enddo
-  
+
            !-----------------------------------------------
            ! 3)  Move e to an orthogonal basis.  e'(i) = Transpose[X] .e(i). X
            ! X is symmetric, but we do not know anything about the symmetry of e.
            ! The easiest way to do this is to calculate e(i) . X , store
-           ! this in HOLD, and then calculate Transpose[X] (.e(i) . X)
+           ! this in a scratch matrix, and then calculate Transpose[X] . (e(i) . X).
+           !
+           ! scratch_rect(nbasis,NBSuse) is used as the rectangular intermediate and
+           ! scratch_sq(NBSuse,NBSuse) receives the result.
            !-----------------------------------------------
-           quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
-  
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-  
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#else
-  
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-  
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#endif
-           allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
+            call MAT_DGEMM ('n', 'n', nbasis, NBSuse, nbasis, 1.0d0, quick_scratch%hold2, &
+                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, scratch_rect, nbasis)
+
+            call MAT_DGEMM ('t', 'n', NBSuse, NBSuse, nbasis, 1.0d0, quick_qm_struct%x, &
+                  nbasis, scratch_rect, nbasis, 0.0d0, scratch_sq, NBSuse)
+
+            allerror(:,:,iidiis) = scratch_sq(:,:)
+
+           ! allerror matrix contains the error in orthogonal basis.
+           ! allerror has dimension NBSuse,NBSuse,iidiis
            !-----------------------------------------------
            ! 4)  Store the e'(I) and O(i).
            ! e'(i) is already stored.  Simply store the operator matrix in
@@ -523,16 +520,12 @@ contains
               enddo
            endif
   
-           ! Now copy the current matrix into HOLD2 transposed.  This will be the
-           ! Transpose[ej] used in B(i,j) = Trace(e(i) Transpose(e(j)))
-           quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
-  
-           do I=1,IDIISfinal
-              ! Copy the transpose of error matrix I into HOLD.
-              quick_scratch%hold(:,:) = allerror(:,:,I) 
-  
-              ! Calculate and sum together the diagonal elements of e(i) Transpose(e(j))).
-              BIJ=Sum2Mat(quick_scratch%hold2,quick_scratch%hold,nbasis)
+            ! Copy the current error slice (j=iidiis) into a scratch array.
+            scratch_sq(:,:) = allerror(:,:,iidiis)
+
+            do I=1,IDIISfinal
+               ! Calculate and sum together the diagonal elements of e(i) Transpose(e(j))).
+               BIJ=Sum2Mat(scratch_sq,allerror(:,:,I),NBSuse)
               
               ! Now place this in the B matrix.
               if(idiis.le.quick_method%maxdiisscf)then
@@ -549,11 +542,12 @@ contains
            enddo
   
            if(idiis.gt.quick_method%maxdiisscf)then
-              quick_scratch%hold(:,:) = allerror(:,:,1)
-              do J=1,quick_method%maxdiisscf-1
-                 allerror(:,:,J) = allerror(:,:,J+1)
-              enddo
-              allerror(:,:,quick_method%maxdiisscf) = quick_scratch%hold(:,:)
+              ! Roll allerror ring buffer: save slot 1, shift down, restore to last slot.
+               scratch_sq(:,:) = allerror(:,:,1)
+               do J=1,quick_method%maxdiisscf-1
+                  allerror(:,:,J) = allerror(:,:,J+1)
+               enddo
+               allerror(:,:,quick_method%maxdiisscf) = scratch_sq(:,:)
            endif
   
            ! Now that all the BIJ elements are in place, fill in all the column
@@ -636,86 +630,68 @@ contains
               enddo
               
            endif
-           !-----------------------------------------------
-           ! 8) Diagonalize the operator matrix to form a new density matrix.
-           ! First you have to transpose this into an orthogonal basis, which
-           ! is accomplished by calculating Transpose[X] . O . X.
-           !-----------------------------------------------
-#if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
-  
-          RECORD_TIME(timer_begin%TDiag)
-          call cuda_diag(quick_qm_struct%o, quick_qm_struct%x, quick_scratch%hold,&
-                quick_qm_struct%E, quick_qm_struct%idegen, &
-                quick_qm_struct%vec, quick_qm_struct%co, &
-                V2, nbasis)
-           RECORD_TIME(timer_end%TDiag)
-  
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
-#else
+            !-----------------------------------------------
+            ! 8) Diagonalize the operator matrix to form a new density matrix.
+            ! First you have to transpose this into an orthogonal basis, which
+            ! is accomplished by calculating Transpose[X] . O . X.
+            ! scratch_rect(nbasis,NBSuse) is used as the rectangular intermediate;
+            ! operator_ptr(NBSuse,NBSuse) receives the result.
+            !-----------------------------------------------
+            call MAT_DGEMM ('n', 'n', nbasis, NBSuse, nbasis, 1.0d0, quick_qm_struct%o, &
+                  nbasis, quick_qm_struct%x, nbasis, 0.0d0, scratch_rect, nbasis)
 
-#if defined HIP || defined HIP_MPIV
+            call MAT_DGEMM ('t', 'n', NBSuse, NBSuse, nbasis, 1.0d0, quick_qm_struct%x, &
+                  nbasis, scratch_rect, nbasis, 0.0d0, operator_ptr, NBSuse)
 
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+            !-----------------------------------------------
+            !  Level shifting if the DIIS error is large.
+            !  operator_ptr(NBSuse,NBSuse) is rotated into the eigenbasis via
+            !  scratch_sq(NBSuse,NBSuse), virtual eigenvalues are shifted, then
+            !  rotated back.
+            !-----------------------------------------------
+            homo = quick_molspec%nelec/2
+            bandgap = quick_qm_struct%E(homo+1) - quick_qm_struct%E(homo)
+            if(idiis .ge. quick_method%LShift_cycle .and. errormax .gt. quick_method%LShift_err .and. &
+               quick_method%LShift_gap .gt. bandgap)then
+               LShift = .true.
+               call MAT_DGEMM ('n', 'n', NBSuse, NBSuse, NBSuse, 1.0d0, operator_ptr, &
+                    NBSuse, quick_qm_struct%oldvec, NBSuse, 0.0d0, scratch_sq, NBSuse)
 
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
+               call MAT_DGEMM ('t', 'n', NBSuse, NBSuse, NBSuse, 1.0d0, quick_qm_struct%oldvec, &
+                    NBSuse, scratch_sq, NBSuse, 0.0d0, operator_ptr, NBSuse)
 
-#else
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-                 nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-  
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
-#endif  
-           ! Now diagonalize the operator matrix.
-           RECORD_TIME(timer_begin%TDiag)
-#if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
-           call magmaDIAG(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
-#else
-#if defined LAPACK || defined MKL
-           call DIAGMKL(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
-#else
-           call DIAG(nbasis,quick_qm_struct%o,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%E,&
-                 quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
-#endif
-!        do i = 1,nbasis
-!          do j=1,nbasis
-!            write(*,*) "DSYEVD", i, j, quick_qm_struct%o(j,i), quick_qm_struct%vec(j,i), quick_qm_struct%E(j)
-!          enddo
-!        end do
+               shift = quick_method%LShift_gap - bandgap
+               do I=homo+1,NBSuse
+                  operator_ptr(I,I) = operator_ptr(I,I) + shift
+               enddo
+            endif
 
-#endif
-           RECORD_TIME(timer_end%TDiag)
-  
-#endif
-  
+            ! Now diagonalize the operator matrix (operator_ptr points to oeff or o).
+            RECORD_TIME(timer_begin%TDiag)
+
+            call MAT_DIAG(operator_ptr, NBSuse, NBSuse, quick_qm_struct%E, quick_qm_struct%vec)
+
+            RECORD_TIME(timer_end%TDiag)
+
            ! Calculate C = XC' and form a new density matrix.
            ! The C' is from the above diagonalization.  Also, save the previous
            ! Density matrix to check for convergence.
            !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'
-  
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  
-           call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
-#else
-           call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-                 nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
-#endif
-  
-           quick_scratch%hold(:,:) = quick_qm_struct%dense(:,:) 
-  
+           ! scratch_sq(NBSuse,NBSuse) is used as intermediate when level-shifting.
+           if(LShift)then
+              call MAT_DGEMM ('n', 'n', NBSuse, NBSuse, NBSuse, 1.0d0, quick_qm_struct%oldvec, &
+                    NBSuse, quick_qm_struct%vec, NBSuse, 0.0d0, scratch_sq, NBSuse)
+              call MAT_DGEMM ('n', 'n', nbasis, NBSuse, NBSuse, 1.0d0, quick_qm_struct%x, &
+                    nbasis, scratch_sq, NBSuse, 0.0d0, quick_qm_struct%co, nbasis)
+              quick_qm_struct%oldvec(:,:) = scratch_sq(:,:)
+           else
+               call MAT_DGEMM ('n', 'n', nbasis, NBSuse, NBSuse, 1.0d0, quick_qm_struct%x, &
+                     nbasis, quick_qm_struct%vec, NBSuse, 0.0d0, quick_qm_struct%co,nbasis)
+               quick_qm_struct%oldvec(:,:) = quick_qm_struct%vec(:,:)
+           endif
            ! Form new density matrix using MO coefficients
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-           call GPU_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
+           call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
                  nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)         
-#else
-           call DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
-                 nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)         
-#endif
-  
            RECORD_TIME(timer_end%TDII)
   
            ! Now check for convergence. pchange is the max change
@@ -723,10 +699,10 @@ contains
            PCHANGE=0.d0
            do I=1,nbasis
               do J=1,nbasis
-                 PCHANGE=max(PCHANGE,abs(quick_qm_struct%dense(J,I)-quick_scratch%hold(J,I)))
+                 PCHANGE=max(PCHANGE,abs(quick_qm_struct%dense(J,I)-quick_qm_struct%denseold(J,I)))
               enddo
            enddo
-           PRMS = rms(quick_qm_struct%dense,quick_scratch%hold,nbasis)
+           PRMS = rms(quick_qm_struct%dense,quick_qm_struct%denseold,nbasis)
   
            tmp = quick_method%integralCutoff
            call adjust_cutoff(PRMS,PCHANGE,quick_method,ierr)  !from quick_method_module
@@ -741,25 +717,13 @@ contains
         !--------------- END MPI/ALL NODES -------------------------------------
   
         if (master) then
-  
-#ifdef USEDAT
-           ! open data file then write calculated info to dat file
-           SAFE_CALL(quick_open(iDataFile, dataFileName, 'R', 'U', 'R',.true.,ierr)
-           rewind(iDataFile)
-           call dat(quick_qm_struct, iDataFile)
-           close(iDataFile)
-#endif
+
+          if (quick_method%writechk) then
+            call chk_update('dense', nbasis, nbasis, quick_qm_struct%dense)
+          end if
+
            current_diis=mod(idiis-1,quick_method%maxdiisscf)
            current_diis=current_diis+1
-
-           ! DELETE ME
-           !write(*,'(A,3es20.10)')"SCF Iter",quick_qm_struct%Ecore,quick_qm_struct%Eel, & ! DELETE ME
-           !& quick_qm_struct%Eel+quick_qm_struct%Ecore ! DELETE ME
-
-           !do i=1,10 ! DELETE ME
-           !   write(6,'(A,I3,f20.10)')"MO",i,quick_qm_struct%E(i) ! DELETE ME
-           !end do ! DELETE ME
-           
            
            write (ioutfile,'("|",I3,1x)',advance="no") jscf
            if(quick_method%printEnergy)then
@@ -778,6 +742,7 @@ contains
            write (ioutfile,'(E10.4,2x)',advance="no") errormax
            write (ioutfile,'(E10.4,2x,E10.4)')  PRMS,PCHANGE
   
+           if(LShift) write (ioutfile,'("|   ***  Level shifting applied  ( HOMO-LUMO gap = ",F6.3," au ) ***")')bandgap
            if (lsolerr /= 0) write (ioutfile,'(" DIIS FAILED !!", &
                  & " PERFORM NORMAL SCF. (NOT FATAL.)")')
   
@@ -842,30 +807,30 @@ contains
   
 #ifdef MPIV
         if (bMPI) then
-           call MPI_BCAST(diisdone,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_method%scf_conv,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+           call MPI_BCAST(diisdone,1,mpi_logical,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_method%scf_conv,1,mpi_logical,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_qm_struct%co,nbasis*NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_qm_struct%E,NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BARRIER(quick_comm,quick_mpi_error)
         endif
 #endif
         if (quick_method%debug)  call debug_SCF(jscf)
      enddo
-  
-#if (defined CUDA || defined CUDA_MPIV) && !defined(HIP)
+
      if(master .and. write_molden) then 
          quick_molden%nscf_snapshots(quick_molden%iexport_snapshot)=jscf 
      endif
 
+#if (defined CUDA || defined CUDA_MPIV) && !defined(HIP)
      ! sign of the coefficient matrix resulting from cusolver is not consistent
      ! with rest of the code (e.g. gradients). We have to correct this.
-     call scalarMatMul(quick_qm_struct%co,nbasis,nbasis,-1.0d0)
+     call scalarMatMul(quick_qm_struct%co,NBSuse,nbasis,-1.0d0)
 #endif
   
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
     if (quick_method%DFT &
 #ifdef CEW
        .or. quick_cew%use_cew &
@@ -879,7 +844,7 @@ contains
     endif
 #endif
   
-     call deallocate_quick_scf(ierr)
+     if(master) call deallocate_quick_scf(ierr)
   
      return
   end subroutine electdiis

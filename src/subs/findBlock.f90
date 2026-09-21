@@ -36,7 +36,7 @@ function check_char(line,ini,ifi)
 
       check_char=0
       do i=ini,ifi
-         if (line(i:i).ne.' ') check_char=check_char+1
+         if (line(i:i).ne.' ' .and. line(i:i).ne.char(9)) check_char=check_char+1
       enddo
 
       return

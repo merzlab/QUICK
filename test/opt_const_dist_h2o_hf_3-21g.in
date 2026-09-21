@@ -1,0 +1,7 @@
+HF BASIS=3-21G CONSTRAIN cutoff=1.0e-9 denserms=1.0e-6 OPTIMIZE DIPOLE
+
+O  0.0 0.0 0.0
+H  1.0 0.0 0.0
+H  0.0 1.0 0.0
+
+DISTANCE 1 2

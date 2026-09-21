@@ -1,11 +1,10 @@
-cmake_minimum_required(VERSION 3.9.0) # version 3.9.0 needed for FindMPI and FindOpenMP versions which provide imported targets
+cmake_minimum_required(VERSION 3.12.0) # version 3.9.0 needed for FindMPI and FindOpenMP versions which provide imported targets
 
-project(quick LANGUAGES NONE VERSION 24.03)
+project(quick LANGUAGES NONE VERSION 26.03)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/quick-cmake)
 
 if(NOT INSIDE_AMBER)
-
 	# initialization and include paths
 	#-------------------------------------------------------------
 	include(cmake/AmberBuildSystemInit.cmake NO_POLICY_SCOPE)
@@ -33,7 +32,17 @@ if(NOT INSIDE_AMBER)
 	set(BUNDLE_IDENTIFIER org.merzlab.quick)
 	set(BUNDLE_SIGNATURE QUIK)
 	include(Packaging)
+endif()
 
+# HDF5
+option(HDF5 "Build with restart capability using HDF5." FALSE)
+if(HDF5)
+    find_package(HDF5 REQUIRED COMPONENTS Fortran HL)
+    if(HDF5_FOUND)
+        message(STATUS "Found HDF5: ${HDF5_VERSION}")
+    else()
+        message(FATAL_ERROR "Restart support via HDF5 is requested but was not found. Please, make sure an HDF5 library (HL, Fortran bindings) is installed.")
+    endif()
 endif()
 
 option(ENABLEF "Enables the support for f functions in the ERI code." FALSE)
@@ -51,19 +60,42 @@ set_property(DIRECTORY . PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>:DEBUG>)
 
 option(WARNINGS "Enable warnings." FALSE)
 
-set(NO_OPT_FFLAGS -O0)
-set(NO_OPT_CFLAGS -O0)
-set(NO_OPT_CXXFLAGS -O0)
-
+set(CMAKE_Fortran_FLAGS "")
 set(CMAKE_C_FLAGS "")
 set(CMAKE_CXX_FLAGS "")
-set(CMAKE_Fortran_FLAGS "")
+
+set(OPT_FFLAGS "")
+set(OPT_CFLAGS "")
+set(OPT_CXXFLAGS "")
+
+set(NO_OPT_FFLAGS "")
+set(NO_OPT_CFLAGS "")
+set(NO_OPT_CXXFLAGS "")
+
+list(APPEND NO_OPT_FFLAGS "-O0")
+list(APPEND NO_OPT_CFLAGS "-O0")
+list(APPEND NO_OPT_CXXFLAGS "-O0")
+
+
+# cache Apple ARM CPU model for subsequent compiler checks
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
+    execute_process(COMMAND sysctl machdep.cpu.brand_string OUTPUT_VARIABLE APPLE_CPU_INFO)
+
+    string(REGEX MATCH "(M[0-9]*)" _ "${APPLE_CPU_INFO}")
+    set(APPLE_CPU_MODEL ${CMAKE_MATCH_1})
+endif()
+
 
 # GNU
 # --------------------------------------------------------------------
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
-
-    set(OPT_CFLAGS -O2 -mtune=native)
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
+        # switch off mtune - it must be supported by the underlying clang compiler
+        # we have no way of checking for compatible gnu/clang versions here
+        list(APPEND OPT_CFLAGS "-O2")
+    else()
+        list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
+    endif()
 
     if (WARNINGS)
 	add_flags(C -Wall -Wno-unused-function -Wno-unknown-pragmas)
@@ -76,12 +108,16 @@ if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 	    add_flags(C -Wno-uninitialized -Wno-maybe-uninitialized)
 	endif()
     endif()
-    
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    
-    set(OPT_CXXFLAGS -O2 -mtune=native)
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
+        # switch off mtune - it must be supported by the underlying clang compiler
+        # we have no way of checking for compatible gnu/clang versions here
+        list(APPEND OPT_CXXFLAGS "-O2")
+    else()
+        list(APPEND OPT_CXXFLAGS "-O2" "-mtune=native")
+    endif()
 
     if (WARNINGS)
 	add_flags(CXX -Wall -Wno-unused-function -Wno-unknown-pragmas)
@@ -101,22 +137,38 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	    add_flags(CXX -Wno-uninitialized -Wno-maybe-uninitialized)
 	endif()
     endif()
-
 endif()
 
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
 
-    set(OPT_FFLAGS -O2 -mtune=native)
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
+
+        if("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "AppleClang")
+            if( ( "${APPLE_CPU_MODEL}" MATCHES "M1" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 15.0.0 )
+                OR  ( "${APPLE_CPU_MODEL}" MATCHES "M2" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0.0 )
+                OR  ( "${APPLE_CPU_MODEL}" MATCHES "M3" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 17.0.0 )
+                OR  ( "${APPLE_CPU_MODEL}" MATCHES "M4" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 20.1.0 ) )
+                list(APPEND OPT_FFLAGS "-O2" "-mtune=native")
+            else()
+                list(APPEND OPT_FFLAGS "-O2")
+            endif()
+        else()
+            # switch off mtune - it must be supported by the underlying clang compiler
+            # we are using GNU C/C++ compiler and have no way of checking for compatible gnu/clang versions here
+            list(APPEND OPT_FFLAGS "-O2")
+        endif()
+
+    else()
+        list(APPEND OPT_FFLAGS "-O2" "-mtune=native")
+    endif()
 
     add_flags(Fortran -ffree-line-length-none)
 
     if (WARNINGS)
 	add_flags(Fortran -Wall -Wno-tabs -Wno-unused-function -ffree-line-length-none -Wno-unused-dummy-argument)
-    
 	if(NOT UNUSED_WARNINGS)
 	    add_flags(Fortran -Wno-unused-variable)
 	endif()
-		
 	if(NOT UNINITIALIZED_WARNINGS)
 	    add_flags(Fortran -Wno-maybe-uninitialized)
 	endif()	
@@ -129,7 +181,68 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
     endif()
 
     add_definitions(-DGNU)
+endif()
 
+
+# LLVM (Clang C/C++, Flang Fortran)
+# --------------------------------------------------------------------
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "AppleClang")
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
+	    if( ( "${APPLE_CPU_MODEL}" STREQUAL "M1" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 15.0.0 )
+		    OR ( "${APPLE_CPU_MODEL}" STREQUAL "M2" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0.0 )
+		    OR ( "${APPLE_CPU_MODEL}" STREQUAL "M3" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 17.0.0)
+		    OR ( "${APPLE_CPU_MODEL}" STREQUAL "M4" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 20.1.0 ) )
+		    list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
+	    else()
+		    list(APPEND OPT_CFLAGS "-O2")
+	    endif()
+    else()
+        list(APPEND OPT_CFLAGS "-O2" "-mtune=native")
+    endif()
+
+    if (WARNINGS)
+	add_flags(C -Wall -Wno-unused-function)
+
+	if(NOT UNUSED_WARNINGS)
+	    add_flags(C -Wno-unused-variable -Wno-unused-but-set-variable)
+	endif()
+
+	if(NOT UNINITIALIZED_WARNINGS)
+	    add_flags(C -Wno-uninitialized -Wno-maybe-uninitialized)
+	endif()
+    endif()
+endif()
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND ${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "arm64")
+	    if( ( "${APPLE_CPU_MODEL}" STREQUAL "M1" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 15.0.0 )
+		    OR ( "${APPLE_CPU_MODEL}" STREQUAL "M2" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0.0 )
+		    OR ( "${APPLE_CPU_MODEL}" STREQUAL "M3" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 17.0.0)
+		    OR ( "${APPLE_CPU_MODEL}" STREQUAL "M4" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 20.1.0 ) )
+		    list(APPEND OPT_CXXFLAGS "-O2" "-mtune=native")
+	    else()
+		    list(APPEND OPT_CXXFLAGS "-O2")
+	    endif()
+    else()
+        list(APPEND OPT_CXXFLAGS "-O2" "-mtune=native")
+    endif()
+
+    if (WARNINGS)
+	add_flags(CXX -Wall -Wno-unused-function)
+
+	if(NOT UNUSED_WARNINGS)
+	    add_flags(CXX -Wno-unused-variable -Wno-unused-but-set-variable)
+	endif()
+
+	if(NOT UNINITIALIZED_WARNINGS)
+	    add_flags(CXX -Wno-uninitialized -Wno-maybe-uninitialized)
+	endif()
+    endif()
+endif()
+
+if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "LLVMFlang")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp")
+    list(APPEND OPT_FFLAGS "-O2" "-mtune=native")
 endif()
 
 
@@ -137,53 +250,92 @@ endif()
 # --------------------------------------------------------------------
 
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")
-
     set(CMAKE_C_FLAGS_DEBUG "-g -debug all -traceback")
-    
-    set(OPT_CFLAGS -ip -O2 -xHost)
-		
+    list(APPEND OPT_CFLAGS "-ip" "-O2" "-xHost")
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-
     set(CMAKE_CXX_FLAGS_DEBUG "-g -debug all -traceback")
-	
-    set(OPT_CXXFLAGS -ip -O2 -xHost)
-
+    list(APPEND OPT_CXXFLAGS "-ip" "-O2" "-xHost")
 endif()
 
 if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
-    
     set(CMAKE_Fortran_FLAGS_DEBUG "-g -debug all -traceback")
-    set(CMAKE_Fortran_FLAGS "-cpp -diag-disable 8291")
-	
-    set(OPT_FFLAGS -ip -O2 -xHost)
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp -diag-disable 8291")
+    list(APPEND OPT_FFLAGS "-ip" "-O2" "-xHost")
 
     if(WARNINGS)
 	add_flags(Fortran "-warn all" "-warn nounused")
-	    
 	option(IFORT_CHECK_INTERFACES "If enabled and Intel Fortran is in use, then ifort will check that types passed to functions are the correct ones, and produce warnings or errors for mismatches." FALSE)
-		
 	if(NOT IFORT_CHECK_INTERFACES)
-			
 	    # disable errors from type mismatches
 	    add_flags(Fortran -warn nointerfaces)
 	endif()
     endif()		
-		
 endif()
 
 
-
-
-# PGI, CRAY, CLANG: NOT SUPPORTED
+# IntelLLVM
 # --------------------------------------------------------------------
-if(${COMPILER} STREQUAL PGI)
-    message(FATAL_ERROR "PGI compiler not supported by QUICK.")
-elseif(${COMPILER} STREQUAL CRAY)
-    message(FATAL_ERROR "CRAY compiler not supported by QUICK.")
-#elseif(${COMPILER} STREQUAL CLANG)
-#    message(FATAL_ERROR "CLANG compiler not supported by QUICK.")
+
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "IntelLLVM")
+    set(CMAKE_C_FLAGS_DEBUG "-g -debug all")
+    list(APPEND OPT_CFLAGS "-O2")
+endif()
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "IntelLLVM")
+    set(CMAKE_CXX_FLAGS_DEBUG "-g -debug all")
+    list(APPEND OPT_CXXFLAGS "-O2")
+endif()
+
+if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "IntelLLVM")
+    set(CMAKE_Fortran_FLAGS_DEBUG "-g -debug all")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fpp -diag-disable 8291")
+    list(APPEND OPT_FFLAGS "-O2")
+
+    if(WARNINGS)
+	add_flags(Fortran "-warn all" "-warn nounused")
+	option(IFORT_CHECK_INTERFACES "If enabled and Intel Fortran is in use, then ifort will check that types passed to functions are the correct ones, and produce warnings or errors for mismatches." FALSE)
+		
+	if(NOT IFORT_CHECK_INTERFACES)
+	    # disable errors from type mismatches
+	    add_flags(Fortran -warn nointerfaces)
+	endif()
+    endif()		
+endif()
+
+# PGI or NVHPC
+# --------------------------------------------------------------------
+
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "PGI" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "NVHPC")
+    list(APPEND OPT_CFLAGS "-O2")
+endif()
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "PGI" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "NVHPC")
+    list(APPEND OPT_CXXFLAGS "-O2")
+endif()
+
+if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "PGI" OR "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "NVHPC")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp")
+    list(APPEND OPT_FFLAGS "-fast" "-O3")
+endif()
+
+
+# CRAY
+# --------------------------------------------------------------------
+
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "CRAY")
+    list(APPEND OPT_CFLAGS "-O2" "-funroll-loops" "-ffast-math")
+#    list(APPEND OPT_CFLAGS "-Ofast" "-funroll-loops")
+endif()
+
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "CRAY")
+    list(APPEND OPT_CXXFLAGS "-O2" "-funroll-loops" "-ffast-math")
+#    list(APPEND OPT_CXXFLAGS "-Ofast" "-funroll-loops")
+endif()
+
+if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "CRAY")
+#    list(APPEND OPT_FFLAGS "-O3" "-hfp3")
 endif()
 
 
@@ -290,7 +442,7 @@ if(INSIDE_AMBER)
 	install(DIRECTORY test USE_SOURCE_PERMISSIONS DESTINATION AmberTools/src/quick COMPONENT Tests ${TESTS_EXCLUDE_OPTION})
 
         # install runtest script
-        install(PROGRAMS tools/runtest DESTINATION AmberTools/src/quick COMPONENT Tests)
+        install(PROGRAMS tools/runtest DESTINATION AmberTools/src/quick COMPONENT Tests ${TESTS_EXCLUDE_OPTION})
 
 else()
 	# Standalone install

@@ -59,7 +59,7 @@
 
   KEYWORD=HF  BASIS=6-31G CUTOFF=1.0E-9 DENSERMS=1.0E-6  ZMAKE ENERGY DIPOLE CHARGE=-3                                                                                                                            
  ============== JOB CARD =============
- METHOD = HATREE FOCK
+ METHOD = HARTREE FOCK
  DIRECT SCF 
  SAD INITAL GUESS 
  USE DIIS SCF

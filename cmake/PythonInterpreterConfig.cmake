@@ -32,7 +32,7 @@ If you do not want to download Miniconda, run cmake again with DOWNLOAD_MINICOND
 	endif()
 
 endif()
-	
+
 
 # --------------------------------------------------------------------
 # Detect system Anaconda
@@ -142,9 +142,19 @@ Either enable DOWNLOAD_MINICONDA, or set PYTHON_EXECUTABLE to point to a Python 
 		set(HAS_PYTHON FALSE)
 	endif()
 	
-	# set up amber.python symlink to point to active python interpreter
-	# (this could break if the install is moved to a different computer, but it's the best we can do)
-	if((HOST_OSX OR HOST_LINUX) AND (TARGET_OSX OR TARGET_LINUX) AND (NOT $ENV{CONDA_BUILD}))
-    	install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${PYTHON_EXECUTABLE} \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_POSTFIX}bin/amber.python)" COMPONENT Python)
-    endif()
+	# Set up symlinks, eg, amber.python which points to the active python
+	# interpreter, following similar setups in UseMiniconda.cmake.
+	# (this could break if the install is moved, but it's the best we can do)
+	if((HOST_OSX OR HOST_LINUX) AND (TARGET_OSX OR TARGET_LINUX))
+		# make sure bin directory exists at this point in the install
+		install(CODE "file(MAKE_DIRECTORY \
+			\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_POSTFIX}bin)"
+			COMPONENT Python)
+		installtime_create_symlink(${PYTHON_EXECUTABLE} ${BINDIR}/amber.python
+			Python)
+		if(EXISTS "${CONDA}")
+			installtime_create_symlink(${CONDA} ${BINDIR}/amber.conda
+				Python)
+		endif()
+	endif()
 endif()

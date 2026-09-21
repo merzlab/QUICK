@@ -59,7 +59,7 @@
 
   KEYWORD=HF BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 GRADIENT EXTCHARGES                                                                                                                                       
  ============== JOB CARD =============
- METHOD = HATREE FOCK
+ METHOD = HARTREE FOCK
  DIRECT SCF 
  SAD INITAL GUESS 
  USE DIIS SCF

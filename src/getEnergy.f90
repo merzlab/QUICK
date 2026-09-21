@@ -20,9 +20,11 @@ subroutine getEnergy(isGuess, ierr)
 #ifdef CEW
    use quick_cew_module, only : quick_cew
 #endif
-#ifdef MPIV 
-   use mpi  
-#endif      
+   use quick_mpi_module, only: master
+#if defined(MPIV)
+   use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
+   use mpi
+#endif
 
    implicit none
 
@@ -98,9 +100,15 @@ subroutine getEnergy(isGuess, ierr)
 #ifdef MPIV
    !-------------- MPI / ALL NODES ----------------------------------
    if (bMPI) then
-      call MPI_BCAST(quick_qm_struct%s,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_qm_struct%x,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_qm_struct%Ecore,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      quick_qm_struct%NBSuse => NBSuse
+
+      call MPI_BCAST(NBSuse,1,mpi_integer,0,quick_comm,quick_mpi_error)
+
+      if(.not. master) call allocate_quick_qm_struct_fullx(quick_qm_struct)
+
+      call MPI_BCAST(quick_qm_struct%s,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(quick_qm_struct%x,nbasis*NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(quick_qm_struct%Ecore,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
    endif
    !-------------- END MPI / ALL NODES ------------------------------
 #endif
@@ -178,8 +186,8 @@ subroutine getEnergy(isGuess, ierr)
    endif
    !--------------- END MPI/MASTER ----------------------
 
-#if defined MPIV || defined CUDA_MPIV || defined HIP_MPIV
-  call MPI_BCAST(quick_qm_struct%Etot, 1, mpi_double_precision,0,MPI_COMM_WORLD,mpierror) 
+#if defined(MPIV) || defined(MPIV_GPU)
+  call MPI_BCAST(quick_qm_struct%Etot, 1, mpi_double_precision,0,quick_comm,quick_mpi_error) 
 #endif
 
 end subroutine getenergy

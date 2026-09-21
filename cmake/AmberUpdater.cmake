@@ -1,8 +1,8 @@
-# CMake script that calls the Amber update script.  BAsed on the user's choice,
+# CMake script that calls the Amber update script.  Based on the user's choice,
 # it either checks for updates or installs them.
 # Must be included after PythonConfig.cmake
 
-# The updater requires python.  Python builds don't have to be enabled, we just need to have the interpereter
+# The updater requires python.  Python builds don't have to be enabled, we just need the interpreter
 if(NOT HAS_PYTHON)
 	return()
 endif()
@@ -17,7 +17,7 @@ if(CHECK_UPDATES OR APPLY_UPDATES)
 		colormsg(HIBLUE "Checking for updates...")
 	else()
 		set(UPDATER_ARG --update)
-		colormsg(HIBLUE "Running updater...")
+		colormsg(HIBLUE "Running update_amber...")
 	endif()
 	
 	# --------------------------------------------------------------------
@@ -27,9 +27,17 @@ if(CHECK_UPDATES OR APPLY_UPDATES)
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 		RESULT_VARIABLE UPDATE_COMMAND_RESULT
 		OUTPUT_VARIABLE UPDATE_COMMAND_OUTPUT)
-		
+
 	# --------------------------------------------------------------------
-	# print the output of the updater with a prefix so the people know it's not coming from the build script
+	# Fail if there was an error
+
+	if(${UPDATE_COMMAND_RESULT} EQUAL 1)
+		message(FATAL_ERROR "update_amber failed !\n"
+			"See its output above.")
+	endif()
+
+	# --------------------------------------------------------------------
+	# print the output of the updater with a prefix so that people know it's not coming from the build script
 	
 	string(REPLACE "\n" ";" UPDATE_COMMAND_OUTPUT "${UPDATE_COMMAND_OUTPUT}")
 	
@@ -55,4 +63,4 @@ if(CHECK_UPDATES OR APPLY_UPDATES)
 		endif()
 	endif()
 endif()
-	
+

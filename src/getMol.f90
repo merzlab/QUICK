@@ -15,11 +15,16 @@ subroutine getMol(ierr)
    use allmod
    use quick_gridpoints_module
    use quick_exception_module
-#ifdef MPIV
+   use quick_io_module, only: chk_read, chk_read_opt_traj
+   use quick_mpi_module, only: master
+#if defined(MPIV)
+   use quick_mpi_module, only: bMPI
    use mpi
 #endif
 
    implicit none
+
+   integer :: fail
 
    logical :: present
    integer :: i,j,k,itemp
@@ -32,15 +37,25 @@ subroutine getMol(ierr)
       call PrtAct(iOutfile,"Begin Reading Molecular Information")
 
       ! read xyz coordinates from the .in file 
-      if(.not. isTemplate) then
-       call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
-       CHECK_ERROR(ierr)
-        ! read molecule coordinates
-        call read2(quick_molspec,inFile,ierr)
-        close(inFile)
+      if (.not. isTemplate) then
+        if (quick_method%readxyz .ge. 0) then
+          ! readxyz == 0: CHK_READ_XYZ with no value -> read flat 'xyz' dataset
+          ! readxyz  > 0: CHK_READ_XYZ=N -> read step N from 'opt_traj'
+          if (quick_method%readxyz == 0) then
+            call chk_read('xyz', 3, natom, xyz)
+          else
+            call chk_read_opt_traj(quick_method%readxyz, natom, xyz)
+          endif
+          quick_molspec%xyz => xyz
+        else
+          call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
+          CHECK_ERROR(ierr)
+          ! read molecule coordinates
+          call read2(quick_molspec,inFile,ierr)
+          close(inFile)
+        endif
       endif
 
-      quick_molspec%nbasis   => nbasis
       quick_qm_struct%nbasis => nbasis
       call set(quick_molspec,ierr)
 
@@ -65,7 +80,7 @@ subroutine getMol(ierr)
    call readbasis(natom,0,0,0,0,ierr)
    ! F implementation of GPU ERI code currently doesnt support open shell
    ! gradient calculations
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
    if(quick_method%hasF .and. quick_method%unrst .and. quick_method%grad) then
        ierr=39
        return
@@ -73,14 +88,13 @@ subroutine getMol(ierr)
 #endif
    CHECK_ERROR(ierr)
 
-   quick_molspec%nbasis   => nbasis
    quick_qm_struct%nbasis => nbasis
 
    call alloc(quick_basis)
    call alloc(quick_qm_struct)
+   cutprim = 0.0d0
+   quick_basis%Xcoeff = 0.0d0
    call init(quick_qm_struct)
-
-
 
    !-----------MPI/MASTER------------------------
    if (master) then
@@ -221,17 +235,21 @@ end subroutine check_quick_method_and_molspec
 !--------------------------------------
 subroutine initialGuess(ierr)
    use allmod
-   use quick_sad_guess_module, only: getSadDense 
+   use quick_sad_guess_module, only: getSadDense
+   use quick_exception_module
+   use quick_io_module, only: chk_read, read_real8_rank3
+   use quick_mpi_module, only: master
+
    implicit none
+
+   integer, intent(inout) :: ierr
+
    logical :: present
-   integer :: failed
+   integer :: failed, fail
    character(len=80) :: keyWD
    integer n,sadAtom
    integer Iatm,i,j
    double precision temp
-   integer, intent(inout) :: ierr
-
-
 
    ! Initialize Density arrays. Create initial density matrix guess.
    call zeroMatrix(quick_qm_struct%dense,nbasis)
@@ -239,21 +257,17 @@ subroutine initialGuess(ierr)
 
    present = .false.
 
-#ifdef USEDAT
-   ! if read matrix is requested, begin to read dmx file
-   if (quick_method%readdmx) inquire (file=dataFileName,exist=present)
-#endif
    if (present) then
       call quick_open(iDataFile, dataFileName, 'O', 'U', 'W',.true.,ierr)
       CHECK_ERROR(ierr)
 
       ! read first part, which is restricted or alpha density matrix
-      call rchk_darray(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, failed)
+      call read_real8_rank3(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, failed)
 
       if(quick_method%unrst) then
          failed = 0
          ! read second part, which is beta density matrix
-         call rchk_darray(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%dense, failed)
+         call read_real8_rank3(iDataFile, "denseb", nbasis, nbasis, 1, quick_qm_struct%dense, failed)
          if (failed .eq. 0) then
             call PrtWrn(iOutFile,"CONVERTING RESTRICTED DENSITY TO UNRESTRICTED")
             do I=1,nbasis
@@ -274,13 +288,19 @@ subroutine initialGuess(ierr)
       !   call MFCC_initial_guess
       !endif
 
-      !  SAD inital guess
-      !if (quick_method%SAD .and. .not. quick_method%MFCC) then
-      if (quick_method%SAD) then
+      !  SAD initial guess or density read from checkpoint
+      if (quick_method%readden) then
+         if (master) then
+            call chk_read('dense', nbasis, nbasis, quick_qm_struct%dense)
+            if (quick_method%unrst) then
+               call chk_read('denseb', nbasis, nbasis, quick_qm_struct%denseb)
+            endif
+         endif
+      else if (quick_method%SAD) then
          call getSadDense
       endif
 
-      if(quick_method%unrst) then
+      if(quick_method%unrst .and. .not. quick_method%readden) then
         do I=1,nbasis
           do J =1,nbasis
             quick_qm_struct%dense(J,I) = quick_qm_struct%dense(J,I)/2.d0

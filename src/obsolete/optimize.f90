@@ -8,11 +8,15 @@ subroutine optimize(ierr)
    use allmod
    use quick_gridpoints_module
    use quick_cutoff_module, only: schwarzoff
-   use quick_cshell_eri_module, only: getEriPrecomputables
-   use quick_gradient_module, only: scf_gradient
-#ifdef MPIV
+   use quick_eri_cshell_module, only: getEriPrecomputables
+   use quick_grad_cshell_module, only: scf_gradient
+#if defined(MPIV)
+   use quick_mpi_module, only: bMPI, master, quick_comm
    use mpi
+#else
+   use quick_mpi_module, only: master
 #endif
+
    implicit double precision(a-h,o-z)
 
    logical :: done,diagco
@@ -119,7 +123,7 @@ subroutine optimize(ierr)
          enddo
       endif
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
       call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
             quick_molspec%molchg, quick_molspec%iAtomType)
       call gpu_upload_xyz(xyz)
@@ -130,7 +134,7 @@ subroutine optimize(ierr)
       call getEriPrecomputables
       call schwarzoff
 
-#if defined CUDA || defined CUDA_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
       call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
             ncontract, itype, aexp, dcoeff, &
             quick_basis%first_basis_function, quick_basis%last_basis_function, &
@@ -142,18 +146,17 @@ subroutine optimize(ierr)
 
       call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
 
-#ifdef CUDA_MPIV
+#if defined(MPIV_GPU)
     timer_begin%T2elb = timer_end%T2elb
     call mgpu_get_2elb_time(timer_end%T2elb)
     timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb
 #endif
-
 #endif
 
       call getEnergy(.false., ierr)
 
       !   This line is for test only
-      !   quick_method%bCUDA = .false.
+      !   quick_method%bGPU = .false.
       ! Now we have several scheme to obtain gradient. For now,
       ! only analytical gradient is available
 
@@ -168,12 +171,12 @@ subroutine optimize(ierr)
          !            endif
       endif
 
-#if defined CUDA || defined CUDA_MPIV
-      if (quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+      if (quick_method%bGPU) then
         call gpu_cleanup()
       endif
 #endif
-        !quick_method%bCUDA=.true.
+        !quick_method%bGPU=.true.
       if (master) then
 
          !-----------------------------------------------------------------------
@@ -295,11 +298,11 @@ subroutine optimize(ierr)
       !-------------- END MPI/MASTER --------------------
 #ifdef MPIV
       ! we now have new geometry, and let other nodes know the new geometry
-      if (bMPI)call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      if (bMPI)call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,quick_comm,quick_mpi_error)
 
 
       ! Notify every nodes if opt is done
-      if (bMPI)call MPI_BCAST(done,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+      if (bMPI)call MPI_BCAST(done,1,mpi_logical,0,quick_comm,quick_mpi_error)
 #endif
 
       !For DFT geometry optimization, we should delete the grid variables here

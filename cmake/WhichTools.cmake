@@ -10,9 +10,14 @@
 # There are many, many reasons that you would want a tool not to build, and in some cases more than one can occur at the same time
 # For that reason, and because order matters, we use a blacklist model for deciding what tools to build.
 # We start with all of them enabled (except the ones not in release builds), and pare down this list for various reasons in the logic below.
+  
+if(PMEMD_ONLY)
+
+   set(AMBER_TOOLS lib emil kmmd gpu_utils pmemd)
+  
+else()
+
 set(AMBER_TOOLS
-  
-  
 #3rd party programs: see 3rdPartyTools.cmake
 #	utility routines and libraries:
 gbnsr6
@@ -30,7 +35,6 @@ antechamber
 sqm
 
 #   miscellaneous:
-reduce
 sebomd
 emil
 kmmd
@@ -82,9 +86,6 @@ tcpb-cpp/pytcpb
 #	reaxff-puremd
 reaxff_puremd
 
-#	ffq
-ffq
-
 #	nfe-umbrella-slice
 nfe-umbrella-slice
 
@@ -99,6 +100,10 @@ pysander
 pytraj
 pdb4amber
 packmol_memgen
+packmol_memgen/web
+PyPE_RESP
+proprep
+rismtools
 
 #	moft
 moft
@@ -111,7 +116,13 @@ pmemd
 nabc
 
 fe-toolkit
+
+modXNA
+
+libdlfind
 )
+
+endif()
 
 # list of tools in the src directory instead of AmberTools/src
 set(TOOLS_IN_SRC
@@ -197,10 +208,11 @@ tool_depends(pysander sander)
 tool_depends(pytraj cpptraj)
 tool_depends(tcpb-cpp sqm)
 tool_depends(tcpb-cpp/pytcpb tcpb-cpp)
+tool_depends(packmol_memgen/web packmol_memgen)
 tool_depends(cew lib)
 tool_depends(quick sqm cew)
 tool_depends(reaxff_puremd sqm)
-tool_depends(rism lib)
+tool_depends(rism lib pbsa)
 tool_depends(sander sqm pbsa sebomd emil lib)
 tool_depends(sebomd sander lib)
 tool_depends(sff pbsa)
@@ -234,7 +246,21 @@ endif()
 
 #Python programs (controlled by BUILD_PYTHON option in PythonConfig.cmake)
 if(NOT BUILD_PYTHON)
-	disable_tools("Python programs are disabled" pysander pytraj pymsmt mmpbsa_py parmed packmol_memgen tcpb-cpp/pytcpb)
+	disable_tools("Python programs are disabled" pysander pytraj pymsmt mmpbsa_py parmed packmol_memgen packmol_memgen/web tcpb-cpp/pytcpb proprep)
+endif()
+
+option(BUILD_PMMG_GUI "Install the packmol-memgen web GUI (packmol-memgen-gui)" ON)
+if(NOT BUILD_PMMG_GUI)
+	disable_tool(packmol_memgen/web "BUILD_PMMG_GUI is disabled")
+elseif(BUILD_PYTHON AND NOT PMMG_GUI_DEPS)
+	execute_process(
+		COMMAND "${PYTHON_EXECUTABLE}" -c
+			"import fastapi, uvicorn, pydantic, multipart, webview, PySide6, qtpy"
+		RESULT_VARIABLE _pmmg_web_deps_result)
+	if(NOT _pmmg_web_deps_result EQUAL 0)
+		disable_tool(packmol_memgen/web
+			"Web GUI dependencies not found (set -DPMMG_GUI_DEPS=ON to install them automatically)")
+	endif()
 endif()
 
 if(STATIC)
@@ -244,7 +270,7 @@ if(STATIC)
 endif()
 
 if(boost_DISABLED)
-	disable_tools("Requires boost" packmol_memgen moft)
+	disable_tools("Requires boost" moft)
 endif()
 
 # Perl programs
@@ -276,10 +302,6 @@ endif()
 
 if(NOT BUILD_REAXFF_PUREMD) # note: option declared in SanderConfig.cmake to resolve circular dependency
 	disable_tool(reaxff_puremd "BUILD_REAXFF_PUREMD is not enabled")
-endif()
-
-if(NOT BUILD_FFQ) # note: option declared in SanderConfig.cmake to resolve circular dependency
-	disable_tool(ffq "BUILD_FFQ is not enabled")
 endif()
 
 if(NOT BUILD_SANDER_API)
@@ -363,7 +385,6 @@ disable_tools("Disabled by user" ${DISABLE_TOOLS})
 # hopefully 3 iterations is enough
 foreach(ITERATION RANGE 0 2)
 	foreach(TOOL ${AMBER_TOOLS})
-		
 		foreach(DEPENDENCY ${TOOL_DEPENDENCIES_${TOOL}})
 			list_contains(DEPEND_ENABLED ${DEPENDENCY} ${AMBER_TOOLS})
 			

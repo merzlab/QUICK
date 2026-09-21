@@ -124,7 +124,7 @@ subroutine dlf_task(ierr2 &
 
 
     ! main optimisation cycle
-    call dlf_run( &
+    call dlf_run(ierr2 &
 #ifdef GAMESS
         core&
 #endif
@@ -171,7 +171,7 @@ subroutine dlf_task(ierr2 &
     call dlf_stat_reset
 
     ! main optimisation cycle
-    call dlf_run( &
+    call dlf_run(ierr2 &
 #ifdef GAMESS
         core&
 #endif
@@ -217,7 +217,7 @@ subroutine dlf_task(ierr2 &
         write(stdout,1000) "Searching the transition state"
 
     ! main optimisation cycle
-    call dlf_run( &
+    call dlf_run(ierr2 &
 #ifdef GAMESS
         core&
 #endif
@@ -270,7 +270,7 @@ subroutine dlf_task(ierr2 &
         &downhill into the first direction"
 
     ! main optimisation cycle
-    call dlf_run( &
+    call dlf_run(ierr2 &
 #ifdef GAMESS
         core&
 #endif
@@ -303,7 +303,7 @@ subroutine dlf_task(ierr2 &
     call dlf_stat_reset
 
     ! main optimisation cycle
-    call dlf_run( &
+    call dlf_run(ierr2 &
 #ifdef GAMESS
         core&
 #endif

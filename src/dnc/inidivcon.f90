@@ -35,12 +35,13 @@
 
 subroutine inidivcon(natomsaved)
   use allmod
-
-#ifdef MPIV
+  use quick_mpi_module, only: master
+#if defined(MPIV)
+  use quick_mpi_module, only: bMPI, quick_comm, quick_comm_size, quick_mpi_error
   use mpi
 #endif
 
- implicit double precision (a-h,o-z)
+  implicit double precision (a-h,o-z)
 
   double precision rbuffer1,rbuffer2
 
@@ -181,10 +182,10 @@ subroutine inidivcon(natomsaved)
 #ifdef MPIV
   !-------------------MPI/ALL NODES------------------------------------
   if (bMPI) then
-     call MPI_BCAST(np,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-     call MPI_BCAST(npsaved,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-     call MPI_BCAST(NNmax,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BCAST(np,1,mpi_integer,0,quick_comm,quick_mpi_error)
+     call MPI_BCAST(npsaved,1,mpi_integer,0,quick_comm,quick_mpi_error)
+     call MPI_BCAST(NNmax,1,mpi_integer,0,quick_comm,quick_mpi_error)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
   endif
   !-------------------END MPI/ALL NODES--------------------------------
 #endif
@@ -718,9 +719,9 @@ subroutine inidivcon(natomsaved)
 #ifdef MPIV
   !-------------------MPI/ALL NODES------------------------------------
   if (bMPI) then
-     call MPI_BCAST(np,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-     call MPI_BCAST(NNmax,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BCAST(np,1,mpi_integer,0,quick_comm,quick_mpi_error)
+     call MPI_BCAST(NNmax,1,mpi_integer,0,quick_comm,quick_mpi_error)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
   endif
   !-------------------END MPI/ALL NODES--------------------------------
 #endif
@@ -839,9 +840,9 @@ subroutine inidivcon(natomsaved)
   !===================================================================
 
 #ifdef MPIV
-  allocate(mpi_dc_fragn(0:mpisize-1))       ! frag no. a node has
-  allocate(mpi_dc_frag(0:mpisize-1,np)) ! frag a node has
-  allocate(mpi_dc_nbasis(0:mpisize-1))  ! total basis set a node has
+  allocate(mpi_dc_fragn(0:quick_comm_size-1))       ! frag no. a node has
+  allocate(mpi_dc_frag(0:quick_comm_size-1,np)) ! frag a node has
+  allocate(mpi_dc_nbasis(0:quick_comm_size-1))  ! total basis set a node has
 
   ! make it compatible for non-mpi calculation
   mpi_dc_fragn(0)=np
@@ -852,7 +853,7 @@ subroutine inidivcon(natomsaved)
   !-------------------MPI/ALL NODES------------------------------------
   if (bMPI) then
      call mpi_setup_inidivcon(natomt)
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
   endif
   !-------------------END MPI/ALL NODES--------------------------------
 #endif

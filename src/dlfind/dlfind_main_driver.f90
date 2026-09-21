@@ -160,7 +160,7 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
   integer   ,intent(inout)   :: micro_esp_fit
   ! local variables
   real(rk)                   :: svar
-  integer                    :: i, iat,jat,mpierror
+  integer                    :: i, iat,jat,quick_mpi_error
   character ::c
 ! **********************************************************************
   ierr=0
@@ -168,7 +168,7 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
 
   nz         = quick_molspec%natom
   nmass      = quick_molspec%natom
-  ncons      = 0
+  ncons      = quick_molspec%nconsatom
   nconn      = 0
   nzero      = 0 
   nframe     = 0
@@ -181,8 +181,10 @@ subroutine dlf_get_params(nvar,nvar2,nspec,coords,coords2,spec,ierr, &
         coords((iat-1)*3 + jat) = xyz(jat, iat)
     enddo 
   enddo
- 
+
+  spec(1:nz) = quick_molspec%dlfind_freezeatm(:)
   spec(1+nz:nz+nz) = quick_molspec%iattype(:)
+  spec(nz+nz+1:nz+nz+(5*ncons)) = reshape(quick_molspec%dlfind_constr,(/5*ncons/))
 
   do iat = 1, quick_molspec%natom
     coords2(iat) = EMASS(quick_molspec%iattype(iat))
@@ -302,15 +304,15 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   use allmod
   use quick_gridpoints_module
   use quick_molspec_module, only: natom, xyz, quick_molspec
-  use quick_cshell_gradient_module, only: scf_gradient
   use quick_cutoff_module, only: schwarzoff
-  use quick_cshell_eri_module, only: getEriPrecomputables
-  use quick_cshell_gradient_module, only: scf_gradient
-  use quick_oshell_gradient_module, only: uscf_gradient
+  use quick_eri_cshell_module, only: getEriPrecomputables
+  use quick_grad_cshell_module, only: scf_gradient
+  use quick_grad_oshell_module, only: uscf_gradient
   use quick_method_module,only: quick_method
   use quick_exception_module, only: RaiseException 
 #ifdef MPIV
-  use quick_mpi_module, only: master
+  use quick_mpi_module, only: master, bMPI, quick_comm, quick_mpi_error
+  use mpi
 #endif
   !use vib_pot
   implicit none
@@ -339,7 +341,12 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
 !  call test_update
   status=1
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#ifdef MPIV
+     ! we now have new geometry, and let other nodes know the new geometry
+     if (bMPI) call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,quick_comm,quick_mpi_error)
+#endif
+
+#if defined(GPU) || defined(MPIV_GPU)
   call gpu_setup(natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &                  
               quick_molspec%molchg, quick_molspec%iAtomType)                                      
   call gpu_upload_xyz(xyz)                                                                  
@@ -349,7 +356,7 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
   call getEriPrecomputables
   call schwarzoff
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
   call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &                       
         ncontract, itype, aexp, dcoeff, &                                                   
         quick_basis%first_basis_function, quick_basis%last_basis_function,&                
@@ -363,7 +370,7 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
 
         call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
                                                                                                   
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
   timer_begin%T2elb = timer_end%T2elb                                                         
   call mgpu_get_2elb_time(timer_end%T2elb)                                                    
   timer_cumer%T2elb = timer_cumer%T2elb+timer_end%T2elb-timer_begin%T2elb                     
@@ -389,8 +396,8 @@ subroutine dlf_get_gradient(nvar,coords,energy,gradient,iimage,kiter,status,ierr
      endif
   endif
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-  if (quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+  if (quick_method%bGPU) then
      call gpu_cleanup()
   endif
 #endif  
@@ -413,7 +420,7 @@ subroutine dlf_get_hessian(nvar,coords,hessian,status)
   use driver_parameter_module
   use dlf_parameter_module
 !  use allmod
-!  use quick_cshell_gradient_module, only: cshell_gradient
+!  use quick_grad_cshell_module, only: cshell_gradient
   !use vib_pot
   implicit none
   integer   ,intent(in)    :: nvar
@@ -576,7 +583,7 @@ subroutine dlf_update()
 end subroutine dlf_update
 
 
-subroutine dlf_get_multistate_gradients(nvar,coords,energy,gradient,iimage,status)
+subroutine dlf_get_multistate_gradients(nvar,coords,energy,gradient,needscoupling,iimage,status)
   ! only a dummy routine up to now
   ! for conical intersection search
   use dlf_parameter_module
@@ -585,6 +592,7 @@ subroutine dlf_get_multistate_gradients(nvar,coords,energy,gradient,iimage,statu
   integer   ,intent(in)    :: coords(nvar)
   real(rk)  ,intent(in)    :: energy(2)
   real(rk)  ,intent(in)    :: gradient(nvar,2)
+  integer   ,intent(in)    :: needscoupling
   integer   ,intent(in)    :: iimage
   integer   ,intent(in)    :: status
 end subroutine dlf_get_multistate_gradients

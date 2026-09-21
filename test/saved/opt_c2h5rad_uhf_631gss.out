@@ -48,7 +48,7 @@
 
   KEYWORD=UHF BASIS=6-31G** CUTOFF=1.0E-9 DENSERMS=1.0E-6 MULT=2 OPTIMIZE=4 DIPOLE                                                                                                                                
  ============== JOB CARD =============
- METHOD = HATREE FOCK
+ METHOD = HARTREE FOCK
  DIRECT SCF 
  SAD INITAL GUESS 
  UNRESTRICTED SYSTEM

@@ -58,7 +58,11 @@ module quick_timer_module
         double precision:: TcewLriGrad=0.0d0 !Time for computing long range integral gradients in cew 
         double precision:: TcewLriQuad=0.0d0 !Time for computing quadrature contribution in cew
         double precision:: TcewLriGradQuad=0.0d0 !Time for computing quadrature gradient contribution in cew
-        double precision:: Tdisp=0.0d0      ! Time for computing dispersion correction
+        double precision:: Tdisp=0.0d0       ! Time for computing dispersion correction
+        double precision:: TESPGrid=0.0d0    ! Time for computing ESP on grid
+        double precision:: TEFIELDGrid=0.0d0 ! Time for computing EFIELD on grid
+        double precision:: TESPSurface=0.0d0    ! Time for creating vanderwaals surface for ESP charge calculation
+        double precision:: TESPCharge=0.0d0    ! Time for computing ESP charge using points on the surface
     end type quick_timer
 
     type quick_timer_cumer
@@ -104,6 +108,11 @@ module quick_timer_module
         double precision:: TcewLriQuad=0.0d0 !Time for computing quadrature contribution in cew
         double precision:: TcewLriGradQuad=0.0d0 !Time for computing quadrature gradient contribution in cew
         double precision:: Tdisp=0.0d0      ! Time for computing dispersion correction
+        double precision:: TESPGrid=0.0d0      ! Time for computing ESP on grid
+        double precision:: TEFIELDGrid=0.0d0      ! Time for computing EFEILD on grid
+        double precision:: TESPSurface=0.0d0    ! Time for creating vanderwaals surface for ESP charge calculation
+        double precision:: TESPCharge=0.0d0    ! Time for computing ESP charge using points on the surface
+
     end type quick_timer_cumer
 
     type (quick_timer),save:: timer_begin
@@ -117,9 +126,10 @@ module quick_timer_module
     ! Output time infos
     !-----------------------
     subroutine timer_output(io)
-        use quick_mpi_module
         use quick_method_module
-#ifdef MPIV
+        use quick_mpi_module, only: master
+#if defined(MPIV)
+        use quick_mpi_module, only: quick_comm, quick_comm_size, quick_mpi_error
         use mpi
 #endif
         implicit none
@@ -127,9 +137,12 @@ module quick_timer_module
         double precision :: t_tot_dftop, t_tot_lb
         
 #ifdef MPIV
-        double precision :: tst2e(mpisize), tstxc(mpisize), tst2egrad(mpisize), tstxcgrad(mpisize)
-        double precision :: tend2e(mpisize), tendxc(mpisize), tend2egrad(mpisize), tendxcgrad(mpisize)
-        double precision :: t2e(mpisize), txc(mpisize), t2egrad(mpisize), txcgrad(mpisize)
+        double precision :: tst2e(quick_comm_size), tstxc(quick_comm_size) 
+        double precision :: tst2egrad(quick_comm_size), tstxcgrad(quick_comm_size)
+        double precision :: tend2e(quick_comm_size), tendxc(quick_comm_size)
+        double precision :: tend2egrad(quick_comm_size), tendxcgrad(quick_comm_size)
+        double precision :: t2e(quick_comm_size), txc(quick_comm_size)
+        double precision :: t2egrad(quick_comm_size), txcgrad(quick_comm_size)
 #endif
         type (quick_timer) tmp_timer
         type (quick_timer_cumer) tmp_timer_cumer,max_timer_cumer
@@ -138,7 +151,7 @@ module quick_timer_module
         ! For Master nodes or single process timing infomations
         !----------------------------------------------------
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
     call get_mgpu_time()
 #endif
 
@@ -186,7 +199,7 @@ module quick_timer_module
                 timer_cumer%TDFTGrdPck/(timer_end%TTotal-timer_begin%TTotal)*100
 #endif
             endif
-#if defined CUDA_MPIV || defined HIP_MPIV && DEBUGTIME
+#if defined(MPIV_GPU) && DEBUGTIME
             t_tot_lb=timer_cumer%t2elb+timer_cumer%tdftlb+timer_cumer%tdftrb
             write (io,'("| TOTAL LOAD BALANCING TIME =",F16.9,"( ",F5.2,"%)")') t_tot_lb, &
             t_tot_lb/(timer_end%TTotal-timer_begin%TTotal)*100
@@ -209,6 +222,23 @@ module quick_timer_module
             if(quick_method%edisp) then
                 write (io,'("| DISPERSION CORRECTION TIME  =",F16.9,"( ",F5.2,"%)")') timer_cumer%Tdisp, &
                 timer_cumer%Tdisp/(timer_end%TTotal-timer_begin%TTotal)*100
+            endif
+
+            if(quick_method%esp_grid .or. quick_method%esp_charge) then
+                write (io,'("| ESP COMPUTATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TESPGrid, &
+                timer_cumer%TESPGrid/(timer_end%TTotal-timer_begin%TTotal)*100
+            endif
+
+            if(quick_method%esp_charge) then
+                write (io,'("| ESP Surface Creation TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TESPSurface, &
+                timer_cumer%TESPSurface/(timer_end%TTotal-timer_begin%TTotal)*100
+                write (io,'("| ESP Charge COMPUTATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TESPCharge, &
+                timer_cumer%TESPCharge/(timer_end%TTotal-timer_begin%TTotal)*100
+            endif
+
+            if(quick_method%efield_grid) then
+                write (io,'("| EFIELD COMPUTATION TIME =",F16.9,"( ",F5.2,"%)")') timer_cumer%TEFIELDGrid, &
+                timer_cumer%TEFIELDGrid/(timer_end%TTotal-timer_begin%TTotal)*100
             endif
 
             if (quick_method%nodirect) &
@@ -321,37 +351,37 @@ module quick_timer_module
 
 #ifdef MPIV
 
-  call MPI_GATHER(timer_begin%T2e,1,mpi_double_precision,tst2e,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_GATHER(timer_begin%TEx,1,mpi_double_precision,tstxc,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_GATHER(timer_begin%T2eGrad,1,mpi_double_precision,tst2egrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_GATHER(timer_begin%TExGrad,1,mpi_double_precision,tstxcgrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+  call MPI_GATHER(timer_begin%T2e,1,mpi_double_precision,tst2e,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+  call MPI_GATHER(timer_begin%TEx,1,mpi_double_precision,tstxc,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+  call MPI_GATHER(timer_begin%T2eGrad,1,mpi_double_precision,tst2egrad,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+  call MPI_GATHER(timer_begin%TExGrad,1,mpi_double_precision,tstxcgrad,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
 
-  call MPI_GATHER(timer_end%T2e,1,mpi_double_precision,tend2e,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_GATHER(timer_end%TEx,1,mpi_double_precision,tendxc,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_GATHER(timer_end%T2eGrad,1,mpi_double_precision,tend2egrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_GATHER(timer_end%TExGrad,1,mpi_double_precision,tendxcgrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+  call MPI_GATHER(timer_end%T2e,1,mpi_double_precision,tend2e,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+  call MPI_GATHER(timer_end%TEx,1,mpi_double_precision,tendxc,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+  call MPI_GATHER(timer_end%T2eGrad,1,mpi_double_precision,tend2egrad,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+  call MPI_GATHER(timer_end%TExGrad,1,mpi_double_precision,tendxcgrad,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
 
-  call MPI_GATHER(timer_cumer%T2e,1,mpi_double_precision,t2e,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_GATHER(timer_cumer%TEx,1,mpi_double_precision,txc,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_GATHER(timer_cumer%T2eGrad,1,mpi_double_precision,t2egrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)  
-  call MPI_GATHER(timer_cumer%TExGrad,1,mpi_double_precision,txcgrad,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+  call MPI_GATHER(timer_cumer%T2e,1,mpi_double_precision,t2e,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+  call MPI_GATHER(timer_cumer%TEx,1,mpi_double_precision,txc,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+  call MPI_GATHER(timer_cumer%T2eGrad,1,mpi_double_precision,t2egrad,1,mpi_double_precision,0,quick_comm,quick_mpi_error)  
+  call MPI_GATHER(timer_cumer%TExGrad,1,mpi_double_precision,txcgrad,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
 
 #ifdef DEBUGTIME
   if(master) then
     write (io,'(" ")')
     write (io,'("----------- MPI TIMING -------------")')
 
-    do i=1, mpisize
+    do i=1, quick_comm_size
      write (io,'("| Rank =", I4,2x,"2e START =",F16.9,2x,"XC START =",F16.9,2x,"2e GRAD START =",F16.9,2x, &
      "XC GRAD START =",F16.9)') i, tst2e(i), tstxc(i), tst2egrad(i), tstxcgrad(i)
     enddo
 
-    do i=1, mpisize
+    do i=1, quick_comm_size
      write (io,'("| Rank =", I4,2x,"2e END   =",F16.9,2x,"XC END   =",F16.9,2x,"2e GRAD END   =",F16.9,2x, &
      "XC GRAD END   =",F16.9)') i, tend2e(i), tendxc(i), tend2egrad(i), tendxcgrad(i)
     enddo
 
-    do i=1, mpisize
+    do i=1, quick_comm_size
      write (io,'("| Rank =", I4,2x,"2e TIME  =",F16.9,2x,"XC TIME  =",F16.9,2x,"2e GRAD TIME  =",F16.9,2x, &
      "XC GRAD TIME  =",F16.9)') i, t2e(i), txc(i), t2egrad(i), txcgrad(i) 
     enddo
@@ -368,12 +398,12 @@ module quick_timer_module
 !        if (bMPI) then
 !            if (.not.master) then
 !                tmp_timer_cumer=timer_cumer
-!                call MPI_SEND(tmp_timer_cumer,1,mpi_timer_cumer_type,0,mpirank,MPI_COMM_WORLD,IERROR)
+!                call MPI_SEND(tmp_timer_cumer,1,mpi_timer_cumer_type,0,quick_comm_rank,quick_comm,IERROR)
 !            else
 !                MPI_timer_cumer=timer_cumer
 !                max_timer_cumer=timer_cumer
-!                do i=1,mpisize-1
-!                    call MPI_RECV(tmp_timer_cumer,1,mpi_timer_cumer_type,i,i,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
+!                do i=1,quick_comm_size-1
+!                    call MPI_RECV(tmp_timer_cumer,1,mpi_timer_cumer_type,i,i,quick_comm,QUICK_MPI_STATUS,IERROR)
 !                    MPI_timer_cumer%TTotal=MPI_timer_cumer%TTotal+tmp_timer_cumer%T2e+tmp_timer_cumer%TMP2+ &
 !                        tmp_timer_cumer%T1e+ tmp_timer_cumer%TDiag+tmp_timer_cumer%TGrad
 !                    MPI_timer_cumer%TTotal=MPI_timer_cumer%TTotal+tmp_timer_cumer%TDiag
@@ -445,35 +475,36 @@ module quick_timer_module
     ! mpi timer setup
     !-----------------------
     subroutine mpi_setup_timer
-
-        use quick_mpi_module
+        use quick_mpi_module, only: bMPI, quick_mpi_error
         use mpi
+
         implicit none
 
         ! declaim mpi timer
         if (bMPI) then
-            call MPI_TYPE_CONTIGUOUS(TIMER_SIZE, mpi_double_precision,MPI_timer_type,mpierror)
-            call MPI_TYPE_COMMIT(MPI_timer_type,mpierror)
+            call MPI_TYPE_CONTIGUOUS(TIMER_SIZE, mpi_double_precision, MPI_timer_type, quick_mpi_error)
+            call MPI_TYPE_COMMIT(MPI_timer_type, quick_mpi_error)
 
-            call MPI_TYPE_CONTIGUOUS(TIMER_CUMER_SIZE, mpi_double_precision,MPI_timer_cumer_type,mpierror)
-            call MPI_TYPE_COMMIT(MPI_timer_cumer_type,mpierror)
+            call MPI_TYPE_CONTIGUOUS(TIMER_CUMER_SIZE, mpi_double_precision, MPI_timer_cumer_type, quick_mpi_error)
+            call MPI_TYPE_COMMIT(MPI_timer_cumer_type, quick_mpi_error)
         endif
-
     end subroutine mpi_setup_timer
 #endif
 
-#if defined CUDA_MPIV || defined HIP_MPIV
+#if defined(MPIV_GPU)
     subroutine get_mgpu_time
-        use quick_mpi_module
+        use quick_mpi_module, only: master, quick_comm
         use mpi
+
         implicit none
+
         integer :: IERROR
         double precision :: tsum_2elb, tsum_xclb, tsum_xcrb, tsum_xcpg
 
-        call MPI_REDUCE(timer_cumer%T2elb, tsum_2elb, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
-        call MPI_REDUCE(timer_cumer%TDFTlb, tsum_xclb, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
-        call MPI_REDUCE(timer_cumer%TDFTrb, tsum_xcrb, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
-        call MPI_REDUCE(timer_cumer%TDFTpg, tsum_xcpg, 1, mpi_double_precision, MPI_MAX, 0, MPI_COMM_WORLD, IERROR)
+        call MPI_REDUCE(timer_cumer%T2elb, tsum_2elb, 1, mpi_double_precision, MPI_MAX, 0, quick_comm, IERROR)
+        call MPI_REDUCE(timer_cumer%TDFTlb, tsum_xclb, 1, mpi_double_precision, MPI_MAX, 0, quick_comm, IERROR)
+        call MPI_REDUCE(timer_cumer%TDFTrb, tsum_xcrb, 1, mpi_double_precision, MPI_MAX, 0, quick_comm, IERROR)
+        call MPI_REDUCE(timer_cumer%TDFTpg, tsum_xcpg, 1, mpi_double_precision, MPI_MAX, 0, quick_comm, IERROR)
 
         if(master) then
           timer_cumer%T2elb=tsum_2elb
@@ -482,7 +513,6 @@ module quick_timer_module
           timer_cumer%TDFTpg=tsum_xcpg
         endif
     end subroutine get_mgpu_time
-
 #endif
 
 end module quick_timer_module

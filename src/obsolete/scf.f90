@@ -58,7 +58,9 @@ subroutine electdiis(jscf,ierr)
    use allmod
    use quick_gridpoints_module
    use quick_scf_module
+   use quick_mpi_module, only: master
 #ifdef MPIV
+   use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
    use mpi
 #endif
 
@@ -149,18 +151,18 @@ subroutine electdiis(jscf,ierr)
 
 #ifdef MPIV
    if (bMPI) then
-!      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+!      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BARRIER(quick_comm,quick_mpi_error)
    endif
 #endif
 
-#if defined CUDA || defined CUDA_MPIV
-   if(quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+   if(quick_method%bGPU) then
 
       if (quick_method%DFT) then
 
@@ -169,7 +171,7 @@ subroutine electdiis(jscf,ierr)
       quick_dft_grid%basf_counter, quick_dft_grid%primf_counter, quick_dft_grid%bin_counter,quick_dft_grid%gridb_count, &
       quick_dft_grid%nbins, quick_dft_grid%nbtotbf, quick_dft_grid%nbtotpf, quick_method%isg, sigrad2, quick_method%DMCutoff)
 
-#ifdef CUDA_MPIV
+#if defined(MPIV_GPU)
       call mgpu_get_xclb_time(timer_cumer%TDFTlb)
 #endif
 
@@ -244,39 +246,21 @@ subroutine electdiis(jscf,ierr)
 
          ! The first part is ODS
 
-#if defined(CUDA) || defined(CUDA_MPIV)
-
-         call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
+         call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
                nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
-         call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
+         call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#else
-         call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-               nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-
-         call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-               nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#endif
 
          allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
 
          ! Calculate D O. then calculate S (do) and subtract that from the allerror matrix.
          ! This means we now have the e(i) matrix.
          ! allerror=ODS-SDO
-#if defined(CUDA) || defined(CUDA_MPIV)
-
-         call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
+         call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
                nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-
-         call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
+         call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#else
-         call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-               nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-         call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
-               nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#endif
 
          errormax = 0.d0
          do I=1,nbasis
@@ -294,21 +278,12 @@ subroutine electdiis(jscf,ierr)
          !-----------------------------------------------
          quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
 
-#if defined(CUDA) || defined(CUDA_MPIV)
-
-         call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
+         call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
                nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
-         call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
+         call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#else
 
-         call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
-               nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-
-         call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-               nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#endif
          allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
          !-----------------------------------------------
          ! 4)  Store the e'(I) and O(i).
@@ -477,61 +452,31 @@ subroutine electdiis(jscf,ierr)
          ! First you have to transpose this into an orthogonal basis, which
          ! is accomplished by calculating Transpose[X] . O . X.
          !-----------------------------------------------
-#if defined(CUDA) || defined(CUDA_MPIV)
-
-        call cpu_time(timer_begin%TDiag)
-        call cuda_diag(quick_qm_struct%o, quick_qm_struct%x, quick_scratch%hold,&
-              quick_qm_struct%E, quick_qm_struct%idegen, &
-              quick_qm_struct%vec, quick_qm_struct%co, &
-              V2, nbasis)
-         call cpu_time(timer_end%TDiag)
-
-         call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-               nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
-#else
-         call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
+         call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
                nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
-         call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
+         call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%o,nbasis)
 
          ! Now diagonalize the operator matrix.
          call cpu_time(timer_begin%TDiag)
 
-#if defined LAPACK || defined MKL
-         call DIAGMKL(nbasis,quick_qm_struct%o,quick_qm_struct%E,quick_qm_struct%vec,IERROR)
-#else
-         call DIAG(nbasis,quick_qm_struct%o,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%E,&
-               quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
-#endif
-         call cpu_time(timer_end%TDiag)
+         call CPU_DIAG(nbasis, quick_qm_struct%o, quick_qm_struct%E, quick_qm_struct%vec,IERROR)
 
-#endif
+         call cpu_time(timer_end%TDiag)
 
          ! Calculate C = XC' and form a new density matrix.
          ! The C' is from the above diagonalization.  Also, save the previous
          ! Density matrix to check for convergence.
          !        call DMatMul(nbasis,X,VEC,CO)    ! C=XC'
-
-#if defined(CUDA) || defined(CUDA_MPIV)
-
-         call cublas_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
+         call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
                nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
-#else
-         call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-               nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
-#endif
 
          quick_scratch%hold(:,:) = quick_qm_struct%dense(:,:) 
 
          ! Form new density matrix using MO coefficients
-#if defined(CUDA) || defined(CUDA_MPIV)
-         call cublas_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
+         call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
                nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)         
-#else
-         call DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
-               nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense,nbasis)         
-#endif
 
          call cpu_time(timer_end%TDII)
 
@@ -627,30 +572,25 @@ subroutine electdiis(jscf,ierr)
 
 #ifdef MPIV
       if (bMPI) then
-         call MPI_BCAST(diisdone,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-!         call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(quick_qm_struct%denseOld,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(diisdone,1,mpi_logical,0,quick_comm,quick_mpi_error)
+!         call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(quick_qm_struct%denseOld,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BARRIER(quick_comm,quick_mpi_error)
       endif
 #endif
       if (quick_method%debug)  call debug_SCF(jscf)
    enddo
 
-#if defined CUDA || defined CUDA_MPIV
-   if(quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+   if(quick_method%bGPU) then
       ! sign of the coefficient matrix resulting from cusolver is not consistent
       ! with rest of the code (e.g. gradients). We have to correct this.
       call scalarMatMul(quick_qm_struct%co,nbasis,nbasis,-1.0d0)
-   endif
-#endif
-
-#if defined CUDA || defined CUDA_MPIV
-   if(quick_method%bCUDA) then
       if (quick_method%DFT) then
          if(quick_method%grad) then
            call gpu_delete_dft_dev_grid()

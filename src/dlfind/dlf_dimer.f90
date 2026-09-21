@@ -582,6 +582,7 @@ subroutine dlf_dimer_was_midpoint(trerun_energy,testconv)
   real(rk)              :: dlength,svar
   logical               :: tok,tconv
   real(rk),external     :: ddot
+  real(rk)              :: temp(1)
 ! **********************************************************************
   testconv=.true.
   ! ==================================================================
@@ -589,7 +590,8 @@ subroutine dlf_dimer_was_midpoint(trerun_energy,testconv)
   ! ==================================================================
 
   ! send information to set_tsmode
-  call dlf_formstep_set_tsmode(1,-1,glob%energy) ! send energy
+  temp(1) = glob%energy
+  call dlf_formstep_set_tsmode(1,-1,temp) ! send energy
   call dlf_formstep_set_tsmode(glob%nvar,0,glob%xcoords) ! TS-geometry
 
   call dlf_direct_xtoi(glob%nvar,dimer%varperimage,dimer%coreperimage, &

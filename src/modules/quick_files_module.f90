@@ -28,15 +28,19 @@ module quick_files_module
 
     implicit none
 
-    character(len=80) :: inFileName     = ''
-    character(len=80) :: baseinFileName = ''
-    character(len=80) :: outFileName    = ''
-    character(len=80) :: dmxFileName    = ''
-    character(len=80) :: rstFileName    = ''
-    character(len=80) :: CPHFFileName   = ''
-    character(len=80) :: dataFileName   = ''
-    character(len=80) :: intFileName    = ''
-    character(len=80) :: moldenFileName = ''
+    character(len=80) :: inFileName       = ''
+    character(len=80) :: baseinFileName   = ''
+    character(len=80) :: outFileName      = ''
+    character(len=80) :: dmxFileName      = ''
+    character(len=80) :: rstFileName      = ''
+    character(len=80) :: CPHFFileName     = ''
+    character(len=80) :: dataFileName     = ''
+    character(len=80) :: intFileName      = ''
+    character(len=80) :: moldenFileName   = ''
+    character(len=80) :: espFileName      = ''
+    character(len=80) :: efieldFileName   = ''
+    character(len=80) :: VdwSurfFileName  = ''
+
 
     ! Basis set and directory
     character(len=240) :: basisDir       = ''
@@ -52,38 +56,44 @@ module quick_files_module
     character(len=80) :: basisCustName  = ''
     character(len=80) :: PDBFileName    = ''
 
-    integer :: inFile         = INFILEHANDLE     ! input file
-    integer :: iOutFile       = OUTFILEHANDLE    ! output file
-    integer :: iDmxFile       = DMXFILEHANDLE    ! density matrix file
-    integer :: iRstFile       = RSTFILEHANDLE    ! Restricted file
-    integer :: iCPHFFile      = CPHFFILEHANDLE   ! CPHF file
-    integer :: iBasisFile     = BASISFILEHANDLE  ! basis set file
-    integer :: iECPFile       = ECPFILEHANDLE    ! ECP file
-    integer :: iBasisCustFile = BASISCFILEHANDLE ! custom basis set file
-    integer :: iPDBFile       = PDBFILEHANDLE    ! PDB input file
-    integer :: iDataFile      = DATAFILEHANDLE   ! Data file, similar to chk file in gaussian
-    integer :: iIntFile       = INTFILEHANDLE    ! integral file
-    integer :: iMoldenFile    = MOLDENFILEHANDLE ! molden file
+    integer :: inFile         = INFILEHANDLE         ! input file
+    integer :: iOutFile       = OUTFILEHANDLE        ! output file
+    integer :: iDmxFile       = DMXFILEHANDLE        ! density matrix file
+    integer :: iRstFile       = RSTFILEHANDLE        ! Restricted file
+    integer :: iCPHFFile      = CPHFFILEHANDLE       ! CPHF file
+    integer :: iBasisFile     = BASISFILEHANDLE      ! basis set file
+    integer :: iECPFile       = ECPFILEHANDLE        ! ECP file
+    integer :: iBasisCustFile = BASISCFILEHANDLE     ! custom basis set file
+    integer :: iPDBFile       = PDBFILEHANDLE        ! PDB input file
+    integer :: iDataFile      = DATAFILEHANDLE       ! Data file, similar to chk file in gaussian
+    integer :: iIntFile       = INTFILEHANDLE        ! integral file
+    integer :: iMoldenFile    = MOLDENFILEHANDLE     ! molden file
+    integer :: iESPFile       = ESPFILEHANDLE        ! properties file for esp
+    integer :: iEFIELDFile    = EFIELDFILEHANDLE     ! properties file for efield
+    integer :: iVdwSurfFile   = VDWSURFFILEHANDLE    ! prints the calculated vanderwaals surface
+
 
     logical :: fexist = .false.         ! Check if file exists
 
     logical :: isTemplate = .false.   ! is input file a template (i.e. only the keywords)
     integer :: wrtStep = 1            ! current step for writing to output file.
     logical :: write_molden = .false. ! flag to export data into molden format
+    logical :: write_esp = .false.   ! flag to export data into prop format
+    logical :: write_efield = .false.   ! flag to export data into prop format
+
 
     contains
+
 
     !------------
     ! Setup input output files and basis dir
     !------------
     subroutine set_quick_files(api,ierr)
-
         implicit none
-        ! Pass-in parameter:
+
         integer, intent(inout) :: ierr    ! Error Flag
         logical, intent(in) :: api
 
-        ! Local Varibles
         integer :: i
 
         ! Read enviromental variables: QUICK_BASIS and ECPs
@@ -103,46 +113,68 @@ module quick_files_module
         ! for input and output files.
 
         if(.not.api) then
-          call getarg(1,inFileName)
-          i = index(inFileName,'.')
+          call getarg(1, inFileName)
+          i = index(inFileName, '.')
           if(i .eq. 0) then
             write(0,'("| Error: Invalid input file name.")')
             call quick_exit(0,1)
           endif
         else
-          i = index(inFileName,'.')  
+          i = index(inFileName, '.')  
         endif
 
-        baseinFileName=inFileName(1:i-1)
-        outFileName=inFileName(1:i-1)//'.out'
+        baseinFileName = inFileName(1:i-1)
 
-        dmxFileName=inFileName(1:i-1)//'.dmx'
-        rstFileName=inFileName(1:i-1)//'.rst'
-        CPHFFileName=inFileName(1:i-1)//'.cphf'
-        pdbFileName=inFileName(1:i-1)//'.pdb'
-        dataFileName=inFileName(1:i-1)//'.dat'
-        intFileName=inFileName(1:i-1)//'.int'
-        moldenFileName=inFileName(1:i-1)//'.molden'
-
-        return
-
+        outFileName = trim(adjustl(baseinFileName)) // '.out'
+        dmxFileName = trim(adjustl(baseinFileName)) // '.dmx'
+        rstFileName = trim(adjustl(baseinFileName)) // '.rst'
+        CPHFFileName = trim(adjustl(baseinFileName)) // '.cphf'
+        pdbFileName = trim(adjustl(baseinFileName)) // '.pdb'
+        dataFileName = trim(adjustl(baseinFileName)) // '.dat'
+        intFileName = trim(adjustl(baseinFileName)) // '.int'
+        moldenFileName = trim(adjustl(baseinFileName)) // '.molden'
+        espFileName = trim(adjustl(baseinFileName)) // '.esp'
+        efieldFileName = trim(adjustl(baseinFileName)) // '.efield'
+        VdwSurfFileName = trim(adjustl(baseinFileName)) // '.vdw'
     end subroutine
 
-    subroutine read_basis_file(keywd,ierr)
 
+    subroutine read_data_file(line)
+      use quick_exception_module
+      use quick_input_parser_module  
+
+      implicit none
+
+      character, intent(out) :: line*(*)
+
+      call read(line, '$DATA', datafilename)
+    end subroutine
+
+
+    subroutine print_data_file(io)
+        implicit none
+
+        ! pass-in Parameter
+        integer, intent(in) :: io
+
+        write (io,'("| DATA FILE  =    ",a)') trim(dataFileName)
+    end subroutine
+
+
+    subroutine read_basis_file(keywd,ierr)
         use quick_exception_module
-        use quick_mpi_module
+        use quick_mpi_module, only: master
 
         implicit none
 
-        !Pass-in Parameter
-        character keywd*(*)
+        character, intent(in) :: keywd*(*)
+        integer, intent(inout) :: ierr
+
         character(len=80) :: line
         character(len=320) :: basis_sets  !stores full path to basis_sets file
         character(len=50) :: search_keywd !keywd packed with '=',used for searching basis file name
         character(len=50) :: tmp_keywd
         character(len=50) :: tmp_basisfilename
-        integer, intent(inout) :: ierr
 
         ! local variables
         integer i,j,k1,k2,k3,k4,iofile,io,flen,f0,f1,lenkwd
@@ -156,17 +188,18 @@ module quick_files_module
 
         ! Gaussian Style Basis. Written by Alessandro GENONI 03/07/2007
         if (index(keywd,'BASIS=') /= 0) then
-
             !Get the length of keywd
             lenkwd=len_trim(keywd)
 
             i = index(keywd,'BASIS=',.false.)
 
-            j = scan(keywd(i:lenkwd),' ',.false.)
+!            j = scan(keywd(i:lenkwd),' ',.false.)
+            j = scan(keywd(i+6:),' ',.false.)
 
             basis_sets=trim(basisdir) // "/basis_link"
 
-            basisSetName = keywd(i+6:i+j-2)
+!            basisSetName = keywd(i+6:i+j-2)
+            basisSetName = keywd(i+6:i+5+j)
             search_keywd= "#" // trim(basisSetName)
             ! Check if the basis_link file exists
 
@@ -179,16 +212,15 @@ module quick_files_module
 
             SAFE_CALL(quick_open(ibasisfile,basis_sets,'O','F','W',.true.,ierr))
 
-            do while (iofile  == 0 )
+            do while (iofile == 0)
                 read(ibasisfile,'(A80)',iostat=iofile) line
-
                 
-                    call upcase(line,80)
+                call upcase(line,80)
                     
-                    if(index(line,trim(search_keywd)) .ne. 0) then
-                        tmp_basisfilename=trim(line(39:74))
-                        iofile=1
-                    endif
+                if(index(line,trim(search_keywd)) .ne. 0) then
+                    tmp_basisfilename = trim(line(39:74))
+                    iofile = 1
+                endif
             enddo
 
             close(ibasisfile)
@@ -211,7 +243,7 @@ module quick_files_module
 
         else
             basisfilename = trim(basisdir) // '/STO-3G.BAS'    ! default
-            sadGuessDir   = trim(basisdir) // '/STO-3G.SAD'
+            sadGuessDir = trim(basisdir) // '/STO-3G.SAD'
         endif
 
         if (index(keywd,'ECP=') /= 0) then
@@ -233,31 +265,23 @@ module quick_files_module
         !        call quick_exit(6,1)
         !    end if
         endif
-
     end subroutine
+
 
     subroutine print_basis_file(io)
         implicit none
 
-        ! pass-in Parameter
-        integer io
-
-        ! instant variables
-        integer i,j,k1,k2
+        integer, intent(in) :: io
 
         write(io,'(" BASIS SET = ",a,",",2X,"TYPE = CARTESIAN")') trim(basisSetName)
         write(io,'("| BASIS FILE = ",a)') trim(basisfilename)
-
     end subroutine
+
 
     subroutine print_ecp_file(io)
         implicit none
 
-        ! pass-in Parameter
-        integer io
-
-        ! instant variables
-        integer i,j,k1,k2
+        integer, intent(in) :: io
 
         write(io,'("| ECP FILE = ",a)') trim(ecpfilename)
     end subroutine
@@ -268,16 +292,11 @@ module quick_files_module
 
         ! Pass-in parameters:
         integer, intent(inout) :: ierr    ! Error Flag
-        integer io      ! file to write
+        integer, intent(in) :: io      ! file to write
 
         write (io,'("| INPUT FILE :    ",a)') trim(inFileName)
         write (io,'("| OUTPUT FILE:    ",a)') trim(outFileName)
-        write (io,'("| DATA FILE  :    ",a)') trim(dataFileName)
         write (io,'("| BASIS SET PATH: ",a)') trim(basisdir)
-
-        return
     end subroutine print_quick_io_file
-
-
 
 end module quick_files_module

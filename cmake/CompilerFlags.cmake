@@ -74,8 +74,6 @@ if("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 			if(TARGET_ARCH STREQUAL x86_64)
           		#-mfpmath=sse is default for x86_64, no need to specific it
           		set(OPT_CFLAGS ${OPT_CFLAGS} "-mtune=native")
-        	else() # i386 needs to be told to use sse prior to using -mfpmath=sse
-          		set(OPT_CFLAGS "${OPT_CFLAGS} -mtune=native -msse -mfpmath=sse")
          	endif()
          endif()
 	endif()    
@@ -118,8 +116,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 			if(TARGET_ARCH STREQUAL x86_64)
           		#-mfpmath=sse is default for x86_64, no need to specific it
           		set(OPT_CXXFLAGS ${OPT_CXXFLAGS} "-mtune=native")
-        	else() # i386 needs to be told to use sse prior to using -mfpmath=sse
-          		set(OPT_CXXFLAGS "${OPT_CXXFLAGS} -mtune=native -msse -mfpmath=sse")
          	endif()
          endif()
 	endif()    
@@ -156,8 +152,6 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
 			if(TARGET_ARCH STREQUAL x86_64)
           		#-mfpmath=sse is default for x86_64, no need to specific it
           		set(OPT_FFLAGS ${OPT_FFLAGS} -mtune=native)
-        	else() # i386 needs to be told to use sse prior to using -mfpmath=sse
-          		set(OPT_FFLAGS ${OPT_FFLAGS} -mtune=native -msse -mfpmath=sse)
          	endif()
          endif()
 	endif()
@@ -195,7 +189,7 @@ endif()
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "AppleClang")
 	add_flags(C -Wall -Wno-unused-function)
 	
-	list(APPEND OPT_CFLAGS "-mtune=native")
+	# list(APPEND OPT_CFLAGS "-mtune=native")
 	
 	#if we are crosscompiling and using clang, tell CMake this
 	if(CROSSCOMPILE)
@@ -214,7 +208,7 @@ endif()
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
 	add_flags(CXX -Wall -Wno-unused-function)
 	
-	list(APPEND OPT_CXXFLAGS "-mtune=native")
+	# list(APPEND OPT_CXXFLAGS "-mtune=native")
 	
 	if(CROSSCOMPILE)
 		set(CMAKE_CXX_COMPILER_TARGET ${TARGET_TRIPLE})
@@ -349,7 +343,7 @@ endif()
 
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "IntelLLVM")
 	set(CMAKE_C_FLAGS_DEBUG "-g -debug all")
-	set(OPT_CFLAGS -ipo -O3)
+	set(OPT_CFLAGS -O3)
 		
 	#  How flags get set for optimization depend on whether we have a MIC processor,
     #  the version of Intel compiler we have, and whether we are cross-compiling
@@ -385,7 +379,7 @@ if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "IntelLLVM")
 		set(CMAKE_Fortran_FLAGS_DEBUG "/Zi")
 	else()
 		set(CMAKE_Fortran_FLAGS_DEBUG "-g -debug all")
-		set(OPT_FFLAGS -ipo -O3)
+		set(OPT_FFLAGS -O3)
 		
 		if(SSE)
 			if("${CMAKE_Fortran_COMPILER_VERSION}" VERSION_GREATER 11 OR ${CMAKE_Fortran_COMPILER_VERSION} VERSION_EQUAL 11)

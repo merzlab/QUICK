@@ -151,6 +151,7 @@ subroutine dlf_formstep
   real(rk)       :: friction
   real(rk)       :: eigvalThreshold = 1.0d-10
   real(rk)       :: projGradient
+  real(rk)       :: temp(1)
   ! for NR-QTS
   real(rk)       :: beta_hbar,dtau,CM_INV_FOR_AMU,amu
 ! **********************************************************************
@@ -258,7 +259,8 @@ subroutine dlf_formstep
       oldgrad(:)=glob%igradient(1:nihvar)
     end if
     ! send information to set_tsmode
-    call dlf_formstep_set_tsmode(1,-1,glob%energy) ! send energy
+    temp(1) = glob%energy
+    call dlf_formstep_set_tsmode(1,-1,temp) ! send energy
     call dlf_formstep_set_tsmode(glob%nvar,0,glob%xcoords) ! TS-geometry
     call dlf_prfo_step(nihvar, glob%icoords(1:nihvar), &
         glob%igradient(1:nihvar), glob%ihessian, glob%step(1:nihvar))

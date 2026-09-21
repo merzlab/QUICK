@@ -1716,7 +1716,7 @@ subroutine dlf_qts_get_hessian(trerun_energy)
       if(taskfarm_mode==1) call dlf_tasks_int_sum(status, 1)
       if(status > 0 ) then ! hessian was read by first task
         ! distribute it to others - only qts%ihessian_image
-        if(taskfarm_mode==1) call dlf_tasks_real_sum(qts%ihessian_image,neb%varperimage*neb%varperimage)
+        if(taskfarm_mode==1) call dlf_tasks_real_sum2(qts%ihessian_image,neb%varperimage*neb%varperimage)
         if(printl>=4) write(stdout,'("Hessian of image ",i4," read from file")') qts%image_status
         if(taskfarm_mode==2.and..not.glob%dotask) qts%ihessian_image=0.D0
         !qts%ihessian_image=0.D0
@@ -1793,7 +1793,7 @@ subroutine dlf_qts_get_hessian(trerun_energy)
       ! to be communicated to the tasks:
       if(.not.fd_hess_running.and.glob%ntasks>0.and.taskfarm_mode==1) then
         call dlf_tasks_real_sum(glob%xgradient, glob%nvar)
-        call dlf_tasks_real_sum(glob%energy, 1)
+        call dlf_tasks_real_sum0(glob%energy, 1)
       end if
 
       ! reduce print level in dlf_fdhessian
@@ -1885,7 +1885,7 @@ subroutine dlf_qts_get_hessian(trerun_energy)
     ! now all Hessians of all images should be calculated. For taskfarm_mode=2
     ! they have to be combined now.
     ! should I introduce some error-checking at this point?
-    if(taskfarm_mode==2) call dlf_tasks_real_sum(qts%vhessian, &
+    if(taskfarm_mode==2) call dlf_tasks_real_sum3(qts%vhessian, &
         neb%varperimage*neb%varperimage*neb%nimage)
   end if
 
@@ -2259,6 +2259,8 @@ subroutine qts_det_tsplitting(nimage,varperimage,dtau_,total_hessian,det_tsplit)
   real(rk),allocatable :: evals_hess(:)   ! (neb%varperimage*neb%nimage)
   real(rk),allocatable :: evecs_hess(:,:) ! (neb%varperimage*neb%nimage,neb%varperimage*neb%nimage)
 
+  real(rk) :: temp(1)
+
   call allocate(hessian,nimage*varperimage,nimage*varperimage)
   hessian=0.D0
   dtau=dtau_
@@ -2365,8 +2367,10 @@ subroutine qts_det_tsplitting(nimage,varperimage,dtau_,total_hessian,det_tsplit)
   !
   ! get the whole hessian of the reactant
   ivar=1 ! nimage
+  temp(1) = svar
   call read_qts_hessian(glob%nat,ivar,neb%varperimage,svar,&
-      svar,glob%xcoords,hess_rs,svar,arr2,mass,"rs",tok)
+      temp,glob%xcoords,hess_rs,svar,arr2,mass,"rs",tok)
+  svar = temp(1)
   if(.not.tok) then
     if(printl>=2) write(stdout,*) "Warning: full reactant state Hessian not available (qts_hessian_rs.txt)"
     det_tsplit=0.D0
@@ -3114,6 +3118,8 @@ subroutine qts_reactant(qrs,ers,qrot,tbimol,tok)
   integer :: bimol,natr2,nimage_read2,varperimager2,natr,varperimager
   real(rk), allocatable :: eigvals2(:)
   real(rk) :: ers2
+
+  real(rk) :: temp(1)
   
 
   tok=.false.
@@ -3144,8 +3150,10 @@ subroutine qts_reactant(qrs,ers,qrot,tbimol,tok)
     call allocate(mass_file,glob%nat)
     
     nimage_read=1
+    temp(1) = ers
     call read_qts_hessian(glob%nat,nimage_read,varperimage_read,temperature,&
-        ers,xcoords,ihessian,etunnel,dist,mass_file,"rs",tok)
+        temp,xcoords,ihessian,etunnel,dist,mass_file,"rs",tok)
+    ers = temp(1)
     
     if(.not.tok.and.nimage_read==1) then
       ! check for bimolecular case
@@ -3171,8 +3179,10 @@ subroutine qts_reactant(qrs,ers,qrot,tbimol,tok)
         call allocate(mass_file,natr)
         call allocate(xcoords,3*natr)
 
+        temp(1) = ers
         call read_qts_hessian(natr,nimage_read,varperimager,temperature,&
-            ers,xcoords,ihessian,etunnel,dist,mass_file,"rs",tok)
+            temp,xcoords,ihessian,etunnel,dist,mass_file,"rs",tok)
+        ers = temp(1)
         ! check for tok
 
         mass_bimol=sum(mass_file)
@@ -3194,8 +3204,10 @@ subroutine qts_reactant(qrs,ers,qrot,tbimol,tok)
         call allocate(mass_file,natr2)
         call allocate(xcoords,3*natr2)
 
+        temp(1) = ers2
         call read_qts_hessian(natr2,nimage_read,varperimager2,temperature,&
-            ers2,xcoords,ihessian,etunnel,dist,mass_file,"rs2",tok)
+            temp,xcoords,ihessian,etunnel,dist,mass_file,"rs2",tok)
+        ers2 = temp(1)
         ! check for tok
 
         svar=sum(mass_file)
@@ -4296,6 +4308,7 @@ subroutine dlf_htst_rate
   real(rk)  :: ene_rs2
   real(rk), allocatable :: eigvals_rs2(:)
   character(128) :: filename
+  real(rk) :: temp2(1)
 
   if(glob%iam > 0 ) return ! only task zero should do this (task farming does
                            ! not make sense for such fast calculations. No
@@ -4383,8 +4396,10 @@ subroutine dlf_htst_rate
     call allocate(mass_file,natr)
 
     nimage_read=1
+    temp2(1) = ene_rs
     call read_qts_hessian(natr,nimage_read,varperimager,temperature,&
-        ene_rs,xcoords,ihessian,etunnel,dist,mass_file,"rs",tok)
+        temp2,xcoords,ihessian,etunnel,dist,mass_file,"rs",tok)
+    ene_rs = temp2(1)
     
     if(.not.tok) call dlf_fail("Error reading reactant from Hessian file.")
     if(nimage_read/=1) call dlf_fail("Wrong number of images for RS.")
@@ -4414,8 +4429,10 @@ subroutine dlf_htst_rate
     call dlf_matrix_diagonalise(varperimager,ihessian,eigvals_rs,evecs)
 
     ! write hessian and qts_reactant file for later use?
+    temp2(1) = ene_rs
     call write_qts_hessian(natr,nimage_read,varperimager,-1.D0,&
-        ene_rs,xcoords,ihessian,etunnel,dist,"rs_mass")
+        temp2,xcoords,ihessian,etunnel,dist,"rs_mass")
+    ene_rs = temp2(1)
 
     call deallocate(ihessian)
     call deallocate(evecs)
@@ -4455,8 +4472,10 @@ subroutine dlf_htst_rate
     call allocate(xcoords,3*natr)
 
     nimage_read=1
+    temp2(1) = ene_rs
     call read_qts_hessian(natr,nimage_read,varperimager,temperature,&
-        ene_rs,xcoords,ihessian,etunnel,dist,mass_file,"rs",tok)
+        temp2,xcoords,ihessian,etunnel,dist,mass_file,"rs",tok)
+    ene_rs = temp2(1)
 
     mu_bim=sum(mass_file)
     
@@ -4494,8 +4513,10 @@ subroutine dlf_htst_rate
     call allocate(xcoords,3*natr2)
 
     nimage_read=1
+    temp2(1) = ene_rs2
     call read_qts_hessian(natr2,nimage_read,varperimager2,temperature,&
-        ene_rs2,xcoords,ihessian,etunnel,dist,mass_file,"rs2",tok)
+        temp2,xcoords,ihessian,etunnel,dist,mass_file,"rs2",tok)
+    ene_rs2 = temp2(1)
     
     if(.not.tok) call dlf_fail("Error reading reactant from Hessian rs2 file.")
     if(nimage_read/=1) call dlf_fail("Wrong number of images for RS2.")
@@ -4574,8 +4595,10 @@ subroutine dlf_htst_rate
     call allocate(mass_file,nat)
 
     nimage_read=1
+    temp2(1) = ene_ts
     call read_qts_hessian(nat,nimage_read,varperimage,temperature,&
-        ene_ts,xcoords,ihessian,etunnel,dist,mass_file,"ts",tok)
+        temp2,xcoords,ihessian,etunnel,dist,mass_file,"ts",tok)
+    ene_ts = temp2(1)
     
     if(.not.tok) call dlf_fail("Error reading TS from Hessian file.")
     if(nimage_read/=1) call dlf_fail("Wrong number of images for TS.")
@@ -4605,8 +4628,10 @@ subroutine dlf_htst_rate
     call dlf_matrix_diagonalise(varperimage,ihessian,eigvals_ts,evecs)
 
     ! write hessian and qts_reactant file for later use?
+    temp2(1) = ene_ts
     call write_qts_hessian(nat,nimage_read,varperimage,-1.D0,&
-        ene_ts,xcoords,ihessian,etunnel,dist,"ts_mass")
+        temp2,xcoords,ihessian,etunnel,dist,"ts_mass")
+    ene_ts = temp2(1)
 
     call deallocate(ihessian)
     call deallocate(evecs)

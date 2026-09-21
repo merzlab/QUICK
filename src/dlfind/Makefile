@@ -24,21 +24,25 @@ FOR=$(FC) $(FORT_EXT_LIB_FLAGS)
 #FOR=$(FC) $(FFLAGS) $(DLFIND_FLAGS)
 
 # modules used by more than one file
-OBJ_MOD = $(dlfindobjfolder)/dlf_stat_module.o $(dlfindobjfolder)/dlf_global_module.o $(dlfindobjfolder)/dlf_allocate.o $(dlfindobjfolder)/dlf_util.o \
+OBJ_MOD = $(dlfindobjfolder)/dlf_stat_module.o $(dlfindobjfolder)/dlf_global_module.o \
+	$(dlfindobjfolder)/dlf_allocate.o $(dlfindobjfolder)/dlf_util.o \
 	$(dlfindobjfolder)/dlf_sort.o
 
 # Objects that work without numerical libraries (this distinction does not hold any more) 
 OBJ_NOLAPACK = $(dlfindobjfolder)/dl_find.o $(dlfindobjfolder)/dlf_convergence.o $(dlfindobjfolder)/dlf_checkpoint.o $(dlfindobjfolder)/dlf_svnversion.o\
 	$(dlfindobjfolder)/dlf_formstep.o $(dlfindobjfolder)/dlf_scalestep.o \
 	$(dlfindobjfolder)/dlf_lbfgs.o $(dlfindobjfolder)/dlf_time.o \
-	$(dlfindobjfolder)/dlf_task.o $(dlfindobjfolder)/dlf_neb.o $(dlfindobjfolder)/dlf_qts.o $(dlfindobjfolder)/dlf_dimer.o $(dlfindobjfolder)/dlf_conint.o $(dlfindobjfolder)/dlf_coords.o \
+	$(dlfindobjfolder)/dlf_task.o $(dlfindobjfolder)/dlf_neb.o \
+	$(dlfindobjfolder)/dlf_qts.o $(dlfindobjfolder)/dlf_dimer.o \
+	$(dlfindobjfolder)/dlf_conint.o $(dlfindobjfolder)/dlf_coords.o \
 	$(dlfindobjfolder)/dlf_parallel_opt.o $(dlfindobjfolder)/dlf_microiter.o
 
 # Objects that need LAPACK linked in
-OBJ_LAPACK = $(dlfindobjfolder)/dlf_hdlc_matrixlib.o $(dlfindobjfolder)/dlf_hdlc_primitive.o $(dlfindobjfolder)/dlf_hdlc_constraint.o \
-	$(dlfindobjfolder)/dlf_hdlc_hdlclib.o $(dlfindobjfolder)/dlf_hdlc_interface.o $(dlfindobjfolder)/dlf_linalg.o
+OBJ_LAPACK = $(dlfindobjfolder)/dlf_hdlc_matrixlib.o $(dlfindobjfolder)/dlf_hdlc_primitive.o \
+	$(dlfindobjfolder)/dlf_hdlc_constraint.o $(dlfindobjfolder)/dlf_hdlc_hdlclib.o \
+	$(dlfindobjfolder)/dlf_hdlc_interface.o $(dlfindobjfolder)/dlf_linalg.o
 
-OBJ =  $(OBJ_NOLAPACK) $(OBJ_LAPACK) 
+OBJ = $(OBJ_NOLAPACK) $(OBJ_LAPACK) 
 
 OBJ_MAIN = $(dlfindobjfolder)/dlfind_main_driver.o $(dlfindobjfolder)/dlf_serial.o 
 ##OBJ_MAIN = $(dlfindobjfolder)/dlf_serial.o 

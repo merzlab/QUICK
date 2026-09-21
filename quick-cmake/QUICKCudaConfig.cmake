@@ -6,8 +6,7 @@ set(QUICK_GPU_PLATFORM "CUDA")
 set(QUICK_GPU_TARGET_NAME "cuda")
 set(GPU_LD_FLAGS "") # hipcc requires special flags for linking (see below)
 
-if(CUDA)
-
+if(CUDA AND NOT HIP)
     find_package(CUDA REQUIRED)
 
     if(NOT CUDA_FOUND)
@@ -19,7 +18,13 @@ if(CUDA)
 
     set(CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
 
-    #SM9.0 = H100, GH200 (Hopper)
+    #SM12.1 = GB20B (Blackwell)
+    set(SM121FLAGS -gencode arch=compute_121,code=sm_121)
+    #SM12.0 = GB202, GB203, GB205, GB206, GB207 (Blackwell)
+    set(SM120FLAGS -gencode arch=compute_120,code=sm_120)
+    #SM10.0 = GB100 (Blackwell)
+    set(SM100FLAGS -gencode arch=compute_100,code=sm_100)
+    #SM9.0 = H100, H200, H800, GH200 (Hopper)
     set(SM90FLAGS -gencode arch=compute_90,code=sm_90)
     #SM8.9 = L4, L40 (Ada Lovelace)
     set(SM89FLAGS -gencode arch=compute_89,code=sm_89)
@@ -101,82 +106,125 @@ if(CUDA)
             list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)          
 	    
-	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 12.0) AND (${CUDA_VERSION} VERSION_LESS 12.5))
+	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 12.0) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 12.6))
             message(STATUS "Configuring QUICK for SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0, SM7.5, SM8.0, SM8.6, SM8.9 and SM9.0")
             list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM89FLAGS} ${SM90FLAGS})
             list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
             set(DISABLE_OPTIMIZER_CONSTANTS TRUE)          
 
+	elseif((${CUDA_VERSION} VERSION_EQUAL 12.8))
+            message(STATUS "Configuring QUICK for SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0, SM7.5, SM8.0, SM8.6, SM8.9, SM9.0, SM10.0, and SM12.0")
+            list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM89FLAGS} ${SM90FLAGS} ${SM100FLAGS} ${SM120FLAGS})
+            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
+            set(DISABLE_OPTIMIZER_CONSTANTS TRUE)          
+
+	elseif((${CUDA_VERSION} VERSION_EQUAL 12.9))
+            message(STATUS "Configuring QUICK for SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0, SM7.5, SM8.0, SM8.6, SM8.9, SM9.0, SM10.0, SM12.0, and SM12.1")
+            list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM89FLAGS} ${SM90FLAGS} ${SM100FLAGS} ${SM120FLAGS} ${SM121FLAGS})
+            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
+            set(DISABLE_OPTIMIZER_CONSTANTS TRUE)          
+
+	elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 13.0) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 13.2))
+            message(STATUS "Configuring QUICK for SM7.5, SM8.0, SM8.6, SM8.9, SM9.0, SM10.0, SM12.0, and SM12.1")
+            list(APPEND CUDA_NVCC_FLAGS ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM89FLAGS} ${SM90FLAGS} ${SM100FLAGS} ${SM120FLAGS} ${SM121FLAGS})
+            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
+            set(DISABLE_OPTIMIZER_CONSTANTS TRUE)          
+
 	else()
-	    message(FATAL_ERROR "Error: Unsupported CUDA version. ${PROJECT_NAME} requires CUDA version >= 8.0 and <= 12.4.  Please upgrade your CUDA installation or disable building with CUDA.")
+	    message(FATAL_ERROR "Error: Unsupported CUDA version. ${PROJECT_NAME} requires CUDA version >= 8.0 and <= 13.2.  Please upgrade your CUDA installation or disable building with CUDA.")
 	endif()
 
     else()
 
         set(FOUND "FALSE")
-        
-        if("${QUICK_USER_ARCH}" MATCHES "kepler")
-            message(STATUS "Configuring QUICK for SM3.5")
-            list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS})
-            list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
-            set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
-            set(FOUND "TRUE")
-        endif()
-            
-        if("${QUICK_USER_ARCH}" MATCHES "maxwell")
-	    message(STATUS "Configuring QUICK for SM5.0")
-            list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS})
-	    list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
-            set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
-            set(FOUND "TRUE")
-        endif()
 
-        if("${QUICK_USER_ARCH}" MATCHES "pascal")
-            message(STATUS "Configuring QUICK for SM6.0")
-            list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS})
-            set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
-            set(FOUND "TRUE")
-        endif()
-        
-        if("${QUICK_USER_ARCH}" MATCHES "volta")
-            message(STATUS "Configuring QUICK for SM7.0")
-	    list(APPEND CUDA_NVCC_FLAGS ${SM70FLAGS})
-            if((${CUDA_VERSION} VERSION_LESS 10.0))
-	        set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
+        string(REPLACE " " ";" ARCH_LIST "${QUICK_USER_ARCH}")
+
+        foreach(ARCH ${ARCH_LIST})
+
+	    # Strip any accidental empty elements caused by consecutive spaces
+	    if(ARCH STREQUAL "")
+		    continue()
+	    endif()
+ 
+	    if(${ARCH} STREQUAL "kepler")
+                message(STATUS "Configuring QUICK for SM3.5")
+                list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS})
+                list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
+                set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
+                set(FOUND "TRUE")
             endif()
-            set(FOUND "TRUE")
-        endif()
+                
+            if(${ARCH} STREQUAL "maxwell")
+                message(STATUS "Configuring QUICK for SM5.0")
+                list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS})
+                list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
+                set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
+                set(FOUND "TRUE")
+            endif()
 
-        if("${QUICK_USER_ARCH}" MATCHES "turing")
-            message(STATUS "Configuring QUICK for SM7.5")
-            list(APPEND CUDA_NVCC_FLAGS ${SM75FLAGS})
-            set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
-            set(FOUND "TRUE")
-        endif()
+            if(${ARCH} STREQUAL "pascal")
+                message(STATUS "Configuring QUICK for SM6.0")
+                list(APPEND CUDA_NVCC_FLAGS ${SM60FLAGS})
+                set(DISABLE_OPTIMIZER_CONSTANTS TRUE)
+                set(FOUND "TRUE")
+            endif()
+            
+            if(${ARCH} STREQUAL "volta")
+                message(STATUS "Configuring QUICK for SM7.0")
+                list(APPEND CUDA_NVCC_FLAGS ${SM70FLAGS})
+                if((${CUDA_VERSION} VERSION_LESS 10.0))
+                    set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
+                endif()
+                set(FOUND "TRUE")
+            endif()
 
-        if("${QUICK_USER_ARCH}" MATCHES "ampere")
-            message(STATUS "Configuring QUICK for SM8.0")
-            list(APPEND CUDA_NVCC_FLAGS ${SM80FLAGS})
-            set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
-            set(FOUND "TRUE")
-        endif()
+            if(${ARCH} STREQUAL "turing")
+                message(STATUS "Configuring QUICK for SM7.5")
+                list(APPEND CUDA_NVCC_FLAGS ${SM75FLAGS})
+                set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
+                set(FOUND "TRUE")
+            endif()
 
-        if("${QUICK_USER_ARCH}" MATCHES "adalovelace")
-            message(STATUS "Configuring QUICK for SM8.9")
-            list(APPEND CUDA_NVCC_FLAGS ${SM89FLAGS})
-            set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
-            set(FOUND "TRUE")
-        endif()
+            if(${ARCH} STREQUAL "ampere")
+                message(STATUS "Configuring QUICK for SM8.0")
+                list(APPEND CUDA_NVCC_FLAGS ${SM80FLAGS})
+                set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
+                set(FOUND "TRUE")
+            endif()
 
-        if("${QUICK_USER_ARCH}" MATCHES "hopper")
-            message(STATUS "Configuring QUICK for SM9.0")
-            list(APPEND CUDA_NVCC_FLAGS ${SM90FLAGS})
-            set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
-            set(FOUND "TRUE")
-        endif()
+            if(${ARCH} STREQUAL "adalovelace")
+                message(STATUS "Configuring QUICK for SM8.9")
+                list(APPEND CUDA_NVCC_FLAGS ${SM89FLAGS})
+                set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
+                set(FOUND "TRUE")
+            endif()
+
+            if(${ARCH} STREQUAL "hopper")
+                message(STATUS "Configuring QUICK for SM9.0")
+                list(APPEND CUDA_NVCC_FLAGS ${SM90FLAGS})
+                set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
+                set(FOUND "TRUE")
+            endif()
+
+            if(${ARCH} STREQUAL "blackwell")
+                message(STATUS "Configuring QUICK for SM10.0")
+                list(APPEND CUDA_NVCC_FLAGS ${SM100FLAGS})
+                set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
+                set(FOUND "TRUE")
+            endif()
+
+            if(${ARCH} STREQUAL "blackwell2")
+                message(STATUS "Configuring QUICK for SM12.0")
+                list(APPEND CUDA_NVCC_FLAGS ${SM120FLAGS})
+                set(DISABLE_OPTIMIZER_CONSTANTS FALSE)
+                set(FOUND "TRUE")
+            endif()
+
+	endforeach()
 
         if (NOT ${FOUND})
-            message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH. Possible values are kepler, maxwell, pascal, volta, turing, ampere, adalovelace, and hopper.")
+            message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH. Possible values are kepler, maxwell, pascal, volta, turing, ampere, adalovelace, hopper, blackwell, and blackwell2.")
         endif()
 
     endif()
@@ -187,9 +235,23 @@ if(CUDA)
     #  https://stackoverflow.com/questions/6622454/cuda-incompatible-with-my-gcc-version
     #  VERSION_EQUAL 10 means 10.0, so use ranges to compare major versions.
     if ( "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" AND (
-            ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.3
+	    ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 16.0
+              AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 6.0
+              AND CUDA_VERSION VERSION_GREATER_EQUAL 13.0
+              AND CUDA_VERSION VERSION_LESS_EQUAL 13.2 )
+	OR  ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0
+              AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 6.0
+              AND CUDA_VERSION VERSION_GREATER_EQUAL 12.8
+              AND CUDA_VERSION VERSION_LESS_EQUAL 12.9 )
+        # 13.3 and 12.6 is a special case where stackoverflow and
+        # nvidia disagree; allow based on Gerald Monard's testing.
+        OR ( CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 13.3
+              AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 6.0
+              AND CUDA_VERSION VERSION_EQUAL 12.6 )
+        OR  ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.3
+              AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 6.0
               AND CUDA_VERSION VERSION_GREATER_EQUAL 12.4
-              AND CUDA_VERSION VERSION_LESS_EQUAL 12.4 )
+              AND CUDA_VERSION VERSION_LESS_EQUAL 12.6 )
         OR ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 12.3
               AND CUDA_VERSION VERSION_GREATER_EQUAL 12.1
               AND CUDA_VERSION VERSION_LESS_EQUAL 12.3 )
@@ -197,11 +259,11 @@ if(CUDA)
               AND CUDA_VERSION VERSION_GREATER_EQUAL 12
               AND CUDA_VERSION VERSION_LESS_EQUAL 12 )
         OR ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 12
-              AND CUDA_VERSION VERSION_GREATER_EQUAL 11.4.1
+              AND CUDA_VERSION VERSION_GREATER_EQUAL 11.5
               AND CUDA_VERSION VERSION_LESS_EQUAL 11.8 )
         OR ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11
               AND CUDA_VERSION VERSION_GREATER_EQUAL 11.1
-              AND CUDA_VERSION VERSION_LESS_EQUAL 11.4.0 )
+              AND CUDA_VERSION VERSION_LESS_EQUAL 11.4 )
         OR ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10
               AND CUDA_VERSION VERSION_GREATER_EQUAL 11
               AND CUDA_VERSION VERSION_LESS_EQUAL 11 )
@@ -223,18 +285,17 @@ if(CUDA)
     ) )
         message(STATUS "Checking CUDA and GNU versions -- compatible")
     elseif ( "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" AND (
-        CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.2
-            OR CUDA_VERSION VERSION_GREATER 12.4
+	CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0
+            OR CUDA_VERSION VERSION_GREATER 13.2
     ) )
         message(STATUS "Checking CUDA and GNU versions -- compatibility unknown")
         message(STATUS "    See https://stackoverflow.com/questions/6622454/cuda-incompatible-with-my-gcc-version")
     elseif ( "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" )
         message(STATUS "")
         message("************************************************************")
-        message("Error: Incompatible CUDA and GNU versions")
-        message(" ${CMAKE_CXX_COMPILER_VERSION}")
-        message(" ${CMAKE_CXX_COMPILER_VERSION_MAJOR}")
-        message("See https://stackoverflow.com/questions/6622454/cuda-incompatible-with-my-gcc-version")
+        message("Error: Incompatible CUDA and GNU versions!")
+        message("  GNU version is ${CMAKE_CXX_COMPILER_VERSION}.")
+        message("  See https://stackoverflow.com/questions/6622454/cuda-incompatible-with-my-gcc-version")
         message("************************************************************")
         message(STATUS "")
         message(FATAL_ERROR)
@@ -266,7 +327,7 @@ if(CUDA)
     endif()
 
     # extra CUDA flags
-    list(APPEND CUDA_NVCC_FLAGS -use_fast_math)
+    list(APPEND CUDA_NVCC_FLAGS --use_fast_math)
 
     if(TARGET_LINUX OR TARGET_OSX)
         list(APPEND CUDA_NVCC_FLAGS --compiler-options -fPIC)
@@ -274,7 +335,7 @@ if(CUDA)
 
     # SPDF
     if(ENABLEF)
-        list(APPEND CUDA_NVCC_FLAGS -DCUDA_SPDF)
+        list(APPEND CUDA_NVCC_FLAGS -DGPU_SPDF)
     endif()
 
     if(DISABLE_OPTIMIZER_CONSTANTS)
@@ -288,20 +349,15 @@ if(CUDA)
     if(NOT INSIDE_AMBER)
 	# --------------------------------------------------------------------
 	# import a couple of CUDA libraries used by amber tools
-
         import_library(cublas "${CUDA_cublas_LIBRARY}")
         import_library(cusolver "${CUDA_cusolver_LIBRARY}")
     endif()
-
 endif()
 
 #option(HIP "Build ${PROJECT_NAME} with HIP GPU acceleration support." FALSE)
 #option(HIP_RDC "Build relocatable device code, also known as separate compilation mode." FALSE)
 #option(HIP_WARP64 "Build for CDNA AMD GPUs (warp size 64) or RDNA (warp size 32)" TRUE)
 if(HIP)
-    # HIP builds currently unavailable (TODO: fix post release)
-    message(FATAL_ERROR "Error: HIP support is currently unavailable in this QUICK release. Support will be added back in a future release.")
-
     set(QUICK_GPU_PLATFORM "HIP")
     set(QUICK_GPU_TARGET_NAME "hip")
     set(GPU_LD_FLAGS -fgpu-rdc --hip-link)
@@ -325,46 +381,95 @@ if(HIP)
     endif()
 
     list(APPEND AMD_HIP_FLAGS -fPIC -std=c++14)
-    set(TARGET_ID_SUPPORT ON)
+    #set(TARGET_ID_SUPPORT ON)
 
 #    if(HIP_WARP64)
 #        add_compile_definitions(QUICK_PLATFORM_AMD_WARP64)
 #    endif()
 
-    # HIP codes currently do not support f-functions with -DUSE_LEGACY_ATOMICS targets (gfx906 and gfx908)
-    if(ENABLEF AND (("${QUICK_USER_ARCH}" STREQUAL "") OR ("${QUICK_USER_ARCH}" MATCHES "gfx906") OR ("${QUICK_USER_ARCH}" MATCHES "gfx908")))
-	    message(FATAL_ERROR "Error: Unsupported HIP options (ENABLEF with -DUSE_LEGACY_ATOMICS). ${PROJECT_NAME} support for f-functions requires newer HIP architecture targets not using LEGACY_ATOMICS.  Please specify architectures with QUICK_USER_ARCH not needing LEGACY_ATOMICS (post-gfx908) or disable f-function support.")
-    endif()
-
     if( NOT "${QUICK_USER_ARCH}" STREQUAL "")
         set(FOUND "FALSE")
-        if("${QUICK_USER_ARCH}" MATCHES "gfx908")
+
+        if("${QUICK_USER_ARCH}" STREQUAL "gfx908")
             message(STATUS "Configuring QUICK for gfx908")
             list(APPEND AMD_HIP_FLAGS -DUSE_LEGACY_ATOMICS)
             set(FOUND "TRUE")
         endif()
 
-        if("${QUICK_USER_ARCH}" MATCHES "gfx90a")
+        if("${QUICK_USER_ARCH}" STREQUAL "gfx90a")
             message(STATUS "Configuring QUICK for gfx90a")
-            list(APPEND AMD_HIP_FLAGS -munsafe-fp-atomics -DAMD_ARCH_GFX90a)
+            list(APPEND AMD_HIP_FLAGS -DAMD_ARCH_GFX90a)
+            set(FOUND "TRUE")
+        endif()
+
+        if("${QUICK_USER_ARCH}" STREQUAL "gfx942")
+            message(STATUS "Configuring QUICK for gfx942")
+            list(APPEND AMD_HIP_FLAGS -DAMD_ARCH_GFX90a)
             set(FOUND "TRUE")
         endif()
 
         if (NOT ${FOUND})
-            message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH. Possible values are gfx908, gfx90a.")
+            message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH. Possible values are gfx908, gfx90a, gfx942.")
         endif()
     else()
-        list(APPEND AMD_HIP_FLAGS -DUSE_LEGACY_ATOMICS)
         set(QUICK_USER_ARCH "gfx908")
+        list(APPEND AMD_HIP_FLAGS -DUSE_LEGACY_ATOMICS)
         message(STATUS "AMD GPU architecture not specified. Code will be optimized for gfx908.")
     endif()
 
     find_package(HipCUDA REQUIRED)
 
+    execute_process(
+          COMMAND ${HIP_HIPCC_EXECUTABLE} --version
+	  OUTPUT_VARIABLE HIPCC_VERSION_OUTPUT
+	  RESULT_VARIABLE HIPCC_VERSION_RESULT)
+
+    if(NOT HIPCC_VERSION_RESULT EQUAL "0")
+        message(FATAL_ERROR "Failed to get ROCm/HIP version.")
+    endif()
+
+    string(REPLACE "\n" ";" HIPCC_VERSION_OUTPUT ${HIPCC_VERSION_OUTPUT})
+    string(REGEX MATCH "rocm-([0-9]+).([0-9]+).([0-9]+)" _ "${HIPCC_VERSION_OUTPUT}")
+    set(HIP_VERSION_MAJOR ${CMAKE_MATCH_1})
+    set(HIP_VERSION_MINOR ${CMAKE_MATCH_2})
+    set(HIP_VERSION_PATCH ${CMAKE_MATCH_3})
+    set(HIP_VERSION "${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_PATCH}" CACHE STRING "ROCm/HIP version (reported by hipcc).")
+    mark_as_advanced(HIP_VERSION)
+    message(STATUS "Detected ROCm/HIP version: ${HIP_VERSION}")
+
+    #  check ROCm version (as reported by hipcc),
+    #  as the QUICK HIP codes trigger a known scalar register fill/spill bug
+    #  in several ROCm versions
+    if ((${HIP_VERSION} VERSION_GREATER_EQUAL 5.4.3) AND (${HIP_VERSION} VERSION_LESS 6.2.1))
+        message(STATUS "")
+        message("************************************************************")
+	message("Error: Incompatible ROCm/HIP version: ${HIP_VERSION}")
+        message("  The QUICK HIP codes trigger a known compiler scalar register ")
+	message("  fill/spill bug in ROCm (>= v5.4.3, < v6.2.1).")
+        message("  Please build QUICK with a tested working ROCm version.")
+        message("************************************************************")
+        message(STATUS "")
+        message(FATAL_ERROR)
+    endif()
+
     list(APPEND CUDA_NVCC_FLAGS ${AMD_HIP_FLAGS})
 
+    if(QUICK_DEBUG_HIP_ASAN)
+	set(QUICK_USER_ARCH "${QUICK_USER_ARCH}:xnack+")
+	list(APPEND CUDA_NVCC_FLAGS -fsanitize=address -fsanitize-recover=address -shared-libsan -g --offload-arch=${QUICK_USER_ARCH})
+    endif()
+
+    # SPDF
+    if(ENABLEF)
+        list(APPEND CUDA_NVCC_FLAGS -DGPU_SPDF)
+    endif()
+ 
+    if(USE_LEGACY_ATOMICS)
+        list(APPEND CUDA_NVCC_FLAGS -DUSE_LEGACY_ATOMICS)
+    endif()
+
     set(CMAKE_CXX_COMPILER ${HIP_HIPCC_EXECUTABLE})
-    set(CMAKE_CXX_LINKER   ${HIP_HIPCC_EXECUTABLE})
+    set(CMAKE_CXX_LINKER ${HIP_HIPCC_EXECUTABLE})
 
 #    if(HIP_RDC)
 #        # Only hipcc can link a library compiled using RDC mode
@@ -375,13 +480,14 @@ if(HIP)
 #        # set(CMAKE_CXX_CREATE_SHARED_LIBRARY "${CUDA_NVCC_EXECUTABLE} -fgpu-rdc --hip-link <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -Wl,--unresolved-symbols=ignore-in-object-files <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 #    endif()
 
-    import_library(cublas "${CUDA_cublas_LIBRARY}")
-    import_library(cusolver "${CUDA_cusolver_LIBRARY}")
+    if(NOT INSIDE_AMBER)
+	# --------------------------------------------------------------------
+	# import a couple of CUDA libraries used by amber tools
+        import_library(cublas "${CUDA_cublas_LIBRARY}")
+        import_library(cusolver "${CUDA_cusolver_LIBRARY}")
+    endif()
 
     if(MAGMA)
         find_package(Magma REQUIRED)
-	
     endif()
-
 endif()
-

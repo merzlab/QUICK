@@ -354,7 +354,7 @@ end subroutine dlf_coords_destroy
 !! glob%icoords, glob%igradient, trerun_energy, testconv
 !!
 !! SYNOPSIS
-subroutine dlf_coords_xtoi(trerun_energy,testconv,iimage)
+subroutine dlf_coords_xtoi(trerun_energy,testconv,iimage,status)
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob, stdout, stderr, printl
@@ -362,6 +362,7 @@ subroutine dlf_coords_xtoi(trerun_energy,testconv,iimage)
   logical, intent(out) :: trerun_energy
   logical, intent(out) :: testconv ! is convergence tested here?
   integer, intent(out) :: iimage ! which image to be calculated next?
+  integer, intent(inout) :: status
 ! **********************************************************************
 
   testconv=.false.

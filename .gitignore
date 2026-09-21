@@ -20,3 +20,6 @@ quick.rc
 runtest
 runtest.log
 share/
+DnC_Test_Runs/
+DnC_Legacy_Code/
+.DS_Store

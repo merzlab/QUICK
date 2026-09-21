@@ -28,8 +28,9 @@ subroutine scf_operator(deltaO)
    use allmod
    use quick_scf_module
    use quick_cutoff_module, only: cshell_density_cutoff
-   use quick_cshell_eri_module, only: getCshellEri, getCshellEriEnergy 
+   use quick_eri_cshell_module, only: getCshellEri, getCshellEriEnergy 
 #ifdef MPIV
+   use quick_mpi_module, only: quick_comm
    use mpi
 #endif
 
@@ -78,14 +79,14 @@ subroutine scf_operator(deltaO)
    call cshell_density_cutoff
 
 #ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
 
 !  Start the timer for 2e-integrals
    call cpu_time(timer_begin%T2e)
 
-#if defined CUDA || defined CUDA_MPIV
-   if (quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+   if (quick_method%bGPU) then
 
       if(quick_method%HF)then      
          call gpu_upload_method(0, 1.0d0)
@@ -105,7 +106,7 @@ subroutine scf_operator(deltaO)
 #endif
 
    if (quick_method%nodirect) then
-#ifdef CUDA
+#if defined(GPU)
       call gpu_addint(quick_qm_struct%o, intindex, intFileName)
 #else
 #ifndef MPI
@@ -120,20 +121,20 @@ subroutine scf_operator(deltaO)
 ! The previous two terms are the one electron part of the Fock matrix.
 ! The next two terms define the two electron part.
 !-----------------------------------------------------------------
-#if defined CUDA || defined CUDA_MPIV
-      if (quick_method%bCUDA) then          
+#if defined(GPU) || defined(MPIV_GPU)
+      if (quick_method%bGPU) then          
          call gpu_get2e(quick_qm_struct%o)  
       else                                  
 #endif
 !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
 !  Reference: Strout DL and Scuseria JCP 102(1995),8448.
 
-#if defined MPIV && !defined CUDA_MPIV 
+#if defined(MPIV) && !defined(MPIV_GPU)
 !  Every nodes will take about jshell/nodes shells integrals such as 1 water, which has 
 !  4 jshell, and 2 nodes will take 2 jshell respectively.
    if(bMPI) then
-      do i=1,mpi_jshelln(mpirank)
-         ii=mpi_jshell(mpirank,i)
+      do i=1,mpi_jshelln(quick_comm_rank)
+         ii=mpi_jshell(quick_comm_rank,i)
          call getCshellEri(II)
       enddo
    else
@@ -147,7 +148,7 @@ subroutine scf_operator(deltaO)
       enddo
 #endif
 
-#if defined CUDA || defined CUDA_MPIV 
+#if defined(GPU) || defined(MPIV_GPU)
       endif                             
 #endif
    endif
@@ -162,7 +163,7 @@ subroutine scf_operator(deltaO)
    if (deltaO) quick_qm_struct%dense(:,:) = quick_qm_struct%denseSave(:,:)
 
 #ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
 
 !  Terminate the timer for 2e-integrals
@@ -177,7 +178,7 @@ subroutine scf_operator(deltaO)
 !-----------------------------------------------------------------
 
 #ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
 
    if (quick_method%DFT) then
@@ -193,7 +194,7 @@ subroutine scf_operator(deltaO)
 
 
 #ifdef MPIV
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
 
 !  Stop the exchange correlation timer
@@ -206,14 +207,14 @@ subroutine scf_operator(deltaO)
 #ifdef MPIV
 !  MPI reduction operations
 
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,quick_mpi_error)
 
    call cpu_time(timer_begin%TEred)
 
    if (quick_method%DFT) then
-   call MPI_REDUCE(quick_qm_struct%Exc, Excsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-   call MPI_REDUCE(quick_qm_struct%aelec, aelec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-   call MPI_REDUCE(quick_qm_struct%belec, belec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+   call MPI_REDUCE(quick_qm_struct%Exc, Excsum, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
+   call MPI_REDUCE(quick_qm_struct%aelec, aelec, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
+   call MPI_REDUCE(quick_qm_struct%belec, belec, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
 
    if(master) then
      quick_qm_struct%Exc = Excsum
@@ -222,8 +223,8 @@ subroutine scf_operator(deltaO)
    endif
    endif
 
-   call MPI_REDUCE(quick_qm_struct%o, quick_scratch%osum, nbasis*nbasis, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-   call MPI_REDUCE(quick_qm_struct%Eel, Eelsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+   call MPI_REDUCE(quick_qm_struct%o, quick_scratch%osum, nbasis*nbasis, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
+   call MPI_REDUCE(quick_qm_struct%Eel, Eelsum, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
 
    if(master) then
      quick_qm_struct%o(:,:) = quick_scratch%osum(:,:)
@@ -269,6 +270,7 @@ subroutine get_xc
    use xc_f90_lib_m
 #ifdef MPIV
    use mpi
+   use quick_mpi_module, only: quick_comm
 #endif
    implicit none
 
@@ -297,10 +299,8 @@ subroutine get_xc
    quick_qm_struct%aelec=0.d0
    quick_qm_struct%belec=0.d0
 
-
-#if defined CUDA || defined CUDA_MPIV
-
-   if(quick_method%bCUDA) then
+#if defined(GPU) || defined(MPIV_GPU)
+   if(quick_method%bGPU) then
 
 #ifdef DEBUG
       if (quick_method%debug)  write(iOutFile,*) "LIBXC Nfuncs:",quick_method%nof_functionals,quick_method%functional_id(1)
@@ -326,10 +326,10 @@ subroutine get_xc
    endif
 
 
-#if defined MPIV && !defined CUDA_MPIV
+#if defined(MPIV) && !defined(MPIV_GPU)
       if(bMPI) then
-         irad_init = quick_dft_grid%igridptll(mpirank+1)
-         irad_end = quick_dft_grid%igridptul(mpirank+1)
+         irad_init = quick_dft_grid%igridptll(quick_comm_rank+1)
+         irad_end = quick_dft_grid%igridptul(quick_comm_rank+1)
       else
          irad_init = 1
          irad_end = quick_dft_grid%nbins

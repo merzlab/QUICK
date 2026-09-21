@@ -871,7 +871,7 @@ end subroutine dlf_hdlc_hessian_xtoi
 subroutine dlf_hdlc_itox(nat,nivar,nicore,micspec,icoords,xcoords,tok)
 !! SOURCE
   use dlf_parameter_module, only: rk
-  use dlf_global, only: printl,stdout  
+  use dlf_global, only: printl,stdout
   use dlfhdlc_hdlclib, only: hdlc,matrix,residue_type,matrix_create,matrix_set, &
       matrix_destroy,matrix_get, matrix_print,&
       ! subroutines
@@ -940,7 +940,19 @@ subroutine dlf_hdlc_itox(nat,nivar,nicore,micspec,icoords,xcoords,tok)
     CALL coord_hdlc_to_cart(residue,cxyz,chdlc)
 
 ! conversion HDLC -> Cartesian failed due to singular G matrix
+#ifdef MPIV
+    !AWG: Ignore failues for MPI runs
+    !     MPI runs are failing with more than 1 MPI process
+    !     This showed up for optimizations with constraints
+    !     linear dependences detected in the HDLC matrix for non-root processes
+    !Note: Only the root process data is actually used
+    !      Hence we can ignore the failure for non-root processes
+    !      This should be fixed in the future if proper DL-FIND MPI support is added
+    !      (for instance to support nudged elastic band optimizations)
+    IF ( .false. ) THEN
+#else
     IF ( .NOT. residue%lgmatok) THEN
+#endif
       tok=.false.
       residue%err_cnt = residue%err_cnt + 1000
 
