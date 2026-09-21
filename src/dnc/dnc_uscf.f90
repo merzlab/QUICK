@@ -11,7 +11,10 @@
 !     use quick_scf_module  
      use quick_oei_module, only: bCalc1e
      use quick_molden_module, only: quick_molden
-
+     use quick_mpi_module, only: bMPI, master
+#if defined(MPIV)
+     use quick_mpi_module, only: quick_comm, quick_comm_rank, quick_comm_size, quick_mpi_error
+#endif
 #if defined HIP || defined HIP_MPIV
      use quick_rocblas_module, only: rocDGEMM
 #if defined WITH_MAGMA
@@ -608,19 +611,11 @@ endif
                  NtempN, holddc, NtempN, 0.0d0, Odcsubtemp,NtempN)
 #endif  
 
-           ! Now diagonalize the operator matrix.
+           ! Now diagonalize the operator matrix. MAT_DIAG is the architecture
+           ! agnostic wrapper; it dispatches to MAGMA/rocSOLVER/LAPACK as
+           ! appropriate for the current build.
            RECORD_TIME(timer_begin%TDiag)
-#if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
-           call magmaDIAG(NtempN,Odcsubtemp,EVAL1temp,VECtemp,IERROR)
-#else
-#if defined LAPACK || defined MKL
-           call DIAGMKL(NtempN,Odcsubtemp,EVAL1temp,VECtemp,IERROR)
-#else
-           call DIAG(NtempN,Odcsubtemp,NtempN,quick_method%DMCutoff,Vtemp,i &
-                     EVAL1temp,IDEGEN1temp,VECtemp,IERROR)
-#endif
-
-#endif
+           call MAT_DIAG(Odcsubtemp, NtempN, NtempN, EVAL1temp, VECtemp)
            RECORD_TIME(timer_end%TDiag)
 
 #endif
@@ -763,19 +758,11 @@ endif
            call DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
                  NtempN, holddc, NtempN, 0.0d0, Odcsubtemp,NtempN)
 #endif  
-           ! Now diagonalize the operator matrix.
+           ! Now diagonalize the operator matrix. MAT_DIAG is the architecture
+           ! agnostic wrapper; it dispatches to MAGMA/rocSOLVER/LAPACK as
+           ! appropriate for the current build.
            RECORD_TIME(timer_begin%TDiag)
-#if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
-           call magmaDIAG(NtempN,Odcsubtemp,EVAL1temp,VECtemp,IERROR)
-#else
-#if defined LAPACK || defined MKL
-           call DIAGMKL(NtempN,Odcsubtemp,EVAL1temp,VECtemp,IERROR)
-#else
-           call DIAG(NtempN,Odcsubtemp,NtempN,quick_method%DMCutoff,Vtemp,i &
-                     EVAL1temp,IDEGEN1temp,VECtemp,IERROR)
-#endif
-
-#endif
+           call MAT_DIAG(Odcsubtemp, NtempN, NtempN, EVAL1temp, VECtemp)
            RECORD_TIME(timer_end%TDiag)
 #endif
 

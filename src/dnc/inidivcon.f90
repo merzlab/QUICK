@@ -1134,9 +1134,7 @@ subroutine divideX
         enddo
      enddo
 
-     !    call DIAG(NBASIS,HOLD,NBASIS,TOL,V,Sminhalf,IDEGEN1,Uxiao,IERROR)
-
-     call DIAG(NBASIS,Odcsubtemp,NBASIS,1d-10,Vtemp,EVAL1temp,IDEGEN1temp,VECtemp,IERROR)
+     call MAT_DIAG(Odcsubtemp, NBASIS, NBASIS, EVAL1temp, VECtemp)
 
      ! Consider the following:
 

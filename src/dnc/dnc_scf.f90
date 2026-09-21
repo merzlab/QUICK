@@ -595,19 +595,11 @@ endif
            call DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
                  NtempN, holddc, NtempN, 0.0d0, Odcsubtemp,NtempN)
 #endif  
-           ! Now diagonalize the operator matrix.
+           ! Now diagonalize the operator matrix. MAT_DIAG is the architecture
+           ! agnostic wrapper; it dispatches to MAGMA/rocSOLVER/LAPACK as
+           ! appropriate for the current build.
            RECORD_TIME(timer_begin%TDiag)
-#if (defined HIP || defined HIP_MPIV) && defined WITH_MAGMA
-           call magmaDIAG(NtempN,Odcsubtemp,EVAL1temp,VECtemp,IERROR)
-#else
-#if defined LAPACK || defined MKL
-           call DIAGMKL(NtempN,Odcsubtemp,EVAL1temp,VECtemp,IERROR)
-#else
-           call DIAG(NtempN,Odcsubtemp,NtempN,quick_method%DMCutoff,Vtemp,i &
-                     EVAL1temp,IDEGEN1temp,VECtemp,IERROR)
-#endif
-
-#endif
+           call MAT_DIAG(Odcsubtemp, NtempN, NtempN, EVAL1temp, VECtemp)
            RECORD_TIME(timer_end%TDiag)
 
 #endif
