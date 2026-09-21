@@ -51,6 +51,9 @@ subroutine inidivcon(natomsaved)
   character*4,allocatable::atomname(:)        ! atom name
   character*3,allocatable::residue(:)         ! residue name
 
+  character*80 :: pdbline                     ! raw PDB record buffer
+  integer :: ipdbstat                         ! iostat for PDB record reads
+
   logical templog
   logical,allocatable:: templog2(:)
   logical,allocatable:: divconmfcc(:,:)
@@ -100,12 +103,26 @@ subroutine inidivcon(natomsaved)
      ! Read Moleculer information. The residue information also can be read from the pdb file.
      !----------------------------------------------        
      if (quick_method%ifragbasis.eq.2) then
+        ! Only ATOM/HETATM records are coordinate records. Skip everything
+        ! else (COMPND, AUTHOR, REMARK, TER, CONECT, ...) so that PDB files
+        ! written by common tools can be read as-is. Record i must still
+        ! correspond to atom i of the input file.
         open(iPDBFile,file=PDBFileName)
-        do 99 i=1,natomt
-           read(iPDBFile,100)sn(i),ttnumber(i),atomname(i),residue(i),class(i),(coord(j,i),j=1,3)
+        i=0
+        do while (i.lt.natomt)
+           read(iPDBFile,'(a80)',iostat=ipdbstat) pdbline
+           if (ipdbstat.ne.0) exit
+           if (pdbline(1:4).ne.'ATOM'.and.pdbline(1:6).ne.'HETATM') cycle
+           i=i+1
+           read(pdbline,100)sn(i),ttnumber(i),atomname(i),residue(i),class(i),(coord(j,i),j=1,3)
 100        format(a6,1x,I4,1x,a4,1x,a3,3x,I3,4x,3f8.3)
-99      enddo
+        enddo
         close(iPDBFile)
+
+        if (i.ne.natomt) then
+           call PrtErr(iOutFile,'PDB file does not contain one ATOM/HETATM record per atom of the input file.')
+           call quick_exit(iOutFile,1)
+        endif
      else
         do i=1,natomt
            coord(1,i)=xyz(1,I)*bohr
