@@ -46,6 +46,7 @@ subroutine electdiisdc(jscf,ierr)
      integer :: ierr1
      logical :: diisdone = .false.  ! flag to indicate if diis is done
      logical :: deltaO   = .false.  ! delta Operator
+     logical :: fermi_ok            ! did the Fermi level search satisfy nelec?
      integer :: idiis = 0           ! diis iteration
      integer :: IDIISfinal,iidiis,current_diis
      integer :: lsolerr = 0
@@ -191,6 +192,10 @@ subroutine electdiisdc(jscf,ierr)
    idiis=0
   ! Now Begin DIIS
    do while (.not.diisdone)
+
+   ! Only the master evaluates the Fermi level, so give every rank a defined
+   ! value before the convergence test below reads it.
+   fermi_ok = .true.
 
    RECORD_TIME(timer_begin%TSCF)
   !--------------------------------------------
@@ -653,8 +658,15 @@ endif
       ! the density matrix
       !--------------------------------------------
 
-      call fermiSCF(efermi,jscf)
+      call fermiSCF(efermi,jscf,fermi_ok)
 
+      ! A failed Fermi search past the initial cycles means the density matrix is
+      ! not converging onto the right electron count. Stop rather than iterate on
+      ! a meaningless density; ALLOW_BAD_SCF overrides, as it does elsewhere.
+      if (.not.fermi_ok .and. jscf.gt.MIN_SCF .and. .not.quick_method%allow_bad_scf) then
+         ierr = 43
+         return
+      endif
 
       ! Now check for convergence. pchange is the max change
       ! and prms is the rms
@@ -730,7 +742,11 @@ endif
       if (lsolerr /= 0) write (ioutfile,'(" DIIS FAILED !!", &
             & " PERFORM NORMAL SCF. (NOT FATAL.)")')
 
-      if (PRMS < quick_method%pmaxrms .and. pchange < quick_method%pmaxrms*100.d0 .and. jscf.gt.MIN_SCF)then
+      ! fermi_ok guards against declaring convergence on a density that failed the
+      ! normalization constraint: if it collapses, PRMS and PCHANGE both go to zero
+      ! and the run would otherwise report a converged nuclear-repulsion energy.
+      if (PRMS < quick_method%pmaxrms .and. pchange < quick_method%pmaxrms*100.d0 .and. jscf.gt.MIN_SCF &
+            .and. fermi_ok)then
          if (quick_method%printEnergy) then
             write(ioutfile,'("| ",120("-"))')
          else
@@ -840,12 +856,15 @@ end subroutine electdiisdc
 ! Use iteriation method to calculate fermi energy
 !
 !
-subroutine fermiSCF(efermi,jscf)
+subroutine fermiSCF(efermi,jscf,fermi_ok)
    use allmod
    implicit double precision(a-h,o-z)
    logical fermidone
    integer jscf
    double precision :: efermi(10)
+   ! .false. if the normalization constraint could not be satisfied, i.e. the
+   ! assembled density does not hold quick_molspec%nelec electrons.
+   logical, intent(out) :: fermi_ok
 
    ! Boltzmann constant in eV/Kelvin:
    boltz = 8.617335408d0*0.00001d0/27.2116d0
@@ -1006,15 +1025,27 @@ subroutine fermiSCF(efermi,jscf)
       if(diff < etoler) fermidone=.true.
    enddo
 
-   ! If can't converge, it will lead to fatal error at late step, but quite common
-   ! for first or second iteration
+   ! Report whether the normalization constraint was satisfied. Failure is not
+   ! unusual on the first couple of SCF cycles and usually clears by itself, but
+   ! if it persists the assembled density is not an nelec-electron density and
+   ! every quantity derived from it is meaningless. The caller decides what to do;
+   ! it must not report such a cycle as converged.
+   fermi_ok = fermidone
+
    if (.not.fermidone) then
-      write(ioutfile,*) "Exceed the maximum interations"
-      write(ioutfile,*) "IF IT APPEARS AT LATE STEP MAY LEAD TO WRONG RESULT!"
+      write(ioutfile,'(" WARNING: Fermi level search did not converge in ",i4," cycles.")') niter
+      write(ioutfile,'("          electrons expected  = ",f16.8)') dble(elecs)
+      write(ioutfile,'("          electrons recovered = ",f16.8)') temp
+      write(ioutfile,'("          E(Fermi)            = ",es16.8)') efermi(1)
+      write(ioutfile,'("          search bracket      = [",es16.8,",",es16.8,"]")') emin,emax
+      write(ioutfile,'("          The density matrix does not hold the correct number of")')
+      write(ioutfile,'("          electrons. Results from this cycle are not meaningful.")')
    endif
 
    ! At this point we get the fermi energy (Ei) and store for next cycle.
-   write (ioutfile,'("E(Fermi)    = ",f12.7,"  AFTER ",i3, " N.C. Cycles")') efermi(1),niter
+   ! es16.8 rather than f12.7: a diverged search overflows a fixed-width field
+   ! and prints only asterisks, which hides the very number needed to debug it.
+   write (ioutfile,'("E(Fermi)    = ",es16.8,"  AFTER ",i3, " N.C. Cycles")') efermi(1),niter
 
    call flush(ioutfile)
 

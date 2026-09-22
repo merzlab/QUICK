@@ -153,6 +153,11 @@ contains
       msg='Number of launched processes is greater than the available number of GPUs. Please &
               &relaunch with lower number of processes.'
 
+    case(43)
+      msg='Divide and conquer Fermi level search failed to converge. The assembled density &
+              &matrix does not hold the correct number of electrons, so the energy is not &
+              &meaningful. ALLOW_BAD_SCF keyword must be specified to proceed anyway.'
+
     case default
       msg='Unknown error.'
 

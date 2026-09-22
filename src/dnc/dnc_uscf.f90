@@ -37,6 +37,8 @@
   
      logical :: diisdone = .false.  ! flag to indicate if diis is done
      logical :: deltaO   = .false.  ! delta Operator
+     logical :: fermi_ok_a          ! did the alpha Fermi level search satisfy nelec?
+     logical :: fermi_ok_b          ! did the beta Fermi level search satisfy nelecb?
      integer :: idiis = 0           ! diis iteration
      integer :: IDIISfinal,iidiis,current_diis
      integer :: lsolerr = 0
@@ -168,8 +170,12 @@
      idiis = 0
      ! Now Begin DIIS
      do while (.not.diisdone)
-  
-  
+
+        ! Only the master evaluates the Fermi levels, so give every rank a defined
+        ! value before the convergence test below reads them.
+        fermi_ok_a = .true.
+        fermi_ok_b = .true.
+
         RECORD_TIME(timer_begin%TSCF)
         !--------------------------------------------
         ! 1)  Form the operator matrix for step i, O(i).
@@ -667,8 +673,8 @@ endif
       ! Next step is to calculate fermi energy and renormalize
       ! the density matrix
       !--------------------------------------------
-      call fermiSCF(efermi,jscf)
- 
+      call fermiSCF(efermi,jscf,fermi_ok_a)
+
            ! Now check for convergence. pchange is the max change
            ! and prms is the rms
            PCHANGE=0.d0
@@ -815,7 +821,16 @@ endif
       ! the density matrix
       !--------------------------------------------
 
-      call fermiUSCF(efermi,jscf)
+      call fermiUSCF(efermi,jscf,fermi_ok_b)
+
+      ! Both spin channels must satisfy the normalization constraint. A failure
+      ! past the initial cycles means the density is not converging onto the right
+      ! electron count; stop rather than iterate on it. ALLOW_BAD_SCF overrides.
+      if ((.not.fermi_ok_a .or. .not.fermi_ok_b) .and. jscf.gt.MIN_SCF &
+            .and. .not.quick_method%allow_bad_scf) then
+         ierr = 43
+         return
+      endif
 
            ! Now check for convergence. pchange is the max change
            ! and prms is the rms
@@ -883,7 +898,11 @@ endif
            if (lsolerr /= 0) write (ioutfile,'(" DIIS FAILED !!", &
                  & " PERFORM NORMAL SCF. (NOT FATAL.)")')
   
-           if (PRMS < quick_method%pmaxrms .and. pchange < quick_method%pmaxrms*100.d0 .and. jscf.gt.MIN_SCF)then
+           ! The fermi_ok guards stop a density that failed the normalization
+           ! constraint from being reported as converged: if it collapses, PRMS and
+           ! PCHANGE both go to zero and the run would otherwise claim convergence.
+           if (PRMS < quick_method%pmaxrms .and. pchange < quick_method%pmaxrms*100.d0 .and. jscf.gt.MIN_SCF &
+                 .and. fermi_ok_a .and. fermi_ok_b)then
               if (quick_method%printEnergy) then
                  write(ioutfile,'("| ",120("-"))')
               else
@@ -975,12 +994,15 @@ endif
 ! Use iteriation method to calculate fermi energy
 !
 !
-subroutine fermiUSCF(efermi,jscf)
+subroutine fermiUSCF(efermi,jscf,fermi_ok)
    use allmod
    implicit double precision(a-h,o-z)
    logical fermidone
    integer jscf
    double precision :: efermi(10)
+   ! .false. if the normalization constraint could not be satisfied, i.e. the
+   ! assembled beta density does not hold quick_molspec%nelecb electrons.
+   logical, intent(out) :: fermi_ok
 
    ! Boltzmann constant in eV/Kelvin:
    boltz = 8.617335408d0*0.00001d0/27.2116d0
@@ -1140,16 +1162,24 @@ subroutine fermiUSCF(efermi,jscf)
       if(diff < etoler) fermidone=.true.
    enddo
 
-   ! If can't converge, it will lead to fatal error at late step, but quite
-   ! common
-   ! for first or second iteration
+   ! See the matching comment in fermiSCF: a failure here means the beta density
+   ! does not hold nelecb electrons, so the caller must not report convergence.
+   fermi_ok = fermidone
+
    if (.not.fermidone) then
-      write(ioutfile,*) "Exceed the maximum interations"
-      write(ioutfile,*) "IF IT APPEARS AT LATE STEP MAY LEAD TO WRONG RESULT!"
+      write(ioutfile,'(" WARNING: Beta Fermi level search did not converge in ",i4," cycles.")') niter
+      write(ioutfile,'("          beta electrons expected  = ",f16.8)') dble(elecs)
+      write(ioutfile,'("          beta electrons recovered = ",f16.8)') temp
+      write(ioutfile,'("          Eb(Fermi)                = ",es16.8)') efermi(1)
+      write(ioutfile,'("          search bracket           = [",es16.8,",",es16.8,"]")') emin,emax
+      write(ioutfile,'("          The beta density matrix does not hold the correct number")')
+      write(ioutfile,'("          of electrons. Results from this cycle are not meaningful.")')
    endif
 
    ! At this point we get the fermi energy (Ei) and store for next cycle.
-   write (ioutfile,'("Eb(Fermi)    = ",f12.7,"  AFTER ",i3, " N.C. Cycles")') efermi(1),niter
+   ! es16.8 rather than f12.7: a diverged search overflows a fixed-width field
+   ! and prints only asterisks, which hides the very number needed to debug it.
+   write (ioutfile,'("Eb(Fermi)    = ",es16.8,"  AFTER ",i3, " N.C. Cycles")') efermi(1),niter
 
    call flush(ioutfile)
 
