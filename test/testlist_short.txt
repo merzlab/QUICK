@@ -30,3 +30,6 @@ api_water_rhf_631g                  #Water: API test
 esp_charge_acetone_b3lyp_def2svp    #ESP test: Tests both ESP charges and ESP on van der Waals surface.
 chk_acetate_xyz_density             #CHK test: writing/reading densities and coordinates
 ene_benzene_b3lyp_aug-cc-pvdz       #C6H6: DFT energy test: B3LYP/aug-cc-pvtz near-linear dependency of basis sets
+ene_ethane_rhf_631gss_divcon_atom       #Ethane: DnC RHF energy test: atom-based fragments, collapses to one subsystem
+ene_gly6_rhf_sto3g_divcon_atom          #Glycine hexamer: DnC RHF energy test: atom-based fragments, 45 merge to 9 subsystems
+ene_gly6_rhf_sto3g_divcon_residue       #Glycine hexamer: DnC RHF energy test: residue-based fragments, reads pdb

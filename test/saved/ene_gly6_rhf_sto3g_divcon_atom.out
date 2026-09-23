@@ -1,0 +1,344 @@
+| *********************************************************************************************************
+| **                                                                                                     **
+| **           888888888888                                                                              **
+| **         8888888888888888                                                                            **
+| **      888888888888888888                                                                             **
+| **     888888888888888888                                                                              **
+| **    888888888888888                                                                                  **
+| **   88888888888888888888                               88888                       8888:              **
+| **   8888888888888888888888Z                            88888                       8888:              **
+| **   888888888888888888888888?                          88888                       8888:              **
+| **   8888888888888      8888888                                        888888       8888:              **
+| **    88888888888         888888     8888:     88888    88888        888888888I     8888:    888888    **
+| **    8888888888           88888:    8888:     88888    88888      $888888888888    8888:   888888     **
+| **    I8Z 88888             88888    8888:     88888    88888    .888888     8888   8888: 888888       **
+| **    .8Z 88888             88888    8888:     88888    88888    $88888             8888:88888         **
+| **     8I 88888      .=88. .88888    8888:     88888    88888    88888              8888888888         **
+| **    :8  88888      888888$8888$    8888:     88888    88888    8888O              88888888888        **
+| **   ,7   +88888.     8888888888.    8888:     88888    88888    888888             88888O888888       **
+| **         $888888:.   .8888888      88888....888888    88888     888888     8888   8888:  888888      **
+| **          I8888888888888888888     888888888888888    88888     O888888888888O    8888:   888888     **
+| **            O888888888888888888     88888888888888    88888       88888888888$    8888:    888888    **
+| **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
+| **                                                                                                     **
+| **                                                                                                     **
+| **                                         Copyright (c) 2026                                          **
+| **                          Regents of the University of California San Diego                          **
+| **                                    & Michigan State University                                      **
+| **                                        All Rights Reserved.                                         **
+| **                                                                                                     **
+| **             This software is subject to the terms of the Mozilla Public License, v. 2.0.            **
+| **                                                                                                     **
+| *********************************************************************************************************
+|                                                                                                          
+| Cite this work as:                                                                                       
+| Manathunga, M.; O'Hearn, K. A.; Shajan, A.; Smith, J.; Miao, Y.; He, X.; Ayers, K.;                      
+| Brothers, E.; Palos, E.; Tripathy, V.; Goetz, A.W.; Merz, K.M. QUICK-26.03.                              
+| University of California,San Diego, CA and                                                               
+| Michigan State University, East Lansing, MI, 2026                                                        
+|                                                                                                          
+| If you have any comments or queries, please reach out to us on GitHub issues or discussion sections:     
+| https://github.com/merzlab/QUICK.                                                                        
+|                                                                                                          
+| TASK STARTS ON: Wed Sep 23 14:45:26 2026
+| INPUT FILE :    gly6atom.in
+| OUTPUT FILE:    gly6atom.out
+| BASIS SET PATH: /Users/kaliakd/Documents/DnC_Prototype/install_serial/basis
+
+ @ Read Job And Atom
+
+  KEYWORD=HF BASIS=STO-3G CUTOFF=1.0E-9 DENSERMS=1.0E-6 DIVCON ATOMBASIS
+ ============== JOB CARD =============
+ METHOD = HARTREE FOCK
+ DIRECT SCF 
+ SAD INITAL GUESS 
+ USE DIIS SCF
+ PRINT ENERGY EVERY CYCLE
+ READ SAD GUESS FROM FILE
+ Level shifting allowed after cycle    3
+ DIIS error must exceed 0.100 for level shifting
+ Max HOMO-LUMO gap to allow level shifting = 0.200
+ DIV & CON METHOD = DIV AND CON ON ATOM BASIS
+ MAX SCF CYCLES =    200
+ MAX DIIS CYCLES =   10
+ DELTA DENSITY START CYCLE =    3
+ COMPUTATIONAL CUTOFF: 
+      TWO-e INTEGRAL         =  0.100E-08
+      BASIS SET PRIME        =  0.100E-09
+      MATRIX ELEMENTS        =  0.100E-09
+      BASIS FUNCTION         =  0.100E-05
+      NEAR-LINEAR DEPENDENCY =  0.100E-04
+ DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
+ BASIS SET = STO-3G,  TYPE = CARTESIAN
+| BASIS FILE = /Users/kaliakd/Documents/DnC_Prototype/install_serial/basis/STO-3G.BAS
+| DATA FILE  =    gly6atom.dat
+
+ @ Finish reading job
+
+
+ @ Begin SAD initial guess
+
+ For Atom Kind =    1
+ ELEMENT = N 
+ BASIS FUNCTIONS =    5
+ For Atom Kind =    2
+ ELEMENT = C 
+ BASIS FUNCTIONS =    5
+ For Atom Kind =    3
+ ELEMENT = O 
+ BASIS FUNCTIONS =    5
+ For Atom Kind =    4
+ ELEMENT = H 
+ BASIS FUNCTIONS =    1
+
+ @ Finish SAD initial guess
+
+
+ @ Begin Reading Molecular Information
+
+
+ =========== Molecule Input ==========
+ TOTAL MOLECULAR CHARGE  =    0    MULTIPLICITY                =    1
+ TOTAL ATOM NUMBER       =   45    NUMBER OF ATOM TYPES        =    4
+ NUMBER OF HYDROGEN ATOM =   20    NUMBER OF NON-HYDROGEN ATOM =   25
+ NUMBER OF ELECTRONS     =  190
+
+ -- INPUT GEOMETRY -- :
+    N          -9.1960      -5.7710      -0.6630
+    C          -7.7070      -5.7380      -0.5430
+    C          -7.2410      -4.2890      -0.5810
+    O          -7.9560      -3.4420      -1.1130
+    H          -7.4430      -6.2280       0.3970
+    H          -7.3010      -6.2790      -1.4010
+    H          -9.5770      -6.7120      -0.7950
+    H          -9.6310      -5.3320       0.1590
+    H          -9.4650      -5.1730      -1.4610
+    N          -6.0510      -4.0280       0.0250
+    C          -5.4360      -2.7100      -0.0000
+    C          -3.9320      -2.9290       0.1020
+    O          -3.4680      -3.9730       0.5610
+    H          -5.4620      -4.7580       0.4260
+    H          -5.6980      -2.1830      -0.9220
+    H          -5.7830      -2.1500       0.8730
+    N          -3.1760      -1.8840      -0.3370
+    C          -1.7290      -1.8860      -0.2670
+    C          -1.2790      -0.4330      -0.3330
+    O          -1.9680       0.4350      -0.8670
+    H          -3.5960      -1.0540      -0.7510
+    H          -1.3390      -2.4280      -1.1330
+    H          -1.3980      -2.3660       0.6580
+    N          -0.0580      -0.1980       0.2280
+    C           0.5600       1.1110       0.2200
+    C           2.0610       0.9010       0.3780
+    O           2.5210      -0.1030       0.9210
+    H           0.4720      -0.9360       0.6870
+    H           0.3260       1.6340      -0.7110
+    H           0.1810       1.6780       1.0750
+    N           2.8200       1.9220      -0.1130
+    C           4.2640       1.9590       0.0140
+    C           4.6850       3.4210      -0.0760
+    O           3.9640       4.2670      -0.6070
+    H           2.4010       2.7410      -0.5460
+    H           4.6970       1.4020      -0.8220
+    H           4.5700       1.5130       0.9650
+    N           5.9090       3.6740       0.4620
+    C           6.5820       4.9740       0.4450
+    C           8.0970       4.8390       0.7450
+    O           8.4270       3.7030       1.2110
+    O           8.8030       5.8480       0.4760
+    H           6.5100       2.9450       0.8490
+    H           6.4150       5.4440      -0.5290
+    H           6.1150       5.5920       1.2190
+
+============== BASIS INFOS ==============
+ BASIS FUNCTIONS =  145
+ NSHELL =   70 NPRIM  =  435
+ JSHELL =   70 JBASIS =  210
+
+
+ @ End Reading Molecular Information 
+
+
+ @ Now Begin Div & Con Fragment
+
+NUMBER OF FRAG (BEFORE ELIMINATION)= 45
+RBuffer=   7.00 A
+============================================================
+The Core and Buffer Atoms before elimination
+============================================================
+Frag       CoreAtom     CoreTot     BufAtom       BufTot  SubTot
+    1  1                  1       2-16              15       16
+    2  2                  1       1,3-17,21         17       18
+    3  3                  1       1-2,4-18,21-23    20       21
+    4  4                  1       1-3,5-18,21-23    20       21
+    5  5                  1       1-4,6-17,21       17       18
+    6  6                  1       1-5,7-17,21       17       18
+    7  7                  1       1-6,8-16          15       16
+    8  8                  1       1-7,9-16          15       16
+    9  9                  1       1-8,10-16         15       16
+   10  10                 1       1-9,11-23         22       23
+   11  11                 1       1-10,12-24,28     24       25
+   12  12                 1       1-11,13-25,28-30  27       28
+   13  13                 1       1-12,14-25,28-30  27       28
+   14  14                 1       1-13,15-23        22       23
+   15  15                 1       1-14,16-24,28     24       25
+   16  16                 1       1-15,17-24,28     24       25
+   17  17                 1       2-6,10-16,18-30   25       26
+   18  18                 1       3-4,10-17,19-31,  24       25
+   19  19                 1       10-18,20-32,35-3  25       26
+   20  20                 1       10-19,21-32,35-3  25       26
+   21  21                 1       2-6,10-20,22-30   25       26
+   22  22                 1       3-4,10-21,23-31,  24       25
+   23  23                 1       3-4,10-22,24-31,  24       25
+   24  24                 1       11-13,15-23,25-3  25       26
+   25  25                 1       12-13,17-24,26-3  24       25
+   26  26                 1       17-25,27-39,43-4  25       26
+   27  27                 1       17-26,28-39,43-4  25       26
+   28  28                 1       11-13,15-27,29-3  25       26
+   29  29                 1       12-13,17-28,30-3  24       25
+   30  30                 1       12-13,17-29,31-3  24       25
+   31  31                 1       18-20,22-30,32-4  25       26
+   32  32                 1       19-20,24-31,33-4  23       24
+   33  33                 1       24-32,34-45       21       22
+   34  34                 1       24-33,35-45       21       22
+   35  35                 1       18-20,22-34,36-4  25       26
+   36  36                 1       19-20,24-35,37-4  23       24
+   37  37                 1       19-20,24-36,38-4  23       24
+   38  38                 1       25-27,29-37,39-4  19       20
+   39  39                 1       26-27,31-38,40-4  16       17
+   40  40                 1       31-39,41-45       14       15
+   41  41                 1       31-40,42-45       14       15
+   42  42                 1       32-34,36-41,43-4  12       13
+   43  43                 1       25-27,29-42,44-4  19       20
+   44  44                 1       26-27,31-43,45    16       17
+   45  45                 1       26-27,31-44       16       17
+-----------------------------------------------------------
+Total Frag=  45
+===========================================================
+ move the subsystem            1  into           13
+ move the subsystem            2  into           13
+ move the subsystem            3  into           13
+ move the subsystem            4  into           13
+ move the subsystem            5  into           13
+ move the subsystem            6  into           13
+ move the subsystem            7  into           13
+ move the subsystem            8  into           13
+ move the subsystem            9  into           13
+ move the subsystem           10  into           13
+ move the subsystem           11  into           13
+ move the subsystem           13  into           12
+ move the subsystem           14  into           12
+ move the subsystem           15  into           12
+ move the subsystem           16  into           12
+ move the subsystem           20  into           19
+ move the subsystem           21  into           17
+ move the subsystem           22  into           18
+ move the subsystem           23  into           18
+ move the subsystem           27  into           26
+ move the subsystem           28  into           24
+ move the subsystem           29  into           25
+ move the subsystem           30  into           25
+ move the subsystem           33  into           37
+ move the subsystem           34  into           37
+ move the subsystem           35  into           31
+ move the subsystem           36  into           32
+ move the subsystem           37  into           32
+ move the subsystem           38  into           32
+ move the subsystem           39  into           32
+ move the subsystem           40  into           32
+ move the subsystem           41  into           32
+ move the subsystem           42  into           32
+ move the subsystem           43  into           32
+ move the subsystem           44  into           32
+ move the subsystem           45  into           32
+============================================================
+The Core and Buffer Atoms
+============================================================
+Frag       CoreAtom     CoreTot     BufAtom       BufTot     SubAtom     SubTot    Elec    NBasis
+    1  1-16              16       17-25,28-30       12       1-25,28-30        28   108    84
+    2  17,21              2       2-6,10-16,18-20,  24       2-6,10-30         26   112    86
+    3  18,22-23           3       3-4,10-17,19-21,  22       3-4,10-31,35      25   112    85
+    4  19-20              2       10-18,21-32,35-3  24       10-32,35-37       26   106    82
+    5  24,28              2       11-13,15-23,25-2  24       11-13,15-37       26   112    86
+    6  25,29-30           3       12-13,17-24,26-2  22       12-13,17-38,43    25   112    85
+    7  26-27              2       17-25,28-39,43-4  24       17-39,43-45       26   106    82
+    8  31,35              2       18-20,22-30,32-3  24       18-20,22-41,43-4  26   112    86
+    9  32-34,36-45       13       19-20,24-31,35    11       19-20,24-45       24   112    84
+-----------------------------------------------------------
+Total Frag=   9
+NBasis Max=  86
+===========================================================
+
+ @ Now End Div & Con Fragment
+
+
+ @ Begin Energy Calculation
+
+| condition number of overlap matrix:    1.177E+01
+| Smallest eigenvalue of overlap matrix:    2.114E-01
+
+                                         SCF ENERGY
+| ------------------------------------------------------------------------------------------------------------------------
+| NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
+| ------------------------------------------------------------------------------------------------------------------------
+E(Fermi)    =  -3.66901033E-02  AFTER  29 N.C. Cycles
+|  1  -1301.624085014      ------         0.670     1        0.00      0.64      0.00    0.1695E+01  0.6889E-01  0.1209E+01
+E(Fermi)    =   9.85736210E-02  AFTER  26 N.C. Cycles
+|  2  -1298.257531199  -.336655E+01       1.436     2        0.00      1.41      0.00    0.2203E+00  0.2507E-01  0.6084E+00
+E(Fermi)    =   4.54482331E-02  AFTER  28 N.C. Cycles
+|  3  -1299.115835621  0.858304E+00       1.351     3        0.00      1.33      0.00    0.1431E+00  0.1007E-01  0.1982E+00
+E(Fermi)    =   2.21968329E-02  AFTER  28 N.C. Cycles
+|  4  -1299.469960338  0.354125E+00       1.300     4        0.00      1.28      0.00    0.2667E-01  0.3167E-02  0.6822E-01
+E(Fermi)    =   3.03071885E-02  AFTER  23 N.C. Cycles
+|  5  -1299.495745581  0.257852E-01       1.225     5        0.00      1.20      0.00    0.1321E-01  0.1244E-02  0.2597E-01
+E(Fermi)    =   3.22785127E-02  AFTER  27 N.C. Cycles
+|  6  -1299.500257805  0.451222E-02       1.164     6        0.00      1.14      0.00    0.5254E-02  0.8685E-03  0.1938E-01
+E(Fermi)    =   3.27611287E-02  AFTER  29 N.C. Cycles
+|  7  -1299.501614675  0.135687E-02       1.144     7        0.00      1.12      0.00    0.5255E-02  0.3155E-03  0.6698E-02
+E(Fermi)    =   3.24613962E-02  AFTER  28 N.C. Cycles
+|  8  -1299.501802112  0.187437E-03       1.076     8        0.00      1.05      0.00    0.5244E-02  0.1616E-03  0.3105E-02
+E(Fermi)    =   3.23815583E-02  AFTER  26 N.C. Cycles
+|  9  -1299.501838453  0.363403E-04       1.004     9        0.00      0.98      0.00    0.5237E-02  0.5762E-04  0.1079E-02
+E(Fermi)    =   3.25099559E-02  AFTER  29 N.C. Cycles
+| 10  -1299.501842886  0.443322E-05       0.931    --        0.00      0.91      0.00    0.5237E-02  0.1234E-04  0.3156E-03
+E(Fermi)    =   3.24795029E-02  AFTER  28 N.C. Cycles
+| 11  -1299.501843351  0.464933E-06       0.824    --        0.00      0.80      0.00    0.5237E-02  0.7267E-05  0.2362E-03
+E(Fermi)    =   3.24865013E-02  AFTER  26 N.C. Cycles
+| 12  -1299.501843470  0.118725E-06       0.773    --        0.00      0.75      0.00    0.5237E-02  0.4610E-05  0.1148E-03
+E(Fermi)    =   3.24781144E-02  AFTER  28 N.C. Cycles
+| 13  -1299.501843538  0.680534E-07       0.743    --        0.00      0.72      0.00    0.5237E-02  0.2908E-05  0.9496E-04
+E(Fermi)    =   3.24789984E-02  AFTER  28 N.C. Cycles
+| 14  -1299.501843549  0.114351E-07       0.712    --        0.00      0.69      0.00    0.5237E-02  0.1916E-05  0.4459E-04
+E(Fermi)    =   3.24767861E-02  AFTER  25 N.C. Cycles
+| 15  -1299.501843564  0.150085E-07       0.670    --        0.00      0.65      0.00    0.5237E-02  0.1236E-05  0.3858E-04
+E(Fermi)    =   3.24768883E-02  AFTER  29 N.C. Cycles
+| 16  -1299.501843566  0.203954E-08       0.641    --        0.00      0.62      0.00    0.5237E-02  0.8226E-06  0.1803E-04
+| ------------------------------------------------------------------------------------------------------------------------
+| REACH CONVERGENCE AFTER  16 CYCLES
+| MAX ERROR = 0.523718E-02   RMS CHANGE = 0.822636E-06   MAX CHANGE = 0.180322E-04
+| -----------------------------------------------
+ ELECTRONIC ENERGY    =  -3264.168526337
+ CORE_CORE REPULSION  =   1964.666682771
+ TOTAL ENERGY         =  -1299.501843566
+
+ @ End Energy calculation
+
+  Skipping one-electron property calculation.
+
+ @ Output Timing Information
+
+------------- TIMING ---------------
+| INITIAL GUESS TIME  =     0.091554000(  0.58%)
+| TOTAL SCF TIME      =    15.681257000( 99.43%)
+|       TOTAL OP TIME      =    15.307830000( 97.06%)
+|             TOTAL 1e TIME      =     0.016303000(  0.10%)
+|             TOTAL 2e TIME      =    15.273672000( 96.85%)
+|       TOTAL DII TIME      =     0.007048000(  0.04%)
+|             TOTAL DC DIAG TIME =     0.052528000(  0.33%)
+| TOTAL TIME          =    15.771133000
+------------------------------------
+| Job cpu time:  0 days  0 hours  0 minutes 15.8 seconds.
+
+ @ Finish Output Timing Information
+
+| Normal Termination. Task Finished on: Wed Sep 23 14:45:42 2026

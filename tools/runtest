@@ -419,6 +419,12 @@ set_test()
     cp "$2/$1.in" ./
   fi
 
+  # divide and conquer tests using RESIDUEBASIS read residue information from a
+  # companion pdb file, which QUICK opens as <stem>.pdb next to the input
+  if [ -f "$2/$1.pdb" ]; then
+    cp "$2/$1.pdb" ./
+  fi
+
   if [ `echo "$1" | grep '^chk_' | wc -l` -eq 1 ]; then
     cp "$2/$1_2.in" ./
   else
@@ -959,6 +965,7 @@ check_dipole()
 clean_up()
 {
   rm -f $1.ref.out $1.ref.vdw $1.ref.esp $1.in $1.tmp ddtmp.$1* $1.*ene $1.*grad $1.*dipole $1.*opt $1.*charge $1.*xyz
+  rm -f $1.pdb $1_*.xyz
   rm -f $1_2.ref.out $1_2.in $1_2.*ene $1_2.*opt
 }
 
