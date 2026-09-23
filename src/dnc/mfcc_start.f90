@@ -162,10 +162,10 @@ subroutine mfcc(natomsaved)
  write(ioutfile,*) '  '
 
   do kk=1,mm-1
-!      write(ioutfile,*)atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+!      write(ioutfile,*)adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
  write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-      atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
-      mfccatomxiao(kk,1)=atomname(kk)(2:2)//' '
+      adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
+      mfccatomxiao(kk,1)=adjustl(atomname(kk)(1:2))
       do j=1,3
         mfcccord(j,kk,1)=coord(j,kk)
       enddo
@@ -240,8 +240,8 @@ subroutine mfcc(natomsaved)
 
     do kk=mmm,nn-1
       write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-      atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
-      mfccatomxiao(kk-mmm+2,k)=atomname(kk)(2:2)//' '
+      adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
+      mfccatomxiao(kk-mmm+2,k)=adjustl(atomname(kk)(1:2))
       do j=1,3
         mfcccord(j,kk-mmm+2,k)=coord(j,kk)
       enddo
@@ -284,9 +284,9 @@ subroutine mfcc(natomsaved)
 
    do kk=mm,nn-1
       write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-      atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+      adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
 
-      mfccatomxiao(kk-mm+2,k)=atomname(kk)(2:2)//' '
+      mfccatomxiao(kk-mm+2,k)=adjustl(atomname(kk)(1:2))
       do j=1,3
         mfcccord(j,kk-mm+2,k)=coord(j,kk)
       enddo
@@ -348,9 +348,9 @@ subroutine mfcc(natomsaved)
 
   do kk=mmm,number
     write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-     atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+     adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
 
-     mfccatomxiao(kk-mmm+2,npmfcc)=atomname(kk)(2:2)//' '
+     mfccatomxiao(kk-mmm+2,npmfcc)=adjustl(atomname(kk)(1:2))
      do j=1,3
        mfcccord(j,kk-mmm+2,npmfcc)=coord(j,kk)
      enddo
@@ -377,9 +377,9 @@ subroutine mfcc(natomsaved)
 
    do kk=mm,number
     write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-     atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
+     adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
 
-    mfccatomxiao(kk-mm+2,npmfcc)=atomname(kk)(2:2)//' '
+    mfccatomxiao(kk-mm+2,npmfcc)=adjustl(atomname(kk)(1:2))
     do j=1,3
       mfcccord(j,kk-mm+2,npmfcc)=coord(j,kk)
     enddo
@@ -432,8 +432,8 @@ subroutine mfcc(natomsaved)
 
    do kk=mmm,nn-1
     write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-    atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
-    mfccatomxiaocap(kk-mmm+2,k)=atomname(kk)(2:2)//' '
+    adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
+    mfccatomxiaocap(kk-mmm+2,k)=adjustl(atomname(kk)(1:2))
     do j=1,3
       mfcccordcap(j,kk-mmm+2,k)=coord(j,kk)
     enddo
@@ -474,8 +474,8 @@ subroutine mfcc(natomsaved)
 
      do kk=mm,nn-1
        write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-       atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
-       mfccatomxiaocap(kk-mm+2,k)=atomname(kk)(2:2)//' '
+       adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
+       mfccatomxiaocap(kk-mm+2,k)=adjustl(atomname(kk)(1:2))
        do j=1,3
          mfcccordcap(j,kk-mm+2,k)=coord(j,kk)
        enddo
@@ -583,9 +583,9 @@ subroutine mfcc(natomsaved)
 
   do kk=mm,nnn-1
      write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-     atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
-     mfccatomxiaocon(kk-mm+2,kxiao)=atomname(kk)(2:2)//' '
-     mfccatomxiaoconi(kk-mm+2,kxiao)=atomname(kk)(2:2)//' '
+     adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
+     mfccatomxiaocon(kk-mm+2,kxiao)=adjustl(atomname(kk)(1:2))
+     mfccatomxiaoconi(kk-mm+2,kxiao)=adjustl(atomname(kk)(1:2))
 
      do j=1,3
        mfcccordcon(j,kk-mm+2,kxiao)=coord(j,kk)
@@ -651,9 +651,9 @@ subroutine mfcc(natomsaved)
 
     do kk=mmm,nnn-1
       write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-      atomname(kk)(2:2)//' ',(coord(j,kk),j=1,3)
-      mfccatomxiaocon2(kk-mmm+2,kxiao)=atomname(kk)(2:2)//' '
-      mfccatomxiaoconj(kk-mmm+2,kxiao)=atomname(kk)(2:2)//' '
+      adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
+      mfccatomxiaocon2(kk-mmm+2,kxiao)=adjustl(atomname(kk)(1:2))
+      mfccatomxiaoconj(kk-mmm+2,kxiao)=adjustl(atomname(kk)(1:2))
 
       do j=1,3
         mfcccordcon2(j,kk-mmm+2,kxiao)=coord(j,kk)
