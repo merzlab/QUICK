@@ -499,6 +499,11 @@ subroutine inidivcon(natomsaved)
      ! double calculation.
      !-----------------------------------------------------------------
 
+     ! Dump the subsystems as they stand before any elimination. Written
+     ! unconditionally of bEliminate so the pre file always reflects the true
+     ! starting partition; with BEOFF it simply matches the post file.
+     if (quick_method%fragxyz) call write_frag_xyz(iFragPreFile,fragPreFileName,coord,natomt,.false.)
+
      divcon_elimination: if (bEliminate) then
 
 
@@ -781,6 +786,10 @@ subroutine inidivcon(natomsaved)
      write(iOutfile,'("Total Frag=",i4)') np
      write(iOutfile,'("NBasis Max=",i4)') NNmax
      write(iOutfile,'("===========================================================")')
+
+     ! Dump the surviving subsystems. Electron and basis counts exist by now,
+     ! so these frames carry more metadata than the pre-elimination ones.
+     if (quick_method%fragxyz) call write_frag_xyz(iFragPostFile,fragPostFileName,coord,natomt,.true.)
 
      !-------------------MPI/MASTER---------------------------------------
   endif masterwork_inidivcon_buildsystem
@@ -1305,3 +1314,57 @@ subroutine wtoscorr
   enddo
 
 end subroutine wtoscorr
+
+!-------------------------------------------------------
+! write_frag_xyz
+!-------------------------------------------------------
+! Dump the divide and conquer subsystems as a multi-frame xyz file, one
+! frame per fragment. Each frame holds the whole subsystem (core atoms
+! followed by buffer atoms, which is the order dcsub is built in), so the
+! comment line can record where the core ends and a viewer can select it
+! by index. Coordinates in coord are already in Angstrom.
+!
+! lpost selects the richer comment line used after elimination, where the
+! per-subsystem electron and basis function counts have been computed.
+!-------------------------------------------------------
+
+subroutine write_frag_xyz(iunit,fname,coord,natomt,lpost)
+  use allmod
+  implicit none
+
+  integer, intent(in) :: iunit,natomt
+  character(len=*), intent(in) :: fname
+  double precision, intent(in) :: coord(3,natomt)
+  logical, intent(in) :: lpost
+
+  integer :: i,j,iat,ierr1
+
+  ! 'R' (REPLACE) rather than 'U': a re-run with fewer fragments must not
+  ! leave the tail of a longer previous dump behind.
+  ierr1 = 0
+  call quick_open(iunit,fname,'R','F','R',.true.,ierr1)
+  if (ierr1 /= 0) then
+     call PrtWrn(iOutFile,'Could not open fragment xyz file, skipping the dump.')
+     return
+  endif
+
+  do i=1,np
+     write(iunit,'(i8)') dcsubn(i)
+     if (lpost) then
+        write(iunit,'("fragment ",i0,"/",i0," | core ",i0," | buffer ",i0, &
+              &" | sub ",i0," | elec ",i0," | nbasis ",i0)') &
+              i,np,dccoren(i),dcsubn(i)-dccoren(i),dcsubn(i),nelecdcsub(i),nbasisdc(i)
+     else
+        write(iunit,'("fragment ",i0,"/",i0," | core ",i0," | buffer ",i0, &
+              &" | sub ",i0)') i,np,dccoren(i),dcsubn(i)-dccoren(i),dcsubn(i)
+     endif
+     do j=1,dcsubn(i)
+        iat=dcsub(i,j)
+        write(iunit,'(a2,3(2x,f14.8))') symbol(quick_molspec%iattype(iat)), &
+              coord(1,iat),coord(2,iat),coord(3,iat)
+     enddo
+  enddo
+
+  close(iunit)
+
+end subroutine write_frag_xyz

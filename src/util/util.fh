@@ -32,6 +32,9 @@
 #define ESPFILEHANDLE        2032
 #define EFIELDFILEHANDLE     2033
 #define VDWSURFFILEHANDLE    2034
+#define FRAGPREFILEHANDLE    2035
+#define FRAGPOSTFILEHANDLE   2036
+#define MFCCXYZFILEHANDLE    2037
 
 
 ! For the following definitions to work, one must use quick_exception_module

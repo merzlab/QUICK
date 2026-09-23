@@ -106,6 +106,7 @@ module quick_method_module
         ! Initial guess part
         logical :: SAD = .true.        ! SAD initial guess(default)
         logical :: MFCC = .false.      ! MFCC
+        logical :: fragxyz = .false.   ! dump fragment geometries as xyz
 
         ! this part is about ECP
         logical :: ecp                 ! ECP
@@ -279,6 +280,7 @@ module quick_method_module
             call MPI_BCAST(self%FMM,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%DIVCON,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%MFCC,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%fragxyz,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%ifragbasis,1,mpi_integer,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%iSG,1,mpi_integer,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%iscf,1,mpi_integer,0,quick_comm,quick_mpi_error)
@@ -440,6 +442,7 @@ module quick_method_module
             if (self%PDB) write(io,'(" PDB INPUT ")')
             if (self%MFCC) write(io,'(" MFCC INITIAL GUESS ")')
             if (self%SAD)  write(io,'(" SAD INITAL GUESS ")')
+            if (self%fragxyz) write(io,'(" WRITE FRAGMENT GEOMETRIES TO XYZ ")')
 
             if (self%FMM)  write(io,'(" FAST MULTIPOLE METHOD = TRUE ")')
 
@@ -605,6 +608,7 @@ module quick_method_module
             call upcase(keyWD,300)
             if (found_keyword(keyWD,'PDB'))        self%PDB=.true.
             if (found_keyword(keyWD,'MFCC'))       self%MFCC=.true.
+            if (found_keyword(keyWD,'FRAGXYZ'))    self%fragxyz=.true.
             if (found_keyword(keyWD,'FMM'))        self%FMM=.true.
             if (found_keyword(keyWD,'MP2'))        self%MP2=.true.
             if (found_keyword(keyWD,'HF'))         self%HF=.true.
@@ -1062,6 +1066,7 @@ module quick_method_module
             self%ifragbasis = 1        ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
             self%iSG = 1               ! =0. SG0, =1. SG1(DEFAULT)
             self%MFCC = .false.        ! MFCC
+            self%fragxyz = .false.     ! dump fragment geometries as xyz
 
             self%iscf = 200
             self%iscf_sad = 200

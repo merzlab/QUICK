@@ -19,6 +19,7 @@ subroutine mfcc(natomsaved)
    integer,allocatable::mselectC(:),mselectN(:),mselectCA(:)
    character*80 :: pdbline                     ! raw PDB record buffer
    integer :: ipdbstat                         ! iostat for PDB record reads
+   integer :: ierrxyz                          ! iostat for the fragment xyz dump
    real(8)::xx,yy,zz,ym,zm
    integer :: mfccatom(50),mfcccharge(50)
    integer :: mfccatomcap(50),mfccchargecap(50)
@@ -681,6 +682,36 @@ subroutine mfcc(natomsaved)
   enddo
 
   kxiaoconnect=kxiao-1
+
+! Dump fragments and caps as one multi-frame xyz file. Fragment and cap frames
+! are tagged in the comment line so they stay distinguishable in a single
+! trajectory. Coordinates are already in Angstrom.
+  if (quick_method%fragxyz) then
+     ierrxyz = 0
+     call quick_open(iMfccXyzFile,mfccXyzFileName,'R','F','R',.true.,ierrxyz)
+     if (ierrxyz /= 0) then
+        call PrtWrn(iOutFile,'Could not open MFCC xyz file, skipping the dump.')
+     else
+        do k=1,npmfcc
+           write(iMfccXyzFile,'(i8)') mfccatom(k)
+           write(iMfccXyzFile,'("mfcc fragment ",i0,"/",i0," | atoms ",i0)') k,npmfcc,mfccatom(k)
+           do i=1,mfccatom(k)
+              write(iMfccXyzFile,'(a2,3(2x,f14.8))') mfccatomxiao(i,k), &
+                    mfcccord(1,i,k),mfcccord(2,i,k),mfcccord(3,i,k)
+           enddo
+        enddo
+        do k=1,npmfcc-1
+           write(iMfccXyzFile,'(i8)') mfccatomcap(k)
+           write(iMfccXyzFile,'("mfcc cap ",i0,"/",i0," | atoms ",i0)') k,npmfcc-1,mfccatomcap(k)
+           do i=1,mfccatomcap(k)
+              write(iMfccXyzFile,'(a2,3(2x,f14.8))') mfccatomxiaocap(i,k), &
+                    mfcccordcap(1,i,k),mfcccordcap(2,i,k),mfcccordcap(3,i,k)
+           enddo
+        enddo
+        close(iMfccXyzFile)
+        write(ioutfile,*) "MFCC wrote fragment and cap geometries to ", trim(mfccXyzFileName)
+     endif
+  endif
 
 end
 

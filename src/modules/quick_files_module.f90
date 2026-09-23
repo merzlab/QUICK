@@ -40,6 +40,10 @@ module quick_files_module
     character(len=80) :: espFileName      = ''
     character(len=80) :: efieldFileName   = ''
     character(len=80) :: VdwSurfFileName  = ''
+    ! fragment geometry dumps written when the FRAGXYZ keyword is given
+    character(len=80) :: fragPreFileName  = ''
+    character(len=80) :: fragPostFileName = ''
+    character(len=80) :: mfccXyzFileName  = ''
 
 
     ! Basis set and directory
@@ -71,6 +75,9 @@ module quick_files_module
     integer :: iESPFile       = ESPFILEHANDLE        ! properties file for esp
     integer :: iEFIELDFile    = EFIELDFILEHANDLE     ! properties file for efield
     integer :: iVdwSurfFile   = VDWSURFFILEHANDLE    ! prints the calculated vanderwaals surface
+    integer :: iFragPreFile   = FRAGPREFILEHANDLE    ! DnC subsystems before fragment elimination
+    integer :: iFragPostFile  = FRAGPOSTFILEHANDLE   ! DnC subsystems after fragment elimination
+    integer :: iMfccXyzFile   = MFCCXYZFILEHANDLE    ! MFCC fragments and caps
 
 
     logical :: fexist = .false.         ! Check if file exists
@@ -136,6 +143,9 @@ module quick_files_module
         espFileName = trim(adjustl(baseinFileName)) // '.esp'
         efieldFileName = trim(adjustl(baseinFileName)) // '.efield'
         VdwSurfFileName = trim(adjustl(baseinFileName)) // '.vdw'
+        fragPreFileName = trim(adjustl(baseinFileName)) // '_frag_pre_elim.xyz'
+        fragPostFileName = trim(adjustl(baseinFileName)) // '_frag_post_elim.xyz'
+        mfccXyzFileName = trim(adjustl(baseinFileName)) // '_mfcc.xyz'
     end subroutine
 
 
