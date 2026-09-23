@@ -876,17 +876,20 @@ subroutine fermiSCF(efermi,jscf,fermi_ok)
 
 
    ! Determine the observed range of eigenvalues for all subsystems.
+   ! This must run for np == 1 as well. Fragment elimination legitimately
+   ! collapses the system to a single subsystem, and skipping this left the
+   ! bracket at its sentinels, i.e. inverted (emin > emax), so the bisection
+   ! below walked off to one end and saturated the occupations instead of
+   ! finding the Fermi level.
    emin = 10000000.0d0
    emax =-10000000.0d0
-   if(np > 1)then
-      do itt=1,np
-         imin = 1!nelecdcsub(itt)/2
-         imax = nbasisdc(itt)!nelecdcsub(itt)/2+1
-!         if(mod(nelecdcsub(itt),2).eq.1)imax = nelecdcsub(itt)/2+2
-         emin = min(emin,evaldcsub(itt,imin))
-         emax = max(emax,evaldcsub(itt,imax))
-      enddo
-   endif
+   do itt=1,np
+      imin = 1!nelecdcsub(itt)/2
+      imax = nbasisdc(itt)!nelecdcsub(itt)/2+1
+!      if(mod(nelecdcsub(itt),2).eq.1)imax = nelecdcsub(itt)/2+2
+      emin = min(emin,evaldcsub(itt,imin))
+      emax = max(emax,evaldcsub(itt,imax))
+   enddo
 
    ! Use a bisection technique to determine the fermi energy.
    !        emax =emax+2.0d0

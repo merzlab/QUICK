@@ -1014,17 +1014,18 @@ subroutine fermiUSCF(efermi,jscf,fermi_ok)
 
 
    ! Determine the observed range of eigenvalues for all subsystems.
+   ! See the matching comment in fermiSCF: this must run for np == 1 too, or
+   ! the bracket stays at its sentinels and the bisection saturates instead of
+   ! locating the Fermi level.
    emin = 10000000.0d0
    emax =-10000000.0d0
-   if(np > 1)then
-      do itt=1,np
-         imin = 1!nelecdcsub(itt)/2
-         imax = nbasisdc(itt)!nelecdcsub(itt)/2+1
-!         if(mod(nelecdcsub(itt),2).eq.1)imax = nelecdcsub(itt)/2+2
-         emin = min(emin,evalbdcsub(itt,imin))
-         emax = max(emax,evalbdcsub(itt,imax))
-      enddo
-   endif
+   do itt=1,np
+      imin = 1!nelecdcsub(itt)/2
+      imax = nbasisdc(itt)!nelecdcsub(itt)/2+1
+!      if(mod(nelecdcsub(itt),2).eq.1)imax = nelecdcsub(itt)/2+2
+      emin = min(emin,evalbdcsub(itt,imin))
+      emax = max(emax,evalbdcsub(itt,imax))
+   enddo
 
    ! Use a bisection technique to determine the fermi energy.
    !        emax =emax+2.0d0
