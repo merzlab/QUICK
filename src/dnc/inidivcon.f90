@@ -60,6 +60,8 @@ subroutine inidivcon(natomsaved)
   logical,allocatable:: buffer2log(:,:)
   logical,allocatable:: embedded(:,:)
   integer,allocatable:: temp1d(:),temp2d(:,:)
+  integer,allocatable:: isurv(:)              ! subsystems surviving elimination
+  integer nsurv                               ! how many of them
   integer tempinteger,tempinteger2
   integer natomt,natomsaved
   logical bEliminate  ! if elimination step needed (absolute must for large systems)
@@ -183,7 +185,10 @@ subroutine inidivcon(natomsaved)
 
      ! Output basic div-con information
      call PrtAct(iOutfile,"Now Begin Div & Con Fragment")
-     write(iOutfile,'("NUMBER OF FRAG=",i3)') np
+     ! This is the count before fragment elimination. Elimination may merge
+     ! subsystems and lower it; the surviving count is reported as "Total Frag"
+     ! once the core and buffer table has been rebuilt.
+     write(iOutfile,'("NUMBER OF FRAG (BEFORE ELIMINATION)=",i3)') np
  
      ! RBuffer is not used when OWNFRAG is on.
      ! All atoms are defined by user input.
@@ -233,6 +238,7 @@ subroutine inidivcon(natomsaved)
   allocate(templog2(np))
   allocate(temp1d(natomt))
   allocate(temp2d(natomt,natomt))
+  allocate(isurv(np))
   allocate(kshells(natom))
   allocate(kshellf(natom))
   allocate(dcconnect(jshell,jshell))
@@ -539,6 +545,14 @@ subroutine inidivcon(natomsaved)
 
         !-----------------------------------------------------------------
         ! then begin to move them
+        !
+        ! A merge target must still be alive. Without that check the tie-break
+        ! below picks j=i-1 when all subsystems are the same size, which builds
+        ! a chain (2->1, 3->2, 4->3, ...) instead of collapsing everything onto
+        ! one root. Each link resurrects a subsystem whose core was just zeroed,
+        ! so dccoren and dcsubn end up with different surviving index sets and
+        ! cores are silently lost. Seen with ATOMBASIS, where every core is a
+        ! single atom and every subsystem is therefore identical.
         !-----------------------------------------------------------------
         do i=1,np
            ! if the embedded number equals 2, then there will be an possibility that two subsystems are
@@ -546,6 +560,7 @@ subroutine inidivcon(natomsaved)
            if (count(embedded(i,1:np).eqv..true.).eq.2) then
               do j=1,np
                  if (i==j) cycle ! don't consider itself
+                 if (dcsubn(j)==0) cycle ! target already merged away, would resurrect it
                  if ((dcsubn1(j)==dcsubn1(i)).and.(j>i)) cycle ! elimiate the subsystem with smaller serier no.
                  if (embedded(i,j)) then
                     ! Move process
@@ -563,6 +578,7 @@ subroutine inidivcon(natomsaved)
               jj=i
               do j=1,np
                  if (i==j) cycle
+                 if (dcsubn(j)==0) cycle ! target already merged away, would resurrect it
                  if ((dcsubn1(j)==dcsubn1(i)).and.(j>i)) cycle
                  if(embedded(i,j)) then
                     if (dcsubn1(j)>=dcsubn1(jj)) jj=j ! pick up the largest embedded subsystem
@@ -582,16 +598,25 @@ subroutine inidivcon(natomsaved)
 
         !-----------------------------------------------------------------!
         ! Now rebuild and rearrange core and subsystems
+        !
+        ! dccore and dcsub are compacted onto the SAME surviving index set.
+        ! Counting dccoren and dcsubn separately lets the two disagree, and the
+        ! fragment count taken from one of them then silently discards the cores
+        ! held by the other.
         !-----------------------------------------------------------------
 
-        tempinteger=0 ! store fragment number after elimination
+        nsurv=0 ! fragment number after elimination
         do i=1,np
-           if(dccoren(i).ne.0) then
-              tempinteger=tempinteger+1
-              ! store new dccore and dccoren
-              temp1d(tempinteger)=dccoren(i)
-              temp2d(tempinteger,1:dccoren(i))=dccore(i,1:dccoren(i)) 
+           if(dcsubn(i).ne.0) then
+              nsurv=nsurv+1
+              isurv(nsurv)=i
            endif
+        enddo
+
+        ! store new dccore and dccoren
+        do i=1,nsurv
+           temp1d(i)=dccoren(isurv(i))
+           temp2d(i,1:dccoren(isurv(i)))=dccore(isurv(i),1:dccoren(isurv(i)))
         enddo
 
         ! format dccore and dccoren
@@ -603,18 +628,15 @@ subroutine inidivcon(natomsaved)
         enddo
 
         ! pass value to new dccoren and dccore
-        do i=1,tempinteger
+        do i=1,nsurv
            dccoren(i)=temp1d(i)
-        enddo
-
-        do i=1,tempinteger
            do j=1,dccoren(i)
               dccore(i,j)=temp2d(i,j)
            enddo
         enddo
 
         ! doesn't have much meaning, but just reorder the dccore
-        do i=1,tempinteger
+        do i=1,nsurv
            do j=1,dccoren(i)
               temp1d(j)=dccore(i,j)
            enddo
@@ -625,14 +647,9 @@ subroutine inidivcon(natomsaved)
         enddo
 
         ! we finish dccore, now we will work on dcsub
-        tempinteger=0
-        do i=1,np
-           if(dcsubn(i).ne.0) then
-              tempinteger=tempinteger+1
-              ! store new dcsub and dcsubn
-              temp1d(tempinteger)=dcsubn(i)
-              temp2d(tempinteger,1:dcsubn(i))=dcsub(i,1:dcsubn(i))
-           endif
+        do i=1,nsurv
+           temp1d(i)=dcsubn(isurv(i))
+           temp2d(i,1:dcsubn(isurv(i)))=dcsub(isurv(i),1:dcsubn(isurv(i)))
         enddo
 
         ! format dcsub and dcsubn
@@ -643,18 +660,15 @@ subroutine inidivcon(natomsaved)
            enddo
         enddo
 
-        do i=1,tempinteger
-           dcsubn(i)=temp1d(i)
-        enddo
-
         ! pass value to dcsub and dcsubn
-        do i=1,tempinteger
+        do i=1,nsurv
+           dcsubn(i)=temp1d(i)
            do j=1,dcsubn(i)
               dcsub(i,j)=temp2d(i,j)
            enddo
         enddo
 
-        do i=1,tempinteger
+        do i=1,nsurv
            do j=1,dcsubn(i)
               temp1d(j)=dcsub(i,j)
            enddo
@@ -665,7 +679,24 @@ subroutine inidivcon(natomsaved)
         enddo
 
         ! finally it's time to rebuild buffers
-        np=tempinteger ! get new fragment number
+        np=nsurv ! get new fragment number
+
+        !-----------------------------------------------------------------!
+        ! The surviving cores must still tile the molecule: every atom in
+        ! exactly one core. If they do not, the density assembled in fermiSCF
+        ! cannot hold the right number of electrons, and the failure would only
+        ! surface much later as a diverged Fermi level search.
+        !-----------------------------------------------------------------
+        tempinteger=0
+        do i=1,np
+           tempinteger=tempinteger+dccoren(i)
+        enddo
+        if (tempinteger.ne.natomt) then
+           write(iOutfile,'("Core atoms after elimination =",i6,", expected",i6)') tempinteger,natomt
+           call PrtErr(iOutFile,'Divide and conquer fragment elimination lost atoms: the &
+                 &surviving cores do not cover the molecule.')
+           call quick_exit(iOutFile,1)
+        endif
         do i=1,np
            dcbuffer1n(i)=dcsubn(i)-dccoren(i) ! nbuffer=nsub-ndccore
            tempinteger=0
@@ -886,6 +917,7 @@ subroutine inidivcon(natomsaved)
   if (allocated(embedded)) deallocate(embedded)
   if (allocated(temp1d)) deallocate(temp1d)
   if (allocated(temp2d)) deallocate(temp2d)
+  if (allocated(isurv)) deallocate(isurv)
 
   !===================================================================
   ! End of inidivcon
