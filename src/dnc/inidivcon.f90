@@ -697,6 +697,28 @@ subroutine inidivcon(natomsaved)
                  &surviving cores do not cover the molecule.')
            call quick_exit(iOutFile,1)
         endif
+
+        !-----------------------------------------------------------------!
+        ! Elimination can merge every subsystem into one. That is a correct
+        ! result, not an error, but the run is then a full SCF carrying the
+        ! divide and conquer overhead, so say so plainly rather than let the
+        ! user read "DIV & CON" in the header and assume otherwise.
+        !-----------------------------------------------------------------
+        if (np.eq.1) then
+           call PrtWrn(iOutFile,'Fragment elimination merged every subsystem into one.')
+           write(iOutfile,'("|          This calculation is effectively UNFRAGMENTED: the single")')
+           write(iOutfile,'("|          subsystem spans the whole molecule, so the result should")')
+           write(iOutfile,'("|          match a plain SCF and none of the expected divide and")')
+           write(iOutfile,'("|          conquer savings are delivered.")')
+           write(iOutfile,'("|")')
+           write(iOutfile,'("|          This happens when the buffer radius reaches every atom,")')
+           write(iOutfile,'("|          which is common for small molecules. It is useful for")')
+           write(iOutfile,'("|          checking divide and conquer against a full SCF. To")')
+           write(iOutfile,'("|          fragment for real, reduce the buffer with the DNCRB")')
+           write(iOutfile,'("|          keyword or choose a coarser fragmentation.")')
+           write(iOutfile,'(a)')
+           call flush(iOutfile)
+        endif
         do i=1,np
            dcbuffer1n(i)=dcsubn(i)-dccoren(i) ! nbuffer=nsub-ndccore
            tempinteger=0
