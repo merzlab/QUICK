@@ -19,8 +19,11 @@ module quick_mfcc_module
 !    integer :: mfccatom(50),mfcccharge(50),IMFCC,kxiaoconnect
     integer :: IMFCC,kxiaoconnect
 
-! This one I commented out
-!   integer npmfcc
+    ! Fragment count and per fragment/cap atom counts. These were local to
+    ! mfcc() and therefore thrown away when it returned, which left the
+    ! fragment densities impossible to compute afterwards.
+    integer :: npmfcc
+    integer :: mfccatom(50),mfccatomcap(50)
     double precision :: mfcccord(3,100,50)
     integer ::Ftmp(300)
     character(len=100)::linetmp

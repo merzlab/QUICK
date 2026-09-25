@@ -15,14 +15,14 @@ subroutine mfcc(natomsaved)
    integer,allocatable::class(:),ttnumber(:)   ! class and residue number
    character*4,allocatable::atomname(:)        ! atom name
    character*3,allocatable::residue(:)         ! residue name
-   integer natomsaved,npmfcc
+   integer natomsaved
    integer,allocatable::mselectC(:),mselectN(:),mselectCA(:)
    character*80 :: pdbline                     ! raw PDB record buffer
    integer :: ipdbstat                         ! iostat for PDB record reads
    integer :: ierrxyz                          ! iostat for the fragment xyz dump
    real(8)::xx,yy,zz,ym,zm
-   integer :: mfccatom(50),mfcccharge(50)
-   integer :: mfccatomcap(50),mfccchargecap(50)
+   integer :: mfcccharge(50)
+   integer :: mfccchargecap(50)
    integer :: mspin(50)
 
 ! integer :: kxiaoconnect
