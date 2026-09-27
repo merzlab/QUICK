@@ -26,7 +26,7 @@ subroutine mfcc_fragment_scf(ierr)
    integer, intent(inout) :: ierr
 
    integer :: k, i, nat, maxbas, ncon, nb_frag
-   integer :: natomsaved, nbs, nbf
+   integer :: natomsaved, nbs, nbf, nloc
    logical :: MPIsaved
    double precision, allocatable :: xyzsaved(:,:)
    type(quick_method_type) :: quick_method_save
@@ -101,7 +101,13 @@ subroutine mfcc_fragment_scf(ierr)
       call mfcc_run_submol(mfccatom(k),mfcccord(1,1,k),mfccatomxiao(1,k), &
             mfccstart(k),mfccfinal(k),mfccbases(k),mfccbasef(k),nb_frag,ierr)
       if (ierr /= 0) goto 900
-      mfccdens(k,1:nb_frag,1:nb_frag) = quick_qm_struct%dense(1:nb_frag,1:nb_frag)
+      ! MFCC_initial_guess reads mfccdens(k,i-mfccbases+1,...) with i starting
+      ! at mfccbases, so block index 1 must be the fragment's first *real*
+      ! basis function, not its first basis function. Storing from 1 would
+      ! include the leading cap hydrogen and shift everything by one.
+      nloc = mfccbasef(k)-mfccbases(k)+1
+      mfccdens(k,1:nloc,1:nloc) = &
+            quick_qm_struct%dense(mfccbases(k):mfccbasef(k),mfccbases(k):mfccbasef(k))
       if (master) write(ioutfile,'("   fragment ",i4," basis ",i5," local range ",i5," -",i5)') &
             k,nb_frag,mfccbases(k),mfccbasef(k)
    enddo
@@ -110,7 +116,9 @@ subroutine mfcc_fragment_scf(ierr)
       call mfcc_run_submol(mfccatomcap(k),mfcccordcap(1,1,k),mfccatomxiaocap(1,k), &
             mfccstartcap(k),mfccfinalcap(k),mfccbasescap(k),mfccbasefcap(k),nb_frag,ierr)
       if (ierr /= 0) goto 900
-      mfccdenscap(k,1:nb_frag,1:nb_frag) = quick_qm_struct%dense(1:nb_frag,1:nb_frag)
+      nloc = mfccbasefcap(k)-mfccbasescap(k)+1
+      mfccdenscap(k,1:nloc,1:nloc) = &
+            quick_qm_struct%dense(mfccbasescap(k):mfccbasefcap(k),mfccbasescap(k):mfccbasefcap(k))
       if (master) write(ioutfile,'("   cap      ",i4," basis ",i5," local range ",i5," -",i5)') &
             k,nb_frag,mfccbasescap(k),mfccbasefcap(k)
    enddo
