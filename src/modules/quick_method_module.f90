@@ -607,7 +607,14 @@ module quick_method_module
 
             call upcase(keyWD,300)
             if (found_keyword(keyWD,'PDB'))        self%PDB=.true.
-            if (found_keyword(keyWD,'MFCC'))       self%MFCC=.true.
+            if (found_keyword(keyWD,'MFCC')) then
+                self%MFCC=.true.
+                ! MFCC supplies its own initial guess. SAD defaults to true and
+                ! nothing else ever clears it, so it must be cleared here: getMol
+                ! calls getSadDense whenever SAD is set, which reads SAD arrays
+                ! that are only allocated by getmolsad.
+                self%SAD=.false.
+            endif
             if (found_keyword(keyWD,'FRAGXYZ'))    self%fragxyz=.true.
             if (found_keyword(keyWD,'FMM'))        self%FMM=.true.
             if (found_keyword(keyWD,'MP2'))        self%MP2=.true.
