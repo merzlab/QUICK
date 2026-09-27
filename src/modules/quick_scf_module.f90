@@ -213,6 +213,7 @@ contains
       double precision, pointer :: scratch_rect(:,:)
 #ifdef CUEST
       double precision :: cuest_densetmp(nbasis, nbasis)
+      double precision :: osave(nbasis, nbasis)
 #endif
 
      !---------------------------------------------------------------------------
@@ -615,6 +616,12 @@ contains
             ! scratch_rect(nbasis,NBSuse) is used as the rectangular intermediate;
             ! operator_ptr(NBSuse,NBSuse) receives the result.
             !-----------------------------------------------
+#ifdef CUEST
+            if (quick_method%usecuest) then
+               osave = quick_qm_struct%o
+            endif
+#endif
+
             call MAT_DGEMM ('n', 'n', nbasis, NBSuse, nbasis, 1.0d0, quick_qm_struct%o, &
                   nbasis, quick_qm_struct%x, nbasis, 0.0d0, scratch_rect, nbasis)
 
@@ -786,7 +793,7 @@ contains
         endif
 #endif
         if (quick_method%debug)  call debug_SCF(jscf)
-     enddo
+     enddo ! while (.not. diisdone)
 
      if(master .and. write_molden) then 
          quick_molden%nscf_snapshots(quick_molden%iexport_snapshot)=jscf 
@@ -796,6 +803,97 @@ contains
      ! sign of the coefficient matrix resulting from cusolver is not consistent
      ! with rest of the code (e.g. gradients). We have to correct this.
      call scalarMatMul(quick_qm_struct%co,NBSuse,nbasis,-1.0d0)
+#endif
+
+#ifdef CUEST
+     if (quick_method%usecuest .and. quick_method%grad) then
+         ! rebuild C from exact S^{1/2} to use for cuEST gradient
+
+         if (.not. allocated(quick_scratch%Sminhalf)) allocate(quick_scratch%Sminhalf(nbasis))
+         if (.not. allocated(quick_scratch%tmphold)) allocate(quick_scratch%tmphold(nbasis,nbasis))
+         if (.not. allocated(quick_scratch%hold)) allocate(quick_scratch%hold(nbasis,nbasis))
+         if (.not. allocated(quick_scratch%hold2)) allocate(quick_scratch%hold2(nbasis,nbasis))
+         quick_scratch%Sminhalf=0.0d0
+         quick_scratch%tmphold=0.0d0
+
+         ! -----------------------------------------------
+         ! compute S^{-1/2}
+         ! -----------------------------------------------
+         
+         ! %Sminhalf has eigenvalues
+         ! %hold2 has eigenvectors
+         ! %tmphold is diagonal matrix of sqrt eigenvalues
+         ! %hold stores intermediates
+         ! %tmphold ends with X=S^{-1/2}
+         call MAT_DIAG(quick_qm_struct%s, nbasis, nbasis, quick_scratch%Sminhalf, quick_scratch%hold2)
+         do j=1, nbasis
+            quick_scratch%tmphold(j,j) = 1/sqrt(quick_scratch%sminhalf(j))
+         enddo
+         
+         ! %hold = (%hold2)*(%tmphold)
+         call MAT_DGEMM('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
+                        nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%hold, nbasis)
+         ! %tmphold = (%hold)*(%hold2)^T = (%hold)*(%tmphold)*(%hold)^T
+         call MAT_DGEMM('n', 't', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold, &
+                        nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_scratch%tmphold, nbasis)
+
+         ! -----------------------------------------------
+         ! transform operator matrix using exact X: tilde F = (X^T)OX
+         !     %tmphold contains X
+         !     scratch_rect stores intermediate
+         ! -----------------------------------------------
+          call MAT_DGEMM ('n', 'n', nbasis, NBSuse, nbasis, 1.0d0, osave, &
+                          nbasis, quick_scratch%tmphold, nbasis, 0.0d0, scratch_rect, nbasis)
+          call MAT_DGEMM ('t', 'n', NBSuse, NBSuse, nbasis, 1.0d0, quick_scratch%tmphold, &
+                          nbasis, scratch_rect, nbasis, 0.0d0, operator_ptr, NBSuse)
+
+         ! -----------------------------------------------
+         ! level shifting
+         !     scratch_sq stores intermediate
+         ! -----------------------------------------------
+         if (LShift) then
+            homo = quick_molspec%nelec/2
+            bandgap = quick_qm_struct%E(homo+1) - quick_qm_struct%E(homo)
+            call MAT_DGEMM ('n', 'n', NBSuse, NBSuse, NBSuse, 1.0d0, operator_ptr, &
+                 NBSuse, quick_qm_struct%oldvec, NBSuse, 0.0d0, scratch_sq, NBSuse)
+
+            call MAT_DGEMM ('t', 'n', NBSuse, NBSuse, NBSuse, 1.0d0, quick_qm_struct%oldvec, &
+                 NBSuse, scratch_sq, NBSuse, 0.0d0, operator_ptr, NBSuse)
+
+            shift = quick_method%LShift_gap - bandgap
+            do I=homo+1,NBSuse
+               operator_ptr(I,I) = operator_ptr(I,I) + shift
+            enddo
+         endif
+
+         ! -----------------------------------------------
+         ! diagonalize operator matrix
+         ! -----------------------------------------------
+         call MAT_DIAG(operator_ptr, NBSuse, NBSuse, quick_scratch%Sminhalf, quick_qm_struct%vec)
+
+         ! -----------------------------------------------
+         ! C = XC'
+         !   scratch_sq contains lshift intermediate
+         ! -----------------------------------------------
+         if(LShift)then
+            call MAT_DGEMM ('n', 'n', NBSuse, NBSuse, NBSuse, 1.0d0, quick_qm_struct%oldvec, &
+                            NBSuse, quick_qm_struct%vec, NBSuse, 0.0d0, scratch_sq, NBSuse)
+            call MAT_DGEMM ('n', 'n', nbasis, NBSuse, NBSuse, 1.0d0, quick_scratch%tmphold, &
+                            nbasis, scratch_sq, NBSuse, 0.0d0, quick_qm_struct%co, nbasis)
+         else
+             call MAT_DGEMM ('n', 'n', nbasis, NBSuse, NBSuse, 1.0d0, quick_scratch%tmphold, &
+                             nbasis, quick_qm_struct%vec, NBSuse, 0.0d0, quick_qm_struct%co,nbasis)
+         endif
+
+         ! -----------------------------------------------
+         ! P = CnC^T
+         ! -----------------------------------------------
+         call MAT_DGEMM ('n', 't', nbasis, nbasis, quick_molspec%nelec/2, 2.0d0, quick_qm_struct%co, &
+                         nbasis, quick_qm_struct%co, nbasis, 0.0d0, quick_qm_struct%dense, nbasis)         
+
+         deallocate(quick_scratch%Sminhalf)
+         deallocate(quick_scratch%tmphold)
+     endif
 #endif
   
 #if defined(GPU) || defined(MPIV_GPU)
