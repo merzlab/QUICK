@@ -123,21 +123,30 @@
     RECORD_TIME(timer_begin%TIniGuess)
 
     ! a. SAD intial guess
+    ! quick_method%SAD is cleared when MFCC is requested, so this is skipped
+    ! for MFCC runs and the MFCC guess is used instead.
     if (quick_method%SAD) SAFE_CALL(getSadGuess(ierr))
     if (quick_method%writeSAD) then
        call quick_exit(iOutFile,ierr)
     end if
 
-    ! b. MFCC initial guess
+    ! b. MFCC initial guess: fragment the system, then converge each fragment
+    ! and cap. The resulting blocks are assembled into the global density by
+    ! MFCC_initial_guess once getMol has built the global basis below.
     if (quick_method%MFCC) then
         call mfcc(quick_molspec%natom)
-    !    call getmolmfcc
+        SAFE_CALL(mfcc_fragment_scf(ierr))
     endif
 
     !------------------------------------------------------------------
     ! 3. Read Molecule Structure
     !-----------------------------------------------------------------
     SAFE_CALL(getMol(ierr))
+
+    ! Assemble the MFCC guess now that the global basis exists. getMol is what
+    ! fills matombases/matombasef, the global half of the index mapping the
+    ! assembly needs; the fragment-local half came from the fragment SCFs.
+    if (quick_method%MFCC .and. master) call MFCC_initial_guess
 
     if (master .and. quick_method%writechk) then
         call chk_init(natom, nbasis)

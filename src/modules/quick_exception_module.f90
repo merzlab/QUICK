@@ -158,6 +158,10 @@ contains
               &matrix does not hold the correct number of electrons, so the energy is not &
               &meaningful. ALLOW_BAD_SCF keyword must be specified to proceed anyway.'
 
+    case(44)
+      msg='MFCC fragment setup failed. The fragment geometry produced by the MFCC &
+              &fragmentation could not be turned into a valid closed shell molecule.'
+
     case default
       msg='Unknown error.'
 
