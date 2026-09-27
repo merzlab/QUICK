@@ -217,7 +217,11 @@ subroutine mfcc(natomsaved)
    nn=mselectC(k+1)
    mmm=mselectCA(k-1)
    nnn=mselectCA(k+1)
-   nnnn=mselectC(k-2)
+   ! nnnn is only needed by the proline branch below. The loop starts at k=2,
+   ! so mselectC(k-2) reads element 0 on the first iteration; guard the read
+   ! rather than run off the start of the array.
+   nnnn=0
+   if (k.ge.3) nnnn=mselectC(k-2)
    if(residue(mselectN(k-1)).ne.'PRO')then
     call xyzchange(coord(1,mm),coord(2,mm),coord(3,mm), &
     coord(1,mmm),coord(2,mmm),coord(3,mmm),xx,ym,zm)    
@@ -263,6 +267,14 @@ subroutine mfcc(natomsaved)
 !  write(ioutfile,*) '======================================'
 !  write(ioutfile,*) '  '      
     else
+
+   ! A proline this early in the chain would need the carbonyl carbon of a
+   ! residue that does not exist. Say so instead of using a bogus index.
+   if (nnnn.le.0) then
+     call PrtErr(iOutFile,'MFCC cannot cap a proline at this chain position: it requires the &
+           &carbonyl carbon of a preceding residue that does not exist.')
+     call quick_exit(iOutFile,1)
+   endif
 
    call Nxyzchange(coord(1,nnnn),coord(2,nnnn),coord(3,nnnn), &
    coord(1,mm),coord(2,mm),coord(3,mm),xx,ym,zm)       
@@ -409,7 +421,10 @@ subroutine mfcc(natomsaved)
    nn=mselectC(k+1)
    mmm=mselectCA(k)
    nnn=mselectCA(k+1)
-   nnnn=mselectC(k-1)
+   ! Same guard as in the fragment loop: this cap loop starts at k=1, so
+   ! mselectC(k-1) reads element 0 on the first iteration.
+   nnnn=0
+   if (k.ge.2) nnnn=mselectC(k-1)
    if(residue(mselectN(k)).ne.'PRO')then
     call xyzchange(coord(1,mm),coord(2,mm),coord(3,mm), &
     coord(1,mmm),coord(2,mmm),coord(3,mmm),xx,ym,zm)       
@@ -452,6 +467,12 @@ subroutine mfcc(natomsaved)
         mfcccordcap(3,nn-mmm+2,k)=zm
 
     else
+
+   if (nnnn.le.0) then
+     call PrtErr(iOutFile,'MFCC cannot cap a proline at this chain position: it requires the &
+           &carbonyl carbon of a preceding residue that does not exist.')
+     call quick_exit(iOutFile,1)
+   endif
 
   call Nxyzchange(coord(1,nnnn),coord(2,nnnn),coord(3,nnnn), &
    coord(1,mm),coord(2,mm),coord(3,mm),xx,ym,zm)       
