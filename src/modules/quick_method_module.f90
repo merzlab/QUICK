@@ -135,6 +135,10 @@ module quick_method_module
         logical :: isDefaultCutoff         = .true.
         double precision :: DNCRB          = 7.0d0    ! buffer region size in DIVCON
         double precision :: DNCRB2         = 0.0d0    ! buffer region 2 size in DIVCON
+        ! Contact cutoff (Angstrom) for MFCC connection terms: residues at least
+        ! three apart in sequence that approach within this distance get an extra
+        ! correction block. Hydrogen bond range by default.
+        double precision :: MFCCCUT        = 3.0d0
         logical :: isDefaultXCCutoff       = .true.
         logical :: isDefaultDNCRB          = .true.
         logical :: isDefaultDNCRB2          = .true.
@@ -308,6 +312,7 @@ module quick_method_module
             call MPI_BCAST(self%OWNfrag,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%DNCRB,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%DNCRB2,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%MFCCCUT,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
 
             !mpi variables for libxc implementation
             call MPI_BCAST(self%uselibxc,1,mpi_logical,0,quick_comm,quick_mpi_error)
@@ -443,6 +448,7 @@ module quick_method_module
             if (self%MFCC) write(io,'(" MFCC INITIAL GUESS ")')
             if (self%SAD)  write(io,'(" SAD INITAL GUESS ")')
             if (self%fragxyz) write(io,'(" WRITE FRAGMENT GEOMETRIES TO XYZ ")')
+            if (self%MFCC) write(io,'(" MFCC CONNECTION CUTOFF =",f7.2," A")') self%MFCCCUT
 
             if (self%FMM)  write(io,'(" FAST MULTIPOLE METHOD = TRUE ")')
 
@@ -901,6 +907,11 @@ module quick_method_module
                 self%isDefaultDNCRB2 = .false.
             endif
 
+            ! Contact cutoff for the MFCC connection terms
+            if (index(keywd,'MFCCCUT') /= 0) then
+                call read(keywd,'MFCCCUT', self%MFCCCUT)
+            endif
+
             ! Basis cutoff
             if (found_keyword(keywd,'BASISCUTOFF')) then
                 call read(keywd,'BASISCUTOFF', self%basisCutoff)
@@ -1074,6 +1085,7 @@ module quick_method_module
             self%iSG = 1               ! =0. SG0, =1. SG1(DEFAULT)
             self%MFCC = .false.        ! MFCC
             self%fragxyz = .false.     ! dump fragment geometries as xyz
+            self%MFCCCUT = 3.0d0       ! contact cutoff for MFCC connection terms
 
             self%iscf = 200
             self%iscf_sad = 200

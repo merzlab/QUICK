@@ -9,7 +9,8 @@ subroutine mfcc(natomsaved)
    integer xiaoconnect(100,100)
    integer :: i,j,j1,j2,j3,number,mm,nn,kk
    integer :: mmm,nnn,nnnn,k,ii,jj
-   integer :: ixiao,jxiao,xiaodis,kxiao
+   integer :: ixiao,jxiao,kxiao
+   double precision :: xiaodis   ! contact distance, was an integer and truncated
    character*6,allocatable:: sn(:)             ! series no.
    double precision,allocatable::coord(:,:)    ! cooridnates
    integer,allocatable::class(:),ttnumber(:)   ! class and residue number
@@ -527,9 +528,13 @@ subroutine mfcc(natomsaved)
             xiaodis=dsqrt((coord(1,ii)-coord(1,jj))**2.0d0+ &
                           (coord(2,ii)-coord(2,jj))**2.0d0+ &
                           (coord(3,ii)-coord(3,jj))**2.0d0)
-            if(xiaodis.le.-1.0d0)then
+            ! This used to read 'xiaodis .le. -1.0d0'. A Euclidean distance is
+            ! never negative, so the connection terms could never be generated;
+            ! the whole con/coni/conj layer below was unreachable. The cutoff is
+            ! now a real contact distance, adjustable with the MFCCCUT keyword.
+            if(xiaodis.le.quick_method%MFCCCUT)then
               xiaoconnect(ixiao,jxiao)=0
-              print*,ixiao,jxiao,ii,jj, 'ixiao,jxiao,ii,jj'
+              if(quick_method%debug) print*,ixiao,jxiao,ii,jj, 'ixiao,jxiao,ii,jj'
             endif
           endif
          enddo
