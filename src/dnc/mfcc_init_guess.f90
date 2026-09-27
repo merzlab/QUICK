@@ -47,6 +47,41 @@ end subroutine
 subroutine MFCC_initial_guess
    use allmod
    call PrtAct(ioutfile,"Begin MFCC initial guess")
+
+   ! The fragment blocks minus the cap blocks must cover every global basis
+   ! function exactly once. matombases/matombasef are only valid once getMol
+   ! has run readbasis on the whole molecule.
+   if (quick_method%debug) then
+      write(ioutfile,'(" MFCC index map (global / local basis ranges)")')
+      do ixiao=1,npmfcc
+         write(ioutfile,'("   fragment ",i3," global ",i5," -",i5,"   local ",i5," -",i5)') &
+               ixiao,matombases(ixiao),matombasef(ixiao),mfccbases(ixiao),mfccbasef(ixiao)
+      enddo
+      do ixiao=1,npmfcc-1
+         write(ioutfile,'("   cap      ",i3," global ",i5," -",i5,"   local ",i5," -",i5)') &
+               ixiao,matombasescap(ixiao),matombasefcap(ixiao),mfccbasescap(ixiao),mfccbasefcap(ixiao)
+      enddo
+   endif
+   ! The connection densities are not computed yet: mfcc_fragment_scf runs the
+   ! fragment and cap SCFs only. Until it also produces the connection blocks,
+   ! these loops must not run, because mfccbasesconi/mfccbasesconj are unset and
+   ! the indexing below would reach quick_qm_struct%dense(0,...).
+   ! Set this to kxiaoconnect once the connection densities are available.
+   nconuse = 0
+
+   if (kxiaoconnect .gt. 0 .and. nconuse .eq. 0) then
+      call PrtWrn(iOutFile,'MFCC connection terms were identified but are NOT included in the guess.')
+      write(ioutfile,'("|          MFCCCUT identified ",i5," connection blocks, but their")') kxiaoconnect
+      write(ioutfile,'("|          densities are not computed yet, so this guess uses the two")')
+      write(ioutfile,'("|          term formula (fragments minus caps) only.")')
+      write(ioutfile,'("|")')
+      write(ioutfile,'("|          The SCF result stays valid, but the guess is less accurate for")')
+      write(ioutfile,'("|          systems with non-sequential residue contacts, which is exactly")')
+      write(ioutfile,'("|          where the connection terms would help.")')
+      write(ioutfile,'(a)')
+      call flush(ioutfile)
+   endif
+
    do i=1,nbasis
       do j=1,nbasis
          quick_qm_struct%dense(i,j)=0.0d0
@@ -84,7 +119,7 @@ subroutine MFCC_initial_guess
    enddo
 
 
-   do ixiao=1,kxiaoconnect
+   do ixiao=1,nconuse
       do i=mfccbasesconi(ixiao),mfccbasefconi(ixiao)
          do j=mfccbasesconi(ixiao),mfccbasefconi(ixiao)
             quick_qm_struct%dense(matombasesconi(ixiao)+i-mfccbasesconi(ixiao),matombasesconi(ixiao)+j-mfccbasesconi(ixiao))= &
@@ -99,7 +134,7 @@ subroutine MFCC_initial_guess
       enddo
    enddo
 
-   do ixiao=1,kxiaoconnect
+   do ixiao=1,nconuse
       do i=mfccbasesconj(ixiao),mfccbasefconj(ixiao)
          do j=mfccbasesconj(ixiao),mfccbasefconj(ixiao)
             quick_qm_struct%dense(matombasesconj(ixiao)+i-mfccbasesconj(ixiao),matombasesconj(ixiao)+j-mfccbasesconj(ixiao))= &
@@ -114,7 +149,7 @@ subroutine MFCC_initial_guess
       enddo
    enddo
 
-   do ixiao=1,kxiaoconnect
+   do ixiao=1,nconuse
       do i=mfccbasesconi(ixiao),mfccbasefconi(ixiao)
          do j=mfccbasesconi(ixiao),mfccbasefconi(ixiao)
             quick_qm_struct%dense(matombasesconi(ixiao)+i-mfccbasesconi(ixiao),matombasesconi(ixiao)+j-mfccbasesconi(ixiao))= &
@@ -130,7 +165,7 @@ subroutine MFCC_initial_guess
    enddo
 
 
-   do ixiao=1,kxiaoconnect
+   do ixiao=1,nconuse
       do i=mfccbasesconj(ixiao),mfccbasefconj(ixiao)
          do j=mfccbasesconj(ixiao),mfccbasefconj(ixiao)
 
