@@ -382,6 +382,12 @@ contains
   
         call scf_operator(deltaO)
 
+#ifdef CUEST
+        if (quick_method%usecuest) then
+           osave = quick_qm_struct%o
+        endif
+#endif
+
         quick_qm_struct%denseOld(:,:) = quick_qm_struct%dense(:,:)
 
         if (quick_method%debug)  call debug_SCF(jscf)
@@ -616,11 +622,6 @@ contains
             ! scratch_rect(nbasis,NBSuse) is used as the rectangular intermediate;
             ! operator_ptr(NBSuse,NBSuse) receives the result.
             !-----------------------------------------------
-#ifdef CUEST
-            if (quick_method%usecuest) then
-               osave = quick_qm_struct%o
-            endif
-#endif
 
             call MAT_DGEMM ('n', 'n', nbasis, NBSuse, nbasis, 1.0d0, quick_qm_struct%o, &
                   nbasis, quick_qm_struct%x, nbasis, 0.0d0, scratch_rect, nbasis)
@@ -838,14 +839,14 @@ contains
                         nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_scratch%tmphold, nbasis)
 
          ! -----------------------------------------------
-         ! transform operator matrix using exact X: tilde F = (X^T)OX
+         ! transform operator matrix using exact X: tilde F = (X^T)FX
          !     %tmphold contains X
          !     scratch_rect stores intermediate
          ! -----------------------------------------------
-          call MAT_DGEMM ('n', 'n', nbasis, NBSuse, nbasis, 1.0d0, osave, &
+          call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, osave, &
                           nbasis, quick_scratch%tmphold, nbasis, 0.0d0, scratch_rect, nbasis)
-          call MAT_DGEMM ('t', 'n', NBSuse, NBSuse, nbasis, 1.0d0, quick_scratch%tmphold, &
-                          nbasis, scratch_rect, nbasis, 0.0d0, operator_ptr, NBSuse)
+          call MAT_DGEMM ('t', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmphold, &
+                          nbasis, scratch_rect, nbasis, 0.0d0, operator_ptr, nbasis)
 
          ! -----------------------------------------------
          ! level shifting
@@ -854,14 +855,14 @@ contains
          if (LShift) then
             homo = quick_molspec%nelec/2
             bandgap = quick_qm_struct%E(homo+1) - quick_qm_struct%E(homo)
-            call MAT_DGEMM ('n', 'n', NBSuse, NBSuse, NBSuse, 1.0d0, operator_ptr, &
-                 NBSuse, quick_qm_struct%oldvec, NBSuse, 0.0d0, scratch_sq, NBSuse)
+            call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, operator_ptr, &
+                 nbasis, quick_qm_struct%oldvec, nbasis, 0.0d0, scratch_sq, nbasis)
 
-            call MAT_DGEMM ('t', 'n', NBSuse, NBSuse, NBSuse, 1.0d0, quick_qm_struct%oldvec, &
-                 NBSuse, scratch_sq, NBSuse, 0.0d0, operator_ptr, NBSuse)
+            call MAT_DGEMM ('t', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%oldvec, &
+                 nbasis, scratch_sq, nbasis, 0.0d0, operator_ptr, nbasis)
 
             shift = quick_method%LShift_gap - bandgap
-            do I=homo+1,NBSuse
+            do I=homo+1,nbasis
                operator_ptr(I,I) = operator_ptr(I,I) + shift
             enddo
          endif
@@ -869,20 +870,20 @@ contains
          ! -----------------------------------------------
          ! diagonalize operator matrix
          ! -----------------------------------------------
-         call MAT_DIAG(operator_ptr, NBSuse, NBSuse, quick_scratch%Sminhalf, quick_qm_struct%vec)
+         call MAT_DIAG(operator_ptr, nbasis, nbasis, quick_scratch%Sminhalf, quick_qm_struct%vec)
 
          ! -----------------------------------------------
          ! C = XC'
          !   scratch_sq contains lshift intermediate
          ! -----------------------------------------------
          if(LShift)then
-            call MAT_DGEMM ('n', 'n', NBSuse, NBSuse, NBSuse, 1.0d0, quick_qm_struct%oldvec, &
-                            NBSuse, quick_qm_struct%vec, NBSuse, 0.0d0, scratch_sq, NBSuse)
-            call MAT_DGEMM ('n', 'n', nbasis, NBSuse, NBSuse, 1.0d0, quick_scratch%tmphold, &
-                            nbasis, scratch_sq, NBSuse, 0.0d0, quick_qm_struct%co, nbasis)
+            call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%oldvec, &
+                            nbasis, quick_qm_struct%vec, nbasis, 0.0d0, scratch_sq, nbasis)
+            call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmphold, &
+                            nbasis, scratch_sq, nbasis, 0.0d0, quick_qm_struct%co, nbasis)
          else
-             call MAT_DGEMM ('n', 'n', nbasis, NBSuse, NBSuse, 1.0d0, quick_scratch%tmphold, &
-                             nbasis, quick_qm_struct%vec, NBSuse, 0.0d0, quick_qm_struct%co,nbasis)
+             call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmphold, &
+                             nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
          endif
 
          ! -----------------------------------------------
