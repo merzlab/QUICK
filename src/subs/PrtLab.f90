@@ -14,6 +14,7 @@
 !-----------------------------------------------------------
 subroutine PrtLab(line,kk,Ktmp)
   integer Ktmp(kk)
+  logical endrun
   character ch,ch2,line*(*),line1*100,line2*100
   parameter (ch=',',ch2='-')
 
@@ -32,7 +33,15 @@ subroutine PrtLab(line,kk,Ktmp)
      write(line1,*) Ktmp(i)
      call EffChar(line1,1,100,k1,k2)
      if (Ktmp(i)-Ktmp(i-1)==1) then
-        if (i==kk.or.Ktmp(i+1)-Ktmp(i).ne.1) then
+        ! Fortran does not guarantee short-circuit .or., so Ktmp(i+1) must not
+        ! appear in the same expression as the i==kk test: on the last element
+        ! it reads one past the end of the array.
+        if (i==kk) then
+           endrun=.true.
+        else
+           endrun=(Ktmp(i+1)-Ktmp(i).ne.1)
+        endif
+        if (endrun) then
            line(ini:ini+k2-k1+1)=ch2//line1(k1:k2)
            ini=ini+k2-k1+2
         endif
