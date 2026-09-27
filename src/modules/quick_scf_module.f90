@@ -812,20 +812,20 @@ contains
 
          if (.not. allocated(quick_scratch%Sminhalf)) allocate(quick_scratch%Sminhalf(nbasis))
          if (.not. allocated(quick_scratch%tmphold)) allocate(quick_scratch%tmphold(nbasis,nbasis))
-         if (.not. allocated(quick_scratch%hold)) allocate(quick_scratch%hold(nbasis,nbasis))
-         if (.not. allocated(quick_scratch%hold2)) allocate(quick_scratch%hold2(nbasis,nbasis))
+         ! %hold and %hold2 are (nbasis x nbasis)
+
          quick_scratch%Sminhalf=0.0d0
          quick_scratch%tmphold=0.0d0
 
          ! -----------------------------------------------
          ! compute S^{-1/2}
+         !     %Sminhalf has eigenvalues
+         !     %hold2 has eigenvectors
+         !     %tmphold is diagonal matrix of sqrt eigenvalues
+         !     %hold stores intermediates
+         !     %tmphold ends with X=S^{-1/2}
          ! -----------------------------------------------
          
-         ! %Sminhalf has eigenvalues
-         ! %hold2 has eigenvectors
-         ! %tmphold is diagonal matrix of sqrt eigenvalues
-         ! %hold stores intermediates
-         ! %tmphold ends with X=S^{-1/2}
          call MAT_DIAG(quick_qm_struct%s, nbasis, nbasis, quick_scratch%Sminhalf, quick_scratch%hold2)
          do j=1, nbasis
             quick_scratch%tmphold(j,j) = 1/sqrt(quick_scratch%sminhalf(j))
@@ -841,50 +841,27 @@ contains
          ! -----------------------------------------------
          ! transform operator matrix using exact X: tilde F = (X^T)FX
          !     %tmphold contains X
-         !     scratch_rect stores intermediate
+         !     %hold stores intermediate
+         !     osave gets transformed operator (overwrites original o)
          ! -----------------------------------------------
           call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, osave, &
-                          nbasis, quick_scratch%tmphold, nbasis, 0.0d0, scratch_rect, nbasis)
+                          nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%hold, nbasis)
           call MAT_DGEMM ('t', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmphold, &
-                          nbasis, scratch_rect, nbasis, 0.0d0, operator_ptr, nbasis)
-
-         ! -----------------------------------------------
-         ! level shifting
-         !     scratch_sq stores intermediate
-         ! -----------------------------------------------
-         if (LShift) then
-            homo = quick_molspec%nelec/2
-            bandgap = quick_qm_struct%E(homo+1) - quick_qm_struct%E(homo)
-            call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, operator_ptr, &
-                 nbasis, quick_qm_struct%oldvec, nbasis, 0.0d0, scratch_sq, nbasis)
-
-            call MAT_DGEMM ('t', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%oldvec, &
-                 nbasis, scratch_sq, nbasis, 0.0d0, operator_ptr, nbasis)
-
-            shift = quick_method%LShift_gap - bandgap
-            do I=homo+1,nbasis
-               operator_ptr(I,I) = operator_ptr(I,I) + shift
-            enddo
-         endif
+                          nbasis, quick_scratch%hold, nbasis, 0.0d0, osave, nbasis)
 
          ! -----------------------------------------------
          ! diagonalize operator matrix
+         !     %Sminhalf stores eigenvalues
+         !     %hold stores eigenvectors
          ! -----------------------------------------------
-         call MAT_DIAG(operator_ptr, nbasis, nbasis, quick_scratch%Sminhalf, quick_qm_struct%vec)
+         call MAT_DIAG(osave, nbasis, nbasis, quick_scratch%Sminhalf, quick_scratch%hold)
 
          ! -----------------------------------------------
          ! C = XC'
-         !   scratch_sq contains lshift intermediate
+         !     %hold contains eigenvalues
          ! -----------------------------------------------
-         if(LShift)then
-            call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%oldvec, &
-                            nbasis, quick_qm_struct%vec, nbasis, 0.0d0, scratch_sq, nbasis)
-            call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmphold, &
-                            nbasis, scratch_sq, nbasis, 0.0d0, quick_qm_struct%co, nbasis)
-         else
-             call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmphold, &
-                             nbasis, quick_qm_struct%vec, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
-         endif
+         call MAT_DGEMM ('n', 'n', nbasis, NBSuse, nbasis, 1.0d0, quick_scratch%tmphold, &
+                         nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
 
          ! -----------------------------------------------
          ! P = CnC^T
