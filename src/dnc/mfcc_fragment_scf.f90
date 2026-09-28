@@ -396,7 +396,22 @@ subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibas
 
    ! getEnergy with isGuess=.true. builds X and the nuclear repulsion and
    ! runs the SCF, while skipping the DFT grid and the verbose banners.
+   quick_method%scf_conv = .false.
    call getEnergy(.true.,ierr)
+   if (ierr /= 0) return
+
+   ! A sub-molecule that ran out of cycles leaves an unconverged density behind,
+   ! and nothing downstream can tell: the guess is assembled from it, the SCF
+   ! starts from garbage and reports a total energy that is simply wrong. Seen
+   ! with MAXDIIS=2, where the charged C-terminal fragment hit the cycle limit
+   ! and the run finished quietly at -761.33 instead of -1299.50. Fail here
+   ! instead, since the fragment SCFs run before any of that is visible.
+   if (.not. quick_method%scf_conv) then
+      call PrtErr(iOutFile,'An MFCC sub-molecule SCF did not converge; its density &
+            &cannot be used to build the initial guess.')
+      ierr = 44
+      return
+   endif
 
 end subroutine mfcc_run_submol
 
