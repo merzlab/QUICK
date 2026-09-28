@@ -329,6 +329,8 @@ end subroutine mfcc_set_submol
 subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibasfinal,nb,ierr)
    use allmod
    use quick_exception_module
+   use quick_cutoff_module, only: schwarzoff
+   use quick_eri_cshell_module, only: getEriPrecomputables
    implicit none
 
    integer, intent(in) :: nat, iatstart, iatfinal, icharge
@@ -362,9 +364,29 @@ subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibas
    endif
 
    quick_qm_struct%nbasis => nbasis
+
+   ! deallocate_calculated above released quick_basis, and with it the
+   ! primitive-pair arrays the ERI engine works through: Apri, Kpri, Ppri,
+   ! cutprim and Xcoeff, all dimensioned by jbasis. readbasis sets jbasis but
+   ! does not reallocate them, so without this the two-electron contribution
+   ! never reaches the Fock matrix and each fragment converges its bare
+   ! one-electron Hamiltonian. This mirrors getMol, which allocates and zeroes
+   ! them in exactly this order.
+   call alloc(quick_basis)
    call alloc(quick_qm_struct)
+   cutprim = 0.0d0
+   quick_basis%Xcoeff = 0.0d0
    call init(quick_qm_struct)
    call normalize_basis()
+
+   ! main calls these two once, after getMol, and mfcc_fragment_scf runs well
+   ! before that. Without them Ycutoff is allocated but never filled, so the
+   ! Schwarz test rejects every shell quartet and the fragment converges its
+   ! bare one-electron Hamiltonian: the electrons collapse onto the most
+   ! attractive nuclei and the fragment density is meaningless. They have to be
+   ! redone per fragment anyway, since both are sized and valued by the basis.
+   call getEriPrecomputables
+   call schwarzoff
 
    ! Crude diagonal starting density, as the SAD guess does for atoms.
    diagelement = dble(quick_molspec%nelec)/dble(nbasis)
