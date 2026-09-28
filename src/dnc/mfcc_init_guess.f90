@@ -190,3 +190,158 @@ subroutine MFCC_initial_guess
 
 call PrtAct(ioutfile,"Finish MFCC initial guess")
 end subroutine
+
+!-------------------------------------------------------
+! mfcc_purify_density
+!-------------------------------------------------------
+! McWeeny purification of the assembled MFCC guess density.
+!
+! MFCC builds the global density as a sum of fragment blocks minus cap blocks.
+! Each block is idempotent on its own, but the sum is not: the assembled density
+! has occupation numbers outside the physical range. On the glycine hexamer the
+! measured idempotency error (trace(DSDS) - 2 trace(DS), zero for a valid closed
+! shell density) is about 17.7, against 1.1 for the SAD guess. DIIS copes badly
+! with that, which is why MFCC started closer to the answer than SAD yet needed
+! more cycles.
+!
+! Working with P = D/2 so the target eigenvalues are 0 and 1, each sweep applies
+!
+!     P <- 3 P S P - 2 P S P S P
+!
+! which is a contraction toward 0 and 1 for eigenvalues already in (-0.5, 1.5).
+! A few sweeps are enough; more can amplify components far outside that range,
+! so the sweep is rejected if it makes the idempotency error worse.
+!
+! Requires the overlap matrix, so this must run after fullX has built it.
+!-------------------------------------------------------
+
+subroutine mfcc_purify_density()
+   use allmod
+   use quick_mpi_module, only: master
+   implicit none
+
+   integer, parameter :: MAXSWEEP = 8
+   double precision, allocatable :: p(:,:), ps(:,:), psp(:,:), pspsp(:,:), pbest(:,:)
+   double precision, allocatable :: cand(:,:,:)
+   integer :: ic, ibest
+   double precision :: errbest
+   character(len=9) :: mapname(3)
+   double precision :: err, errprev, t1, t2, nocc
+
+   integer :: i, j, isweep, n
+
+   if (.not.master) return
+   if (.not.quick_method%MFCC) return
+
+   n = nbasis
+   allocate(p(n,n),ps(n,n),psp(n,n),pspsp(n,n),pbest(n,n),cand(n,n,3))
+   mapname(1)='McWeeny  '
+   mapname(2)='TC2 down '
+   mapname(3)='TC2 up   '
+
+   p = 0.5d0*quick_qm_struct%dense
+   pbest = p
+   call mfcc_idem(p,n,t1,t2,errprev)
+
+   if (master) write(ioutfile,'(" MFCC purification: error before ",f14.6,"   trace(DS) ",f12.4, &
+         &"   target ",f12.4)') 2.0d0*errprev,2.0d0*t1,dble(quick_molspec%nelec)
+
+   nocc = 0.5d0*dble(quick_molspec%nelec)
+
+   nocc = 0.5d0*dble(quick_molspec%nelec)
+
+   ! Which sweep helps depends on where the occupations actually are, so rather
+   ! than fix an order, try all three candidate maps each sweep and keep the one
+   ! that reduces the idempotency error most:
+   !
+   !   McWeeny   3 PSP - 2 PSPSP    contracts only inside (-0.5, 1.5)
+   !   TC2 down  PSP                pulls negative occupations up toward 0
+   !   TC2 up    2P - PSP           pulls occupations above 1 down toward 1
+   !
+   ! The two TC2 maps are complementary: squaring repairs negative occupations
+   ! and the other repairs occupations above 1, so a fixed McWeeny-then-TC2
+   ! order would be arbitrary. Greedy selection needs no spectral information.
+   !
+   ! Selection is on idempotency alone. Purification moves the trace, but the
+   ! divide and conquer Fermi step renormalises the electron count every cycle,
+   ! so idempotency is the part the SCF cannot repair for itself.
+   do isweep = 1, MAXSWEEP
+      call DGEMM('n','n',n,n,n,1.0d0,p,n,quick_qm_struct%s,n,0.0d0,ps,n)
+      call DGEMM('n','n',n,n,n,1.0d0,ps,n,p,n,0.0d0,psp,n)
+      call DGEMM('n','n',n,n,n,1.0d0,ps,n,psp,n,0.0d0,pspsp,n)
+
+      cand(:,:,1) = 3.0d0*psp - 2.0d0*pspsp
+      cand(:,:,2) = psp
+      cand(:,:,3) = 2.0d0*p - psp
+
+      ibest = 0
+      errbest = errprev
+      do ic = 1, 3
+         call mfcc_idem(cand(:,:,ic),n,t1,t2,err)
+         if (err .lt. errbest) then
+            errbest = err
+            ibest = ic
+         endif
+      enddo
+
+      if (ibest .eq. 0) then
+         if (master) write(ioutfile,'("   sweep ",i2," no candidate improves; stopping")') isweep
+         exit
+      endif
+
+      p = cand(:,:,ibest)
+      pbest = p
+      errprev = errbest
+      call mfcc_idem(p,n,t1,t2,err)
+      if (master) write(ioutfile,'("   sweep ",i2," ",a," -> error ",f14.6, &
+            &"   trace(DS) ",f12.4)') isweep,trim(mapname(ibest)),2.0d0*err,2.0d0*t1
+      if (err .lt. 1.0d-8) exit
+   enddo
+
+   quick_qm_struct%dense = 2.0d0*pbest
+   call mfcc_idem(0.5d0*quick_qm_struct%dense,n,t1,t2,err)
+   if (master) then
+      write(ioutfile,'(" MFCC purification: idempotency error after  ",f14.6, &
+            &"   trace(DS) ",f12.4)') 2.0d0*err,2.0d0*t1
+      call flush(ioutfile)
+   endif
+
+   deallocate(p,ps,psp,pspsp,pbest,cand)
+
+end subroutine mfcc_purify_density
+
+
+!-------------------------------------------------------
+! mfcc_idem
+!-------------------------------------------------------
+! For P with target eigenvalues 0 and 1: t1 = trace(PS), t2 = trace(PSPS),
+! err = |t2 - t1|, which is zero when P is idempotent.
+!-------------------------------------------------------
+
+subroutine mfcc_idem(p,n,t1,t2,err)
+   use allmod
+   implicit none
+
+   integer, intent(in) :: n
+   double precision, intent(in) :: p(n,n)
+   double precision, intent(out) :: t1, t2, err
+
+   double precision, allocatable :: ps(:,:)
+   integer :: i, j
+
+   allocate(ps(n,n))
+   call DGEMM('n','n',n,n,n,1.0d0,p,n,quick_qm_struct%s,n,0.0d0,ps,n)
+   t1 = 0.0d0
+   do i = 1, n
+      t1 = t1 + ps(i,i)
+   enddo
+   t2 = 0.0d0
+   do i = 1, n
+      do j = 1, n
+         t2 = t2 + ps(i,j)*ps(j,i)
+      enddo
+   enddo
+   err = dabs(t2-t1)
+   deallocate(ps)
+
+end subroutine mfcc_idem

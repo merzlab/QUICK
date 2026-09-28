@@ -59,6 +59,11 @@ subroutine getEnergy(isGuess, ierr)
       ! Build a transformation matrix X and overlap matrix
       call fullX
 
+      ! The MFCC guess is a sum of fragment densities minus cap densities, which
+      ! is not idempotent. Purify it now that the overlap exists, before the SCF
+      ! has to cope with occupation numbers outside the physical range.
+      if (quick_method%MFCC .and. .not. isGuess) call mfcc_purify_density
+
       ! if it's a div-con calculate, construct Div & Con matrices, Overlap,X, and PDC
       if (quick_method%DivCon .or. quick_method%dcmp2only) then
          call DivideS
