@@ -224,7 +224,7 @@ subroutine mfcc_purify_density()
    double precision, allocatable :: p(:,:), ps(:,:), psp(:,:), pspsp(:,:), pbest(:,:)
    double precision, allocatable :: cand(:,:,:)
    integer :: ic, ibest
-   double precision :: errbest
+   double precision :: errbest, obj, objbest, t1best, t1prev
    character(len=9) :: mapname(3)
    double precision :: err, errprev, t1, t2, nocc
 
@@ -242,6 +242,7 @@ subroutine mfcc_purify_density()
    p = 0.5d0*quick_qm_struct%dense
    pbest = p
    call mfcc_idem(p,n,t1,t2,errprev)
+   t1prev = t1
 
    if (master) write(ioutfile,'(" MFCC purification: error before ",f14.6,"   trace(DS) ",f12.4, &
          &"   target ",f12.4)') 2.0d0*errprev,2.0d0*t1,dble(quick_molspec%nelec)
@@ -262,9 +263,13 @@ subroutine mfcc_purify_density()
    ! and the other repairs occupations above 1, so a fixed McWeeny-then-TC2
    ! order would be arbitrary. Greedy selection needs no spectral information.
    !
-   ! Selection is on idempotency alone. Purification moves the trace, but the
-   ! divide and conquer Fermi step renormalises the electron count every cycle,
-   ! so idempotency is the part the SCF cannot repair for itself.
+   ! Selection must weigh the trace as well as idempotency. Selecting on
+   ! idempotency alone converges happily onto an idempotent density with the
+   ! WRONG number of occupied orbitals: on gly6/6-31G* it reached error 0 at
+   ! trace 210 against a target of 190, ten extra occupied orbitals, and the SCF
+   ! then needed more cycles, not fewer. Renormalising afterwards does not undo
+   ! that, because the converged density is a different density, not a scaled
+   ! one. TC2 uses the trace to pick its branch for exactly this reason.
    do isweep = 1, MAXSWEEP
       call DGEMM('n','n',n,n,n,1.0d0,p,n,quick_qm_struct%s,n,0.0d0,ps,n)
       call DGEMM('n','n',n,n,n,1.0d0,ps,n,p,n,0.0d0,psp,n)
@@ -274,12 +279,19 @@ subroutine mfcc_purify_density()
       cand(:,:,2) = psp
       cand(:,:,3) = 2.0d0*p - psp
 
+      ! Objective: idempotency error plus how far the trace sits from the
+      ! target occupation. Both are in units of orbitals, so they combine
+      ! directly, and a sweep that buys idempotency by inventing electrons is
+      ! no longer free.
       ibest = 0
-      errbest = errprev
+      objbest = errprev + dabs(t1prev-nocc)
       do ic = 1, 3
          call mfcc_idem(cand(:,:,ic),n,t1,t2,err)
-         if (err .lt. errbest) then
+         obj = err + dabs(t1-nocc)
+         if (obj .lt. objbest) then
+            objbest = obj
             errbest = err
+            t1best = t1
             ibest = ic
          endif
       enddo
@@ -292,6 +304,7 @@ subroutine mfcc_purify_density()
       p = cand(:,:,ibest)
       pbest = p
       errprev = errbest
+      t1prev = t1best
       call mfcc_idem(p,n,t1,t2,err)
       if (master) write(ioutfile,'("   sweep ",i2," ",a," -> error ",f14.6, &
             &"   trace(DS) ",f12.4)') isweep,trim(mapname(ibest)),2.0d0*err,2.0d0*t1
