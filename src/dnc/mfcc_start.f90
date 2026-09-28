@@ -21,9 +21,9 @@ subroutine mfcc(natomsaved)
    character*80 :: pdbline                     ! raw PDB record buffer
    integer :: ipdbstat                         ! iostat for PDB record reads
    integer :: ierrxyz                          ! iostat for the fragment xyz dump
+   integer :: nterm_h                          ! hydrogens on the N terminal nitrogen
+   logical :: cterm_oxt                        ! C terminus carries OXT
    real(8)::xx,yy,zz,ym,zm
-   integer :: mfcccharge(50)
-   integer :: mfccchargecap(50)
    integer :: mspin(50)
 
 ! integer :: kxiaoconnect
@@ -546,6 +546,56 @@ subroutine mfcc(natomsaved)
 
   write(ioutfile,*) '======================================'
   write(ioutfile,*) 'MFCC checked for neutral terminus'
+
+!-----------------------------------------------------------------------
+! Assign fragment charges from the terminus composition.
+!
+! A peptide read from a pdb is normally a zwitterion: the N terminal
+! nitrogen carries three hydrogens (NH3+) and the C terminal carboxylate
+! carries OXT (COO-). The molecule is neutral overall, but a fragment that
+! contains only one charged terminus is an ion. Treating it as neutral gives
+! an odd electron count and the fragment SCF cannot converge as closed shell.
+!
+! Only these two cases are recognised. Any other charged group (Lys, Arg,
+! Asp, Glu, a bound ion, a non standard terminus) is NOT detected and its
+! fragment will still be treated as neutral.
+!-----------------------------------------------------------------------
+  ! Count only the hydrogens ON the terminal nitrogen, by pdb name (H1,H2,H3),
+  ! not every hydrogen in residue 1. Counting all of them also picks up the HA
+  ! hydrogens on CA, which would make a neutral NH2 terminus look protonated.
+  nterm_h = 0
+  do i = 1, number
+    if (class(i).ne.1) cycle
+    if (trim(adjustl(atomname(i))).eq.'H1' .or. &
+        trim(adjustl(atomname(i))).eq.'H2' .or. &
+        trim(adjustl(atomname(i))).eq.'H3') nterm_h = nterm_h + 1
+  enddo
+
+  cterm_oxt = .false.
+  do i = 1, number
+    if (class(i).eq.npmfcc .and. trim(adjustl(atomname(i))).eq.'OXT') cterm_oxt = .true.
+  enddo
+
+  if (nterm_h .ge. 3) mfcccharge(1) = 1
+  if (cterm_oxt) mfcccharge(npmfcc) = -1
+
+  if (mfcccharge(1).ne.0 .or. mfcccharge(npmfcc).ne.0) then
+    call PrtWrn(iOutFile,'MFCC assigned charges to the terminal fragments.')
+    if (mfcccharge(1).ne.0) &
+      write(ioutfile,'("|          fragment ",i4," charge ",i3,"  (N terminus carries ",i2, &
+            &" hydrogens, NH3+)")') 1,mfcccharge(1),nterm_h
+    if (mfcccharge(npmfcc).ne.0) &
+      write(ioutfile,'("|          fragment ",i4," charge ",i3,"  (C terminus has OXT, COO-)")') &
+            npmfcc,mfcccharge(npmfcc)
+    write(ioutfile,'("|")')
+    write(ioutfile,'("|          Terminus detection is the ONLY charge assignment implemented.")')
+    write(ioutfile,'("|          Charged side chains (Lys, Arg, Asp, Glu), bound ions and non")')
+    write(ioutfile,'("|          standard termini are NOT detected, and their fragments are")')
+    write(ioutfile,'("|          treated as neutral. Check the fragment charges below against")')
+    write(ioutfile,'("|          the chemistry of your system before trusting the guess.")')
+    write(ioutfile,'(a)')
+    call flush(ioutfile)
+  endif
   write(ioutfile,*) '  '
 
 ! The whole block of code (below) up until the end

@@ -35,6 +35,7 @@
 #define FRAGPREFILEHANDLE    2035
 #define FRAGPOSTFILEHANDLE   2036
 #define MFCCXYZFILEHANDLE    2037
+#define REORDERFILEHANDLE    2038
 
 
 ! For the following definitions to work, one must use quick_exception_module

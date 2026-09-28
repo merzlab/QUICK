@@ -162,6 +162,10 @@ contains
       msg='MFCC fragment setup failed. The fragment geometry produced by the MFCC &
               &fragmentation could not be turned into a valid closed shell molecule.'
 
+    case(45)
+      msg='MFCC could not determine or apply the atom reordering it needs. Every hydrogen &
+              &must be adjacent to the heavy atom it is bonded to.'
+
     case default
       msg='Unknown error.'
 

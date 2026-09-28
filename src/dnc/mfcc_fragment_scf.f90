@@ -27,6 +27,11 @@ subroutine mfcc_fragment_scf(ierr)
 
    integer :: k, i, nat, maxbas, ncon, nb_frag
    integer :: natomsaved, nbs, nbf, nloc
+   integer :: nbi, nbj, nati, natj, icbi, icbf, jcbi, jcbf
+   logical :: mfcc_con_ok
+   integer, parameter :: MFCC_MAXAT = 200   ! mfcccord* second dimension is 100 per part
+   double precision :: concord(3,MFCC_MAXAT)
+   character(len=2) :: consym(MFCC_MAXAT)
    logical :: MPIsaved
    double precision, allocatable :: xyzsaved(:,:)
    type(quick_method_type) :: quick_method_save
@@ -72,7 +77,7 @@ subroutine mfcc_fragment_scf(ierr)
    maxbas = 0
    do k = 1, npmfcc
       call deallocate_calculated
-      call mfcc_set_submol(mfccatom(k),mfcccord(1,1,k),mfccatomxiao(1,k),ierr)
+      call mfcc_set_submol(mfccatom(k),mfcccord(1,1,k),mfccatomxiao(1,k),mfcccharge(k),ierr)
       if (ierr /= 0) goto 900
       call readbasis(natom,mfccstart(k),mfccfinal(k),nbs,nbf,ierr)
       if (ierr /= 0) goto 900
@@ -81,9 +86,55 @@ subroutine mfcc_fragment_scf(ierr)
 
    do k = 1, npmfcc-1
       call deallocate_calculated
-      call mfcc_set_submol(mfccatomcap(k),mfcccordcap(1,1,k),mfccatomxiaocap(1,k),ierr)
+      call mfcc_set_submol(mfccatomcap(k),mfcccordcap(1,1,k),mfccatomxiaocap(1,k),mfccchargecap(k),ierr)
       if (ierr /= 0) goto 900
       call readbasis(natom,mfccstartcap(k),mfccfinalcap(k),nbs,nbf,ierr)
+      if (ierr /= 0) goto 900
+      maxbas = max(maxbas,nbasis)
+   enddo
+
+   ! Connection blocks are sized here too: they can be larger than any fragment
+   ! or cap, and the combined I+J block needs room for both.
+   !
+   ! First validate the geometry mfcc_start produced. The i==2 branch of the
+   ! connection construction hardcodes mm=9, an atom index from some other
+   ! system, so for a contact involving residue 2 it yields a negative atom
+   ! count. That code has never run before now. If any block is malformed the
+   ! whole connection layer is disabled rather than partially applied, since
+   ! MFCC_initial_guess consumes blocks 1..nconuse contiguously.
+   mfcc_con_ok = (kxiaoconnect .gt. 0)
+   do k = 1, kxiaoconnect
+      if (mfccatomconi(k) .le. 0 .or. mfccatomconj(k) .le. 0 .or. &
+          mfccatomcon(k)  .le. 0 .or. mfccatomcon2(k) .le. 0) then
+         mfcc_con_ok = .false.
+         if (master) write(ioutfile,'(" MFCC connection block ",i4," has an invalid atom count (", &
+               &4(i6))') k,mfccatomconi(k),mfccatomconj(k),mfccatomcon(k),mfccatomcon2(k)
+      endif
+   enddo
+
+   if (kxiaoconnect .gt. 0 .and. .not.mfcc_con_ok) then
+      call PrtWrn(iOutFile,'MFCC connection geometry is malformed; connection terms are disabled.')
+      write(ioutfile,'("|          The connection construction in mfcc_start.f90 produced an")')
+      write(ioutfile,'("|          invalid atom count for at least one block. Its i==2 branch")')
+      write(ioutfile,'("|          hardcodes an atom index (mm=9) and cannot be correct in")')
+      write(ioutfile,'("|          general. The guess falls back to the two term formula.")')
+      write(ioutfile,'(a)')
+      call flush(ioutfile)
+      kxiaoconnect = 0
+   endif
+
+   do k = 1, kxiaoconnect
+      call deallocate_calculated
+      call mfcc_set_submol(mfccatomconi(k),mfcccordconi(1,1,k),mfccatomxiaoconi(1,k),0,ierr)
+      if (ierr /= 0) goto 900
+      call readbasis(natom,mfccstartconi(k),mfccfinalconi(k),nbs,nbf,ierr)
+      if (ierr /= 0) goto 900
+      maxbas = max(maxbas,nbasis)
+
+      call deallocate_calculated
+      call mfcc_set_submol(mfccatomconj(k),mfcccordconj(1,1,k),mfccatomxiaoconj(1,k),0,ierr)
+      if (ierr /= 0) goto 900
+      call readbasis(natom,mfccstartconj(k),mfccfinalconj(k),nbs,nbf,ierr)
       if (ierr /= 0) goto 900
       maxbas = max(maxbas,nbasis)
    enddo
@@ -98,7 +149,7 @@ subroutine mfcc_fragment_scf(ierr)
    ! Pass 2: converge each sub-molecule and keep its density.
    ! ---------------------------------------------------------------
    do k = 1, npmfcc
-      call mfcc_run_submol(mfccatom(k),mfcccord(1,1,k),mfccatomxiao(1,k), &
+      call mfcc_run_submol(mfccatom(k),mfcccord(1,1,k),mfccatomxiao(1,k),mfcccharge(k), &
             mfccstart(k),mfccfinal(k),mfccbases(k),mfccbasef(k),nb_frag,ierr)
       if (ierr /= 0) goto 900
       ! MFCC_initial_guess reads mfccdens(k,i-mfccbases+1,...) with i starting
@@ -113,7 +164,7 @@ subroutine mfcc_fragment_scf(ierr)
    enddo
 
    do k = 1, npmfcc-1
-      call mfcc_run_submol(mfccatomcap(k),mfcccordcap(1,1,k),mfccatomxiaocap(1,k), &
+      call mfcc_run_submol(mfccatomcap(k),mfcccordcap(1,1,k),mfccatomxiaocap(1,k),mfccchargecap(k), &
             mfccstartcap(k),mfccfinalcap(k),mfccbasescap(k),mfccbasefcap(k),nb_frag,ierr)
       if (ierr /= 0) goto 900
       nloc = mfccbasefcap(k)-mfccbasescap(k)+1
@@ -121,6 +172,66 @@ subroutine mfcc_fragment_scf(ierr)
             quick_qm_struct%dense(mfccbasescap(k):mfccbasefcap(k),mfccbasescap(k):mfccbasefcap(k))
       if (master) write(ioutfile,'("   cap      ",i4," basis ",i5," local range ",i5," -",i5)') &
             k,nb_frag,mfccbasescap(k),mfccbasefcap(k)
+   enddo
+
+   ! ---------------------------------------------------------------
+   ! Pass 3: connection blocks. For each non-sequential contact the guess needs
+   ! a two-body correction, which MFCC_initial_guess assembles as
+   !     D += D(I union J)|I + D(I union J)|J - D(I) - D(J)
+   ! so three SCFs per connection: each fragment alone, then the two together.
+   ! Only the diagonal sub-blocks of the combined density are used.
+   ! ---------------------------------------------------------------
+   do k = 1, kxiaoconnect
+
+      ! the I fragment on its own
+      call mfcc_run_submol(mfccatomconi(k),mfcccordconi(1,1,k),mfccatomxiaoconi(1,k),0, &
+            mfccstartconi(k),mfccfinalconi(k),mfccbasesconi(k),mfccbasefconi(k),nb_frag,ierr)
+      if (ierr /= 0) goto 900
+      nbi = mfccbasefconi(k)-mfccbasesconi(k)+1
+      mfccdensconi(k,1:nbi,1:nbi) = &
+            quick_qm_struct%dense(mfccbasesconi(k):mfccbasefconi(k),mfccbasesconi(k):mfccbasefconi(k))
+
+      ! the J fragment on its own
+      call mfcc_run_submol(mfccatomconj(k),mfcccordconj(1,1,k),mfccatomxiaoconj(1,k),0, &
+            mfccstartconj(k),mfccfinalconj(k),mfccbasesconj(k),mfccbasefconj(k),nb_frag,ierr)
+      if (ierr /= 0) goto 900
+      nbj = mfccbasefconj(k)-mfccbasesconj(k)+1
+      mfccdensconj(k,1:nbj,1:nbj) = &
+            quick_qm_struct%dense(mfccbasesconj(k):mfccbasefconj(k),mfccbasesconj(k):mfccbasefconj(k))
+
+      ! the two together, as one molecule: con holds the I atoms, con2 the J atoms
+      nati = mfccatomcon(k)
+      natj = mfccatomcon2(k)
+      if (nati+natj .gt. MFCC_MAXAT) then
+         call PrtErr(iOutFile,'MFCC combined connection block exceeds the per-fragment atom limit.')
+         ierr = 44
+         goto 900
+      endif
+      do i = 1, nati
+         concord(1:3,i) = mfcccordcon(1:3,i,k)
+         consym(i) = mfccatomxiaocon(i,k)
+      enddo
+      do i = 1, natj
+         concord(1:3,nati+i) = mfcccordcon2(1:3,i,k)
+         consym(nati+i) = mfccatomxiaocon2(i,k)
+      enddo
+
+      ! Two readbasis passes on the same combined molecule, because it returns
+      ! one atom-to-basis range per call and both parts' ranges are needed.
+      call mfcc_run_submol(nati+natj,concord,consym,0, &
+            mfccstartcon(k),mfccfinalcon(k),icbi,icbf,nb_frag,ierr)
+      if (ierr /= 0) goto 900
+      call readbasis(natom,nati+mfccstartconj(k)-1,nati+mfccfinalconj(k)-1,jcbi,jcbf,ierr)
+      if (ierr /= 0) goto 900
+
+      ! Pack the two diagonal sub-blocks adjacently: MFCC_initial_guess reads the
+      ! J part offset by the I block size.
+      nbi = icbf-icbi+1
+      nbj = jcbf-jcbi+1
+      mfccdenscon(k,1:nbi,1:nbi) = quick_qm_struct%dense(icbi:icbf,icbi:icbf)
+      mfccdenscon(k,nbi+1:nbi+nbj,nbi+1:nbi+nbj) = quick_qm_struct%dense(jcbi:jcbf,jcbi:jcbf)
+
+      if (master) write(ioutfile,'("   connection ",i3," I basis ",i5," J basis ",i5)') k,nbi,nbj
    enddo
 
    if (master) call PrtAct(ioutfile,"Finish MFCC fragment densities")
@@ -157,13 +268,14 @@ end subroutine mfcc_fragment_scf
 ! atom types. mfcc_start stores coordinates in Angstrom, QUICK works in bohr.
 !-------------------------------------------------------
 
-subroutine mfcc_set_submol(nat,cord,sym,ierr)
+subroutine mfcc_set_submol(nat,cord,sym,icharge,ierr)
    use allmod
    implicit none
 
    integer, intent(in) :: nat
    double precision, intent(in) :: cord(3,*)
    character(len=2), intent(in) :: sym(*)
+   integer, intent(in) :: icharge          ! formal charge of this sub-molecule
    integer, intent(inout) :: ierr
 
    integer :: i, iz
@@ -189,10 +301,15 @@ subroutine mfcc_set_submol(nat,cord,sym,ierr)
       xyz(3,i) = cord(3,i)/BOHR
    enddo
 
-   ! Fragments and caps are built neutral and closed shell.
+   ! Apply the formal charge before testing parity. A fragment holding one
+   ! charged terminus of a zwitterion is an ion, so the neutral electron count
+   ! is odd and only becomes even once the charge is accounted for.
+   quick_molspec%nelec = quick_molspec%nelec - icharge
+   quick_molspec%molchg = icharge
+
    if (mod(quick_molspec%nelec,2) .ne. 0) then
-      call PrtErr(iOutFile,'MFCC fragment has an odd number of electrons; &
-            &only closed shell fragments are supported.')
+      call PrtErr(iOutFile,'MFCC sub-molecule has an odd number of electrons even after &
+            &applying its formal charge; only closed shell fragments are supported.')
       ierr = 44
       return
    endif
@@ -209,12 +326,12 @@ end subroutine mfcc_set_submol
 ! size and the local basis range spanned by its real (non-cap) atoms.
 !-------------------------------------------------------
 
-subroutine mfcc_run_submol(nat,cord,sym,iatstart,iatfinal,ibasstart,ibasfinal,nb,ierr)
+subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibasfinal,nb,ierr)
    use allmod
    use quick_exception_module
    implicit none
 
-   integer, intent(in) :: nat, iatstart, iatfinal
+   integer, intent(in) :: nat, iatstart, iatfinal, icharge
    double precision, intent(in) :: cord(3,*)
    character(len=2), intent(in) :: sym(*)
    integer, intent(out) :: ibasstart, ibasfinal, nb
@@ -229,7 +346,7 @@ subroutine mfcc_run_submol(nat,cord,sym,iatstart,iatfinal,ibasstart,ibasfinal,nb
    call deallocate_calculated
    call dealloc(quick_qm_struct)
 
-   call mfcc_set_submol(nat,cord,sym,ierr)
+   call mfcc_set_submol(nat,cord,sym,icharge,ierr)
    if (ierr /= 0) return
 
    ! readbasis returns the basis range spanned by atoms iatstart..iatfinal,

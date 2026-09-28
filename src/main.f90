@@ -134,6 +134,10 @@
     ! and cap. The resulting blocks are assembled into the global density by
     ! MFCC_initial_guess once getMol has built the global basis below.
     if (quick_method%MFCC) then
+        ! MFCC needs every hydrogen adjacent to its heavy atom, because it cuts
+        ! fragments mid residue using contiguous atom index ranges. Check and
+        ! reorder before any fragmentation reads the geometry.
+        SAFE_CALL(mfcc_check_atom_order(ierr))
         call mfcc(quick_molspec%natom)
         SAFE_CALL(mfcc_fragment_scf(ierr))
     endif

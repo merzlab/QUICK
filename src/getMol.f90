@@ -62,6 +62,11 @@ subroutine getMol(ierr)
       ! quick forward coordinates stored in namelist to instant variables
       xyz(1:3,1:natom)=quick_molspec%xyz(1:3,1:natom)
 
+      ! If MFCC reordered the atoms, the global geometry must follow, so that
+      ! the basis, matombases and the DnC fragmentation all agree with the
+      ! order the MFCC fragmentation used.
+      if (quick_method%MFCC) call mfcc_apply_reorder
+
       ! check the correctness between molecular specification and method used
       call check_quick_method_and_molspec(iOutFile,quick_molspec,quick_method,ierr)
       CHECK_ERROR(ierr)

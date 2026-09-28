@@ -24,6 +24,17 @@ module quick_mfcc_module
     ! fragment densities impossible to compute afterwards.
     integer :: npmfcc
     integer :: mfccatom(50),mfccatomcap(50)
+    ! Per fragment/cap formal charge. Set from the terminus composition in
+    ! mfcc_start; zero for everything else.
+    integer :: mfcccharge(50),mfccchargecap(50)
+
+    ! Atom reordering applied so that every hydrogen sits next to the heavy
+    ! atom it is bonded to. MFCC defines fragments as contiguous ranges of
+    ! global atom index and cuts them mid-residue, so a hydrogen separated
+    ! from its heavy atom is either stranded in a fragment or dropped from
+    ! one. mfcc_perm(new) = old index.
+    logical :: mfcc_reordered = .false.
+    integer, allocatable :: mfcc_perm(:)
     double precision :: mfcccord(3,100,50)
     integer ::Ftmp(300)
     character(len=100)::linetmp

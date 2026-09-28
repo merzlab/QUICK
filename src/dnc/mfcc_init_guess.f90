@@ -62,12 +62,13 @@ subroutine MFCC_initial_guess
                ixiao,matombasescap(ixiao),matombasefcap(ixiao),mfccbasescap(ixiao),mfccbasefcap(ixiao)
       enddo
    endif
-   ! The connection densities are not computed yet: mfcc_fragment_scf runs the
-   ! fragment and cap SCFs only. Until it also produces the connection blocks,
-   ! these loops must not run, because mfccbasesconi/mfccbasesconj are unset and
-   ! the indexing below would reach quick_qm_struct%dense(0,...).
-   ! Set this to kxiaoconnect once the connection densities are available.
-   nconuse = 0
+   ! mfcc_fragment_scf now computes the connection densities (pass 3), so the
+   ! connection loops below are live. The guard remains as a tripwire: if the
+   ! local basis ranges are somehow unset, skip rather than index dense(0,...).
+   nconuse = kxiaoconnect
+   do ixiao = 1, kxiaoconnect
+      if (mfccbasesconi(ixiao) .le. 0 .or. mfccbasesconj(ixiao) .le. 0) nconuse = 0
+   enddo
 
    if (kxiaoconnect .gt. 0 .and. nconuse .eq. 0) then
       call PrtWrn(iOutFile,'MFCC connection terms were identified but are NOT included in the guess.')

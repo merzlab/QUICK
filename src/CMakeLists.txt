@@ -80,7 +80,7 @@ set(DFTD3_SOURCES
 set(DNC_SOURCES
         dnc_scf.f90 dnc_scf_operator.f90
         dnc_uscf.f90 dnc_uscf_operator.f90
-        inidivcon.f90 mfcc_init_guess.f90 mfcc_fragment_scf.f90
+        inidivcon.f90 mfcc_init_guess.f90 mfcc_fragment_scf.f90 mfcc_reorder.f90
         mfcc_start.f90 calmp2divcon.f90 dnc_shell.f90)
 
 if(mirp_ENABLED)
