@@ -570,39 +570,147 @@ subroutine mfcc(natomsaved)
 ! Asp, Glu, a bound ion, a non standard terminus) is NOT detected and its
 ! fragment will still be treated as neutral.
 !-----------------------------------------------------------------------
-  ! Count only the hydrogens ON the terminal nitrogen, by pdb name (H1,H2,H3),
-  ! not every hydrogen in residue 1. Counting all of them also picks up the HA
-  ! hydrogens on CA, which would make a neutral NH2 terminus look protonated.
-  nterm_h = 0
-  do i = 1, number
-    if (class(i).ne.1) cycle
-    if (trim(adjustl(atomname(i))).eq.'H1' .or. &
-        trim(adjustl(atomname(i))).eq.'H2' .or. &
-        trim(adjustl(atomname(i))).eq.'H3') nterm_h = nterm_h + 1
-  enddo
+  ! Formal charges are localised on one representative atom per charged group,
+  ! then summed over the atom range each fragment and cap actually spans. That
+  ! matters because the spans overlap: an internal side chain sits in fragment
+  ! k, in fragment k+1 and in cap k, and the MFCC sum is fragments minus caps,
+  ! so charging all three leaves the right total (-1 -1 +1 = -1). Assigning per
+  ! residue instead would count it twice.
+  !
+  ! Protonation is read from the geometry, by counting hydrogens bonded to the
+  ! nitrogen or oxygen of the group, so it does not depend on how the file
+  ! names its hydrogens. Only the residue name is trusted, which every pdb
+  ! writer gets right.
+  block
+    integer, allocatable :: atomchg(:)
+    integer :: ires, nh, irep, nsc, ia
+    character(len=3) :: rnm
+    character(len=2), external :: mfcc_element
+    double precision :: dd
+    ! Generous X-H covalent cutoff: the longest is about 1.09 A (C-H) and the
+    ! shortest non bonded contact is well above 1.5 A.
+    double precision, parameter :: HB = 1.35d0
 
-  cterm_oxt = .false.
-  do i = 1, number
-    if (class(i).eq.npmfcc .and. trim(adjustl(atomname(i))).eq.'OXT') cterm_oxt = .true.
-  enddo
+    allocate(atomchg(number))
+    atomchg = 0
 
-  if (nterm_h .ge. 3) mfcccharge(1) = 1
-  if (cterm_oxt) mfcccharge(npmfcc) = -1
+    do ires = 1, npmfcc
+      rnm = residue(minloc(class, dim=1, mask=(class.eq.ires)))
 
-  if (mfcccharge(1).ne.0 .or. mfcccharge(npmfcc).ne.0) then
-    call PrtWrn(iOutFile,'MFCC assigned charges to the terminal fragments.')
-    if (mfcccharge(1).ne.0) &
-      write(ioutfile,'("|          fragment ",i4," charge ",i3,"  (N terminus carries ",i2, &
-            &" hydrogens, NH3+)")') 1,mfcccharge(1),nterm_h
-    if (mfcccharge(npmfcc).ne.0) &
-      write(ioutfile,'("|          fragment ",i4," charge ",i3,"  (C terminus has OXT, COO-)")') &
-            npmfcc,mfcccharge(npmfcc)
+      ! --- side chain amines: Lys NZ, Arg guanidinium, His ring ---
+      nh = 0
+      nsc = 0
+      irep = 0
+      do i = 1, number
+        if (class(i).ne.ires) cycle
+        if (mfcc_element(atomname(i)).ne.'N ') cycle
+        if (atomname(i).eq.' N  ') cycle          ! backbone amide
+        nsc = nsc + 1
+        if (irep.eq.0) irep = i
+        do j = 1, number
+          if (mfcc_element(atomname(j)).ne.'H ') cycle
+          dd = dsqrt((coord(1,i)-coord(1,j))**2 + (coord(2,i)-coord(2,j))**2 &
+                   + (coord(3,i)-coord(3,j))**2)
+          if (dd.le.HB) nh = nh + 1
+        enddo
+      enddo
+      if (irep.gt.0) then
+        ! Neutral reference counts: Lys NH2 2, Arg guanidine 4, His ring 1.
+        if (rnm.eq.'LYS' .and. nh.ge.3) atomchg(irep) = 1
+        if (rnm.eq.'ARG' .and. nh.ge.5) atomchg(irep) = 1
+        if ((rnm.eq.'HIS'.or.rnm.eq.'HIP') .and. nh.ge.2) atomchg(irep) = 1
+      endif
+
+      ! --- side chain carboxylates: Asp, Glu ---
+      if (rnm.eq.'ASP' .or. rnm.eq.'GLU') then
+        nh = 0
+        irep = 0
+        do i = 1, number
+          if (class(i).ne.ires) cycle
+          if (mfcc_element(atomname(i)).ne.'O ') cycle
+          if (atomname(i).eq.' O  ' .or. trim(adjustl(atomname(i))).eq.'OXT') cycle
+          if (irep.eq.0) irep = i
+          do j = 1, number
+            if (mfcc_element(atomname(j)).ne.'H ') cycle
+            dd = dsqrt((coord(1,i)-coord(1,j))**2 + (coord(2,i)-coord(2,j))**2 &
+                     + (coord(3,i)-coord(3,j))**2)
+            if (dd.le.HB) nh = nh + 1
+          enddo
+        enddo
+        if (irep.gt.0 .and. nh.eq.0) atomchg(irep) = -1
+      endif
+    enddo
+
+    ! --- termini ---
+    ! Count only the hydrogens ON the terminal nitrogen, not every hydrogen in
+    ! residue 1: counting all of them also picks up the HA hydrogens on CA,
+    ! which would make a neutral NH2 terminus look protonated.
+    nterm_h = 0
+    irep = 0
+    do i = 1, number
+      if (class(i).ne.1 .or. atomname(i).ne.' N  ') cycle
+      irep = i
+      do j = 1, number
+        if (mfcc_element(atomname(j)).ne.'H ') cycle
+        dd = dsqrt((coord(1,i)-coord(1,j))**2 + (coord(2,i)-coord(2,j))**2 &
+                 + (coord(3,i)-coord(3,j))**2)
+        if (dd.le.HB) nterm_h = nterm_h + 1
+      enddo
+    enddo
+    if (irep.gt.0 .and. nterm_h.ge.3) atomchg(irep) = 1
+
+    cterm_oxt = .false.
+    do i = 1, number
+      if (class(i).ne.npmfcc) cycle
+      if (trim(adjustl(atomname(i))).ne.'OXT') cycle
+      nh = 0
+      do j = 1, number
+        if (mfcc_element(atomname(j)).ne.'H ') cycle
+        dd = dsqrt((coord(1,i)-coord(1,j))**2 + (coord(2,i)-coord(2,j))**2 &
+                 + (coord(3,i)-coord(3,j))**2)
+        if (dd.le.HB) nh = nh + 1
+      enddo
+      if (nh.eq.0) then
+        cterm_oxt = .true.
+        atomchg(i) = -1
+      endif
+    enddo
+
+    ! --- sum over the span each sub-molecule really covers ---
+    do ires = 1, npmfcc
+      mfcccharge(ires) = 0
+      do ia = matomstart(ires), matomfinal(ires)
+        mfcccharge(ires) = mfcccharge(ires) + atomchg(ia)
+      enddo
+    enddo
+    do ires = 1, npmfcc-1
+      mfccchargecap(ires) = 0
+      do ia = matomstartcap(ires), matomfinalcap(ires)
+        mfccchargecap(ires) = mfccchargecap(ires) + atomchg(ia)
+      enddo
+    enddo
+
+    write(ioutfile,'(" MFCC total formal charge from detected groups: ",i4)') sum(atomchg)
+    deallocate(atomchg)
+  end block
+
+  if (any(mfcccharge(1:npmfcc).ne.0) .or. any(mfccchargecap(1:npmfcc-1).ne.0)) then
+    call PrtWrn(iOutFile,'MFCC assigned formal charges to some fragments and caps.')
+    do i = 1, npmfcc
+      if (mfcccharge(i).ne.0) &
+        write(ioutfile,'("|          fragment ",i4," charge ",i3)') i,mfcccharge(i)
+    enddo
+    do i = 1, npmfcc-1
+      if (mfccchargecap(i).ne.0) &
+        write(ioutfile,'("|          cap      ",i4," charge ",i3)') i,mfccchargecap(i)
+    enddo
     write(ioutfile,'("|")')
-    write(ioutfile,'("|          Terminus detection is the ONLY charge assignment implemented.")')
-    write(ioutfile,'("|          Charged side chains (Lys, Arg, Asp, Glu), bound ions and non")')
-    write(ioutfile,'("|          standard termini are NOT detected, and their fragments are")')
-    write(ioutfile,'("|          treated as neutral. Check the fragment charges below against")')
-    write(ioutfile,'("|          the chemistry of your system before trusting the guess.")')
+    write(ioutfile,'("|          Detected: NH3+ and COO- termini, Lys, Arg, protonated His,")')
+    write(ioutfile,'("|          Asp and Glu, from the residue name and the hydrogens bonded")')
+    write(ioutfile,'("|          to each group. Bound ions, non standard residues, modified")')
+    write(ioutfile,'("|          termini and anything whose residue name is not recognised are")')
+    write(ioutfile,'("|          NOT detected and are treated as neutral. Check these charges")')
+    write(ioutfile,'("|          against the chemistry of your system before trusting the guess.")')
     write(ioutfile,'(a)')
     call flush(ioutfile)
   endif
@@ -828,6 +936,7 @@ subroutine Nxyzchange(xold,yold,zold,xzero,yzero,zzero, &
   ynew=yzero+grad*(yold-yzero)
   znew=zzero+grad*(zold-zzero)
 end
+
 
 !-----------------------------------------------------------------------!
 ! mfcc_element                                                          !
