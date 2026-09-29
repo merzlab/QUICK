@@ -384,7 +384,16 @@ subroutine mfcc(natomsaved)
     mfccatom(npmfcc)=number-mm+1+1
 
    mfccstart(npmfcc)=2
-   mfccfinal(npmfcc)=number-mmm+2
+   ! This branch spans mm (the nitrogen), not mmm (the alpha carbon): the atoms
+   ! stored below run kk=mm..number at local index kk-mm+2, and matomstart is mm.
+   ! Reading number-mmm+2 here dropped every atom between N and CA of the
+   ! preceding residue from the fragment's basis range, so those basis functions
+   ! received no density at all. A proline ring puts CD, CG and CB in exactly
+   ! that gap, which on Trp-cage left 34 of 919 basis functions empty and the
+   ! guess 47 electrons short. Only the proline branch is affected, and only for
+   ! the final fragment, so a system without a proline near the C terminus never
+   ! shows it.
+   mfccfinal(npmfcc)=number-mm+2
 
    matomstart(npmfcc)=mm
    matomfinal(npmfcc)=number
