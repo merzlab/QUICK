@@ -20,6 +20,7 @@ subroutine mfcc(natomsaved)
    integer,allocatable::mselectC(:),mselectN(:),mselectCA(:)
    character*80 :: pdbline                     ! raw PDB record buffer
    integer :: ipdbstat                         ! iostat for PDB record reads
+   character(len=2), external :: mfcc_element  ! element symbol from a pdb atom name
    integer :: ierrxyz                          ! iostat for the fragment xyz dump
    integer :: nterm_h                          ! hydrogens on the N terminal nitrogen
    logical :: cterm_oxt                        ! C terminus carries OXT
@@ -163,10 +164,10 @@ subroutine mfcc(natomsaved)
  write(ioutfile,*) '  '
 
   do kk=1,mm-1
-!      write(ioutfile,*)adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
+!      write(ioutfile,*)mfcc_element(atomname(kk)),(coord(j,kk),j=1,3)
  write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-      adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
-      mfccatomxiao(kk,1)=adjustl(atomname(kk)(1:2))
+      mfcc_element(atomname(kk)),(coord(j,kk),j=1,3)
+      mfccatomxiao(kk,1)=mfcc_element(atomname(kk))
       do j=1,3
         mfcccord(j,kk,1)=coord(j,kk)
       enddo
@@ -245,8 +246,8 @@ subroutine mfcc(natomsaved)
 
     do kk=mmm,nn-1
       write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-      adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
-      mfccatomxiao(kk-mmm+2,k)=adjustl(atomname(kk)(1:2))
+      mfcc_element(atomname(kk)),(coord(j,kk),j=1,3)
+      mfccatomxiao(kk-mmm+2,k)=mfcc_element(atomname(kk))
       do j=1,3
         mfcccord(j,kk-mmm+2,k)=coord(j,kk)
       enddo
@@ -297,9 +298,9 @@ subroutine mfcc(natomsaved)
 
    do kk=mm,nn-1
       write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-      adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
+      mfcc_element(atomname(kk)),(coord(j,kk),j=1,3)
 
-      mfccatomxiao(kk-mm+2,k)=adjustl(atomname(kk)(1:2))
+      mfccatomxiao(kk-mm+2,k)=mfcc_element(atomname(kk))
       do j=1,3
         mfcccord(j,kk-mm+2,k)=coord(j,kk)
       enddo
@@ -361,9 +362,9 @@ subroutine mfcc(natomsaved)
 
   do kk=mmm,number
     write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-     adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
+     mfcc_element(atomname(kk)),(coord(j,kk),j=1,3)
 
-     mfccatomxiao(kk-mmm+2,npmfcc)=adjustl(atomname(kk)(1:2))
+     mfccatomxiao(kk-mmm+2,npmfcc)=mfcc_element(atomname(kk))
      do j=1,3
        mfcccord(j,kk-mmm+2,npmfcc)=coord(j,kk)
      enddo
@@ -390,9 +391,9 @@ subroutine mfcc(natomsaved)
 
    do kk=mm,number
     write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-     adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
+     mfcc_element(atomname(kk)),(coord(j,kk),j=1,3)
 
-    mfccatomxiao(kk-mm+2,npmfcc)=adjustl(atomname(kk)(1:2))
+    mfccatomxiao(kk-mm+2,npmfcc)=mfcc_element(atomname(kk))
     do j=1,3
       mfcccord(j,kk-mm+2,npmfcc)=coord(j,kk)
     enddo
@@ -448,8 +449,8 @@ subroutine mfcc(natomsaved)
 
    do kk=mmm,nn-1
     write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-    adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
-    mfccatomxiaocap(kk-mmm+2,k)=adjustl(atomname(kk)(1:2))
+    mfcc_element(atomname(kk)),(coord(j,kk),j=1,3)
+    mfccatomxiaocap(kk-mmm+2,k)=mfcc_element(atomname(kk))
     do j=1,3
       mfcccordcap(j,kk-mmm+2,k)=coord(j,kk)
     enddo
@@ -496,8 +497,8 @@ subroutine mfcc(natomsaved)
 
      do kk=mm,nn-1
        write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-       adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
-       mfccatomxiaocap(kk-mm+2,k)=adjustl(atomname(kk)(1:2))
+       mfcc_element(atomname(kk)),(coord(j,kk),j=1,3)
+       mfccatomxiaocap(kk-mm+2,k)=mfcc_element(atomname(kk))
        do j=1,3
          mfcccordcap(j,kk-mm+2,k)=coord(j,kk)
        enddo
@@ -659,9 +660,9 @@ subroutine mfcc(natomsaved)
 
   do kk=mm,nnn-1
      write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-     adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
-     mfccatomxiaocon(kk-mm+2,kxiao)=adjustl(atomname(kk)(1:2))
-     mfccatomxiaoconi(kk-mm+2,kxiao)=adjustl(atomname(kk)(1:2))
+     mfcc_element(atomname(kk)),(coord(j,kk),j=1,3)
+     mfccatomxiaocon(kk-mm+2,kxiao)=mfcc_element(atomname(kk))
+     mfccatomxiaoconi(kk-mm+2,kxiao)=mfcc_element(atomname(kk))
 
      do j=1,3
        mfcccordcon(j,kk-mm+2,kxiao)=coord(j,kk)
@@ -727,9 +728,9 @@ subroutine mfcc(natomsaved)
 
     do kk=mmm,nnn-1
       write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
-      adjustl(atomname(kk)(1:2)),(coord(j,kk),j=1,3)
-      mfccatomxiaocon2(kk-mmm+2,kxiao)=adjustl(atomname(kk)(1:2))
-      mfccatomxiaoconj(kk-mmm+2,kxiao)=adjustl(atomname(kk)(1:2))
+      mfcc_element(atomname(kk)),(coord(j,kk),j=1,3)
+      mfccatomxiaocon2(kk-mmm+2,kxiao)=mfcc_element(atomname(kk))
+      mfccatomxiaoconj(kk-mmm+2,kxiao)=mfcc_element(atomname(kk))
 
       do j=1,3
         mfcccordcon2(j,kk-mmm+2,kxiao)=coord(j,kk)
@@ -818,3 +819,38 @@ subroutine Nxyzchange(xold,yold,zold,xzero,yzero,zzero, &
   ynew=yzero+grad*(yold-yzero)
   znew=zzero+grad*(zold-zzero)
 end
+
+!-----------------------------------------------------------------------!
+! mfcc_element                                                          !
+!                                                                       !
+! Element symbol for a pdb atom name field (columns 13-16 of the        !
+! record, so characters 1-4 here).                                      !
+!                                                                       !
+! A pdb right justifies the element symbol in columns 13-14, which is    !
+! why characters 1-2 of this field usually give it directly. But a name  !
+! needing all four characters starts in column 13 instead, and in a      !
+! protein those are always hydrogens: HD11, HG12, HH21, HB13 and so on.  !
+! Taking characters 1-2 there returns 'HD', 'HG' or 'HH', which are not  !
+! elements, and the fragment then carries a bogus atom type. A glycine   !
+! only system never exposes this, since glycine has no branched side     !
+! chain and so no four character hydrogen name.                          !
+!                                                                       !
+! The older style that puts the branch digit first (1HB, 2HG1) is        !
+! handled too: a leading digit only ever appears on a hydrogen.          !
+!_______________________________________________________________________!
+
+function mfcc_element(nm) result(el)
+  implicit none
+  character(len=4), intent(in) :: nm
+  character(len=2) :: el
+  character(len=4) :: nmt
+
+  nmt = adjustl(nm)
+  if (nmt(1:1).ge.'0' .and. nmt(1:1).le.'9') then
+     el = 'H '
+  else if (len_trim(nmt).eq.4 .and. nmt(1:1).eq.'H') then
+     el = 'H '
+  else
+     el = adjustl(nm(1:2))
+  endif
+end function mfcc_element
