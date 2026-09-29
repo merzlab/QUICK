@@ -1,53 +1,63 @@
-  *********************************************************************************************************
-  **                                                                                                     **
-  **           888888888888                                                                              **
-  **         8888888888888888                                                                            **
-  **      888888888888888888                                                                             **
-  **     888888888888888888                                                                              **
-  **    888888888888888                                                                                  **
-  **   88888888888888888888                               88888                       8888:              **
-  **   8888888888888888888888Z                            88888                       8888:              **
-  **   888888888888888888888888?                          88888                       8888:              **
-  **   8888888888888      8888888                                        888888       8888:              **
-  **    88888888888         888888     8888:     88888    88888        888888888I     8888:    888888    **
-  **    8888888888           88888:    8888:     88888    88888      $888888888888    8888:   888888     **
-  **    I8Z 88888             88888    8888:     88888    88888    .888888     8888   8888: 888888       **
-  **    .8Z 88888             88888    8888:     88888    88888    $88888             8888:88888         **
-  **     8I 88888      .=88. .88888    8888:     88888    88888    88888              8888888888         **
-  **    :8  88888      888888$8888$    8888:     88888    88888    8888O              88888888888        **
-  **   ,7   +88888.     8888888888.    8888:     88888    88888    888888             88888O888888       **
-  **         $888888:.   .8888888      88888....888888    88888     888888     8888   8888:  888888      **
-  **          I8888888888888888888     888888888888888    88888     O888888888888O    8888:   888888     **
-  **            O888888888888888888     88888888888888    88888       88888888888$    8888:    888888    **
-  **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
-  **                                                                                                     **
-  **                                                                                                     **
-  **                                         Copyright (c) 2022                                          **
-  **                          Regents of the University of California San Diego                          **
-  **                                    & Michigan State University                                      **
-  **                                        All Rights Reserved.                                         **
-  **                                                                                                     **
-  **             This software is subject to the terms of the Mozilla Public License, v. 2.0.            **
-  **                                                                                                     **
-  *********************************************************************************************************
-                                                                                                           
-  Cite this work as:                                                                                       
-  Manathunga, M.; Shajan, A.; Giese, T. J.; Cruzeiro, V.W.D.; Smith, J.; Miao, Y.; He, X.; Ayers, K.;      
-  Brothers, E.; Goetz, A.W.; Merz, K.M. QUICK-22.03                                                        
-  University of California San Diego, CA and Michigan State University, East Lansing, MI, 2022             
-                                                                                                           
-  If you have any comments or queries, please send us an email for technical support:                      
-  quick.merzlab@gmail.com                                                                                  
-                                                                                                           
-| TASK STARTS ON: Thu Sep 21 16:14:45 2023
-| INPUT FILE :    c2h6.in
-| OUTPUT FILE:    c2h6.out
-| DATA FILE  :    c2h6.dat
-| BASIS SET PATH: /mnt/home/manathun/Work/quick-342289f/install/basis
+| *********************************************************************************************************
+| **                                                                                                     **
+| **           888888888888                                                                              **
+| **         8888888888888888                                                                            **
+| **      888888888888888888                                                                             **
+| **     888888888888888888                                                                              **
+| **    888888888888888                                                                                  **
+| **   88888888888888888888                               88888                       8888:              **
+| **   8888888888888888888888Z                            88888                       8888:              **
+| **   888888888888888888888888?                          88888                       8888:              **
+| **   8888888888888      8888888                                        888888       8888:              **
+| **    88888888888         888888     8888:     88888    88888        888888888I     8888:    888888    **
+| **    8888888888           88888:    8888:     88888    88888      $888888888888    8888:   888888     **
+| **    I8Z 88888             88888    8888:     88888    88888    .888888     8888   8888: 888888       **
+| **    .8Z 88888             88888    8888:     88888    88888    $88888             8888:88888         **
+| **     8I 88888      .=88. .88888    8888:     88888    88888    88888              8888888888         **
+| **    :8  88888      888888$8888$    8888:     88888    88888    8888O              88888888888        **
+| **   ,7   +88888.     8888888888.    8888:     88888    88888    888888             88888O888888       **
+| **         $888888:.   .8888888      88888....888888    88888     888888     8888   8888:  888888      **
+| **          I8888888888888888888     888888888888888    88888     O888888888888O    8888:   888888     **
+| **            O888888888888888888     88888888888888    88888       88888888888$    8888:    888888    **
+| **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
+| **                                                                                                     **
+| **                                                                                                     **
+| **                                         Copyright (c) 2026                                          **
+| **                          Regents of the University of California San Diego                          **
+| **                                    & Michigan State University                                      **
+| **                                        All Rights Reserved.                                         **
+| **                                                                                                     **
+| **             This software is subject to the terms of the Mozilla Public License, v. 2.0.            **
+| **                                                                                                     **
+| *********************************************************************************************************
+|                                                                                                          
+| Cite this work as:                                                                                       
+| Manathunga, M.; O'Hearn, K. A.; Shajan, A.; Smith, J.; Miao, Y.; He, X.; Ayers, K.;                      
+| Brothers, E.; Palos, E.; Tripathy, V.; Goetz, A.W.; Merz, K.M. QUICK-26.03.                              
+| University of California,San Diego, CA and                                                               
+| Michigan State University, East Lansing, MI, 2026                                                        
+|                                                                                                          
+| If you have any comments or queries, please reach out to us on GitHub issues or discussion sections:     
+| https://github.com/merzlab/QUICK.                                                                        
+|                                                                                                          
+| TASK STARTS ON: Sat Aug  1 23:23:37 2026
+| INPUT FILE :    ene_C2H6_b3lyp_def2tzvp.in
+| OUTPUT FILE:    ene_C2H6_b3lyp_def2tzvp.out
+| BASIS SET PATH: /scratch/vtripathy/QUICK/install_ffun/basis
+
+|------------ GPU INFORMATION ---------------
+| CUDA ENABLED DEVICE         :        1
+| CUDA DEVICE IN USE          :        0
+| CUDA DEVICE NAME            : NVIDIA GeForce RTX 2080
+| CUDA DEVICE PM              :       46
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.71
+| CUDA DEVICE MEMORY SIZE (MB):     7776
+| SUPPORTING CUDA VERSION     :      7.5
+|--------------------------------------------
 
  @ Read Job And Atom
 
-  KEYWORD=DFT B3LYP BASIS=DEF2-TZVP CUTOFF=1.0E-9 DENSERMS=1.0E-8 ENERGY                                                                                                                                          
+  KEYWORD=DFT B3LYP BASIS=DEF2-TZVP CUTOFF=1.0E-9 DENSERMS=1.0E-8 ENERGY DIPOLE
  ============== JOB CARD =============
  METHOD = DENSITY FUNCTIONAL THEORY
  DENSITY FUNCTIONAL = B3LYP
@@ -56,18 +66,24 @@
  USE DIIS SCF
  PRINT ENERGY EVERY CYCLE
  READ SAD GUESS FROM FILE
+ DIPOLE
  STANDARD GRID = SG1
+ Level shifting allowed after cycle    3
+ DIIS error must exceed 0.100 for level shifting
+ Max HOMO-LUMO gap to allow level shifting = 0.200
  MAX SCF CYCLES =    200
  MAX DIIS CYCLES =   10
  DELTA DENSITY START CYCLE =    3
  COMPUTATIONAL CUTOFF: 
-      TWO-e INTEGRAL   =  0.100E-08
-      BASIS SET PRIME  =  0.100E-09
-      MATRIX ELEMENTS  =  0.100E-09
-      BASIS FUNCTION   =  0.100E-05
+      TWO-e INTEGRAL         =  0.100E-08
+      BASIS SET PRIME        =  0.100E-09
+      MATRIX ELEMENTS        =  0.100E-09
+      BASIS FUNCTION         =  0.100E-05
+      NEAR-LINEAR DEPENDENCY =  0.100E-04
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-07
  BASIS SET = DEF2-TZVP,  TYPE = CARTESIAN
-| BASIS FILE = /mnt/home/manathun/Work/quick-342289f/install/basis/DEF2-TZVP.BAS
+| BASIS FILE = /scratch/vtripathy/QUICK/install_ffun/basis/DEF2-TZVP.BAS
+| DATA FILE  =    ene_C2H6_b3lyp_def2tzvp.dat
 
  @ Finish reading job
 
@@ -141,52 +157,76 @@
 
  @ Begin Energy Calculation
 
+| condition number of overlap matrix:    8.722E+04
+| Smallest eigenvalue of overlap matrix:    1.306E-04
+
                                          SCF ENERGY
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1    -73.280463032      ------         1.664     1        0.01      1.66      0.00    0.2467E+01  0.5128E+00  0.1994E+02
-|  2    -77.178389147  0.389793E+01       2.506     2        0.01      2.50      0.00    0.6998E+00  0.1001E+00  0.3003E+01
-|  3    -78.639103440  0.146071E+01       2.437     3        0.01      2.43      0.00    0.5714E+00  0.1084E-01  0.2638E+00
-|  4    -79.857703458  0.121860E+01       2.402     4        0.01      2.39      0.00    0.4323E-01  0.2018E-02  0.7962E-01
-|  5    -79.864461649  0.675819E-02       2.365     5        0.01      2.36      0.00    0.6745E-02  0.2604E-03  0.3812E-02
-|  6    -79.864733313  0.271664E-03       2.325     6        0.01      2.32      0.00    0.1411E-02  0.4259E-04  0.8981E-03
-|  7    -79.864744909  0.115968E-04       2.269     7        0.01      2.26      0.00    0.4341E-04  0.3237E-05  0.5742E-04
-|  8    -79.864744926  0.167427E-07       2.120     8        0.01      2.11      0.00    0.7864E-05  0.3483E-06  0.5500E-05
+|  1    -80.002847491      ------         1.149     1        0.01      1.14      0.00    0.2053E+01  0.1629E-01  0.2100E+00
+|  2    -79.795377069  -.207470E+00       1.246     2        0.01      1.24      0.00    0.1351E+00  0.6908E-02  0.1026E+00
+|  3    -79.781313234  -.140638E-01       1.242     3        0.01      1.24      0.01    0.1588E+00  0.3756E-02  0.5193E-01
+|  4    -79.864421426  0.831082E-01       1.238     4        0.01      1.23      0.00    0.6907E-02  0.2521E-03  0.4580E-02
+|  5    -79.864737490  0.316064E-03       1.226     5        0.01      1.22      0.00    0.1311E-02  0.3775E-04  0.3387E-03
+|  6    -79.864744714  0.722309E-05       1.215     6        0.01      1.21      0.00    0.1022E-03  0.4580E-05  0.6052E-04
+|  7    -79.864744785  0.712351E-07       1.201     7        0.01      1.19      0.00    0.1487E-04  0.7412E-06  0.1264E-04
 | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-09 ------------
-|  9    -79.864744927  0.379977E-09       2.064     9        0.01      2.06      0.00    0.1780E-05  0.6919E-07  0.1088E-05
+|  8    -79.864744786  0.142072E-08       1.192     8        0.01      1.19      0.00    0.2500E-05  0.9746E-07  0.1319E-05
 | -------------- 2E-INT CUTOFF CHANGE TO 0.1000E-10 ------------
-| 10    -79.864744927  0.138201E-10       2.109    10        0.01      2.10      0.00    0.7612E-06  0.1853E-07  0.4116E-06
-| 11    -79.864744927  0.547118E-12       1.980     1        0.01      1.97      0.00    0.2183E-06  0.9563E-08  0.2055E-06
+|  9    -79.864744786  0.502283E-10       1.194     9        0.01      1.19      0.00    0.2574E-06  0.1192E-07  0.1638E-06
+| 10    -79.864744786  -.751044E-11       1.167    10        0.01      1.16      0.00    0.8904E-07  0.3924E-08  0.9359E-07
 | ------------------------------------------------------------------------------------------------------------------------
-| REACH CONVERGENCE AFTER  11 CYCLES
-| MAX ERROR = 0.218252E-06   RMS CHANGE = 0.956273E-08   MAX CHANGE = 0.205459E-06
+| REACH CONVERGENCE AFTER  10 CYCLES
+| MAX ERROR = 0.890391E-07   RMS CHANGE = 0.392400E-08   MAX CHANGE = 0.935860E-07
 | -----------------------------------------------
- ALPHA ELECTRON DENSITY    =     8.9999971244
- BETA ELECTRON DENSITY     =     8.9999971244
- ELECTRONIC ENERGY    =   -122.030650329
+ ALPHA ELECTRON DENSITY    =     8.9999973809
+ BETA ELECTRON DENSITY     =     8.9999973809
+ ELECTRONIC ENERGY    =   -122.030650189
  CORE_CORE REPULSION  =     42.165905403
- TOTAL ENERGY         =    -79.864744927
+ TOTAL ENERGY         =    -79.864744786
 
  @ End Energy calculation
+
+  Skipping one-electron property calculation.
+
+ @ Begin Charge and Dipole Calculation
+
+    ATOMIC CHARGES
+   ATOM          MULLIKEN            LOWDIN
+   C             -0.3044            -0.7849
+   C             -0.3042            -0.7849
+   H              0.1014             0.2664
+   H              0.1014             0.2539
+   H              0.1014             0.2646
+   H              0.1014             0.2646
+   H              0.1015             0.2539
+   H              0.1014             0.2664
+   TOTAL         0.0000             0.0000
+
+    DIPOLE (DEBYE)
+      X         Y         Z        TOTAL
+   -0.0000   -0.0000    0.0000    0.0000
+
+ @ End Charge and Dipole Calculation
 
 
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.414652000(  1.67%)
-| DFT GRID OPERATIONS =     0.101536000(  0.41%)
-| TOTAL SCF TIME      =    24.251887000( 97.84%)
-|       TOTAL OP TIME      =    24.168332000( 97.51%)
-|             TOTAL 1e TIME      =     0.011855000(  0.05%)
-|             TOTAL 2e TIME      =    19.377364000( 78.18%)
-|             TOTAL EXC TIME     =     4.765373000( 19.23%)
-|       TOTAL DII TIME      =     0.083324000(  0.34%)
-|             TOTAL DIAG TIME    =     0.028261000(  0.11%)
-| TOTAL TIME          =    24.786410000
+| INITIAL GUESS TIME  =     0.482977000(  3.75%)
+| DFT GRID OPERATIONS =     0.039526000(  0.31%)
+| TOTAL SCF TIME      =    12.075211000( 93.64%)
+|       TOTAL OP TIME      =    12.004510000( 93.09%)
+|             TOTAL 1e TIME      =     0.003298000(  0.03%)
+|             TOTAL 2e TIME      =     4.503014000( 34.92%)
+|             TOTAL EXC TIME     =     7.493979000( 58.11%)
+|       TOTAL DII TIME      =     0.070529000(  0.55%)
+|             TOTAL DIAG TIME    =     0.049706000(  0.39%)
+| TOTAL TIME          =    12.895415000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes 24.8 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes 12.9 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Thu Sep 21 16:15:10 2023
+| Normal Termination. Task Finished on: Sat Aug  1 23:23:50 2026
