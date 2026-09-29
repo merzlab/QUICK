@@ -6,14 +6,16 @@
 ! 34567890123456789012345678901234567890123345678901234567890123456789012<stop
 
     subroutine zmake
-    use quick_molspec_module
-    use quick_files_module
+    use quick_molspec_module, only: natom, xyz, quick_molspec
+    use quick_files_module, only: iOutFile
     use quick_constants_module, only : symbol
-    implicit double precision(a-h,o-z)
+    implicit none
     double precision, dimension(3,natom) :: zmat
     integer, dimension(3,natom) :: izmat,ioptions
     double precision, dimension(3) :: ztemp
     double precision :: degree = 57.2957795131d0
+    double precision :: r, angle, dih, absz
+    integer :: i, j, k, l, m, iat
 
 ! Initialization block
     r=0.d0

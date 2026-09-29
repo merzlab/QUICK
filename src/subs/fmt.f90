@@ -11,9 +11,13 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 Subroutine FmT(MaxM,X,vals)
-  use quick_constants_module
-  implicit double precision (a-h,o-z)
-  double precision, dimension(0:20) :: vals
+  use quick_constants_module, only: PI
+  implicit none
+  integer, intent(in) :: maxm
+  double precision, intent(in) :: x
+  double precision, intent(out), dimension(0:20) :: vals
+  double precision :: pie4, xinv, e, ww1, y, f1, twot
+  integer :: m
 
   PIE4 = PI/4.0d0
   XINV = 1.d0/X

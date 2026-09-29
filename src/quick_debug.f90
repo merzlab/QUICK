@@ -17,7 +17,10 @@
 
 ! this subroutine is to output some infos in debug mode in SCF
 subroutine debug_SCF(jscf)
-   use allmod
+   use quick_basis_module, only: nbasis, quick_basis, itype, ncontract, aexp, dcoeff
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_files_module, only: iOutFile
+   use quick_molspec_module, only: xyz
    use quick_overlap_module, only: overlap, gpt
    implicit none
    double precision total, g_table(200),Ax,Ay,Az,Bx,By,Bz, Px,Py,Pz,a,b
@@ -91,7 +94,9 @@ end subroutine debug_SCF
 ! debugElecdii()
 ! this subroutine is to output some infos in debug mode
 subroutine debugElecdii(jscf)
-   use allmod
+   use quick_basis_module, only: nbasis
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_files_module, only: iOutFile
    implicit none
    integer jscf
 
@@ -106,7 +111,10 @@ end subroutine debugElecdii
 ! debugDivconNorm
 ! this subroutine is to output normalization info for divcon
 subroutine debugDivconNorm()
-   use allmod
+   use quick_basis_module, only: nbasis
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_files_module, only: iOutFile
+   use quick_divcon_module, only: np, nbasisdc, Pdcsub, smatrixdcsub
 
    implicit none
    double precision tmp
@@ -139,7 +147,9 @@ end subroutine debugDivconNorm
 
 ! debugBasis
 subroutine debugBasis
-   use allmod
+   use quick_basis_module, only: nbasis, nshell, quick_basis, itype, ncontract, aexp, dcoeff
+   use quick_files_module, only: iOutFile
+   use quick_molspec_module, only: natom
    implicit none
    integer i,j
    do I=1,nbasis
@@ -193,7 +203,10 @@ end subroutine debugBasis
 
 ! debugFullX
 subroutine debugFullX
-    use allmod
+    use quick_basis_module, only: nbasis
+    use quick_calculated_module, only: quick_qm_struct
+    use quick_files_module, only: iOutFile
+    implicit none
     write(ioutfile,'("THE OVERLAP MATRIX")')
     call PriSym(iOutFile,nbasis,quick_qm_struct%s,'F18.10')
     call flush(iOutFile)
@@ -205,7 +218,10 @@ end subroutine debugFullX
 
 ! debugInitialGuess
 subroutine debugInitialGuess
-    use allmod
+    use quick_basis_module, only: nbasis
+    use quick_calculated_module, only: quick_qm_struct
+    use quick_files_module, only: iOutFile
+    implicit none
          write(iOutFile,*) "DENSITY MATRIX AFTER INITIAL GUESS"
          call PriSym(iOutFile,nbasis,quick_qm_struct%dense,'f14.8')
 end subroutine

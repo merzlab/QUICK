@@ -20,8 +20,13 @@ subroutine rdnum(string,istart,value,ierror)
   ! is set to one.  this routine expects that there are no blank spaces
   ! embedded anywhere within the numerical field.
 
-  implicit double precision (a-h,o-z)
-  character string*(*),char*1,efield(4)*1
+  implicit none
+  character, intent(in) :: string*(*)
+  integer, intent(in) :: istart
+  double precision, intent(out) :: value
+  integer, intent(out) :: ierror
+  character :: char*1, efield(4)*1
+  integer :: ibeg, istop, iend, i, ieq
   data efield /'E','e','D','d'/
   save efield
   ierror = 0

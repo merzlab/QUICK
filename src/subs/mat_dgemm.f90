@@ -11,7 +11,6 @@
 subroutine MAT_DGEMM(TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, &
                 C, LDC)
 #if defined(HIP) || defined(HIP_MPIV)
-    use quick_rocblas_module, only: rocDGEMM
 #endif
 
     implicit none

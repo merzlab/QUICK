@@ -172,10 +172,13 @@ end subroutine check_fqin
 ! reads the job card from template file with .qin extension and initialize quick
 ! also allocate memory for quick_api internal arrays
 subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
-  use quick_files_module
+  use quick_files_module, only: iOutFile, outFileName, inFileName, isTemplate, print_quick_io_file, set_quick_files
   use quick_molspec_module, only : quick_molspec, alloc
-  use quick_exception_module
-  use quick_method_module
+  use quick_exception_module, only: RaiseException
+  use quick_method_module, only: quick_method
+#if defined(GPU) || defined(MPIV_GPU)
+  use quick_method_module, only: upload
+#endif
 #if defined(MPIV)
   use quick_mpi_module, only: bMPI, master, print_quick_mpi
 #  if defined(MPIV_GPU)
@@ -343,7 +346,7 @@ end subroutine allocate_point_charge
 
 ! allocate memory for point charges and gradients
 subroutine deallocate_point_charge(isgrad,ierr)
-  use quick_calculated_module
+  use quick_calculated_module, only: quick_qm_struct, realloc
 
   implicit none
 
@@ -436,22 +439,22 @@ end subroutine get_quick_energy_gradients
 
 ! runs quick, partially resembles quick main program
 subroutine run_quick(self,ierr)
-  use quick_timer_module
+  use quick_timer_module, only: timer_begin, timer_cumer, timer_end
   use quick_method_module, only: quick_method
-  use quick_files_module
+  use quick_files_module, only: baseinFileName, moldenFileName, write_molden
   use quick_calculated_module, only: quick_qm_struct
   use quick_gridpoints_module, only: quick_dft_grid, deform_dft_grid
   use quick_cutoff_module, only: schwarzoff
-  use quick_exception_module
+  use quick_exception_module, only: RaiseException
   use quick_eri_cshell_module, only: getEriPrecomputables
   use quick_grad_cshell_module, only: cshell_gradient
   use quick_grad_oshell_module, only: oshell_gradient
-  use quick_optimizer_module
+  use quick_optimizer_module, only: lopt
   use quick_sad_guess_module, only: getSadGuess
   use quick_molden_module, only: quick_molden, initializeExport, exportCoordinates, exportBasis, &
       exportMO, exportSCF, exportOPT
 #ifdef CEW 
-  use quick_cew_module
+  use quick_cew_module, only: delete, quick_cew, upload
 #endif
 #if defined(MPIV)
   use quick_mpi_module, only: master
@@ -728,7 +731,8 @@ end subroutine set_quick_molspecs
 ! uploads molecular information into gpu
 subroutine gpu_upload_molspecs(ierr)
   use quick_molspec_module, only: quick_molspec
-  use quick_basis_module
+  use quick_basis_module, only: Ycutoff, aexp, cutprim, dcoeff, itype, jbasis, jshell, maxcontract, nbasis, &
+      ncontract, nprim, nshell, quick_basis
 
   implicit none
 
@@ -797,9 +801,12 @@ end subroutine
 ! fialize quick and deallocate memory of quick_api internal arrays
 subroutine delete_quick_job(ierr)
   use quick_files_module, only: iOutFile
-  use quick_exception_module
-  use quick_method_module
+  use quick_exception_module, only: RaiseException
+  use quick_method_module, only: quick_method
   use quick_mpi_module, only: master
+#if defined(GPU) || defined(MPIV_GPU)
+  use quick_method_module, only: delete
+#endif
 
   implicit none
   integer, intent(out) :: ierr

@@ -123,7 +123,7 @@ subroutine dlf_qts_init()
   use dlf_constants, only : dlf_constants_get
   !use dlf_hessian
   use dlf_allocate, only: allocate,deallocate
-  use dlf_qts
+  use dlf_qts, only: qts, taskfarm_mode
   implicit none
   integer   :: nimage,iimage,ivar
   real(rk)  :: kboltz_au,svar
@@ -344,7 +344,7 @@ end subroutine dlf_qts_init
 subroutine dlf_qts_destroy()
   !! SOURCE
   use dlf_parameter_module, only: rk
-  use dlf_qts
+  use dlf_qts, only: qts
   use dlf_global, only: glob
  use dlf_allocate, only: allocate, deallocate
   use dlf_neb, only: neb,unitp,xyzall
@@ -406,7 +406,7 @@ subroutine qts_tau_from_path()
   use dlf_neb, only: neb,unitp,xyzall
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob, pi
-  use dlf_qts
+  use dlf_qts, only: qts
   implicit none
   integer             :: iimage, nimage
   logical,parameter   :: sinscale=.false.
@@ -527,7 +527,7 @@ subroutine dlf_qts_trans_force(trerun,tok_back)
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob, pi,printl,printf
   use dlf_neb, only: neb,unitp,xyzall,beta_hbar
-  use dlf_qts
+  use dlf_qts, only: qts
 
   implicit none
   logical, intent(out)  :: trerun ! calculate all E&G once more
@@ -753,7 +753,7 @@ subroutine qts_get_dtau()
   use dlf_global, only: glob,printl,printf,stdout
   use dlf_constants, only: dlf_constants_get
   use dlf_stat, only: stat
-  use dlf_qts
+  use dlf_qts, only: qts
   implicit none
   real(rk)  :: gradleft(neb%nimage) ! is also grad-parallel
   real(rk)  :: gradright(neb%nimage)
@@ -1098,7 +1098,7 @@ subroutine qts_gradient_etos(grad_action)
   use dlf_global, only: glob,printl,printf,stdout
   use dlf_constants, only: dlf_constants_get
   use dlf_stat, only: stat
-  use dlf_qts
+  use dlf_qts, only: qts
   implicit none
   real(rk),intent(out)  :: grad_action(neb%varperimage*neb%nimage) ! dS_E / dy
   real(rk)  :: svar
@@ -1293,7 +1293,7 @@ end subroutine qts_gradient_etos
 ! Dimer rotation: Compute action at midpoint and move endpoint
 ! ********************************************************************
 subroutine dlf_qts_phi_1(trerun,stoprot)
-  use dlf_qts
+  use dlf_qts, only: qts
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob
   use dlf_neb, only: neb,unitp,xyzall
@@ -1322,7 +1322,7 @@ end subroutine dlf_qts_phi_1
 ! Dimer rotation: Compute  phi_min (part1)
 ! ********************************************************************
 subroutine dlf_qts_min_phi_part1(trerun,stoprot)
-  use dlf_qts
+  use dlf_qts, only: qts
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob, pi, stdout
   use dlf_neb, only: neb,unitp,xyzall
@@ -1416,7 +1416,7 @@ end subroutine dlf_qts_min_phi_part1
 ! Dimer rotation: Compute phi_min (part2)
 ! ********************************************************************
 subroutine dlf_qts_min_phi_part2(trerun,stoprot)
-  use dlf_qts
+  use dlf_qts, only: qts
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob, pi, stdout
   use dlf_neb, only: neb,unitp,xyzall
@@ -1545,7 +1545,7 @@ subroutine dlf_qts_get_hessian(trerun_energy)
   use dlf_hessian, only: fd_hess_running
   use dlf_allocate, only: allocate,deallocate
   use dlf_constants, only : dlf_constants_get
-  use dlf_qts
+  use dlf_qts, only: qts, taskfarm_mode
   implicit none
   logical, intent(inout) :: trerun_energy
   integer                :: status
@@ -1943,7 +1943,7 @@ subroutine dlf_qts_update_hessian
   use dlf_neb, only: neb
   use dlf_global, only: glob,printl,stdout
   use dlf_allocate, only: allocate,deallocate
-  use dlf_qts
+  use dlf_qts, only: qts
   implicit none
   integer   :: iimage,cstart,cend
   !real(rk)  :: hess_image(neb%varperimage,neb%varperimage)
@@ -2045,7 +2045,7 @@ subroutine qts_hessian_etos_halfpath
 !! SOURCE
   use dlf_global, only: glob
   use dlf_neb, only: neb,beta_hbar
-  use dlf_qts
+  use dlf_qts, only: qts
   implicit none
   integer :: iimage,posi,posj,ivar,jvar,cstart,cend
 
@@ -2494,7 +2494,6 @@ subroutine report_qts_pathlength
   use dlf_neb, only: neb,beta_hbar
   use dlf_global, only: glob,stdout,printl,printf,pi
   use dlf_constants, only : dlf_constants_get
-  use dlf_qts
   implicit none
   real(rk) :: plength(glob%nat)
   integer  :: iat,nat,iimage
@@ -2540,10 +2539,9 @@ subroutine dlf_qts_rate()
   use dlf_parameter_module, only: rk
   use dlf_neb, only: neb,unitp,xyzall,beta_hbar
   use dlf_global, only: glob,stdout,printl,printf,pi
-  use dlf_hessian
   use dlf_allocate, only: allocate,deallocate
   use dlf_constants, only : dlf_constants_get
-  use dlf_qts
+  use dlf_qts, only: qts, hess_dtau
   implicit none
   real(rk),allocatable :: total_hessian(:,:) ! (neb%varperimage*neb%nimage*2,neb%varperimage*neb%nimage*2)
   real(rk),allocatable :: evals_hess(:)   ! (neb%varperimage*neb%nimage*2)
@@ -3083,7 +3081,7 @@ subroutine qts_reactant(qrs,ers,qrot,tbimol,tok)
   use dlf_global, only: printl,stdout,glob,pi
   use dlf_constants, only : dlf_constants_get
   use dlf_allocate, only: allocate,deallocate
-  use dlf_qts
+  use dlf_qts, only: qts, hess_dtau
   implicit none
   real(rk), intent(out) :: qrs ! ln of the partition function (no potential part)
   real(rk), intent(out) :: ers ! energy of the reactant
@@ -3504,7 +3502,7 @@ subroutine dlf_qts_convergence!(testconv)
   use dlf_parameter_module, only: rk
   use dlf_neb, only: neb,unitp,xyzall,beta_hbar
   use dlf_global, only: glob
-  use dlf_qts
+  use dlf_qts, only: qts
   implicit none
   real(rk) :: xstep(3*glob%nat*neb%nimage)
   real(rk) :: xgradient(3*glob%nat*neb%nimage)
@@ -3541,7 +3539,7 @@ end subroutine dlf_qts_convergence
 
 ! now get-routines so that other files don't have to use the qts module.
 subroutine dlf_qts_get_int(label,val)
-  use dlf_qts
+  use dlf_qts, only: qts, taskfarm_mode
   implicit none
   character(*), intent(in)  :: label
   integer     , intent(out) :: val
@@ -4244,7 +4242,7 @@ subroutine dlf_htst_rate
 !  use dlf_neb, only: neb,unitp,beta_hbar
 !  use dlf_qts
   use dlf_allocate, only: allocate,deallocate
-  use dlf_constants, only: dlf_constants_init,dlf_constants_get
+   use dlf_constants, only: dlf_constants_get
   implicit none
   ! user parameters
   integer   :: nat !  number of atoms TS
@@ -5108,7 +5106,7 @@ subroutine dlf_qts_definepath(nimage,useimage)
   use dlf_constants, only : dlf_constants_get
   use dlf_bspline, only: spline_init, spline_create, spline_get, &
       spline_destroy
-  use dlf_qts
+  use dlf_qts, only: qts
   implicit none
   integer ,intent(in)   :: nimage
   integer ,intent(inout):: useimage(nimage)
