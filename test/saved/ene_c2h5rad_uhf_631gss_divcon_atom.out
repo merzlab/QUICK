@@ -1,0 +1,266 @@
+| *********************************************************************************************************
+| **                                                                                                     **
+| **           888888888888                                                                              **
+| **         8888888888888888                                                                            **
+| **      888888888888888888                                                                             **
+| **     888888888888888888                                                                              **
+| **    888888888888888                                                                                  **
+| **   88888888888888888888                               88888                       8888:              **
+| **   8888888888888888888888Z                            88888                       8888:              **
+| **   888888888888888888888888?                          88888                       8888:              **
+| **   8888888888888      8888888                                        888888       8888:              **
+| **    88888888888         888888     8888:     88888    88888        888888888I     8888:    888888    **
+| **    8888888888           88888:    8888:     88888    88888      $888888888888    8888:   888888     **
+| **    I8Z 88888             88888    8888:     88888    88888    .888888     8888   8888: 888888       **
+| **    .8Z 88888             88888    8888:     88888    88888    $88888             8888:88888         **
+| **     8I 88888      .=88. .88888    8888:     88888    88888    88888              8888888888         **
+| **    :8  88888      888888$8888$    8888:     88888    88888    8888O              88888888888        **
+| **   ,7   +88888.     8888888888.    8888:     88888    88888    888888             88888O888888       **
+| **         $888888:.   .8888888      88888....888888    88888     888888     8888   8888:  888888      **
+| **          I8888888888888888888     888888888888888    88888     O888888888888O    8888:   888888     **
+| **            O888888888888888888     88888888888888    88888       88888888888$    8888:    888888    **
+| **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
+| **                                                                                                     **
+| **                                                                                                     **
+| **                                         Copyright (c) 2026                                          **
+| **                          Regents of the University of California San Diego                          **
+| **                                    & Michigan State University                                      **
+| **                                        All Rights Reserved.                                         **
+| **                                                                                                     **
+| **             This software is subject to the terms of the Mozilla Public License, v. 2.0.            **
+| **                                                                                                     **
+| *********************************************************************************************************
+|                                                                                                          
+| Cite this work as:                                                                                       
+| Manathunga, M.; O'Hearn, K. A.; Shajan, A.; Smith, J.; Miao, Y.; He, X.; Ayers, K.;                      
+| Brothers, E.; Palos, E.; Tripathy, V.; Goetz, A.W.; Merz, K.M. QUICK-26.03.                              
+| University of California,San Diego, CA and                                                               
+| Michigan State University, East Lansing, MI, 2026                                                        
+|                                                                                                          
+| If you have any comments or queries, please reach out to us on GitHub issues or discussion sections:     
+| https://github.com/merzlab/QUICK.                                                                        
+|                                                                                                          
+| TASK STARTS ON: Wed Sep 30 15:11:34 2026
+| INPUT FILE :    ene_c2h5rad_uhf_631gss_divcon_atom.in
+| OUTPUT FILE:    ene_c2h5rad_uhf_631gss_divcon_atom.out
+| BASIS SET PATH: /Users/kaliakd/Documents/DnC_Prototype/install_serial/basis
+
+ @ Read Job And Atom
+
+  KEYWORD=UHF BASIS=6-31G** CUTOFF=1.0E-9 DENSERMS=1.0E-6 MULT=2 DIVCON ATOMBASIS
+ ============== JOB CARD =============
+ METHOD = HARTREE FOCK
+ DIRECT SCF 
+ SAD INITAL GUESS 
+ UNRESTRICTED SYSTEM
+ USE DIIS SCF
+ PRINT ENERGY EVERY CYCLE
+ READ SAD GUESS FROM FILE
+ Level shifting allowed after cycle    3
+ DIIS error must exceed 0.100 for level shifting
+ Max HOMO-LUMO gap to allow level shifting = 0.200
+ DIV & CON METHOD = DIV AND CON ON ATOM BASIS
+ MAX SCF CYCLES =    200
+ MAX DIIS CYCLES =   10
+ DELTA DENSITY START CYCLE =    3
+ COMPUTATIONAL CUTOFF: 
+      TWO-e INTEGRAL         =  0.100E-08
+      BASIS SET PRIME        =  0.100E-09
+      MATRIX ELEMENTS        =  0.100E-09
+      BASIS FUNCTION         =  0.100E-05
+      NEAR-LINEAR DEPENDENCY =  0.100E-04
+ DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
+ BASIS SET = 6-31G**,  TYPE = CARTESIAN
+| BASIS FILE = /Users/kaliakd/Documents/DnC_Prototype/install_serial/basis/6-31GDP.BAS
+| DATA FILE  =    ene_c2h5rad_uhf_631gss_divcon_atom.dat
+
+ @ Finish reading job
+
+
+ @ Begin SAD initial guess
+
+ For Atom Kind =    1
+ ELEMENT = C 
+ BASIS FUNCTIONS =   15
+ For Atom Kind =    2
+ ELEMENT = H 
+ BASIS FUNCTIONS =    5
+
+ @ Finish SAD initial guess
+
+
+ @ Begin Reading Molecular Information
+
+
+ =========== Molecule Input ==========
+ TOTAL MOLECULAR CHARGE  =    0    MULTIPLICITY                =    2
+ TOTAL ATOM NUMBER       =    7    NUMBER OF ATOM TYPES        =    2
+ NUMBER OF HYDROGEN ATOM =    5    NUMBER OF NON-HYDROGEN ATOM =    2
+ NUMBER OF ALPHA ELECTRONS =    9
+ NUMBER OF BETA ELECTRONS  =    8
+
+ -- INPUT GEOMETRY -- :
+    C           0.0000       0.0000       0.7698
+    C           0.0000       0.0000      -0.7698
+    H           0.8895       0.5135       1.1348
+    H           0.8895      -0.5135      -1.1348
+    H          -0.8895       0.5135       1.1348
+    H          -0.8895      -0.5135      -1.1348
+    H           0.0000      -1.0271       1.1348
+
+ -- DISTANCE MATRIX -- :
+              1           2           3           4           5
+      1     0.00000
+      2     2.90958     0.00000
+      3     2.05980     4.08929     0.00000
+      4     4.08929     2.05980     4.70781     0.00000
+      5     2.05980     4.08929     3.36169     5.78484     0.00000
+      6     4.08929     2.05980     5.78484     3.36169     4.70781
+      7     2.05980     4.08928     3.36169     4.70781     3.36169
+              6           7
+      6     0.00000
+      7     4.70781     0.00000
+
+============== BASIS INFOS ==============
+ BASIS FUNCTIONS =   55
+ NSHELL =   23 NPRIM  =   91
+ JSHELL =   23 JBASIS =   47
+
+
+ @ End Reading Molecular Information 
+
+
+ @ Now Begin Div & Con Fragment
+
+NUMBER OF FRAG (BEFORE ELIMINATION)=  7
+RBuffer=   7.00 A
+============================================================
+The Core and Buffer Atoms before elimination
+============================================================
+Frag       CoreAtom     CoreTot     BufAtom       BufTot  SubTot
+    1  1                  1       2-7                6        7
+    2  2                  1       1,3-7              6        7
+    3  3                  1       1-2,4-7            6        7
+    4  4                  1       1-3,5-7            6        7
+    5  5                  1       1-4,6-7            6        7
+    6  6                  1       1-5,7              6        7
+    7  7                  1       1-6                6        7
+-----------------------------------------------------------
+Total Frag=   7
+===========================================================
+ move the subsystem            2  into            1
+ move the subsystem            3  into            1
+ move the subsystem            4  into            1
+ move the subsystem            5  into            1
+ move the subsystem            6  into            1
+ move the subsystem            7  into            1
+
+| WARNING: Fragment elimination merged every subsystem into one.
+
+|          This calculation is effectively UNFRAGMENTED: the single
+|          subsystem spans the whole molecule, so the result should
+|          match a plain SCF and none of the expected divide and
+|          conquer savings are delivered.
+|
+|          This happens when the buffer radius reaches every atom,
+|          which is common for small molecules. It is useful for
+|          checking divide and conquer against a full SCF. To
+|          fragment for real, reduce the buffer with the DNCRB
+|          keyword or choose a coarser fragmentation.
+
+============================================================
+The Core and Buffer Atoms
+============================================================
+Frag       CoreAtom     CoreTot     BufAtom       BufTot     SubAtom     SubTot    Elec    NBasis
+    1  1-7                7       1                  0       1-7                7    17    55
+-----------------------------------------------------------
+Total Frag=   1
+NBasis Max=  55
+===========================================================
+
+ @ Now End Div & Con Fragment
+
+
+ @ Begin Energy Calculation
+
+| condition number of overlap matrix:    7.189E+02
+| Smallest eigenvalue of overlap matrix:    8.844E-03
+
+                                         USCF ENERGY
+| ------------------------------------------------------------------------------------------------------------------------
+| NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
+| ------------------------------------------------------------------------------------------------------------------------
+E(Fermi)    =  -1.06653271E-02  AFTER   6 N.C. Cycles
+Eb(Fermi)    =  -2.63916341E-01  AFTER   4 N.C. Cycles
+|  1    -78.999150745      ------         0.054       1        0.00      0.05      0.00    0.2149E+01  0.1942E-01  0.2377E+00
+E(Fermi)    =  -1.53248941E-01  AFTER   4 N.C. Cycles
+Eb(Fermi)    =  -1.42358693E-01  AFTER   4 N.C. Cycles
+|  2    -78.517990769  -.481160E+00       0.073       2        0.00      0.07      0.00    0.7918E-01  0.3685E-02  0.3898E-01
+E(Fermi)    =  -1.08972141E-01  AFTER   4 N.C. Cycles
+Eb(Fermi)    =  -9.68874841E-02  AFTER   4 N.C. Cycles
+|  3    -78.578674083  0.606833E-01       0.071       3        0.00      0.07      0.00    0.2685E-01  0.1844E-02  0.1495E-01
+E(Fermi)    =  -1.24621159E-01  AFTER   4 N.C. Cycles
+Eb(Fermi)    =  -1.14826919E-01  AFTER   4 N.C. Cycles
+|  4    -78.590749868  0.120758E-01       0.070       4        0.00      0.07      0.00    0.1516E-01  0.7512E-03  0.7231E-02
+E(Fermi)    =  -1.21685787E-01  AFTER   4 N.C. Cycles
+Eb(Fermi)    =  -1.08716934E-01  AFTER   4 N.C. Cycles
+|  5    -78.592973115  0.222325E-02       0.069       5        0.00      0.07      0.00    0.9073E-02  0.4989E-03  0.5512E-02
+E(Fermi)    =  -1.22181487E-01  AFTER   4 N.C. Cycles
+Eb(Fermi)    =  -1.10017944E-01  AFTER   4 N.C. Cycles
+|  6    -78.593730566  0.757451E-03       0.067       6        0.00      0.07      0.00    0.4306E-02  0.3014E-03  0.3228E-02
+E(Fermi)    =  -1.22076917E-01  AFTER   4 N.C. Cycles
+Eb(Fermi)    =  -1.09601407E-01  AFTER   4 N.C. Cycles
+|  7    -78.593929917  0.199351E-03       0.067       7        0.00      0.07      0.00    0.1537E-02  0.1311E-03  0.1541E-02
+E(Fermi)    =  -1.21967465E-01  AFTER   4 N.C. Cycles
+Eb(Fermi)    =  -1.09626982E-01  AFTER   4 N.C. Cycles
+|  8    -78.593959236  0.293194E-04       0.065       8        0.00      0.06      0.00    0.2837E-03  0.3461E-04  0.4890E-03
+E(Fermi)    =  -1.22036377E-01  AFTER   4 N.C. Cycles
+Eb(Fermi)    =  -1.09640689E-01  AFTER   4 N.C. Cycles
+|  9    -78.593961252  0.201536E-05       0.063      --        0.06      0.06      0.00    0.2837E-03  0.9960E-05  0.1303E-03
+E(Fermi)    =  -1.22007400E-01  AFTER   4 N.C. Cycles
+Eb(Fermi)    =  -1.09644170E-01  AFTER   4 N.C. Cycles
+| 10    -78.593961515  0.263140E-06       0.059      --        0.12      0.06      0.00    0.2837E-03  0.5956E-05  0.9396E-04
+E(Fermi)    =  -1.22014171E-01  AFTER   4 N.C. Cycles
+Eb(Fermi)    =  -1.09646448E-01  AFTER   4 N.C. Cycles
+| 11    -78.593961630  0.114958E-06       0.058      --        0.18      0.06      0.00    0.2837E-03  0.4017E-05  0.6041E-04
+E(Fermi)    =  -1.22009475E-01  AFTER   4 N.C. Cycles
+Eb(Fermi)    =  -1.09649539E-01  AFTER   4 N.C. Cycles
+| 12    -78.593961683  0.527510E-07       0.057      --        0.24      0.06      0.00    0.2837E-03  0.2622E-05  0.4143E-04
+E(Fermi)    =  -1.22009274E-01  AFTER   4 N.C. Cycles
+Eb(Fermi)    =  -1.09650840E-01  AFTER   4 N.C. Cycles
+| 13    -78.593961707  0.248757E-07       0.056      --        0.29      0.06      0.00    0.2837E-03  0.1799E-05  0.2755E-04
+E(Fermi)    =  -1.22008058E-01  AFTER   4 N.C. Cycles
+Eb(Fermi)    =  -1.09652409E-01  AFTER   4 N.C. Cycles
+| 14    -78.593961720  0.125787E-07       0.054      --        0.35      0.05      0.00    0.2837E-03  0.1222E-05  0.1868E-04
+E(Fermi)    =  -1.22007509E-01  AFTER   4 N.C. Cycles
+Eb(Fermi)    =  -1.09653267E-01  AFTER   4 N.C. Cycles
+| 15    -78.593961727  0.735353E-08       0.054      --        0.40      0.05      0.00    0.2837E-03  0.8469E-06  0.1258E-04
+| ------------------------------------------------------------------------------------------------------------------------
+| REACH CONVERGENCE AFTER  15 CYCLES
+| MAX ERROR = 0.283661E-03   RMS CHANGE = 0.846893E-06   MAX CHANGE = 0.125838E-04
+| -----------------------------------------------
+ ELECTRONIC ENERGY    =   -115.252943242
+ CORE_CORE REPULSION  =     36.658981514
+ TOTAL ENERGY         =    -78.593961727
+
+ @ End Energy calculation
+
+  Skipping one-electron property calculation.
+
+ @ Output Timing Information
+
+------------- TIMING ---------------
+| INITIAL GUESS TIME  =     0.040538000(  3.90%)
+| TOTAL SCF TIME      =     0.937688000( 90.13%)
+|       TOTAL OP TIME      =     0.928272000( 89.23%)
+|             TOTAL 1e TIME      =     0.001238000(  0.12%)
+|             TOTAL 2e TIME      =     0.925356000( 88.95%)
+|       TOTAL DII TIME      =     1.650734000( *****%)
+|             TOTAL DC DIAG TIME =     0.000364000(  0.03%)
+| TOTAL TIME          =     1.040346000
+------------------------------------
+| Job cpu time:  0 days  0 hours  0 minutes  1.0 seconds.
+
+ @ Finish Output Timing Information
+
+| Normal Termination. Task Finished on: Wed Sep 30 15:11:35 2026

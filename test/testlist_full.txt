@@ -187,5 +187,6 @@ chk_acetate_xyz_density                 #CHK test: writing/reading densities and
 chk_acetate_density                     #CHK test: writing/reading densities
 chk_acetate_unrestricted_density        #CHK test: unrestricted writing/reading densities
 ene_ethane_rhf_631gss_divcon_atom       #Ethane: DnC RHF energy test: atom-based fragments, collapses to one subsystem
+ene_c2h5rad_uhf_631gss_divcon_atom     #Ethyl radical: DnC UHF energy test: atom-based fragments, open shell
 ene_gly6_rhf_sto3g_divcon_atom          #Glycine hexamer: DnC RHF energy test: atom-based fragments, 45 merge to 9 subsystems
 ene_gly6_rhf_sto3g_divcon_residue       #Glycine hexamer: DnC RHF energy test: residue-based fragments, reads pdb
