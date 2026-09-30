@@ -60,9 +60,17 @@ subroutine getEnergy(isGuess, ierr)
       call fullX
 
       ! The MFCC guess is a sum of fragment densities minus cap densities, which
-      ! is not idempotent. Purify it now that the overlap exists, before the SCF
-      ! has to cope with occupation numbers outside the physical range.
-      if (quick_method%MFCC .and. .not. isGuess) call mfcc_purify_density
+      ! is not idempotent. Purifying it here, once the overlap exists, makes it
+      ! idempotent with the right trace before the SCF has to cope with
+      ! occupation numbers outside the physical range.
+      !
+      ! Off unless MFCCPURE is given. On gly6 the purified guess costs a cycle at
+      ! STO-3G (11 against 10) and changes nothing at 6-31G*: an idempotent guess
+      ! is not the same as a guess close to the SCF solution, and forcing exact
+      ! idempotency moves the density away from the latter. Kept as an option
+      ! because a guess with badly unphysical occupations may still need it.
+      if (quick_method%MFCC .and. quick_method%mfccpure .and. .not. isGuess) &
+            call mfcc_purify_density
 
       ! if it's a div-con calculate, construct Div & Con matrices, Overlap,X, and PDC
       if (quick_method%DivCon .or. quick_method%dcmp2only) then
