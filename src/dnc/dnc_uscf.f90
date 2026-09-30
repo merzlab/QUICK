@@ -53,9 +53,13 @@
    dimension:: B(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1),BSAVE(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1)
    dimension:: BCOPY(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1),W(quick_method%maxdiisscf+1)
    dimension:: COEFF(quick_method%maxdiisscf+1),RHS(quick_method%maxdiisscf+1)
-   dimension:: allerror(nbasis, nbasis, quick_method%maxdiisscf)
-   dimension:: alloperator(nbasis, nbasis, quick_method%maxdiisscf)
-   dimension:: alloperatorB(nbasis, nbasis, quick_method%maxdiisscf)
+   ! On the heap rather than as automatic arrays: at (nbasis,nbasis,maxdiis)
+   ! each these run to tens or hundreds of MB on a real system, which is well
+   ! past a default stack. allerrorB and dInA are only used by DENSDIIS.
+   double precision, allocatable :: allerror(:,:,:), alloperator(:,:,:)
+   double precision, allocatable :: alloperatorB(:,:,:), allerrorB(:,:,:)
+   double precision, allocatable :: dInA(:,:)
+   integer :: ndd, islot, nddfinal
    double precision,allocatable :: dcco(:,:), holddc(:,:),Xdcsubtemp(:,:)
 
    logical templog1,templog2
@@ -164,10 +168,29 @@
 #endif
   
   
+     allocate(allerror(nbasis,nbasis,quick_method%maxdiisscf), &
+              alloperator(nbasis,nbasis,quick_method%maxdiisscf), &
+              alloperatorB(nbasis,nbasis,quick_method%maxdiisscf), stat=ierr1)
+     if (ierr1 /= 0) then
+        call PrtErr(iOutFile,'Could not allocate the divide and conquer DIIS history.')
+        ierr = 34
+        return
+     endif
+     if (quick_method%densdiis) then
+        allocate(allerrorB(nbasis,nbasis,quick_method%maxdiisscf), &
+                 dInA(nbasis,nbasis), stat=ierr1)
+        if (ierr1 /= 0) then
+           call PrtErr(iOutFile,'Could not allocate the divide and conquer density mixing history.')
+           ierr = 34
+           return
+        endif
+     endif
+
      bCalc1e = .true.
      diisdone = .false.
      deltaO = .false.
      idiis = 0
+     ndd = 0
      ! Now Begin DIIS
      do while (.not.diisdone)
 
@@ -214,7 +237,9 @@
         !------------- MASTER NODE -------------------------------
         if (master) then
 
-if (.not.diisoff) then
+! DENSDIIS replaces this block with Pulay mixing on the alpha and beta density
+! residuals, done below where both residuals actually exist.
+if (.not.diisoff .and. .not.quick_method%densdiis) then
 
            !-----------------------------------------------
            ! End of Delta Matrix
@@ -667,6 +692,9 @@ endif
       enddo
 
       quick_scratch%hold(:,:) = quick_qm_struct%dense(:,:)
+      ! hold is reused for the beta density further down, so keep the alpha
+      ! input separately until both residuals can be formed together.
+      if (quick_method%densdiis) dInA(:,:) = quick_qm_struct%dense(:,:)
 
       nbasis=nbasissave
       !--------------------------------------------
@@ -829,6 +857,11 @@ endif
       if ((.not.fermi_ok_a .or. .not.fermi_ok_b) .and. jscf.gt.MIN_SCF &
             .and. .not.quick_method%allow_bad_scf) then
          ierr = 43
+         if (allocated(allerror))     deallocate(allerror)
+         if (allocated(allerrorB))    deallocate(allerrorB)
+         if (allocated(alloperator))  deallocate(alloperator)
+         if (allocated(alloperatorB)) deallocate(alloperatorB)
+         if (allocated(dInA))         deallocate(dInA)
          return
       endif
 
@@ -841,6 +874,75 @@ endif
            enddo
            PRMS2 = rms(quick_qm_struct%denseb,quick_scratch%hold,nbasis)
            PRMS = MAX(PRMS,PRMS2)
+
+           !-----------------------------------------------
+           ! DENSDIIS: Pulay mixing on the density residual, the unrestricted
+           ! counterpart of the restricted version in dnc_scf.f90. Alpha and
+           ! beta share one set of coefficients, obtained from the combined
+           ! inner product <Ra,Ra> + <Rb,Rb>, because they are coupled through
+           ! the same Fock build and must be extrapolated consistently.
+           !
+           ! dInA holds the alpha density that went into this cycle's map and
+           ! hold holds the beta one, so both residuals are available here and
+           ! nowhere earlier.
+           !-----------------------------------------------
+           if (quick_method%densdiis) then
+              ndd = ndd + 1
+              if (ndd .le. quick_method%maxdiisscf) then
+                 islot = ndd
+              else
+                 do K=1,quick_method%maxdiisscf-1
+                    allerror(:,:,K)     = allerror(:,:,K+1)
+                    allerrorB(:,:,K)    = allerrorB(:,:,K+1)
+                    alloperator(:,:,K)  = alloperator(:,:,K+1)
+                    alloperatorB(:,:,K) = alloperatorB(:,:,K+1)
+                 enddo
+                 islot = quick_method%maxdiisscf
+              endif
+              nddfinal = min(ndd,quick_method%maxdiisscf)
+
+              allerror(:,:,islot)     = quick_qm_struct%dense(:,:)  - dInA(:,:)
+              allerrorB(:,:,islot)    = quick_qm_struct%denseb(:,:) - quick_scratch%hold(:,:)
+              alloperator(:,:,islot)  = quick_qm_struct%dense(:,:)
+              alloperatorB(:,:,islot) = quick_qm_struct%denseb(:,:)
+
+              errormax = max(maxval(abs(allerror(:,:,islot))), &
+                             maxval(abs(allerrorB(:,:,islot))))
+
+              do I=1,nddfinal
+                 do J=I,nddfinal
+                    BIJ = Sum2Mat(allerror(:,:,I),allerror(:,:,J),nbasis) &
+                        + Sum2Mat(allerrorB(:,:,I),allerrorB(:,:,J),nbasis)
+                    B(J,I) = BIJ
+                    B(I,J) = BIJ
+                 enddo
+              enddo
+              do I=1,nddfinal
+                 B(I,nddfinal+1) = -1.d0
+                 B(nddfinal+1,I) = -1.d0
+                 RHS(I) = 0.d0
+              enddo
+              B(nddfinal+1,nddfinal+1) = 0.d0
+              RHS(nddfinal+1) = -1.d0
+
+              if (nddfinal .gt. 1) then
+                 call LSOLVE(nddfinal+1,quick_method%maxdiisscf+1,B,RHS,W, &
+                       quick_method%DMCutoff,COEFF,LSOLERR)
+                 ! A singular B means the residuals have gone linearly
+                 ! dependent, which is what convergence looks like. Keep the
+                 ! plain iterate in that case.
+                 if (LSOLERR .eq. 0) then
+                    quick_qm_struct%dense(:,:)  = 0.0d0
+                    quick_qm_struct%denseb(:,:) = 0.0d0
+                    do I=1,nddfinal
+                       quick_qm_struct%dense(:,:)  = quick_qm_struct%dense(:,:) &
+                             + COEFF(I)*alloperator(:,:,I)
+                       quick_qm_struct%denseb(:,:) = quick_qm_struct%denseb(:,:) &
+                             + COEFF(I)*alloperatorB(:,:,I)
+                    enddo
+                 endif
+              endif
+           endif
 
            RECORD_TIME(timer_end%TDII)  
 
@@ -923,7 +1025,8 @@ endif
               quick_method%uscf_conv=.true. 
   
            endif
-           if (PRMS < 1.0d-4) then
+           ! Under DENSDIIS the residual keeps decaying, so mixing stays on.
+           if (PRMS < 1.0d-4 .and. .not.quick_method%densdiis) then
               diisoff=.true.
            endif
            if(jscf >= quick_method%iscf-1) then
@@ -985,6 +1088,12 @@ endif
   
 !     call deallocate_quick_uscf(ierr)
   
+     if (allocated(allerror))     deallocate(allerror)
+     if (allocated(allerrorB))    deallocate(allerrorB)
+     if (allocated(alloperator))  deallocate(alloperator)
+     if (allocated(alloperatorB)) deallocate(alloperatorB)
+     if (allocated(dInA))         deallocate(dInA)
+
      return
   end subroutine uelectdiisdc
 
