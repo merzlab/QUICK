@@ -69,6 +69,8 @@ subroutine electdiisdc(jscf,ierr)
    ! there at all is left to the compiler. The conventional SCF already keeps
    ! these on the heap, via allocate_quick_scf.
    double precision, allocatable :: allerror(:,:,:), alloperator(:,:,:)
+   ! DENSDIIS history bookkeeping (Pulay mixing on the density).
+   integer :: ndd, islot, nddfinal
    double precision,allocatable :: dcco(:,:), holddc(:,:),Xdcsubtemp(:,:)
 
    logical templog1,templog2
@@ -207,6 +209,7 @@ subroutine electdiisdc(jscf,ierr)
    diisdone=.false.
    deltaO = .false.
    idiis=0
+   ndd=0
   ! Now Begin DIIS
    do while (.not.diisdone)
 
@@ -275,7 +278,9 @@ subroutine electdiisdc(jscf,ierr)
    !------------- MASTER NODE -------------------------------
    if (master) then
 
-if (.not.diisoff) then
+! DENSDIIS replaces this whole block with Pulay mixing on the density, done
+! after the subsystem diagonalisation where the residual actually exists.
+if (.not.diisoff .and. .not.quick_method%densdiis) then
 
       !-----------------------------------------------
       ! End of Delta Matrix
@@ -664,6 +669,76 @@ endif
       enddo
       PRMS = rms(quick_qm_struct%dense,quick_scratch%hold,nbasis)
 
+      !-----------------------------------------------
+      ! DENSDIIS: Pulay (Anderson) mixing on the density.
+      !
+      ! This is the point the Fock-space DIIS above cannot reach. Divide and
+      ! conquer defines a map P -> A(P): build the Fock from P, diagonalise the
+      ! subsystems, renormalise to the electron count. Right here, hold is the
+      ! density that went into that map this cycle and dense is what came out,
+      ! so R = dense - hold is the residual of A at that point. It is the
+      ! quantity that actually goes to zero at self consistency, unlike FDS-SDF,
+      ! which keeps a floor set by the inter-subsystem blocks the partition
+      ! throws away (0.2247 on gly6/6-31G*, from cycle two to the last one).
+      !
+      ! Extrapolating the density needs no pairing with a Fock at all, which is
+      ! what makes it well defined here: mixing the Fock requires knowing which
+      ! Fock produced which residual, and after the first extrapolation the Fock
+      ! being diagonalised is a combination that is not H of any single density.
+      !
+      ! The history reuses allerror for the residuals and alloperator for the
+      ! output densities; both are already (nbasis,nbasis,maxdiisscf).
+      !-----------------------------------------------
+      if (quick_method%densdiis) then
+         ndd = ndd + 1
+         if (ndd .le. quick_method%maxdiisscf) then
+            islot = ndd
+         else
+            do K=1,quick_method%maxdiisscf-1
+               allerror(:,:,K)    = allerror(:,:,K+1)
+               alloperator(:,:,K) = alloperator(:,:,K+1)
+            enddo
+            islot = quick_method%maxdiisscf
+         endif
+         nddfinal = min(ndd,quick_method%maxdiisscf)
+
+         allerror(:,:,islot)    = quick_qm_struct%dense(:,:) - quick_scratch%hold(:,:)
+         alloperator(:,:,islot) = quick_qm_struct%dense(:,:)
+
+         ! Report the residual, which now decays, in place of the stagnant
+         ! commutator norm the default path prints.
+         errormax = maxval(abs(allerror(:,:,islot)))
+
+         do I=1,nddfinal
+            do J=I,nddfinal
+               BIJ = Sum2Mat(allerror(:,:,I),allerror(:,:,J),nbasis)
+               B(J,I) = BIJ
+               B(I,J) = BIJ
+            enddo
+         enddo
+         do I=1,nddfinal
+            B(I,nddfinal+1) = -1.d0
+            B(nddfinal+1,I) = -1.d0
+            RHS(I) = 0.d0
+         enddo
+         B(nddfinal+1,nddfinal+1) = 0.d0
+         RHS(nddfinal+1) = -1.d0
+
+         if (nddfinal .gt. 1) then
+            call LSOLVE(nddfinal+1,quick_method%maxdiisscf+1,B,RHS,W, &
+                  quick_method%DMCutoff,COEFF,LSOLERR)
+            ! A singular B means the residuals are linearly dependent, which is
+            ! what happens once they are converged. Keep the plain iterate then.
+            if (LSOLERR .eq. 0) then
+               quick_qm_struct%dense(:,:) = 0.0d0
+               do I=1,nddfinal
+                  quick_qm_struct%dense(:,:) = quick_qm_struct%dense(:,:) &
+                        + COEFF(I)*alloperator(:,:,I)
+               enddo
+            endif
+         endif
+      endif
+
       tmp = quick_method%integralCutoff
       call adjust_cutoff(PRMS,PCHANGE,quick_method,ierr)  !from quick_method_module
    endif
@@ -763,7 +838,10 @@ endif
 !         endif
 
       endif
-      if (PRMS < 1.0d-4) then
+      ! The default path has to switch DIIS off here because its error vector
+      ! stops carrying information once the density is close. Under DENSDIIS the
+      ! residual keeps decaying, so mixing stays on for the whole run.
+      if (PRMS < 1.0d-4 .and. .not.quick_method%densdiis) then
          diisoff=.true.
       endif
       if(jscf >= quick_method%iscf-1) then

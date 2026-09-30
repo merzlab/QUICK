@@ -108,6 +108,8 @@ module quick_method_module
         logical :: MFCC = .false.      ! MFCC
         logical :: fragxyz = .false.   ! dump fragment geometries as xyz
         logical :: mfccpure = .false.  ! purify the MFCC guess density (MFCCPURE)
+        logical :: densdiis = .false.  ! DnC: Pulay mixing on the density instead
+                                       ! of Fock DIIS on FDS-SDF (DENSDIIS)
 
         ! this part is about ECP
         logical :: ecp                 ! ECP
@@ -287,6 +289,7 @@ module quick_method_module
             call MPI_BCAST(self%MFCC,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%fragxyz,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%mfccpure,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%densdiis,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%ifragbasis,1,mpi_integer,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%iSG,1,mpi_integer,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%iscf,1,mpi_integer,0,quick_comm,quick_mpi_error)
@@ -452,6 +455,7 @@ module quick_method_module
             if (self%fragxyz) write(io,'(" WRITE FRAGMENT GEOMETRIES TO XYZ ")')
             if (self%MFCC) write(io,'(" MFCC CONNECTION CUTOFF =",f7.2," A")') self%MFCCCUT
             if (self%mfccpure) write(io,'(" PURIFY THE MFCC GUESS DENSITY ")')
+            if (self%densdiis) write(io,'(" DIIS ON THE DENSITY RESIDUAL (DIVIDE AND CONQUER) ")')
 
             if (self%FMM)  write(io,'(" FAST MULTIPOLE METHOD = TRUE ")')
 
@@ -626,6 +630,7 @@ module quick_method_module
             endif
             if (found_keyword(keyWD,'FRAGXYZ'))    self%fragxyz=.true.
             if (found_keyword(keyWD,'MFCCPURE'))   self%mfccpure=.true.
+            if (found_keyword(keyWD,'DENSDIIS'))   self%densdiis=.true.
             if (found_keyword(keyWD,'FMM'))        self%FMM=.true.
             if (found_keyword(keyWD,'MP2'))        self%MP2=.true.
             if (found_keyword(keyWD,'HF'))         self%HF=.true.
@@ -1090,6 +1095,7 @@ module quick_method_module
             self%MFCC = .false.        ! MFCC
             self%fragxyz = .false.     ! dump fragment geometries as xyz
             self%mfccpure = .false.    ! purify the MFCC guess density (MFCCPURE)
+            self%densdiis = .false.    ! Pulay mixing on the density for DnC (DENSDIIS)
             self%MFCCCUT = 3.0d0       ! contact cutoff for MFCC connection terms
 
             self%iscf = 200
