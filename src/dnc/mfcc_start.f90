@@ -21,6 +21,7 @@ subroutine mfcc(natomsaved)
    character*80 :: pdbline                     ! raw PDB record buffer
    integer :: ipdbstat                         ! iostat for PDB record reads
    character(len=2), external :: mfcc_element  ! element symbol from a pdb atom name
+   integer :: mfccnatmax, mfccnat, mfccierr, mfccncon  ! MFCC array sizing
    integer :: ierrxyz                          ! iostat for the fragment xyz dump
    integer :: nterm_h                          ! hydrogens on the N terminal nitrogen
    logical :: cterm_oxt                        ! C terminus carries OXT
@@ -106,6 +107,37 @@ subroutine mfcc(natomsaved)
  npmfcc=class(number)
 
  write(ioutfile,*) 'Number of MFCC fragments', ' is ', npmfcc
+
+! ---------------------------------------------------------------------
+! Size the MFCC arrays from this system. They used to be fixed at 50
+! fragments by 100 atoms, and npmfcc is taken straight from the residue
+! number in the pdb with nothing checking it, so a 51 residue protein
+! wrote past the end of every one of them and corrupted memory silently.
+!
+! A fragment never reaches past the residue on either side of its own, so
+! the widest any of them can be is the largest run of three consecutive
+! residues, plus the two capping hydrogens. Counting that from class needs
+! nothing but the pdb and so can be done here, before anything is stored.
+! ---------------------------------------------------------------------
+  mfccnatmax = 0
+  do i = 1, npmfcc
+    mfccnat = 0
+    do j = 1, number
+      if (class(j).ge.i-1 .and. class(j).le.i+1) mfccnat = mfccnat + 1
+    enddo
+    mfccnatmax = max(mfccnatmax, mfccnat)
+  enddo
+  mfccnatmax = mfccnatmax + 2
+
+  mfccierr = 0
+  call mfcc_alloc_frag(npmfcc, mfccnatmax, mfccierr)
+  if (mfccierr /= 0) then
+    call PrtErr(iOutFile,'Could not allocate the MFCC fragment arrays.')
+    call quick_exit(iOutFile,1)
+  endif
+
+  write(ioutfile,'(" MFCC arrays sized for ",i6," fragments and ",i6, &
+        &" atoms per fragment")') npmfcc, mfccnatmax
 
 !  write(*,*) "Assigned number of fragments"
 
@@ -553,6 +585,27 @@ subroutine mfcc(natomsaved)
    enddo
 
   kxiao=1
+
+! ---------------------------------------------------------------------
+! Size the connection arrays now that the contact search has run. How many
+! there are is not known any earlier, and on a folded protein it can far
+! exceed the fragment count: Trp-cage alone finds 24 contacts inside 3 A
+! across 20 residues. These were fixed at 50 as well.
+! ---------------------------------------------------------------------
+  mfccncon = 0
+  do i = 2, npmfcc
+    do jj = i+3, npmfcc+3
+      if (xiaoconnect(i,jj).eq.0) mfccncon = mfccncon + 1
+    enddo
+  enddo
+
+  mfccierr = 0
+  call mfcc_alloc_con(mfccncon, mfccnatmax, mfccierr)
+  if (mfccierr /= 0) then
+    call PrtErr(iOutFile,'Could not allocate the MFCC connection arrays.')
+    call quick_exit(iOutFile,1)
+  endif
+  write(ioutfile,'(" MFCC connection arrays sized for ",i6," contacts")') mfccncon
 
   write(ioutfile,*) '======================================'
   write(ioutfile,*) 'MFCC checked for neutral terminus'

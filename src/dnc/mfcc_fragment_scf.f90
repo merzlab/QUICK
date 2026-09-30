@@ -29,15 +29,27 @@ subroutine mfcc_fragment_scf(ierr)
    integer :: natomsaved, nbs, nbf, nloc
    integer :: nbi, nbj, nati, natj, icbi, icbf, jcbi, jcbf
    logical :: mfcc_con_ok
-   integer, parameter :: MFCC_MAXAT = 200   ! mfcccord* second dimension is 100 per part
-   double precision :: concord(3,MFCC_MAXAT)
-   character(len=2) :: consym(MFCC_MAXAT)
+   ! A combined connection block holds an I part and a J part, so it is bounded
+   ! by twice whatever mfcc_start sized the per block arrays to. That is no
+   ! longer a fixed 100, so this cannot be a fixed 200 either.
+   integer :: MFCC_MAXAT
+   double precision, allocatable :: concord(:,:)
+   character(len=2), allocatable :: consym(:)
    logical :: MPIsaved
    double precision, allocatable :: xyzsaved(:,:)
    type(quick_method_type) :: quick_method_save
    type(quick_molspec_type) :: quick_molspec_save
 
    if (npmfcc .le. 0) return
+
+   MFCC_MAXAT = 2*size(mfcccord,2)
+   allocate(concord(3,MFCC_MAXAT), consym(MFCC_MAXAT), stat=ierr)
+   if (ierr /= 0) then
+      call PrtErr(iOutFile,'Could not allocate the MFCC connection scratch arrays.')
+      ierr = 34
+      return
+   endif
+   ierr = 0
 
    ! ---------------------------------------------------------------
    ! Save the global state. getmolsad relies on getMol rebuilding the
@@ -257,6 +269,8 @@ subroutine mfcc_fragment_scf(ierr)
    quick_molspec = quick_molspec_save
    bMPI = MPIsaved
    deallocate(xyzsaved)
+   if (allocated(concord)) deallocate(concord)
+   if (allocated(consym))  deallocate(consym)
 
 end subroutine mfcc_fragment_scf
 
