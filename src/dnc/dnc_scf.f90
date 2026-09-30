@@ -63,8 +63,12 @@ subroutine electdiisdc(jscf,ierr)
    dimension:: B(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1),BSAVE(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1)
    dimension:: BCOPY(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1),W(quick_method%maxdiisscf+1)
    dimension:: COEFF(quick_method%maxdiisscf+1),RHS(quick_method%maxdiisscf+1)
-   dimension:: allerror(nbasis, nbasis, quick_method%maxdiisscf)
-   dimension:: alloperator(nbasis, nbasis, quick_method%maxdiisscf)
+   ! On the heap, not as automatic arrays. Sized (nbasis,nbasis,maxdiis) each,
+   ! the pair is 27 MB for gly6/6-31G* (415 functions) and 135 MB for Trp-cage
+   ! at STO-3G (919), which is well past a default 8 MB stack; whether it lands
+   ! there at all is left to the compiler. The conventional SCF already keeps
+   ! these on the heap, via allocate_quick_scf.
+   double precision, allocatable :: allerror(:,:,:), alloperator(:,:,:)
    double precision,allocatable :: dcco(:,:), holddc(:,:),Xdcsubtemp(:,:)
 
    logical templog1,templog2
@@ -186,6 +190,19 @@ subroutine electdiisdc(jscf,ierr)
 !     call computeLRI(c_coords,c_zeta,c_chg)
 !-----------------------------------------------
 
+   allocate(allerror(nbasis,nbasis,quick_method%maxdiisscf), stat=ierr1)
+   if (ierr1 /= 0) then
+      call PrtErr(iOutFile,'Could not allocate the divide and conquer DIIS error history.')
+      ierr = 34
+      return
+   endif
+   allocate(alloperator(nbasis,nbasis,quick_method%maxdiisscf), stat=ierr1)
+   if (ierr1 /= 0) then
+      call PrtErr(iOutFile,'Could not allocate the divide and conquer DIIS operator history.')
+      ierr = 34
+      return
+   endif
+
    bCalc1e = .true.
    diisdone=.false.
    deltaO = .false.
@@ -284,44 +301,26 @@ if (.not.diisoff) then
 
       ! The first part is ODS
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-
-      call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
+      call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
             nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
-      call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
+      call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
                  nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#else
-      call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-            nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
-      call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%o, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#endif
+      ! Then subtract SDO in place, the way the conventional SCF does it: one
+      ! accumulating multiply with alpha=-1 and beta=1 rather than a second
+      ! product followed by an element loop.
+      call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
+            nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+      call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, -1.0d0, quick_qm_struct%s, &
+                 nbasis, quick_scratch%hold, nbasis, 1.0d0, quick_scratch%hold2,nbasis)
 
+      ! hold2 now holds e(i) = ODS - SDO
       allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
-
-      ! Calculate D O. then calculate S (do) and subtract that from the allerror matrix.
-      ! This means we now have the e(i) matrix.
-      ! allerror=ODS-SDO
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-
-      call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-            nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-
-      call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#else
-      call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
-            nbasis, quick_qm_struct%o, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-      call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
-                 nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#endif
 
       errormax = 0.d0
       do I=1,nbasis
          do J=1,nbasis
-            allerror(J,I,iidiis) = allerror(J,I,iidiis) - quick_scratch%hold2(J,I) !e=ODS=SDO
             errormax = max(allerror(J,I,iidiis),errormax)
          enddo
       enddo
@@ -334,21 +333,12 @@ if (.not.diisoff) then
       !-----------------------------------------------
       quick_scratch%hold2(:,:) = allerror(:,:,iidiis)
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
 
-      call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
+      call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
             nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
 
-      call GPU_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
+      call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
             nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#else
-
-      call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
-            nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold,nbasis)
-
-      call DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
-            nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2,nbasis)
-#endif
       allerror(:,:,iidiis) = quick_scratch%hold2(:,:)
       !-----------------------------------------------
       ! 4)  Store the e'(I) and O(i).
@@ -624,14 +614,8 @@ endif
          ! The C' is from the above diagonalization.
          !---------------------------------------------
 
-#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-
-           call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
+           call MAT_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
                  NtempN, VECtemp, NtempN, 0.0d0, dcco,NtempN)
-#else
-           call DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
-                 NtempN, VECtemp, NtempN, 0.0d0, dcco,NtempN)
-#endif
 
          do I=1,nbasisdc(itt)
             do J=1,nbasisdc(itt)
@@ -665,6 +649,8 @@ endif
       ! a meaningless density; ALLOW_BAD_SCF overrides, as it does elsewhere.
       if (.not.fermi_ok .and. jscf.gt.MIN_SCF .and. .not.quick_method%allow_bad_scf) then
          ierr = 43
+         if (allocated(allerror))    deallocate(allerror)
+         if (allocated(alloperator)) deallocate(alloperator)
          return
       endif
 
@@ -844,6 +830,9 @@ endif
 #endif
 
 !    call deallocate_quick_scf(ierr)
+
+    if (allocated(allerror))    deallocate(allerror)
+    if (allocated(alloperator)) deallocate(alloperator)
 
     return
 end subroutine electdiisdc
