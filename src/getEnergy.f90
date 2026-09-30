@@ -74,6 +74,24 @@ subroutine getEnergy(isGuess, ierr)
 
       ! if it's a div-con calculate, construct Div & Con matrices, Overlap,X, and PDC
       if (quick_method%DivCon .or. quick_method%dcmp2only) then
+         ! fullX sets NBSuse < nbasis when the overlap matrix is near singular,
+         ! and X then becomes nbasis by NBSuse. The divide and conquer path
+         ! indexes X as though it were square, in Xdivided and again in the DIIS
+         ! block, so it would read past the end of the array and return numbers
+         ! that look plausible and are not. Nothing here ever checked.
+         !
+         ! This is refused rather than supported because the two ideas do not
+         ! compose: canonical orthogonalisation replaces the atom centred basis
+         ! with delocalised combinations, and divide and conquer needs atom
+         ! locality to cut subsystems at all. Supporting it means removing the
+         ! dependency per subsystem instead of globally, which is a different
+         ! algorithm, not an extension of this one.
+         if (NBSuse .ne. nbasis) then
+            write(ioutfile,'("| Basis functions:",i6,"   linearly independent:",i6)') nbasis,NBSuse
+            ierr = 46
+            return
+         endif
+
          call DivideS
          call DivideX
          call PDCDivided

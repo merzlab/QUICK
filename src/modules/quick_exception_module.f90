@@ -166,6 +166,12 @@ contains
       msg='MFCC could not determine or apply the atom reordering it needs. Every hydrogen &
               &must be adjacent to the heavy atom it is bonded to.'
 
+    case(46)
+      msg='Divide and conquer cannot run with a near-linearly-dependent basis. The canonical &
+              &orthogonalisation that removes the dependency produces delocalised basis &
+              &functions, which cannot be partitioned into atom-based subsystems. Use a basis &
+              &without the dependency, or run without DIVCON.'
+
     case default
       msg='Unknown error.'
 
