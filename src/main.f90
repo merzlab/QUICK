@@ -137,9 +137,21 @@
         ! MFCC needs every hydrogen adjacent to its heavy atom, because it cuts
         ! fragments mid residue using contiguous atom index ranges. Check and
         ! reorder before any fragmentation reads the geometry.
+#ifdef MPIV
+        ! mfcc_start writes its fragmentation report to iOutFile from every
+        ! rank, and the per fragment SCF tables come out of electdiis the same
+        ! way, but only the master has that unit connected. Point everyone else
+        ! at /dev/null for the whole MFCC phase: otherwise each rank implicitly
+        ! connects the unit and drops a fort.NNNN copy of the report into the
+        ! run directory.
+        if (bMPI .and. .not.master) open(iOutFile,file='/dev/null',status='UNKNOWN')
+#endif
         SAFE_CALL(mfcc_check_atom_order(ierr))
         call mfcc(quick_molspec%natom)
         SAFE_CALL(mfcc_fragment_scf(ierr))
+#ifdef MPIV
+        if (bMPI .and. .not.master) close(iOutFile)
+#endif
     endif
 
     !------------------------------------------------------------------

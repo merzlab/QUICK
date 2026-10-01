@@ -26,6 +26,10 @@
 subroutine mfcc_check_atom_order(ierr)
    use allmod
    use quick_mpi_module, only: master
+#ifdef MPIV
+   use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
+   use mpi
+#endif
    implicit none
 
    integer, intent(inout) :: ierr
@@ -48,7 +52,11 @@ subroutine mfcc_check_atom_order(ierr)
    ! about 1.09 (C-H), and the shortest non-bond contact is well above 1.5.
    double precision, parameter :: HBOND_MAX = 1.35d0
 
-   if (.not.master) return
+   ! Every rank needs the same answer, but only the master should read and
+   ! rewrite files. The master does the work and the result is published to the
+   ! others at label 900, which is also where the error paths land so that no
+   ! rank is left waiting at the barrier.
+   if (.not.master) goto 900
 
    ! ------------------------------------------------------------------
    ! Read the pdb as records so it can be rewritten verbatim apart from order.
@@ -60,7 +68,7 @@ subroutine mfcc_check_atom_order(ierr)
       if (ios /= 0) then
          call PrtErr(iOutFile,'Could not open the pdb file to check MFCC atom ordering.')
          ierr = 45
-         return
+         goto 900
       endif
       do
          read(REORDERFILEHANDLE,'(a80)',iostat=ios) pdbline
@@ -75,7 +83,7 @@ subroutine mfcc_check_atom_order(ierr)
       enddo
       close(REORDERFILEHANDLE)
       if (npass .eq. 1) then
-         if (nat .lt. 2) return
+         if (nat .lt. 2) goto 900
          allocate(line(nat),elem(nat),crd(3,nat),owner(nat),perm(nat))
       endif
    enddo
@@ -102,7 +110,7 @@ subroutine mfcc_check_atom_order(ierr)
                &f5.2," A")') i,HBOND_MAX
          call PrtErr(iOutFile,'Cannot determine hydrogen connectivity for the MFCC atom order check.')
          ierr = 45
-         return
+         goto 900
       endif
    enddo
 
@@ -126,7 +134,7 @@ subroutine mfcc_check_atom_order(ierr)
    if (k .ne. nat) then
       call PrtErr(iOutFile,'MFCC atom order check produced an incomplete permutation.')
       ierr = 45
-      return
+      goto 900
    endif
 
    identity = .true.
@@ -141,7 +149,7 @@ subroutine mfcc_check_atom_order(ierr)
    if (identity) then
       write(iOutFile,'(" MFCC: atom order already has every hydrogen next to its heavy atom.")')
       deallocate(line,elem,crd,owner,perm)
-      return
+      goto 900
    endif
 
    ! ------------------------------------------------------------------
@@ -203,6 +211,18 @@ subroutine mfcc_check_atom_order(ierr)
    call flush(iOutFile)
 
    deallocate(line,elem,crd,owner,perm)
+
+900 continue
+#ifdef MPIV
+   ! The master may have repointed PDBFileName at the reordered copy it just
+   ! wrote. mfcc() opens that file on every rank, so the new name has to travel
+   ! and the file has to exist before anyone else reads it.
+   if (bMPI) then
+      call MPI_BCAST(PDBFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(mfcc_reordered,1,mpi_logical,0,quick_comm,quick_mpi_error)
+      call MPI_BARRIER(quick_comm,quick_mpi_error)
+   endif
+#endif
 
 end subroutine mfcc_check_atom_order
 

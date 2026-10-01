@@ -21,6 +21,10 @@ subroutine mfcc_fragment_scf(ierr)
    use allmod
    use quick_exception_module
    use quick_mpi_module, only: bMPI, master
+#ifdef MPIV
+   use quick_mpi_module, only: quick_comm, quick_comm_rank, quick_comm_size, quick_mpi_error
+   use mpi
+#endif
    implicit none
 
    integer, intent(inout) :: ierr
@@ -35,7 +39,9 @@ subroutine mfcc_fragment_scf(ierr)
    integer :: MFCC_MAXAT
    double precision, allocatable :: concord(:,:)
    character(len=2), allocatable :: consym(:)
-   logical :: MPIsaved
+   logical :: MPIsaved, mastersaved, real_master
+   integer :: myrank, nranks
+   integer :: commsaved, ranksaved, sizesaved
    double precision, allocatable :: xyzsaved(:,:)
    type(quick_method_type) :: quick_method_save
    type(quick_molspec_type) :: quick_molspec_save
@@ -60,6 +66,10 @@ subroutine mfcc_fragment_scf(ierr)
    quick_molspec_save = quick_molspec
    natomsaved = natom
    MPIsaved = bMPI
+   mastersaved = master
+   real_master = master
+   myrank = 0
+   nranks = 1
    allocate(xyzsaved(3,natom))
    xyzsaved = xyz(1:3,1:natom)
 
@@ -67,6 +77,34 @@ subroutine mfcc_fragment_scf(ierr)
    ! that does not apply to them, in particular divide and conquer, or the
    ! fragment SCF would recurse into the method we are producing a guess for.
    bMPI = .false.
+#ifdef MPIV
+   ! Each rank solves whole sub-molecules by itself, which takes more than
+   ! clearing bMPI.
+   !
+   ! First, electdiis sets diisdone only inside if(master), and with bMPI off
+   ! the broadcast that would carry it to the others never happens, so a
+   ! non-master rank spins in the SCF loop for ever. Forcing master true makes
+   ! each rank self-contained.
+   !
+   ! Second, and less obviously, the MPI reductions in scf_operator sit inside
+   ! a bare #ifdef MPIV with no bMPI test, so every Fock build unconditionally
+   ! sums quick_qm_struct%o across quick_comm. With each rank holding a
+   ! complete and different sub-molecule that sum is meaningless: the first
+   ! fragment started at -729 instead of -235 and never converged. Pointing
+   ! quick_comm at MPI_COMM_SELF turns those reductions into local no-ops
+   ! without touching the shared operator, which every other calculation uses.
+   if (MPIsaved) then
+      myrank = quick_comm_rank
+      nranks = quick_comm_size
+      commsaved = quick_comm
+      ranksaved = quick_comm_rank
+      sizesaved = quick_comm_size
+      quick_comm = MPI_COMM_SELF
+      quick_comm_rank = 0
+      quick_comm_size = 1
+      master = .true.
+   endif
+#endif
    quick_method%HF = .true.
    quick_method%DFT = .false.
    quick_method%UNRST = .false.
@@ -79,7 +117,7 @@ subroutine mfcc_fragment_scf(ierr)
    quick_method%nodirect = .false.
    quick_molspec%imult = 1
 
-   if (master) call PrtAct(ioutfile,"Begin MFCC fragment densities")
+   if (real_master) call PrtAct(ioutfile,"Begin MFCC fragment densities")
 
    ! ---------------------------------------------------------------
    ! Pass 1: build each fragment basis to learn how large the density
@@ -119,7 +157,7 @@ subroutine mfcc_fragment_scf(ierr)
       if (mfccatomconi(k) .le. 0 .or. mfccatomconj(k) .le. 0 .or. &
           mfccatomcon(k)  .le. 0 .or. mfccatomcon2(k) .le. 0) then
          mfcc_con_ok = .false.
-         if (master) write(ioutfile,'(" MFCC connection block ",i4," has an invalid atom count (", &
+         if (real_master) write(ioutfile,'(" MFCC connection block ",i4," has an invalid atom count (", &
                &4(i6))') k,mfccatomconi(k),mfccatomconj(k),mfccatomcon(k),mfccatomcon2(k)
       endif
    enddo
@@ -154,7 +192,7 @@ subroutine mfcc_fragment_scf(ierr)
    ncon = max(kxiaoconnect,1)
    call allocate_MFCC(npmfcc,ncon,maxbas)
 
-   if (master) write(ioutfile,'(" MFCC fragments =",i4,"  caps =",i4, &
+   if (real_master) write(ioutfile,'(" MFCC fragments =",i4,"  caps =",i4, &
          &"  connections =",i4,"  max basis =",i5)') npmfcc,npmfcc-1,kxiaoconnect,maxbas
 
    ! ---------------------------------------------------------------
@@ -171,7 +209,7 @@ subroutine mfcc_fragment_scf(ierr)
       nloc = mfccbasef(k)-mfccbases(k)+1
       mfccdens(k,1:nloc,1:nloc) = &
             quick_qm_struct%dense(mfccbases(k):mfccbasef(k),mfccbases(k):mfccbasef(k))
-      if (master) write(ioutfile,'("   fragment ",i4," basis ",i5," local range ",i5," -",i5)') &
+      if (real_master) write(ioutfile,'("   fragment ",i4," basis ",i5," local range ",i5," -",i5)') &
             k,nb_frag,mfccbases(k),mfccbasef(k)
    enddo
 
@@ -182,7 +220,7 @@ subroutine mfcc_fragment_scf(ierr)
       nloc = mfccbasefcap(k)-mfccbasescap(k)+1
       mfccdenscap(k,1:nloc,1:nloc) = &
             quick_qm_struct%dense(mfccbasescap(k):mfccbasefcap(k),mfccbasescap(k):mfccbasefcap(k))
-      if (master) write(ioutfile,'("   cap      ",i4," basis ",i5," local range ",i5," -",i5)') &
+      if (real_master) write(ioutfile,'("   cap      ",i4," basis ",i5," local range ",i5," -",i5)') &
             k,nb_frag,mfccbasescap(k),mfccbasefcap(k)
    enddo
 
@@ -243,7 +281,7 @@ subroutine mfcc_fragment_scf(ierr)
       mfccdenscon(k,1:nbi,1:nbi) = quick_qm_struct%dense(icbi:icbf,icbi:icbf)
       mfccdenscon(k,nbi+1:nbi+nbj,nbi+1:nbi+nbj) = quick_qm_struct%dense(jcbi:jcbf,jcbi:jcbf)
 
-      if (master) write(ioutfile,'("   connection ",i3," I basis ",i5," J basis ",i5)') k,nbi,nbj
+      if (real_master) write(ioutfile,'("   connection ",i3," I basis ",i5," J basis ",i5)') k,nbi,nbj
    enddo
 
    if (master) call PrtAct(ioutfile,"Finish MFCC fragment densities")
@@ -268,6 +306,14 @@ subroutine mfcc_fragment_scf(ierr)
    quick_method = quick_method_save
    quick_molspec = quick_molspec_save
    bMPI = MPIsaved
+#ifdef MPIV
+   if (MPIsaved) then
+      quick_comm = commsaved
+      quick_comm_rank = ranksaved
+      quick_comm_size = sizesaved
+   endif
+#endif
+   master = mastersaved
    deallocate(xyzsaved)
    if (allocated(concord)) deallocate(concord)
    if (allocated(consym))  deallocate(consym)

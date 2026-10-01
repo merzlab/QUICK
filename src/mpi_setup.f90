@@ -62,6 +62,21 @@
     call MPI_BCAST(natom,1,mpi_integer,0,quick_comm,quick_mpi_error)
     call MPI_BCAST(quick_molspec%nextpoint,1,mpi_integer,0,quick_comm,quick_mpi_error)
     call MPI_BCAST(nbasis,1,mpi_integer,0,quick_comm,quick_mpi_error)
+
+    ! set_quick_files runs on the master only, so every other rank starts with
+    ! these as empty strings. Anything that opens a file by name outside a
+    ! master block then fails: mfcc() reads the pdb on every rank and died on
+    ! "Cannot open file ''" for any run with more than one rank. inidivcon
+    ! avoids it only because it guards its own pdb read with if(master).
+    call MPI_BCAST(PDBFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(baseinFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(basisDir,240,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(sadGuessDir,240,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(basisFileName,320,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(basisSetName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(basisCustName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(ECPDir,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(ECPFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
     if (quick_method%ecp) then
         call MPI_BCAST(tolecp,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
         call MPI_BCAST(thrshecp,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
