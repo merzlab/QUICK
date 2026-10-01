@@ -858,9 +858,12 @@ contains
 
          ! -----------------------------------------------
          ! C = XC'
+         !     resize C to (nbasis x nbasis) instead of (nbasis x NBSuse)
          !     %hold contains eigenvalues
          ! -----------------------------------------------
-         call MAT_DGEMM ('n', 'n', nbasis, NBSuse, nbasis, 1.0d0, quick_scratch%tmphold, &
+         deallocate(quick_qm_struct%co)
+         allocate(quick_qm_struct%co(nbasis, nbasis))
+         call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmphold, &
                          nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_qm_struct%co,nbasis)
 
          ! -----------------------------------------------
