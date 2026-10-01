@@ -172,6 +172,13 @@ contains
               &functions, which cannot be partitioned into atom-based subsystems. Use a basis &
               &without the dependency, or run without DIVCON.'
 
+    case(47)
+      msg='Divide and conquer does not compute the exchange-correlation term, so it cannot be &
+              &combined with DFT. The call to get_xc is absent from the divide and conquer &
+              &operator build, which leaves the Fock matrix without any XC contribution and the &
+              &energy badly wrong rather than merely approximate. Use HF with DIVCON, or DFT &
+              &without it.'
+
     case default
       msg='Unknown error.'
 

@@ -185,6 +185,21 @@ subroutine check_quick_method_and_molspec(io,quick_molspec_arg,quick_method_arg,
    endif
 
 
+   ! Divide and conquer has no exchange-correlation term at all: the call to
+   ! get_xc in dnc_scf_operator.f90 is commented out and there is no other XC
+   ! call anywhere under src/dnc. The DFT branch there runs a timer around
+   ! nothing, so the Fock matrix is built without XC while the energy expression
+   ! still expects it. On ethane with B3LYP/6-31G that gives -60.50 against the
+   ! correct -79.81, returned with a zero exit status and no warning.
+   !
+   ! Refuse the combination rather than let it produce that number. This is a
+   ! missing implementation, not an approximation to be documented away.
+   if (quick_method_arg%DFT .and. &
+       (quick_method_arg%divcon .or. quick_method_arg%dcmp2only)) then
+      ierr=47
+      return
+   endif
+
    ! check the correctness between elections, multiplicity and unrestricted calculation
    ! request. And try to correct possible error
    i = mod(dble(quick_molspec_arg%nelec),2.d0)
