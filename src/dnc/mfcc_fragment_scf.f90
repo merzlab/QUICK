@@ -42,6 +42,7 @@ subroutine mfcc_fragment_scf(ierr)
    logical :: MPIsaved, mastersaved, real_master
    integer :: myrank, nranks
    integer :: commsaved, ranksaved, sizesaved
+   integer :: nd1, nd2, nd3, nc1, nc2, nc3
    double precision, allocatable :: xyzsaved(:,:)
    type(quick_method_type) :: quick_method_save
    type(quick_molspec_type) :: quick_molspec_save
@@ -198,7 +199,16 @@ subroutine mfcc_fragment_scf(ierr)
    ! ---------------------------------------------------------------
    ! Pass 2: converge each sub-molecule and keep its density.
    ! ---------------------------------------------------------------
+   ! Sub-molecules are independent, so each rank solves only its own share.
+   ! Dealing them out round robin rather than in contiguous blocks keeps the
+   ! load even without sorting: consecutive fragments are similar in size, so
+   ! strided assignment spreads the large ones across ranks.
+   !
+   ! Everything was allocated zeroed, and each rank writes only its own blocks,
+   ! so a single sum over ranks at the end reconstructs the full set. That is
+   ! why no packing or variable length gather is needed.
    do k = 1, npmfcc
+      if (mod(k-1,nranks) .ne. myrank) cycle
       call mfcc_run_submol(mfccatom(k),mfcccord(1,1,k),mfccatomxiao(1,k),mfcccharge(k), &
             mfccstart(k),mfccfinal(k),mfccbases(k),mfccbasef(k),nb_frag,ierr)
       if (ierr /= 0) goto 900
@@ -214,6 +224,7 @@ subroutine mfcc_fragment_scf(ierr)
    enddo
 
    do k = 1, npmfcc-1
+      if (mod(k-1,nranks) .ne. myrank) cycle
       call mfcc_run_submol(mfccatomcap(k),mfcccordcap(1,1,k),mfccatomxiaocap(1,k),mfccchargecap(k), &
             mfccstartcap(k),mfccfinalcap(k),mfccbasescap(k),mfccbasefcap(k),nb_frag,ierr)
       if (ierr /= 0) goto 900
@@ -232,6 +243,7 @@ subroutine mfcc_fragment_scf(ierr)
    ! Only the diagonal sub-blocks of the combined density are used.
    ! ---------------------------------------------------------------
    do k = 1, kxiaoconnect
+      if (mod(k-1,nranks) .ne. myrank) cycle
 
       ! the I fragment on its own
       call mfcc_run_submol(mfccatomconi(k),mfcccordconi(1,1,k),mfccatomxiaoconi(1,k),0, &
@@ -284,9 +296,40 @@ subroutine mfcc_fragment_scf(ierr)
       if (real_master) write(ioutfile,'("   connection ",i3," I basis ",i5," J basis ",i5)') k,nbi,nbj
    enddo
 
-   if (master) call PrtAct(ioutfile,"Finish MFCC fragment densities")
+   if (real_master) call PrtAct(ioutfile,"Finish MFCC fragment densities")
 
 900 continue
+
+#ifdef MPIV
+   ! Collect the blocks. quick_comm is still MPI_COMM_SELF at this point, so
+   ! restore the real communicator before reducing. Density blocks sum because
+   ! every array was zeroed on allocation and each rank filled only its own
+   ! slices; the basis range indices take a max for the same reason, unset
+   ! entries being zero and real ones positive.
+   if (MPIsaved) then
+      quick_comm = commsaved
+      quick_comm_rank = ranksaved
+      quick_comm_size = sizesaved
+
+      nd1 = size(mfccdens,1); nd2 = size(mfccdens,2); nd3 = size(mfccdens,3)
+      call mfcc_reduce_dens(mfccdens,    nd1,nd2,nd3)
+      call mfcc_reduce_dens(mfccdenscap, nd1,nd2,nd3)
+      call mfcc_reduce_idx(mfccbases,    npmfcc)
+      call mfcc_reduce_idx(mfccbasef,    npmfcc)
+      call mfcc_reduce_idx(mfccbasescap, npmfcc)
+      call mfcc_reduce_idx(mfccbasefcap, npmfcc)
+      if (kxiaoconnect .gt. 0) then
+         nc1 = size(mfccdenscon,1); nc2 = size(mfccdenscon,2); nc3 = size(mfccdenscon,3)
+         call mfcc_reduce_dens(mfccdensconi,nc1,nc2,nc3)
+         call mfcc_reduce_dens(mfccdensconj,nc1,nc2,nc3)
+         call mfcc_reduce_dens(mfccdenscon, nc1,nc2,nc3)
+         call mfcc_reduce_idx(mfccbasesconi,kxiaoconnect)
+         call mfcc_reduce_idx(mfccbasefconi,kxiaoconnect)
+         call mfcc_reduce_idx(mfccbasesconj,kxiaoconnect)
+         call mfcc_reduce_idx(mfccbasefconj,kxiaoconnect)
+      endif
+   endif
+#endif
 
    ! ---------------------------------------------------------------
    ! Restore the global state.
@@ -507,3 +550,44 @@ subroutine mfcc_symbol_to_z(sym,iz,ierr)
    ierr = 44
 
 end subroutine mfcc_symbol_to_z
+
+
+#ifdef MPIV
+!-------------------------------------------------------
+! mfcc_reduce_dens / mfcc_reduce_idx
+!-------------------------------------------------------
+! Sum the per-rank density blocks, and max the per-rank basis range indices,
+! over the real communicator. Separate routines only because the arrays differ
+! in type and rank; both rely on the unwritten entries being exactly zero.
+!-------------------------------------------------------
+
+subroutine mfcc_reduce_dens(a,n1,n2,n3)
+   use quick_mpi_module, only: quick_comm, quick_mpi_error
+   use mpi
+   implicit none
+   integer, intent(in) :: n1,n2,n3
+   double precision, intent(inout) :: a(n1,n2,n3)
+   double precision, allocatable :: tmp(:,:,:)
+
+   allocate(tmp(n1,n2,n3))
+   tmp = a
+   call MPI_ALLREDUCE(tmp,a,n1*n2*n3,mpi_double_precision,MPI_SUM,quick_comm,quick_mpi_error)
+   deallocate(tmp)
+end subroutine mfcc_reduce_dens
+
+
+subroutine mfcc_reduce_idx(a,n)
+   use quick_mpi_module, only: quick_comm, quick_mpi_error
+   use mpi
+   implicit none
+   integer, intent(in) :: n
+   integer, intent(inout) :: a(n)
+   integer, allocatable :: tmp(:)
+
+   if (n .le. 0) return
+   allocate(tmp(n))
+   tmp = a
+   call MPI_ALLREDUCE(tmp,a,n,mpi_integer,MPI_MAX,quick_comm,quick_mpi_error)
+   deallocate(tmp)
+end subroutine mfcc_reduce_idx
+#endif
