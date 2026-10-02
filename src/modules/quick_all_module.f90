@@ -27,7 +27,6 @@
 !    electrondensity: Electron Density
 !    divpb_interface: Div_PB modules 
 !    divpb_private  :
-!    MPI_module     : MPI module
 !    timer          : timer module
 !    AMBER_interface_module
 !                   : AMBER interface module
@@ -53,8 +52,8 @@
     use quick_ecp_module
     use quick_divcon_module
     use quick_electrondensity_module
-    use quick_MPI_module
     use quick_timer_module
+
     implicit none
     end module allmod
 !********************************************************

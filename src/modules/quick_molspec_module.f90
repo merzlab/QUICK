@@ -311,44 +311,45 @@ contains
    ! broadcast variable list
    !-------------------
    subroutine broadcast_quick_molspec(self,ierr)
-      use quick_mpi_module
       use quick_exception_module
+      use quick_mpi_module, only: quick_comm, quick_mpi_error
       use mpi
 
       implicit none
+
       type (quick_molspec_type), intent(inout) :: self
-      integer natom2
       integer, intent(inout) :: ierr
 
-      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%natom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      integer natom2
+
+      call MPI_BCAST(self%natom,1,mpi_integer,0,quick_comm,quick_mpi_error)
 
       natom2=natom**2
-      call MPI_BCAST(self%nelec,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nelecb,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nextatom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%imult,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%molchg,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nNonHAtom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nHAtom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%iAtomType,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%atom_type_sym,20,mpi_character,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%distnbor,natom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%AtomDistance,natom*natom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      !call MPI_BCAST(self%xyz,natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      !call MPI_BCAST(self%nbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%nelec,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%nelecb,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%nextatom,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%imult,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%molchg,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%nNonHAtom,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%nHAtom,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%iAtomType,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%atom_type_sym,20,mpi_character,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%distnbor,natom,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%AtomDistance,natom*natom,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      !call MPI_BCAST(self%xyz,natom*3,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      !call MPI_BCAST(self%nbasis,1,mpi_integer,0,quick_comm,quick_mpi_error)
 
       if (self%nextatom.gt.0) then
-         call MPI_BCAST(self%extxyz,self%nextatom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%extchg,self%nextatom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%extxyz,self%nextatom*3,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%extchg,self%nextatom,mpi_double_precision,0,quick_comm,quick_mpi_error)
       endif
 
       if (self%nextpoint.gt.0) then
-         call MPI_BCAST(self%extpointxyz,self%nextpoint*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%extpointxyz,self%nextpoint*3,mpi_double_precision,0,quick_comm,quick_mpi_error)
       endif
 
-      call MPI_BCAST(self%iattype,natom,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%chg,natom,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%iattype,natom,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%chg,natom,mpi_integer,0,quick_comm,quick_mpi_error)
 
    end subroutine broadcast_quick_molspec
 #endif

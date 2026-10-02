@@ -16,7 +16,9 @@ subroutine getMol(ierr)
    use quick_gridpoints_module
    use quick_exception_module
    use quick_io_module, only: chk_read, chk_read_opt_traj
-#ifdef MPIV
+   use quick_mpi_module, only: master
+#if defined(MPIV)
+   use quick_mpi_module, only: bMPI
    use mpi
 #endif
 
@@ -235,17 +237,19 @@ subroutine initialGuess(ierr)
    use allmod
    use quick_sad_guess_module, only: getSadDense
    use quick_exception_module
-   use quick_io_module, only: chk_read
+   use quick_io_module, only: chk_read, read_real8_rank3
+   use quick_mpi_module, only: master
+
    implicit none
+
+   integer, intent(inout) :: ierr
+
    logical :: present
    integer :: failed, fail
    character(len=80) :: keyWD
    integer n,sadAtom
    integer Iatm,i,j
    double precision temp
-   integer, intent(inout) :: ierr
-
-
 
    ! Initialize Density arrays. Create initial density matrix guess.
    call zeroMatrix(quick_qm_struct%dense,nbasis)

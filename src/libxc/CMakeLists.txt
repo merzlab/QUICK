@@ -112,9 +112,9 @@ set(LIBXC_FORTRAN_SOURCES
 	libxc.f90)
 
 if(CUDA)
-	set(LIBXC_GPU_SOURCES gpu.c ../gpu/cuda/gpu_utils.cu)
+	set(LIBXC_GPU_SOURCES gpu.c)
 elseif(HIP)
-	set(LIBXC_GPU_SOURCES gpu.c ../gpu/hip/gpu_utils.cu)
+	set(LIBXC_GPU_SOURCES gpu.c)
 endif()
 
 # -------------------------------------------------------------
@@ -150,13 +150,16 @@ if(CUDA OR HIP)
 	copy_target(xc xc_gpu SWAP_SOURCES TO ${LIBXC_GPU_SOURCES})
 	if(MPI)
 		target_compile_definitions(xc_gpu PRIVATE GPU ${QUICK_GPU_PLATFORM})
+		target_include_directories(xc_gpu PRIVATE ${MPI_CXX_INCLUDE_DIRS})
+		if(INSIDE_AMBER)
+			target_link_libraries(xc_gpu libcew ${MPI_CXX_LIBRARIES})
+		else()
+			target_link_libraries(xc_gpu ${MPI_CXX_LIBRARIES})
+		endif()
         else()
 		target_compile_definitions(xc_gpu PRIVATE MPIV_GPU ${QUICK_GPU_PLATFORM}_MPIV)
 	endif()
 
-	if(INSIDE_AMBER)
-		target_link_libraries(xc_gpu libcew)
-	endif()
 	config_module_dirs(xc_gpu libxc/gpu)
 
 	# build gpu code

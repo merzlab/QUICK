@@ -48,10 +48,12 @@ cuda_add_library(xc_${QUICK_GPU_TARGET_NAME} STATIC ${LIBXC_GPU_SOURCES}
 
 if(MPI)
 	target_compile_definitions(xc_${QUICK_GPU_TARGET_NAME} PRIVATE MPIV_GPU ${QUICK_GPU_PLATFORM}_MPIV)
+	target_include_directories(xc_${QUICK_GPU_TARGET_NAME} PRIVATE ${MPI_CXX_INCLUDE_DIRS})
+	if(INSIDE_AMBER)
+		target_link_libraries(xc_${QUICK_GPU_TARGET_NAME} libcew ${MPI_CXX_LIBRARIES})
+	else()
+		target_link_libraries(xc_${QUICK_GPU_TARGET_NAME} ${MPI_CXX_LIBRARIES})
+	endif()
 else()
 	target_compile_definitions(xc_${QUICK_GPU_TARGET_NAME} PRIVATE GPU ${QUICK_GPU_PLATFORM})
-endif()
-
-if(INSIDE_AMBER)
-	target_link_libraries(xc_${QUICK_GPU_TARGET_NAME} libcew)
 endif()

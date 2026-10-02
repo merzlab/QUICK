@@ -18,10 +18,9 @@
 !---------------------------------------------------------------------!
 
 module quick_sad_guess_module
+  implicit none
 
-  implicit double precision(a-h,o-z)
   private
-
   public :: getSadGuess, getSadDense
 
 interface getSadGuess
@@ -39,10 +38,10 @@ contains
      use quick_gridpoints_module
      use quick_files_module
      use quick_exception_module
-
 #ifdef CEW 
      use quick_cew_module, only : quick_cew
 #endif
+     use quick_mpi_module, only: bMPI, master
   
      implicit none
 
@@ -232,13 +231,10 @@ contains
   !   quick_molspec%nelec = quick_molspec_save%nelec
   
      bMPI=MPIsaved
-  
-     return
-  
   end subroutine getmolsad
 
-  subroutine get_sad_density_matrix
 
+  subroutine get_sad_density_matrix
     use quick_constants_module, only: symbol
     use quick_basis_module, only: atombasis, atomdens 
     use quick_molspec_module, only: natom
@@ -246,6 +242,7 @@ contains
     use quick_calculated_module, only: quick_qm_struct
 
     implicit none 
+
     integer :: n, Iatm, sadAtom, i, j
 
     n=0
@@ -292,7 +289,9 @@ contains
      ! this subroutine is to do scf job for restricted system
      !-------------------------------------------------------
      use allmod
+     use quick_mpi_module, only: master
      use quick_overlap_module, only: fullx
+
      implicit none
 
      logical :: done
@@ -333,9 +332,6 @@ contains
      endif
 
      jscf=jscf+1
-
-     return
-
   end subroutine sad_uscf
 
 
@@ -863,8 +859,6 @@ contains
   
   
      call deallocate_quick_uscf(ierr)
-  
-     return
   end subroutine sad_uelectdiis
 
 
@@ -939,9 +933,6 @@ contains
   
   !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
      if(quick_method%printEnergy) call getOshellEriEnergy
-  
-  return
-  
   end subroutine sad_uscf_operator
 
 end module quick_sad_guess_module
