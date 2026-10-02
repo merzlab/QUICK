@@ -22,6 +22,7 @@ subroutine mfcc(natomsaved)
    integer :: ipdbstat                         ! iostat for PDB record reads
    character(len=2), external :: mfcc_element  ! element symbol from a pdb atom name
    integer :: mfccnatmax, mfccnat, mfccierr, mfccncon  ! MFCC array sizing
+   integer :: nconskip                                ! contacts with a malformed span
    integer :: ierrxyz                          ! iostat for the fragment xyz dump
    integer :: nterm_h                          ! hydrogens on the N terminal nitrogen
    logical :: cterm_oxt                        ! C terminus carries OXT
@@ -585,6 +586,7 @@ subroutine mfcc(natomsaved)
    enddo
 
   kxiao=1
+  nconskip=0
 
 ! ---------------------------------------------------------------------
 ! Size the connection arrays now that the contact search has run. How many
@@ -800,6 +802,26 @@ subroutine mfcc(natomsaved)
     nnn=mselectCA(i-1)
   endif
 
+  ! The i==2 branch above hardcodes mm=9, an atom index from whatever system
+  ! this was written against. For any real molecule it is unrelated to the
+  ! chain start, and the span mm..nnn-1 it implies comes out empty or reversed:
+  ! on Trp-cage nnn-mm+2 is -2, and every store below indexed the connection
+  ! arrays at -2. Those arrays used to be fixed size, so the writes landed
+  ! quietly in whatever preceded them in static memory; now that they are
+  ! allocated it is a clean out-of-bounds access instead. Either way the block
+  ! is meaningless, so skip the contact rather than build it.
+  !
+  ! The whole connection layer is disabled downstream when a block turns out
+  ! malformed, which is the behaviour this preserves. It becomes live again
+  ! once the chain-start span is defined properly.
+  if (nnn-mm+2 .lt. 2 .or. mm-2 .lt. 1) then
+    nconskip = nconskip + 1
+    write(ioutfile,'(" MFCC skipping contact between residues ",i4," and ",i4, &
+          &": the connection span is empty (start atom ",i6,", end atom ",i6,")")') &
+          i,jj,mm,nnn
+    cycle
+  endif
+
   call xyzchange(coord(1,mm-2),coord(2,mm-2),coord(3,mm-2), &
   coord(1,mm),coord(2,mm),coord(3,mm),xx,ym,zm)
 !     write(*,*) '1st call for xyzchange in final loop'
@@ -929,6 +951,24 @@ subroutine mfcc(natomsaved)
   enddo
 
   kxiaoconnect=kxiao-1
+
+  ! Skipping the malformed contacts individually would leave the rest of the
+  ! layer live, and the two-body path has never run: with the chain-start
+  ! blocks dropped and the other twenty kept, Trp-cage reaches pass 3 and
+  ! crashes there. Disable the layer as a whole instead, which is what used to
+  ! happen anyway once mfcc_fragment_scf saw an invalid atom count. The
+  ! difference is that nothing has been written out of bounds getting here.
+  if (nconskip .gt. 0) then
+    call PrtWrn(iOutFile,'MFCC connection terms are disabled.')
+    write(ioutfile,'("|          ",i4," of ",i4," contacts have a malformed connection span,")') &
+          nconskip,kxiaoconnect+nconskip
+    write(ioutfile,'("|          from the hardcoded chain-start atom index in mfcc_start.f90.")')
+    write(ioutfile,'("|          The guess falls back to fragments minus caps, which is the")')
+    write(ioutfile,'("|          published MFCC form and what every run so far has used.")')
+    write(ioutfile,'(a)')
+    call flush(ioutfile)
+    kxiaoconnect=0
+  endif
 
 ! Dump fragments and caps as one multi-frame xyz file. Fragment and cap frames
 ! are tagged in the comment line so they stay distinguishable in a single
