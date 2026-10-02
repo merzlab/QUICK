@@ -77,6 +77,26 @@
     call MPI_BCAST(basisCustName,80,mpi_character,0,quick_comm,quick_mpi_error)
     call MPI_BCAST(ECPDir,80,mpi_character,0,quick_comm,quick_mpi_error)
     call MPI_BCAST(ECPFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    ! The rest of the set too. mfcc_fragment_scf makes every rank act as its own
+    ! master so that each can drive a complete sub-molecule SCF, which means any
+    ! file operation that used to be master-only now runs everywhere. quick_open
+    ! takes the effective character range of the name it is given, and for an
+    ! all-blank name that range starts at zero, so an unset name is an
+    ! out-of-bounds substring rather than a clean error.
+    call MPI_BCAST(inFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(outFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(dmxFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(rstFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(CPHFFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(dataFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(intFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(moldenFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(espFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(efieldFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(VdwSurfFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(fragPreFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(fragPostFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(mfccXyzFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
     if (quick_method%ecp) then
         call MPI_BCAST(tolecp,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
         call MPI_BCAST(thrshecp,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
