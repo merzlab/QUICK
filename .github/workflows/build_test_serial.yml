@@ -272,11 +272,11 @@ jobs:
             hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04'
             compiler-type: 'PGI'
-            compiler-version: '25.1'
+            compiler-version: '26.3'
             c-compiler: 'pgcc'
             cxx-compiler: 'pgcc++'
             fortran-compiler: 'pgf90'
-            compiler-install: 'nvhpc-25-1 gfortran'
+            compiler-install: 'nvhpc-26-3 gfortran'
             hdf5-install: ''
             hdf5-restart-support: FALSE
           - os: 'ubuntu-24.04-arm'
