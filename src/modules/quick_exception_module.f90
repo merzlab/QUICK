@@ -179,6 +179,10 @@ contains
               &energy badly wrong rather than merely approximate. Use HF with DIVCON, or DFT &
               &without it.'
 
+    case(48)
+      msg='A file was opened with no name. The name was blank by the time it reached &
+              &quick_open, which normally means set_quick_files never ran in that context.'
+
     case default
       msg='Unknown error.'
 

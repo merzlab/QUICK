@@ -67,7 +67,18 @@ subroutine quick_open(funit,filename,filestat,fileform,fileacc,log_ow,ierr)
     flen=len(filename)
     call EffChar(filename,1,flen,k1,k2)
 
-    inquire(file=filename(k1:k2),exist=log_exist)   
+    ! A blank name means the caller never had one: the usual cause is reaching
+    ! here in a context where set_quick_files has not run, which is how a
+    ! non-master MPI rank used to arrive with every file name still at its
+    ! empty default. Stop with something that says so. Falling through would
+    ! inquire on an empty name, build 'mv  ' out of it and run that through the
+    ! shell, then fail at the open with nothing to point at the real cause.
+    if (k2 .lt. k1) then
+        ierr=48
+        return
+    end if
+
+    inquire(file=filename(k1:k2),exist=log_exist)
    
     run='mv '//filename(k1:k2)//' '//filename(k1:k2)//ch
     if (log_exist.and.(.not.log_ow)) then
