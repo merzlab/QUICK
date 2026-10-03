@@ -72,6 +72,7 @@ module quick_method_module
         logical :: hasF= .false.       ! If f functions present
         logical :: calcDens = .false.  ! calculate density
         logical :: calcDensLap = .false. !calculate density lap
+        logical :: sadmo = .false.     ! Force SAD to become idempotent and generate MO coefficients
 
         double precision :: gridSpacing = 0.1d0
                                        ! Density file gridspacing
@@ -894,6 +895,10 @@ module quick_method_module
            endif
            if (found_keyword(keyWD,'LSHIFT_GAP')) then
                call read(keywd,'LSHIFT_GAP', self%LShift_gap)
+           endif
+
+           if (index(keyWD, 'SADMO').ne.0) then
+               self%sadmo = .true.
            endif
         end subroutine read_quick_method
 
