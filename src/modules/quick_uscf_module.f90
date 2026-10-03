@@ -857,13 +857,6 @@ contains
          quick_molden%nscf_snapshots(quick_molden%iexport_snapshot)=jscf
      endif  
 
-#if (defined CUDA || defined CUDA_MPIV) && !defined(HIP)
-     ! sign of the coefficient matrix resulting from cusolver is not consistent
-     ! with rest of the code (e.g. gradients). We have to correct this.
-     call scalarMatMul(quick_qm_struct%co, NBSuse,nbasis,-1.0d0)
-     call scalarMatMul(quick_qm_struct%cob,NBSuse,nbasis,-1.0d0)
-#endif
-  
 #if defined(GPU) || defined(MPIV_GPU)
     if (quick_method%DFT) then
        if(quick_method%grad) then
