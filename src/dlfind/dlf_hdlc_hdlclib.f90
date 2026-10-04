@@ -25,11 +25,18 @@
 MODULE dlfhdlc_hdlclib
 !  USE global
   use dlf_parameter_module, only: rk
-  use dlf_global, only: printl,stdout!,pi
+  use dlf_global, only: printl,stdout,pi
+  use dlf_allocate, only: allocate, deallocate
 
-  USE dlfhdlc_matrixlib
-  USE dlfhdlc_primitive
-  USE dlfhdlc_constraint
+  USE dlfhdlc_matrixlib, only: matrix, int_matrix, matrix_add, matrix_transpose, &
+      matrix_multiply, matrix_diagonalise, matrix_invert, matrix_scale, &
+      matrix_absmax, matrix_length, int_matrix_dimension, matrix_dimension, &
+      matrix_create, matrix_set_row, matrix_set, matrix_get, matrix_get_column, &
+      matrix_get_row, matrix_copy, matrix_print, matrix_destroy, hdlc_wr_matrix, &
+      hdlc_rd_matrix
+  USE dlfhdlc_primitive, only: connect_all, valcoor, valcoor_print, vdihedral, vangle
+  USE dlfhdlc_constraint, only: ci_cons, ck_angle_cons, ortho_cons, split_cons, &
+      rest_cons, ortho_mat
   IMPLICIT NONE
 
 !------------------------------------------------------------------------------

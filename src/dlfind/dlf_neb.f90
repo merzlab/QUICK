@@ -1924,7 +1924,6 @@ subroutine string_reparametrise(treduce)
   use dlf_neb, only: neb,unitp
   use dlf_bspline, only: spline_init, spline_create, spline_get, &
       spline_destroy
-  use dlf_stat ! REMOVE JK
   implicit none
   logical,intent(in) :: treduce(neb%nimage)
   integer  :: ivar,iimage,cstart,cend

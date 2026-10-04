@@ -15,7 +15,7 @@
 ! This module should contain stuff relevent for DFT
 module quick_dft_module
 
-  implicit double precision(a-h,o-z)
+  implicit none
   private
 
   public :: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e 
@@ -23,45 +23,55 @@ module quick_dft_module
 contains
 
   subroutine b3lypf (rhoa1,sigmaaa1, vrhoa,vsigmaaa)
-     !
-     !     P.J. Stephens, F.J. Devlin, C.F. Chabalowski, M.J. Frisch
-     !     Ab initio calculation of vibrational absorption and circular
-     !     dichroism spectra using density functional force fields
-     !     J. Phys. Chem. 98 (1994) 11623-11627
-     !
-     !
-     !     CITATION:
-     !
-     !     Functionals were obtained from the Density Functional Repository
-     !     as developed and distributed by the Quantum Chemistry Group,
-     !     CCLRC Daresbury Laboratory, Daresbury, Cheshire, WA4 4AD
-     !     United Kingdom. Contact Huub van Dam (h.j.j.vandam@dl.ac.uk) or
-     !     Paul Sherwood for further information.
-     !
-     !     COPYRIGHT:
-     !
-     !     Users may incorporate the source code into software packages and
-     !     redistribute the source code provided the source code is not
-     !     changed in anyway and is properly cited in any documentation or
-     !     publication related to its use.
-     !
-     !     ACKNOWLEDGEMENT:
-     !
-     !     The source code was generated using Maple 8 through a modified
-     !     version of the dfauto script published in:
-     !
-     !        R. Strange, F.R. Manby, P.J. Knowles
-     !        Automatic code generation in density functional theory
-     !        Comp. Phys. Comm. 136 (2001) 310-318.
-     !
-     implicit double precision (a-h,o-z)
-     integer,parameter::npt=1
-     integer ideriv
-     double precision rhoa1
-     double precision sigmaaa1
-     double precision zk,vrhoa,vsigmaaa
-     double precision v2rhoa2(npt),v2rhoasigmaaa(npt),v2sigmaaa2(npt)
-     parameter(tol=1.0d-20)
+      !
+      !     P.J. Stephens, F.J. Devlin, C.F. Chabalowski, M.J. Frisch
+      !     Ab initio calculation of vibrational absorption and circular
+      !     dichroism spectra using density functional force fields
+      !     J. Phys. Chem. 98 (1994) 11623-11627
+      !
+      !
+      !     CITATION:
+      !
+      !     Functionals were obtained from the Density Functional Repository
+      !     as developed and distributed by the Quantum Chemistry Group,
+      !     CCLRC Daresbury Laboratory, Daresbury, Cheshire, WA4 4AD
+      !     United Kingdom. Contact Huub van Dam (h.j.j.vandam@dl.ac.uk) or
+      !     Paul Sherwood for further information.
+      !
+      !     COPYRIGHT:
+      !
+      !     Users may incorporate the source code into software packages and
+      !     redistribute the source code provided the source code is not
+      !     changed in anyway and is properly cited in any documentation or
+      !     publication related to its use.
+      !
+      !     ACKNOWLEDGEMENT:
+      !
+      !     The source code was generated using Maple 8 through a modified
+      !     version of the dfauto script published in:
+      !
+      !        R. Strange, F.R. Manby, P.J. Knowles
+      !        Automatic code generation in density functional theory
+      !        Comp. Phys. Comm. 136 (2001) 310-318.
+      !
+      implicit none
+      integer,parameter::npt=1
+      integer :: ideriv
+      double precision,intent(in) :: rhoa1
+      double precision,intent(in) :: sigmaaa1
+      double precision,intent(out) :: vrhoa,vsigmaaa
+      double precision :: zk
+      double precision :: v2rhoa2(npt),v2rhoasigmaaa(npt),v2sigmaaa2(npt)
+      double precision,parameter :: tol=1.0d-20
+      double precision :: rho, sigma, t2, t3, t5, t6, t7, t8, t10, t13, t14
+      double precision :: t17, t19, t20, t23, t24, t25, t26, t28, t30, t31
+      double precision :: t34, t36, t44, t47, t52, t56, t57, t59, t61, t62
+      double precision :: t65, t68, t71, t74, t75, t77, t84, t88, t89, t94
+      double precision :: t98, t99, t109, t112, t117, t123, t124, t127, t129
+      double precision :: t144, t146, t147, t175, t176, t178, t181, t182
+      double precision :: t186, t187, t189, t190, t192, t200, t201
+      double precision :: s1, s2
+      integer :: i
   
   
      !      do i=1,npt
@@ -176,16 +186,21 @@ contains
      return
   end subroutine b3lypf
   
-  subroutine b3lyp_e(rhoa1,sigmaaa1,zk)
-  
-     implicit double precision (a-h,o-z)
-     integer,parameter::npt=1
-     integer ideriv
-     double precision rhoa1
-     double precision sigmaaa1
-     double precision zk,vrhoa(npt),vsigmaaa(npt)
-     double precision v2rhoa2(npt),v2rhoasigmaaa(npt),v2sigmaaa2(npt)
-     parameter(tol=1.0d-20)
+   subroutine b3lyp_e(rhoa1,sigmaaa1,zk)
+   
+      implicit none
+      integer,parameter::npt=1
+      integer :: ideriv
+      double precision,intent(in) :: rhoa1
+      double precision,intent(in) :: sigmaaa1
+      double precision,intent(out) :: zk
+      double precision :: vrhoa(npt),vsigmaaa(npt)
+      double precision :: v2rhoa2(npt),v2rhoasigmaaa(npt),v2sigmaaa2(npt)
+      double precision,parameter :: tol=1.0d-20
+      double precision :: rho, sigma, t2, t3, t5, t6, t7, t8, t10, t17, t20
+      double precision :: t23, t24, t26, t28, t34, t56, t57, t59, t62, t65
+      double precision :: t71, t75, t77
+      integer :: i
   
      i=1
      rho = dmax1(0.D0,rhoa1)
@@ -228,22 +243,28 @@ contains
   
   ! Ed Brothers. January 28, 2002
   ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
-  subroutine becke(density,gx,gy,gz,gotherx,gothery,gotherz,dfdr,dfdgg,dfdggo)
-     implicit double precision(a-h,o-z)
-  
-     ! Given either density and the two gradients, (with gother being for
-     ! the spin that density is not, i.e. beta if density is alpha) return
-     ! the derivative of beckes 1988 functional with regard to the density
-     ! and the derivatives with regard to the gradient invariants.
-  
-     ! Example:  If becke() is passed the alpha density and the alpha and beta
-     ! density gradients, return the derivative of f with regard to the alpha
-     ! denisty, the alpha-alpha gradient invariant, and the alpha beta gradient
-     ! invariant.
-  
-     fourPi= 12.5663706143591729538505735331d0
-     b = 0.0042d0
-     dfdggo=0.d0
+   subroutine becke(density,gx,gy,gz,gotherx,gothery,gotherz,dfdr,dfdgg,dfdggo)
+      implicit none
+   
+      ! Given either density and the two gradients, (with gother being for
+      ! the spin that density is not, i.e. beta if density is alpha) return
+      ! the derivative of beckes 1988 functional with regard to the density
+      ! and the derivatives with regard to the gradient invariants.
+   
+      ! Example:  If becke() is passed the alpha density and the alpha and beta
+      ! density gradients, return the derivative of f with regard to the alpha
+      ! denisty, the alpha-alpha gradient invariant, and the alpha beta gradient
+      ! invariant.
+   
+      double precision,intent(in) :: density, gx, gy, gz, gotherx, gothery, gotherz
+      double precision,intent(out) :: dfdr, dfdgg, dfdggo
+      
+      double precision :: fourPi, b, rhothirds, rho4thirds, x
+      double precision :: arcsinhx, denom, gofx, gprimeofx
+      
+      fourPi= 12.5663706143591729538505735331d0
+      b = 0.0042d0
+      dfdggo=0.d0
   
      rhothirds=density**(1.d0/3.d0)
      rho4thirds=rhothirds**(4.d0)
@@ -269,12 +290,18 @@ contains
   ! Ed Brothers. January 28, 2002
   ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
   
-  subroutine becke_e(density,densityb,gax,gay,gaz,gbx,gby,gbz,e)
-     implicit double precision(a-h,o-z)
-  
-     ! Given the densities and the two gradients, return the energy.
-  
-     b = 0.0042d0
+   subroutine becke_e(density,densityb,gax,gay,gaz,gbx,gby,gbz,e)
+      implicit none
+   
+      ! Given the densities and the two gradients, return the energy.
+      
+      double precision,intent(in) :: density, densityb, gax, gay, gaz, gbx, gby, gbz
+      double precision,intent(out) :: e
+      
+      double precision :: b, rho4thirds, x, gofx
+      double precision :: rhob4thirds, xb, gofxb
+
+      b = 0.0042d0
   
      rho4thirds=density**(4.d0/3.d0)
      x = Dsqrt(gax*gax+gay*gay+gaz*gaz)/rho4thirds
@@ -296,19 +323,26 @@ contains
   
   ! Ed Brothers. January 28, 2002
   ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
-  subroutine lyp(pa,pb,gax,gay,gaz,gbx,gby,gbz, &
-        dfdr,dfdgg,dfdggo)
-     implicit double precision(a-h,o-z)
-  
-     ! Given the densites and the two gradients, (with gother being for
-     ! the spin that density is not, i.e. beta if density is alpha) return
-     ! the derivative of the lyp correlation functional with regard to the density
-     ! and the derivatives with regard to the gradient invariants.
-  
-  
-     ! Some params:
-  
-     pi=3.1415926535897932385d0
+   subroutine lyp(pa,pb,gax,gay,gaz,gbx,gby,gbz, &
+         dfdr,dfdgg,dfdggo)
+      implicit none
+   
+      ! Given the densites and the two gradients, (with gother being for
+      ! the spin that density is not, i.e. beta if density is alpha) return
+      ! the derivative of the lyp correlation functional with regard to the density
+      ! and the derivatives with regard to the gradient invariants.
+   
+   
+      ! Some params:
+      
+      double precision,intent(in) :: pa, pb, gax, gay, gaz, gbx, gby, gbz
+      double precision,intent(out) :: dfdr, dfdgg, dfdggo
+      
+      double precision :: pi, a, b, c, d, CF
+      double precision :: gaa, gbb, gab, ptot, ptone3rd, third, third2
+      double precision :: w, abw, abwpapb, dabw, dabwpapb, delta
+
+      pi=3.1415926535897932385d0
   
      a = .04918d0
      b = .132d0
@@ -378,17 +412,23 @@ contains
   ! Ed Brothers. January 31, 2003.
   ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
   
-  subroutine lyp_e(pa,pb,gax,gay,gaz,gbx,gby,gbz,e)
-     implicit double precision(a-h,o-z)
-  
-     ! Given the densities and the two gradients, return the energy, return
-     ! the LYP correlation energy.
-  
-     ! Note the code is kind of garbled, as Mathematic was used to write it.
-  
-     ! Some params:
-  
-     pi=3.1415926535897932385d0
+   subroutine lyp_e(pa,pb,gax,gay,gaz,gbx,gby,gbz,e)
+      implicit none
+   
+      ! Given the densities and the two gradients, return the energy, return
+      ! the LYP correlation energy.
+   
+      ! Note the code is kind of garbled, as Mathematic was used to write it.
+   
+      ! Some params:
+      
+      double precision,intent(in) :: pa, pb, gax, gay, gaz, gbx, gby, gbz
+      double precision,intent(out) :: e
+      
+      double precision :: pi, a, b, c, d, CF
+      double precision :: gaa, gbb, gab, ptot, ptone3rd, w, abw, abwpapb, delta
+
+      pi=3.1415926535897932385d0
   
      a = .04918d0
      b = .132d0

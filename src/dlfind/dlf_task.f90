@@ -68,10 +68,10 @@ subroutine dlf_task(ierr2 &
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr,stdout,printl,printf
-  use dlf_stat, only: stat
-  use dlf_allocate, only: allocate,deallocate
+
+   use dlf_allocate, only: deallocate
   use dlf_task_module, only: tconverged
-  use dlf_store
+  use dlf_store, only: store_allocate, store_set, store_get, store_delete
   implicit none
 #ifdef GAMESS
   real(rk) :: core(*) ! GAMESS memory, not used in DL-FIND
@@ -347,7 +347,7 @@ end subroutine dlf_task
 !! SYNOPSIS
 subroutine dlf_task_set_l(label,value)
 !! SOURCE
-  use dlf_task_module
+  use dlf_task_module, only: tconverged
   implicit none
   character(*), intent(in) :: label
   logical     , intent(in) :: value
