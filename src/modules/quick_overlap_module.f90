@@ -174,6 +174,12 @@ subroutine fullx
    !   matrix X.  The first step is forming the overlap matrix (Smatrix).
    !
    use allmod
+#if defined(CUDA) && defined(CUEST)
+   use quick_cuest_module, only: cuest_init_oei_plan, cuest_get_oei_S
+#ifdef CUESTDEBUG
+   use quick_cuest_module, only: cuest_debuglog, cuest_correct_o, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
+#endif
+#endif
 
    implicit none
 
@@ -182,11 +188,32 @@ subroutine fullx
    double precision g_table(200),Px,Py,Pz
    integer g_count,ii,jj,kk
    double precision a,b,Ax,Ay,Az,Bx,By,Bz
+#if defined(CUDA) && defined(CUEST)
+   double precision :: tmp2d(nbasis, nbasis)
+#endif
+
+#if defined(CUDA) && defined(CUEST)
+   ! initialize oei plan (since overlap is computed before T and V)
+   ! will be deinit after computing T and V
+   if (quick_method%usecuest) call cuest_init_oei_plan()
+#endif
 
    RECORD_TIME(timer_begin%T1eS)
 
    call allocfullx(quick_scratch,nbasis)
 
+#ifdef CUEST
+   if (quick_method%usecuest) then
+      call cuest_get_oei_S (quick_qm_struct%s)
+#ifdef CUESTDEBUG
+      tmp2d = quick_qm_struct%s
+      call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+      call cuest_debuglog("======== S ========")
+      call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+      call cuest_debuglog("====== end S ======")
+#endif
+   else
+#endif ! #ifdef CUEST
    do Ibas=1,nbasis
       ii = itype(1,Ibas)
       jj = itype(2,Ibas)
@@ -222,6 +249,9 @@ subroutine fullx
          quick_qm_struct%s(Jbas,Ibas) = SJI
       enddo
    enddo
+#ifdef CUEST
+   endif
+#endif
 
    RECORD_TIME(timer_end%T1eS)
    timer_cumer%T1eS = timer_cumer%T1eS + timer_end%T1eS - timer_begin%T1eS

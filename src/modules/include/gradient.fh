@@ -92,6 +92,10 @@ contains
      use quick_mpi_module, only: master
      use mpi
 #endif
+#ifdef CUEST
+     use, intrinsic :: iso_c_binding, only: c_int64_t
+     use quick_cuest_module
+#endif
 
      implicit none
   
@@ -119,7 +123,18 @@ contains
      enddo
   
      call getEnergy(.false.,ierr)
-  
+
+#ifdef CUEST
+     if (quick_method%usecuest) then
+        if(quick_method%DFT) call cuest_init_xc_grad(int(2000000000, c_int64_t))
+        call cuest_init_JK_grad(int(2000000000, c_int64_t))
+        call cuest_init_V_grad
+        call cuest_init_T_grad
+        call cuest_init_S_grad
+        call cuest_init_grad
+     endif
+#endif
+
      if (quick_method%analgrad) then
 #ifdef OSHELL
         call uscf_gradient
@@ -132,6 +147,17 @@ contains
 #if defined(GPU) || defined(MPIV_GPU)
      if (quick_method%bGPU) then
         call gpu_cleanup()
+     endif
+#endif
+
+#ifdef CUEST
+     if (quick_method%usecuest) then
+        call cuest_deinit_grad
+        call cuest_deinit_S_grad
+        call cuest_deinit_T_grad
+        call cuest_deinit_V_grad
+        call cuest_deinit_JK_grad
+        if(quick_method%DFT) call cuest_deinit_xc_grad
      endif
 #endif
   
@@ -248,7 +274,7 @@ contains
 #endif
   
 #ifdef DEBUG
-     if (quick_method%debug) then
+     if (quick_method%debug.or.quick_method%graddebug) then
           write (ioutfile,'(/," DEBUG STEP 1 :  NUCLEAR REPULSION GRADIENT: ")')
           do Iatm=1,natom
               do Imomentum=1,3
@@ -271,12 +297,14 @@ contains
   ! gradient kernel call (see gpu_get2e.cu) in GPU and MPI+GPU versions
   
 !#if !defined(GPU) && !defined(MPIV_GPU)
+
 #ifdef OSHELL
     call get_oshell_oneen_grad
 #else
     call get_cshell_oneen_grad
 !    call gpu_get_oei_grad(quick_qm_struct%gradient, quick_qm_struct%ptchg_gradient)
 #endif
+
 !#endif
 
   !---------------------------------------------------------------------
@@ -386,7 +414,7 @@ contains
 #endif
   
 #ifdef DEBUG
-    if (quick_method%debug) then
+    if (quick_method%debug.or.quick_method%graddebug) then
           write (ioutfile,'(/," DEBUG STEP : TOTAL GRADIENT: ")')
           do Iatm=1,natom*3
                   write (ioutfile,'(I5,7x,F20.10)')Iatm,quick_qm_struct%gradient(Iatm)
@@ -405,7 +433,7 @@ contains
 #endif
   
 #ifdef DEBUG
-    if (quick_method%debug) then
+    if (quick_method%debug.or.quick_method%graddebug) then
       if(quick_method%extCharges) then
           write (iOutFile,'(/," DEBUG: POINT CHARGE GRADIENT: ")')
           do Iatm=1,quick_molspec%nextatom*3
@@ -540,10 +568,21 @@ contains
     use quick_mpi_module, only: bMPI, master, quick_mpi_error, quick_comm_rank, quick_comm
     use mpi
 #endif
+#ifdef CUEST
+     use quick_cuest_module, only: cuest_get_V_grad
+     use quick_cuest_module, only: cuest_correct_P, cuest_correct_C, &
+                                   CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
+#endif
 
     implicit none
 
     integer :: Iatm, Imomentum, IIsh, JJsh, i, j, nshell_mpi
+#ifdef CUEST
+    double precision :: cuest_densetmp(nbasis, nbasis)
+    double precision :: cuest_cotmp(nbasis, quick_molspec%nelec/2)
+    double precision :: cuest_gradbuf(3*natom)
+    double precision :: cuest_gradbuf_ptchg(3*quick_molspec%nextatom)
+#endif
   
   !---------------------------------------------------------------------
   !  1) The derivative of the kinetic term
@@ -553,10 +592,29 @@ contains
   
      RECORD_TIME(timer_begin%T1eTGrad)
   
+#ifdef CUEST
+     if (quick_method%usecuest) then
+        ! correct density and coefficient matrices for QUICK kinetic compute
+        ! TODO: remove this when calling cuEST for kinetic compute
+        cuest_densetmp = quick_qm_struct%dense
+        cuest_cotmp = quick_qm_struct%co
+        call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+        call cuest_correct_C(quick_qm_struct%co, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+     endif
+#endif
+
 #ifdef OSHELL
      call get_oshell_kinetic_grad
 #else
      call get_cshell_kinetic_grad
+#endif
+
+#ifdef CUEST
+     if (quick_method%usecuest) then
+        ! undo correction
+        quick_qm_struct%dense = cuest_densetmp
+        quick_qm_struct%co = cuest_cotmp
+     endif
 #endif
   
      RECORD_TIME(timer_end%T1eTGrad)
@@ -567,7 +625,7 @@ contains
 #endif
   
 #ifdef DEBUG
-    if (quick_method%debug) then
+    if (quick_method%debug.or.quick_method%graddebug) then
           write (ioutfile,'(/," DEBUG STEP 2 :  KINETIC GRADIENT ADDED: ")')
           do Iatm=1,natom
               do Imomentum=1,3
@@ -605,6 +663,19 @@ contains
         call gpu_upload_beta_density_matrix(quick_qm_struct%denseb)
 #endif
 
+#ifdef CUEST
+        if (quick_method%usecuest) then
+#ifdef OSHELL
+           call cuest_get_V_grad(cuest_gradbuf, cuest_gradbuf_ptchg, quick_qm_struct%dense + quick_qm_struct%denseb)
+#else
+           call cuest_get_V_grad(cuest_gradbuf, cuest_gradbuf_ptchg, quick_qm_struct%dense)
+#endif
+           ! subtract because of cuEST conventions
+           quick_qm_struct%gradient = quick_qm_struct%gradient - cuest_gradbuf
+           quick_qm_struct%ptchg_gradient = quick_qm_struct%ptchg_gradient - cuest_gradbuf_ptchg
+        else
+#endif ! #ifdef CUEST
+
         if(.not. quick_method%hasF) then
           call gpu_get_oei_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
         else
@@ -632,7 +703,10 @@ contains
 
         endif
 
-#else 
+#ifdef CUEST
+        endif
+#endif ! #ifdef CUEST
+#else ! #if defined(GPU) || defined(MPIV_GPU)
 #ifdef MPIV
      if (bMPI) then
         nshell_mpi = mpi_jshelln(quick_comm_rank)
@@ -653,7 +727,7 @@ contains
            call attrashellopt(IIsh,JJsh)
         enddo
      enddo
-#endif
+#endif ! #if defined(GPU) || defined(MPIV_GPU)
   
      RECORD_TIME(timer_end%T1eVGrad)
      timer_cumer%T1eVGrad=timer_cumer%T1eVGrad+timer_end%T1eVGrad-timer_begin%T1eVGrad
@@ -667,7 +741,7 @@ contains
 #endif
   
 #ifdef DEBUG
-    if (quick_method%debug) then
+    if (quick_method%debug.or.quick_method%graddebug) then
           write (ioutfile,'(/," DEBUG STEP 3 :  NUC-EN ATTRACTION GRADIENT ADDED:")')
           do Iatm=1,natom
               do Imomentum=1,3
@@ -708,6 +782,9 @@ contains
      use quick_mpi_module, only: bMPI, master, quick_mpi_error, quick_comm_rank, quick_comm
      use mpi
 #endif
+#ifdef CUEST
+     use quick_cuest_module, only: cuest_get_S_grad, cuest_get_T_grad
+#endif
 
      implicit none
   
@@ -718,6 +795,9 @@ contains
      logical :: ijcon
 #if defined(MPIV)
      integer :: nbasis_mpi
+#endif
+#ifdef CUEST
+     double precision :: cuest_gradbuf(3*natom)
 #endif
   
   !  1)  The negative of the energy weighted density matrix element i j
@@ -776,6 +856,27 @@ contains
            enddo
         enddo
      endif
+
+#ifdef CUEST
+     if (quick_method%usecuest.and..false.) then
+        call cuest_get_S_grad(cuest_gradbuf, quick_scratch%hold)
+        quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
+
+#ifdef OSHELL
+        call cuest_get_T_grad(cuest_gradbuf, quick_qm_struct%dense + quick_qm_struct%denseb)
+#else
+        call cuest_get_T_grad(cuest_gradbuf, quick_qm_struct%dense)
+#endif
+        quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
+
+        ! NOTE: currently does nothing
+#ifdef MPIV
+        call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+#endif
+
+        return
+     endif
+#endif ! #ifdef CUEST
   
   !  The contribution to the derivative of energy with respect to nuclear
   !  postion for this term is: -(Sum over i,j) Q(i,j) dS(ij)/dXA
@@ -861,10 +962,17 @@ contains
    use quick_mpi_module, only: bMPI, quick_mpi_error, quick_comm_rank, quick_comm
    use mpi
 #endif
+#ifdef CUEST
+     use quick_cuest_module, only: cuest_get_JK_grad, cuest_debuglog
+#endif
 
      implicit none
   
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+#ifdef CUEST
+     double precision :: cuest_gradbuf(3*natom)
+     character(len=120) :: cuest_tmpstr
+#endif
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      double precision :: cutoffTest, testCutoff, Testtmp
 #if defined(MPIV) && !defined(MPIV_GPU)
@@ -896,7 +1004,26 @@ contains
 !        call gpu_upload_calculated_beta(quick_qm_struct%ob,quick_qm_struct%denseb)
         call gpu_get_oshell_eri_grad(quick_qm_struct%gradient)
 #else
+#ifdef CUEST
+        if (quick_method%usecuest) then
+           call cuest_get_JK_grad(cuest_gradbuf, quick_qm_struct%dense, quick_qm_struct%co)
+           quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
+
+#ifdef CUESTDEBUG
+           call cuest_debuglog("======== dense ========")
+           call cuest_debuglog_PriSym(nbasis, quick_qm_struct%dense, "F12.7")
+           call cuest_debuglog("====== end dense ======")
+           call cuest_debuglog("======== cuest_get_JK_grad ========")
+           write (cuest_tmpstr, '(9F12.7)') cuest_gradbuf(1:9)
+           call cuest_debuglog(trim(cuest_tmpstr))
+           call cuest_debuglog("====== end cuest_get_JK_grad ======")
+#endif
+        else
+           call gpu_get_cshell_eri_grad(quick_qm_struct%gradient)
+        endif
+#else ! ifdef CUEST
         call gpu_get_cshell_eri_grad(quick_qm_struct%gradient)
+#endif ! ifdef CUEST
 #endif
   
      else
@@ -949,7 +1076,7 @@ contains
 #endif
 
 #ifdef DEBUG
-    if (quick_method%debug) then
+    if (quick_method%debug.or.quick_method%graddebug) then
           write (ioutfile,'(/," DEBUG STEP 4 :  ERI GRADIENT ADDED:")')
           do Iatm=1,natom
               do Imomentum=1,3
@@ -1019,7 +1146,9 @@ contains
 #if defined(MPIV)
      use quick_mpi_module, only: bMPI, quick_comm_rank
 #endif
-
+#ifdef CUEST
+     use quick_cuest_module, only: cuest_get_xc_grad, cuest_debuglog
+#endif
      implicit none
   
      integer :: iatm, ibas, ibin, icount, ifunc, igp, jbas, jcount, ibasstart, irad_init, &
@@ -1042,6 +1171,11 @@ contains
      integer :: i,k,oi
      double precision,allocatable :: dp(:,:)
 
+#ifdef CUEST
+     double precision :: cuest_gradbuf(3*natom)
+     character(len=120) :: cuest_tmpstr
+#endif
+
      if ( quick_method%HF ) then
         ! If we don't return for HF+CEW, then the unitialized data will enter
         ! the gradients somehow and screw everything up.  Not sure where the
@@ -1060,7 +1194,22 @@ contains
 #ifdef OSHELL
         call gpu_get_oshell_xcgrad(quick_qm_struct%gradient)
 #else
+#ifdef CUEST
+        if (quick_method%usecuest) then
+           call cuest_get_xc_grad(cuest_gradbuf, quick_qm_struct%co)
+           quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
+#ifdef CUESTDEBUG
+           call cuest_debuglog("======== cuest xc gradient ========")
+           write (cuest_tmpstr, '(9F12.7)') cuest_gradbuf(1:9)
+           call cuest_debuglog(trim(cuest_tmpstr))
+           call cuest_debuglog("====== end cuest xc gradient ======")
+#endif
+        else
+           call gpu_get_cshell_xcgrad(quick_qm_struct%gradient)
+        endif
+#else ! #ifdef CUEST
         call gpu_get_cshell_xcgrad(quick_qm_struct%gradient)
+#endif ! #ifdef CUEST
 #endif
   
         call gpu_delete_dft_grid()
@@ -1410,7 +1559,7 @@ contains
 #endif
 
 #ifdef DEBUG
-    if (quick_method%debug) then
+    if (quick_method%debug.or.quick_method%graddebug) then
           write (ioutfile,'(/," DEBUG STEP 5 :  XC GRADIENT ADDED:")')
           do Iatm=1,natom
               do Imomentum=1,3

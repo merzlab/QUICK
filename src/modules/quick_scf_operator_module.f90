@@ -19,7 +19,6 @@ module quick_scf_operator_module
 
   private 
   public :: scf_operator
-  
 
 contains
   
@@ -41,6 +40,12 @@ contains
      use quick_mpi_module, only: bMPI, master, quick_comm, quick_comm_rank, quick_mpi_error
      use mpi
 #endif
+#if defined(CUDA) && defined(CUEST)
+    use, intrinsic :: iso_c_binding, only: c_int64_t
+    use quick_method_module, only: quick_method
+    use quick_molspec_module, only: quick_molspec
+    use quick_cuest_module
+#endif
   
      implicit none
 
@@ -49,6 +54,17 @@ contains
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      double precision tst, te, tred
+#if defined(CUDA) && defined(CUEST)
+     double precision :: cuest_J(nbasis, nbasis)
+     double precision :: cuest_K(nbasis, nbasis)
+     double precision :: cuest_Vxc(nbasis, nbasis)
+     double precision :: cuest_Exc
+     logical :: hasK
+     double precision :: Sum2Mat
+     double precision :: tmp2d(nbasis, nbasis)
+     double precision :: tmp_eval(nbasis), tmp_evec(nbasis, nbasis), tmp_hold(nbasis, nbasis)
+     double precision :: tmp_sqrtS(nbasis, nbasis), tmp_sqrtSinv(nbasis, nbasis)
+#endif
 #ifdef MPIV
      integer ierror
      double precision :: Eelsum, Excsum, aelec, belec
@@ -62,6 +78,12 @@ contains
   
      quick_qm_struct%o = 0.0d0
      quick_qm_struct%Eel=0.0d0
+
+#ifdef CUEST
+     if (quick_method%usecuest) then
+        hasK = quick_method%x_hybrid_coeff /= 0.0d0
+     endif
+#endif
   
   !-----------------------------------------------------------------
   !  Step 1. evaluate 1e integrals
@@ -101,7 +123,9 @@ contains
  
      call get1e(deltaO)
 
-     if(quick_method%printEnergy) call get1eEnergy(deltaO)
+     if(quick_method%printEnergy) then
+         call get1eEnergy(deltaO)
+     endif
 
 
 !     if (quick_method%nodirect) then
@@ -125,7 +149,36 @@ contains
 
 #if defined(GPU) || defined(MPIV_GPU)
         if (quick_method%bGPU) then          
+#ifdef CUEST
+           if (quick_method%usecuest) then
+              call cuest_get_eri_J(cuest_J, quick_qm_struct%dense)
+
+              if (hasK) then
+                  call cuest_get_cshell_eri_K(cuest_K, quick_qm_struct%co)
+                  cuest_J = cuest_J - cuest_K ! K fraction is applied in cuEST
+              endif
+
+              if (hasK .and. deltaO) then
+                 quick_qm_struct%o = quick_qm_struct%o + cuest_J + quick_qm_struct%cuest_prev_K
+              else
+                 quick_qm_struct%o = quick_qm_struct%o + cuest_J
+              endif
+
+              if (hasK) quick_qm_struct%cuest_prev_K = cuest_K
+              
+#ifdef CUESTDEBUG
+              tmp2d = cuest_J
+              call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+              call cuest_debuglog("======== quick J+K ========")
+              call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+              call cuest_debuglog("====== end quick J+K ======")
+#endif
+           else
+              call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
+           endif
+#else ! #ifdef CUEST
            call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
+#endif ! #ifdef CUEST
         else                                  
 #endif
   !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
@@ -191,7 +244,22 @@ contains
         RECORD_TIME(timer_begin%TEx)
 
   !  Calculate exchange correlation contribution & add to operator    
+#ifdef CUEST
+        if (quick_method%usecuest) then
+           call cuest_get_cshell_xc(cuest_Vxc, cuest_Exc, quick_qm_struct%co)
+           quick_qm_struct%oxc = cuest_Vxc
+           quick_qm_struct%o   = quick_qm_struct%o + cuest_Vxc
+           quick_qm_struct%Exc = cuest_Exc
+           quick_qm_struct%Eel = quick_qm_struct%Eel + cuest_Exc
+
+           call cuest_get_xc_nelec(quick_qm_struct%co, quick_qm_struct%aelec)
+           quick_qm_struct%belec = quick_qm_struct%aelec
+        else
+           call get_xc(deltaO)
+        endif
+#else
         call get_xc(deltaO)
+#endif
 
   !  Remember the operator is symmetric
         call copySym(quick_qm_struct%o,nbasis)

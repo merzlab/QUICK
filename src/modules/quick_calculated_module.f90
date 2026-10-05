@@ -124,6 +124,12 @@ module quick_calculated_module
       ! the dimension is nbasis*nbasis.
       double precision,dimension(:,:), allocatable :: densebOld
 
+#if defined(CUDA) && defined(CUEST)
+      ! previous J - K computed by cuEST
+      double precision, dimension(:,:), allocatable :: cuest_prev_K
+      double precision, dimension(:,:), allocatable :: cuest_prev_Kb
+#endif
+
       ! A matrix of orbital degeneracies
       integer, dimension(:),allocatable :: iDegen
 
@@ -308,6 +314,13 @@ contains
       if(.not. allocated(self%denseOld)) allocate(self%denseOld(nbasis,nbasis))
       if(.not. allocated(self%iDegen)) allocate(self%iDegen(nbasis))
 
+#if defined(CUDA) && defined(CUEST)
+      if(.not. allocated(self%cuest_prev_K)) allocate(self%cuest_prev_K(nbasis,nbasis))
+      self%cuest_prev_K = 0.0d0
+      if(.not. allocated(self%cuest_prev_Kb)) allocate(self%cuest_prev_Kb(nbasis,nbasis))
+      self%cuest_prev_Kb = 0.0d0
+#endif
+
       if(.not. allocated(self%Mulliken)) allocate(self%Mulliken(natom))
       if(.not. allocated(self%Lowdin)) allocate(self%Lowdin(natom))
 
@@ -428,6 +441,10 @@ contains
       if (allocated(self%denseOld)) deallocate(self%denseOld)
       if (allocated(self%E)) deallocate(self%E)
       if (allocated(self%iDegen)) deallocate(self%iDegen)
+#if defined(CUDA) && defined(CUEST)
+      if (allocated(self%cuest_prev_K)) deallocate(self%cuest_prev_K)
+      if (allocated(self%cuest_prev_Kb)) deallocate(self%cuest_prev_Kb)
+#endif
 
       if (allocated(self%Mulliken)) deallocate(self%Mulliken)
       if (allocated(self%Lowdin)) deallocate(self%Lowdin)
