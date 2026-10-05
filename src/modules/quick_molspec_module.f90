@@ -311,44 +311,45 @@ contains
    ! broadcast variable list
    !-------------------
    subroutine broadcast_quick_molspec(self,ierr)
-      use quick_mpi_module
       use quick_exception_module
+      use quick_mpi_module, only: quick_comm, quick_mpi_error
       use mpi
 
       implicit none
+
       type (quick_molspec_type), intent(inout) :: self
-      integer natom2
       integer, intent(inout) :: ierr
 
-      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%natom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      integer natom2
+
+      call MPI_BCAST(self%natom,1,mpi_integer,0,quick_comm,quick_mpi_error)
 
       natom2=natom**2
-      call MPI_BCAST(self%nelec,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nelecb,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nextatom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%imult,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%molchg,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nNonHAtom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nHAtom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%iAtomType,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%atom_type_sym,20,mpi_character,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%distnbor,natom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%AtomDistance,natom*natom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      !call MPI_BCAST(self%xyz,natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      !call MPI_BCAST(self%nbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%nelec,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%nelecb,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%nextatom,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%imult,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%molchg,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%nNonHAtom,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%nHAtom,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%iAtomType,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%atom_type_sym,20,mpi_character,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%distnbor,natom,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%AtomDistance,natom*natom,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      !call MPI_BCAST(self%xyz,natom*3,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      !call MPI_BCAST(self%nbasis,1,mpi_integer,0,quick_comm,quick_mpi_error)
 
       if (self%nextatom.gt.0) then
-         call MPI_BCAST(self%extxyz,self%nextatom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%extchg,self%nextatom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%extxyz,self%nextatom*3,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%extchg,self%nextatom,mpi_double_precision,0,quick_comm,quick_mpi_error)
       endif
 
       if (self%nextpoint.gt.0) then
-         call MPI_BCAST(self%extpointxyz,self%nextpoint*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%extpointxyz,self%nextpoint*3,mpi_double_precision,0,quick_comm,quick_mpi_error)
       endif
 
-      call MPI_BCAST(self%iattype,natom,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%chg,natom,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%iattype,natom,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%chg,natom,mpi_integer,0,quick_comm,quick_mpi_error)
 
    end subroutine broadcast_quick_molspec
 #endif
@@ -365,6 +366,7 @@ contains
     use quick_method_module, only: quick_method
     use quick_files_module, only : iDataFile, dataFileName
     use quick_io_module, only: chk_read
+    use quick_input_parser_module, only: read, found_keyword
 
     implicit none
 
@@ -372,14 +374,14 @@ contains
 
     type (quick_molspec_type), intent(inout) :: self
     integer, intent(inout) :: ierr
-    integer :: input,rdinml,i,j,k
+    integer :: input,i,j,k
     integer :: ierror
     integer :: iAtomType
     integer :: nextatom
     integer :: nextpoint
     integer :: nconsatom
     integer :: nfreezeatom
-    double precision :: temp,rdnml
+    double precision :: temp
     character(len=STR_LEN) :: keywd
     character(len=STR_LEN) :: tempstring
     logical :: is_extcharge = .false.
@@ -412,25 +414,25 @@ contains
     call upcase(keywd,STR_LEN)
 
     ! Read Charge
-    if (index(keywd,'CHARGE=') /= 0) self%molchg = rdinml(keywd,'CHARGE')
+    if(found_keyword(keywd,'CHARGE')) call read(keywd,'CHARGE', self%molchg)
 
     ! read multipilicity
-    if (index(keywd,'MULT=') /= 0) self%imult = rdinml(keywd,'MULT')
+    if(found_keyword(keywd,'MULT')) call read(keywd,'MULT', self%imult)
 
     ! determine if external charge exists
-    if (index(keywd,'EXTCHARGES') /= 0) is_extcharge=.true.
+    if (found_keyword(keywd,'EXTCHARGES')) is_extcharge=.true.
 
     ! determine if external grid points exist
-    if (index(keywd,'ESP_GRID') /= 0) is_extgrid=.true.
+    if (found_keyword(keywd,'ESP_GRID')) is_extgrid=.true.
    
     ! determine if external grid points exist
-    if (index(keywd,'EFIELD_GRID') /= 0) is_extgrid=.true.
+    if (found_keyword(keywd,'EFIELD_GRID')) is_extgrid=.true.
    
     ! determine if external grid points exist
-    if (index(keywd,'EFG_GRID') /= 0) is_extgrid=.true.
+    if (found_keyword(keywd,'EFG_GRID')) is_extgrid=.true.
 
     ! determine if constraints exists
-    if (index(keywd,'CONSTRAIN') /= 0) is_constrain=.true.
+    if (found_keyword(keywd,'CONSTRAIN')) is_constrain=.true.
 
     ! get the atom number, type and number of external charges
 

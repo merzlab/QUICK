@@ -356,8 +356,8 @@ subroutine dlf_run(ierr2 &
   use quick_molden_module, only: quick_molden
   use quick_mpi_module, only: master
 #ifdef MPIV
+  use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
   use mpi
-  use quick_mpi_module, only: bMPI, mpierror
 #endif
   use quick_io_module, only: chk_append_opt_traj
   implicit none
@@ -906,12 +906,12 @@ subroutine dlf_run(ierr2 &
          if (glob%imicroiter < 2) then
             ! Standard convergence test
 #ifdef MPIV
-    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+    call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
             call convergence_test(stat%ccycle,.true.,tconv)
 #ifdef MPIV
-    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-    if (bMPI)call MPI_BCAST(tconv,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+    call MPI_BARRIER(quick_comm,quick_mpi_error)
+    if (bMPI) call MPI_BCAST(tconv,1,mpi_logical,0,quick_comm,quick_mpi_error)
 #endif
             if (tconv) then
               if (printl > 0) then

@@ -18,6 +18,9 @@
 #include "gpu_libxc_type.h"
 
 #include <cuda.h>
+#if defined(MPIV_GPU)
+  #include <mpi.h>
+#endif
 
 #include <stdio.h>
 
@@ -306,14 +309,18 @@ struct gpu_simulation_type {
     // Some more infos about pre-calculated values
     QUICKDouble *o;
     QUICKDouble *ob;
+#if defined(USE_LEGACY_ATOMICS)
     QUICKULL *oULL;
     QUICKULL *obULL;
+#endif
     QUICKDouble *dense;
     QUICKDouble *denseb;
 
     // OEPROP
     QUICKDouble *esp_electronic;
+#if defined(USE_LEGACY_ATOMICS)
     QUICKULL *esp_electronicULL;
+#endif
 
     QUICKDouble *distance;
     QUICKDouble *Xcoeff;
@@ -340,12 +347,12 @@ struct gpu_simulation_type {
     // for ERI generator
 #if defined(COMPILE_GPU_AOINT)
     ERI_entry **aoint_buffer;
+    QUICKULL *intCount;
 #endif
 
     QUICKDouble maxIntegralCutoff;
     QUICKDouble leastIntegralCutoff;
     int iBatchSize;
-    QUICKULL *intCount;
 
     // For Grad
     QUICKDouble *grad;
@@ -356,8 +363,8 @@ struct gpu_simulation_type {
 #endif
 
     // mpi variable definitions
-    int mpirank;
-    int mpisize;
+    int mpi_comm_rank;
+    int mpi_comm_size;
 
     // multi-GPU variables
     unsigned char *mpi_bcompute;
@@ -375,11 +382,13 @@ struct gpu_simulation_type {
     QUICKDouble *storeCC;
     QUICKDouble *YVerticalTemp;
 
+#if defined(CEW)
     // for long range integrals
     QUICKDouble lri_zeta;
     QUICKDouble *lri_cc;
     QUICKDouble *cew_vrecip;
     bool use_cew;
+#endif
 };
 
 struct gpu_basis_type {
@@ -443,9 +452,6 @@ struct gpu_basis_type {
 
 // a type to define a graphic card
 struct gpu_type {
-#if defined(DEBUG) || defined(DEBUGTIME)
-    FILE *debugFile;
-#endif
     SM_VERSION sm_version;
     // Memory parameters
     long long int totalCPUMemory; // total CPU memory allocated
@@ -460,9 +466,6 @@ struct gpu_type {
     unsigned int xc_blocks;     //Num of blocks for octree based dft implementation
     unsigned int xc_threadsPerBlock; //Num of threads/block for octree based dft implementation
     unsigned int sswGradThreadsPerBlock;
-    // mpi variable definitions
-    int mpirank;
-    int mpisize;
     // timer
     gpu_timer_type *timer;
     // Molecule specification part
@@ -492,19 +495,33 @@ struct gpu_type {
     // For gradient
     gpu_buffer_type<QUICKDouble> *grad;
     gpu_buffer_type<QUICKDouble> *ptchg_grad;
+#if defined(USE_LEGACY_ATOMICS)
     gpu_buffer_type<QUICKULL> *gradULL;
     gpu_buffer_type<QUICKULL> *ptchg_gradULL;
+#endif
+#if defined(CEW)
     gpu_buffer_type<QUICKDouble> *cew_grad;
-
+    lri_data_type *lri_data;
+#endif
     gpu_calculated_type *gpu_calculated;
     gpu_basis_type *gpu_basis;
     gpu_cutoff_type *gpu_cutoff;
     gpu_simulation_type gpu_sim;
     XC_quadrature_type *gpu_xcq;
+#if defined(COMPILE_GPU_AOINT)
     gpu_buffer_type<ERI_entry> **aoint_buffer;
     gpu_buffer_type<QUICKULL> *intCount;
+#endif
     gpu_scratch *scratch;
-    lri_data_type *lri_data;
+    // mpi variable definitions
+#if defined(MPIV_GPU)
+    MPI_Comm mpi_comm;
+#endif
+    int mpi_comm_rank;
+    int mpi_comm_size;
+#if defined(DEBUG) || defined(DEBUGTIME)
+    FILE *debugFile;
+#endif
 };
 
 

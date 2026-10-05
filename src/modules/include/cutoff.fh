@@ -12,82 +12,84 @@
 ! file, You can obtain one at http://mozilla.org/MPL/2.0/.            !
 !_____________________________________________________________________!
 
-#ifdef OSHELL
-subroutine oshell_dnscreen(II,JJ,DNmax1)
+#if defined(OSHELL)
+subroutine oshell_dnscreen(II, JJ, DNmax1)
 #else
-subroutine cshell_dnscreen(II,JJ,DNmax1)
+subroutine cshell_dnscreen(II, JJ, DNmax1)
+#endif
+  use allmod
+  use quick_basis_module, only: quick_basis
+  use quick_calculated_module, only: quick_qm_struct
+
+  implicit none
+
+  integer, intent(in) :: ii, jj
+  double precision, intent(inout) :: DNmax1
+
+  integer :: ii111, ii112, jj111, jj112
+#if defined(OSHELL)
+  double precision :: denseji, densejia, densejib, densemax
+#else
+  double precision :: denseji
 #endif
 
-  use allmod
+  II111 = quick_basis%ksumtype(II) + quick_basis%Qsbasis(II,quick_basis%Qstart(II))
+  II112 = quick_basis%ksumtype(II) + quick_basis%Qfbasis(II,quick_basis%Qfinal(II))
+  JJ111 = quick_basis%ksumtype(JJ) + quick_basis%Qsbasis(JJ,quick_basis%Qstart(JJ))
+  JJ112 = quick_basis%ksumtype(JJ) + quick_basis%Qfbasis(JJ,quick_basis%Qfinal(JJ))
 
-  Implicit double precision(a-h,o-z)
-
-  NII1=quick_basis%Qstart(II)
-  NII2=quick_basis%Qfinal(II)
-  NJJ1=quick_basis%Qstart(JJ)
-  NJJ2=quick_basis%Qfinal(JJ)
-
-  NBI1=quick_basis%Qsbasis(II,NII1)
-  NBI2=quick_basis%Qfbasis(II,NII2)
-  NBJ1=quick_basis%Qsbasis(JJ,NJJ1)
-  NBJ2=quick_basis%Qfbasis(JJ,NJJ2)
-
-  II111=quick_basis%ksumtype(II)+NBI1
-  II112=quick_basis%ksumtype(II)+NBI2
-  JJ111=quick_basis%ksumtype(JJ)+NBJ1
-  JJ112=quick_basis%ksumtype(JJ)+NBJ2
-
-  do III=II111,II112
-     do JJJ=JJ111,JJ112
-#ifdef OSHELL
-        DENSEJI=dabs(quick_qm_struct%dense(JJJ,III)+quick_qm_struct%denseb(JJJ,III))
-        DENSEJIA=dabs(quick_qm_struct%dense(JJJ,III))
-        DENSEJIB=dabs(quick_qm_struct%denseb(JJJ,III))
-        DENSEMAX=max(DENSEJI,DENSEJIA,DENSEJIB)
-        if(DENSEMAX.gt.DNmax1)DNmax1=DENSEMAX
+  do III = II111,II112
+     do JJJ = JJ111,JJ112
+#if defined(OSHELL)
+        DENSEJI = dabs(quick_qm_struct%dense(JJJ,III) + quick_qm_struct%denseb(JJJ,III))
+        DENSEJIA = dabs(quick_qm_struct%dense(JJJ,III))
+        DENSEJIB = dabs(quick_qm_struct%denseb(JJJ,III))
+        DENSEMAX = max(DENSEJI, DENSEJIA, DENSEJIB)
+        if (DENSEMAX.gt.DNmax1) DNmax1 = DENSEMAX
 #else
-        DENSEJI=dabs(quick_qm_struct%dense(JJJ,III))
-        if(DENSEJI.gt.DNmax1)DNmax1=DENSEJI
+        DENSEJI = dabs(quick_qm_struct%dense(JJJ,III))
+        if (DENSEJI.gt.DNmax1) DNmax1 = DENSEJI
 #endif
      enddo
   enddo
-
-#ifdef OSHELL
+#if defined(OSHELL)
 end subroutine oshell_dnscreen
 #else
 end subroutine cshell_dnscreen
 #endif
 
 
-#ifdef OSHELL
+!------------------------------------------------
+! This subroutine is to cutoff delta density
+!------------------------------------------------
+#if defined(OSHELL)
 subroutine oshell_density_cutoff
 #else
 subroutine cshell_density_cutoff
 #endif
-
-   !------------------------------------------------
-   ! This subroutine is to cutoff delta density
-   !------------------------------------------------
    use allmod
-   implicit double precision(a-h,o-z)
+   use quick_basis_module, only: jshell, cutMatrix
+
+   implicit none
+
+   integer :: ii, jj
+   double precision :: DNtemp
 
    ! Cutmatrix(II,JJ) indicated for ii shell and jj shell, the max dense
-   do II=1,jshell
-      do JJ=II,jshell
-         DNtemp=0.0d0
-#ifdef OSHELL
-         call oshell_dnscreen(II,JJ,DNtemp)
+   do II = 1,jshell
+      do JJ = II,jshell
+         DNtemp = 0.0d0
+#if defined(OSHELL)
+         call oshell_dnscreen(II, JJ, DNtemp)
 #else
-         call cshell_dnscreen(II,JJ,DNtemp)
+         call cshell_dnscreen(II, JJ, DNtemp)
 #endif
-         Cutmatrix(II,JJ)=DNtemp
-         Cutmatrix(JJ,II)=DNtemp
+         Cutmatrix(II,JJ) = DNtemp
+         Cutmatrix(JJ,II) = DNtemp
       enddo
    enddo
-
-#ifdef OSHELL
+#if defined(OSHELL)
 end subroutine oshell_density_cutoff
 #else
 end subroutine cshell_density_cutoff
 #endif
-

@@ -24,19 +24,19 @@ module quick_dftd3_module
     module procedure calculate_dispersion_energy
   end interface calculateDFTD3
 
+
 contains
 
-  subroutine calculate_dispersion_energy(ierr)
 
+  subroutine calculate_dispersion_energy(ierr)
     use dftd3_api
     use quick_molspec_module, only: quick_molspec, xyz
     use quick_method_module, only: quick_method
     use quick_calculated_module, only: quick_qm_struct
     use quick_timer_module
     use quick_exception_module
-
-#ifdef MPIV
-  use quick_mpi_module
+#if defined(MPIV)
+    use quick_mpi_module, only: master
 #endif
 
     implicit none

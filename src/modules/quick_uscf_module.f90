@@ -138,7 +138,9 @@ contains
      use quick_scf_module  
      use quick_oei_module, only: bCalc1e
      use quick_molden_module, only: quick_molden
+     use quick_mpi_module, only: master
 #ifdef MPIV
+     use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
      use mpi
 #endif
      use quick_io_module, only: chk_update
@@ -261,15 +263,15 @@ contains
 
 #ifdef MPIV
      if (bMPI) then
-        call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_qm_struct%denseb,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_qm_struct%co,nbasis*NBSuse,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_qm_struct%cob,nbasis*NBSuse,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_qm_struct%E,NBSuse,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_qm_struct%Eb,NBSuse,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+        call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_qm_struct%denseb,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_qm_struct%co,nbasis*NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_qm_struct%cob,nbasis*NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_qm_struct%E,NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_qm_struct%Eb,NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BARRIER(quick_comm,quick_mpi_error)
      endif
 #endif
   
@@ -835,17 +837,17 @@ contains
   
 #ifdef MPIV
         if (bMPI) then
-           call MPI_BCAST(diisdone,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_method%uscf_conv,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_qm_struct%denseb,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_qm_struct%co,nbasis*NBSuse,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_qm_struct%cob,nbasis*NBSuse,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_qm_struct%E,NBSuse,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_qm_struct%Eb,NBSuse,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+           call MPI_BCAST(diisdone,1,mpi_logical,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_method%uscf_conv,1,mpi_logical,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_qm_struct%denseb,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_qm_struct%co,nbasis*NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_qm_struct%cob,nbasis*NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_qm_struct%E,NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_qm_struct%Eb,NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BARRIER(quick_comm,quick_mpi_error)
         endif
 #endif
         !if (quick_method%debug)  call debug_SCF(jscf)
@@ -855,13 +857,6 @@ contains
          quick_molden%nscf_snapshots(quick_molden%iexport_snapshot)=jscf
      endif  
 
-#if (defined CUDA || defined CUDA_MPIV) && !defined(HIP)
-     ! sign of the coefficient matrix resulting from cusolver is not consistent
-     ! with rest of the code (e.g. gradients). We have to correct this.
-     call scalarMatMul(quick_qm_struct%co, NBSuse,nbasis,-1.0d0)
-     call scalarMatMul(quick_qm_struct%cob,NBSuse,nbasis,-1.0d0)
-#endif
-  
 #if defined(GPU) || defined(MPIV_GPU)
     if (quick_method%DFT) then
        if(quick_method%grad) then

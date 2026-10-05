@@ -88,8 +88,8 @@ octobj = $(objfolder)/grid_packer.o $(objfolder)/octree.o
 
 modobj = $(objfolder)/quick_exception_module.o $(objfolder)/quick_input_parser_module.o $(objfolder)/quick_mpi_module.o \
 	$(objfolder)/quick_files_module.o $(objfolder)/quick_constants_module.o $(objfolder)/quick_method_module.o \
-	$(objfolder)/quick_molspec_module.o $(objfolder)/quick_gaussian_class_module.o $(objfolder)/quick_size_module.o \
-	$(objfolder)/quick_basis_module.o $(objfolder)/quick_calculated_module.o \
+	$(objfolder)/quick_io_module.o $(objfolder)/quick_molspec_module.o $(objfolder)/quick_gaussian_class_module.o \
+	$(objfolder)/quick_size_module.o $(objfolder)/quick_basis_module.o $(objfolder)/quick_calculated_module.o \
 	$(objfolder)/quick_divcon_module.o $(objfolder)/quick_ecp_module.o $(objfolder)/quick_electrondensity_module.o \
 	$(objfolder)/quick_timer_module.o $(objfolder)/quick_mfcc_module.o $(objfolder)/quick_params_module.o \
 	$(objfolder)/quick_pb_module.o $(objfolder)/quick_scratch_module.o $(objfolder)/quick_all_module.o \
@@ -129,7 +129,7 @@ SUBS = $(objfolder)/Angles.o $(objfolder)/copyDMat.o $(objfolder)/copySym.o \
 	$(objfolder)/upcase.o $(objfolder)/vett.o $(objfolder)/whatis.o $(objfolder)/whole.o \
 	$(objfolder)/wrtRestart.o $(objfolder)/xnorm.o $(objfolder)/zeroMatrix.o $(objfolder)/zmake.o \
 	$(objfolder)/pt2der.o $(objfolder)/sswder.o $(objfolder)/denspt_new_imp.o \
-	$(objfolder)/pteval_new_imp.o $(objfolder)/scaMatMul.o $(objfolder)/naive_distribute.o
+	$(objfolder)/pteval_new_imp.o $(objfolder)/naive_distribute.o $(objfolder)/lowdin_orth.o
 
 MAIN = $(mainobjfolder)/main.o
 

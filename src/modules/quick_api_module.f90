@@ -13,13 +13,11 @@
 
 ! Interface for quick libarary
 module quick_api_module
-
   implicit none
-  private
 
+  private
   public :: quick_api
   public :: setQuickJob, getQuickEnergy, getQuickEnergyGradients, deleteQuickJob
-
 #ifdef MPIV
   public :: setQuickMPI
 #endif
@@ -32,9 +30,6 @@ module quick_api_module
     ! used to determine if memory should be allocated and SAD guess should
     ! be performed
     logical :: firstStep = .true.
-
-    ! current md step, should come from MM code
-    integer :: mdstep = 1
 
     ! keeps track of how many times quick is called by MM code
     integer :: step = 1
@@ -78,9 +73,6 @@ module quick_api_module
     ! total energy in hartree
     double precision :: tot_ene = 0.0d0
 
-    ! if gradients and point charge gradients are requested
-    logical :: isForce = .false.
-
     ! gradients
     double precision, allocatable, dimension(:,:) :: gradient
 
@@ -91,8 +83,6 @@ module quick_api_module
     logical :: usedlfind                     = .true.   ! DL-Find used as default optimizer  
     integer :: dlfind_iopt                   = 3        ! type of optimisation algorithm
     integer :: dlfind_icoord                 = 3        ! type of internal coordinates
-
-
   end type quick_api_type
 
 ! save a quick_api_type varible that othe quick modules can access
@@ -120,18 +110,18 @@ module quick_api_module
     module procedure delete_quick_job
   end interface
 
+
 contains
 
 
 ! allocates memory for a new quick_api_type variable
 subroutine new_quick_api_type(self, natoms, atomic_numbers, ierr)
-
   implicit none
 
   type(quick_api_type), intent(inout) :: self
-  integer, intent(in)   :: natoms
-  integer, intent(in)   :: atomic_numbers(natoms)
-  integer, intent(inout)  :: ierr
+  integer, intent(in) :: natoms
+  integer, intent(in) :: atomic_numbers(natoms)
+  integer, intent(inout) :: ierr
   integer :: atm_type_id(natoms)
   integer :: i, natm_type
 
@@ -141,25 +131,26 @@ subroutine new_quick_api_type(self, natoms, atomic_numbers, ierr)
   if ( .not. allocated(self%atm_type_id))    allocate(self%atm_type_id(natm_type), stat=ierr)
   if ( .not. allocated(self%atomic_numbers)) allocate(self%atomic_numbers(natoms), stat=ierr)
   if ( .not. allocated(self%coords))         allocate(self%coords(3,natoms), stat=ierr)
-  if ( .not. allocated(self%gradient))          allocate(self%gradient(3,natoms), stat=ierr)
+  if ( .not. allocated(self%gradient))       allocate(self%gradient(3,natoms), stat=ierr)
 
  ! save values in the quick_api struct
-  self%natoms         = natoms
-  self%natm_type      = natm_type
+  self%natoms = natoms
+  self%natm_type = natm_type
   self%atomic_numbers = atomic_numbers
 
-  do i=1, natm_type
+  do i = 1, natm_type
     self%atm_type_id(i) = atm_type_id(i)
   enddo
 
   ! set result vectors and matrices to zero
-  self%gradient  = 0.0d0
-
+  self%gradient = 0.0d0
 end subroutine new_quick_api_type
+
 
 ! this subroutine checks if the string passed through api is a file name
 ! or a job card
 subroutine check_fqin(fqin, keywd, ierr)
+  use quick_input_parser_module, only: found_keyword
 
   implicit none
 
@@ -169,25 +160,28 @@ subroutine check_fqin(fqin, keywd, ierr)
 
   call upcase(keywd, 256)
 
-  if ((index(keywd, 'HF') .ne. 0) .or. (index(keywd, 'DFT') .ne. 0) .and. (index(keywd, 'BASIS=') .ne. 0 )) then
+  if (found_keyword(keywd, 'HF') .or. found_keyword(keywd, 'DFT') .and. found_keyword(keywd, 'BASIS=')) then
     quick_api%hasKeywd = .true.
     quick_api%Keywd = keywd
   endif
 
   quick_api%fqin    = trim(fqin) // '.in'
-
 end subroutine check_fqin
+
 
 ! reads the job card from template file with .qin extension and initialize quick
 ! also allocate memory for quick_api internal arrays
 subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
-
   use quick_files_module
   use quick_molspec_module, only : quick_molspec, alloc
   use quick_exception_module
   use quick_method_module
-#ifdef MPIV
-  use quick_mpi_module
+#if defined(MPIV)
+  use quick_mpi_module, only: bMPI, master, print_quick_mpi
+#  if defined(MPIV_GPU)
+  use quick_mpi_module, only: mgpu_id, mgpu_ids, &
+        mpi_world_rank, quick_comm, quick_comm_rank, quick_comm_size
+#  endif
 #endif
 
   implicit none
@@ -200,22 +194,19 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
   integer, intent(out) :: ierr
   integer :: flen
   ierr=0
-  
 
   ! allocate memory for quick_api_type
   call new_quick_api_type(quick_api, natoms, atomic_numbers, ierr)
 
-  quick_api%reuse_dmx=reusedmx
+  quick_api%reuse_dmx = reusedmx
 
   ! check if fqin string is a input file name or job card
   flen = LEN_TRIM(fqin)
 
   if(flen .gt. 1) then
-
     quick_api%apiMode = .true.
 
     call check_fqin(fqin, keywd, ierr)
-
   endif
 
   ! Quick calling flow is extremely horrible. Modules are
@@ -233,7 +224,6 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
 #ifdef MPIV
   if(master) then
 #endif
-
     ! set quick files
     call set_quick_files(.true.,ierr)
     CHECK_ERROR(ierr)
@@ -249,7 +239,7 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
     call print_quick_io_file(iOutFile,ierr)
 
 #ifdef MPIV
-    ! check the mpisize and turn on mpi mode
+    ! check the quick_comm_size and turn on mpi mode
     !call check_quick_mpi(iOutFile,ierr)
 
     ! print mpi info into output
@@ -264,11 +254,11 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
   SAFE_CALL(gpu_init_device(ierr))
   SAFE_CALL(gpu_write_info(iOutFile, ierr))
 #elif defined(MPIV_GPU)
-  SAFE_CALL(gpu_new(mpirank, ierr))
-  SAFE_CALL(mgpu_query(mpisize, mpirank, mgpu_id, ierr))
+  SAFE_CALL(gpu_new(quick_comm_rank, ierr))
+  SAFE_CALL(mgpu_query(mpi_world_rank, mgpu_id, ierr))
   SAFE_CALL(mgpu_setup(ierr))
-  if (master) SAFE_CALL(mgpu_write_info(iOutFile, mpisize, mgpu_ids, ierr))
-  SAFE_CALL(mgpu_init_device(mpirank, mpisize, mgpu_id, ierr))
+  if (master) SAFE_CALL(mgpu_write_info(iOutFile, quick_comm_size, mgpu_ids, ierr))
+  SAFE_CALL(mgpu_init_device(quick_comm, quick_comm_rank, quick_comm_size, mgpu_id, ierr))
 #endif
   call gpu_allocate_scratch(.true.)
 #endif
@@ -287,13 +277,11 @@ subroutine set_quick_job(fqin, keywd, natoms, atomic_numbers, reusedmx, ierr)
 
   ! allocate memory for coordinates and charges in molspec
   SAFE_CALL(alloc(quick_molspec, quick_method%readxyz, ierr))
-
 end subroutine set_quick_job
 
 
 ! computes atom types
 subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id, ierr)
-
   implicit none
 
   integer, intent(in)  :: natoms
@@ -327,15 +315,16 @@ subroutine get_atom_types(natoms, atomic_numbers, natm_type, atm_type_id, ierr)
   enddo
 
   natm_type = natm_type-1
-
 end subroutine get_atom_types
+
 
 ! allocate memory for point charges and gradients
 subroutine allocate_point_charge(isgrad,ierr)
-
   use quick_molspec_module, only: quick_molspec, realloc
   use quick_calculated_module, only: quick_qm_struct, realloc
+
   implicit none
+
   logical, intent(in) :: isgrad
   integer, intent(inout) :: ierr
   
@@ -349,15 +338,15 @@ subroutine allocate_point_charge(isgrad,ierr)
     quick_api%ptchg_grad =0.0d0
     call realloc(quick_qm_struct,ierr)
   endif
-  
-
 end subroutine allocate_point_charge
+
 
 ! allocate memory for point charges and gradients
 subroutine deallocate_point_charge(isgrad,ierr)
-
   use quick_calculated_module
+
   implicit none
+
   logical, intent(in) :: isgrad
   integer, intent(inout) :: ierr
 
@@ -366,13 +355,13 @@ subroutine deallocate_point_charge(isgrad,ierr)
   if(isgrad) then
     if ( allocated(quick_api%ptchg_grad))     deallocate(quick_api%ptchg_grad, stat=ierr)  
   endif
-
 end subroutine deallocate_point_charge
+
 
 ! returns quick qm energy
 subroutine get_quick_energy(coords, nxt_ptchg, ptchg_crd, energy, ierr)
-
   use quick_molspec_module, only: quick_molspec
+
   implicit none
   
   integer, intent(in)           :: nxt_ptchg
@@ -384,14 +373,14 @@ subroutine get_quick_energy(coords, nxt_ptchg, ptchg_crd, energy, ierr)
 
   ! assign passed parameter values into quick_api struct
   quick_api%nxt_ptchg = nxt_ptchg
-  quick_api%coords        = coords
+  quick_api%coords = coords
 
   ! set number of external atoms in quick_molspec
-  quick_molspec%nextatom  = quick_api%nxt_ptchg
+  quick_molspec%nextatom = quick_api%nxt_ptchg
 
   if(quick_api%nxt_ptchg .gt. 0) then
     call allocate_point_charge(.false., ierr)
-    quick_api%ptchg_crd     = ptchg_crd
+    quick_api%ptchg_crd = ptchg_crd
   endif
 
   call run_quick(quick_api,ierr)
@@ -400,15 +389,14 @@ subroutine get_quick_energy(coords, nxt_ptchg, ptchg_crd, energy, ierr)
   energy = quick_api%tot_ene
 
   if(quick_api%nxt_ptchg .gt. 0) call deallocate_point_charge(.false., ierr)
-
 end subroutine get_quick_energy
 
 
 ! calculates and returns energy, gradients and point charge gradients
 subroutine get_quick_energy_gradients(coords, nxt_ptchg, ptchg_crd, &
            energy, gradients, ptchg_grad, ierr)
-
   use quick_molspec_module, only: quick_molspec
+
   implicit none
 
   integer, intent(in)             :: nxt_ptchg 
@@ -435,8 +423,8 @@ subroutine get_quick_energy_gradients(coords, nxt_ptchg, ptchg_crd, &
   call run_quick(quick_api,ierr)
 
   ! send back total energy, gradients and point charge gradients
-  energy     = quick_api%tot_ene
-  gradients     = quick_api%gradient
+  energy = quick_api%tot_ene
+  gradients = quick_api%gradient
 
   if(quick_api%nxt_ptchg .gt. 0) then
     ptchg_grad = quick_api%ptchg_grad
@@ -448,7 +436,6 @@ end subroutine get_quick_energy_gradients
 
 ! runs quick, partially resembles quick main program
 subroutine run_quick(self,ierr)
-
   use quick_timer_module
   use quick_method_module, only: quick_method
   use quick_files_module
@@ -463,20 +450,18 @@ subroutine run_quick(self,ierr)
   use quick_sad_guess_module, only: getSadGuess
   use quick_molden_module, only: quick_molden, initializeExport, exportCoordinates, exportBasis, &
       exportMO, exportSCF, exportOPT
-
-
 #ifdef CEW 
   use quick_cew_module
 #endif
-
-#ifdef MPIV
-  use quick_mpi_module
+#if defined(MPIV)
+  use quick_mpi_module, only: master
 #endif
 
   implicit none
 
   type(quick_api_type), intent(inout) :: self
   integer, intent(out) :: ierr
+
   integer :: i, j, k
   logical :: failed = .false.
   ierr=0
@@ -651,19 +636,18 @@ subroutine run_quick(self,ierr)
 
   ! increase internal quick step by one
   quick_api%step = quick_api%step + 1
-
 end subroutine run_quick
 
 
 ! this subroutine will print the step into quick output file
 subroutine print_step(self,ierr)
-
-  use quick_files_module
-#ifdef MPIV
-  use quick_mpi_module
+  use quick_files_module, only: iOutFile
+#if defined(MPIV)
+  use quick_mpi_module, only: master
 #endif
 
   implicit none
+
   type (quick_api_type) :: self
   integer, intent(inout) :: ierr
 
@@ -671,34 +655,31 @@ subroutine print_step(self,ierr)
 #ifdef MPIV
   if(master) then
 #endif
-
   write(iOutFile, '(A1)') ' '
-  write(iOutFile, '(1x,A16,1x,I12)') '@ Running Step :',self%step
+  write(iOutFile, '(1x,A16,1x,I12)') '@ Running Step :', self%step
   write(iOutFile, '(A1)') ' '
-
 #ifdef MPIV
   endif
 #endif
-
 end subroutine print_step
 
 
 ! this rubroutine will set atom number, types and number of external atoms
 ! based on the information provided through library api
 subroutine set_quick_molspecs(self,ierr)
-
-  use quick_files_module
+  use quick_files_module, only: wrtStep
   use quick_constants_module, only: BOHRS_TO_A, BOHRS_TO_A_AMBER, symbol
   use quick_molspec_module, only : quick_molspec, xyz
-
 #ifdef CEW
   use quick_cew_module, only: quick_cew
 #endif
 
   implicit none
+
   type (quick_api_type) :: self
   integer :: i, j
   integer, intent(inout) :: ierr
+
   double precision :: A_TO_BOHRS
 
   A_TO_BOHRS = 1.0D0 / BOHRS_TO_A
@@ -737,21 +718,20 @@ subroutine set_quick_molspecs(self,ierr)
       do j=1,3
         quick_molspec%extxyz(j,i) = self%ptchg_crd(j,i) * A_TO_BOHRS
       enddo
-      quick_molspec%extchg(i)     = self%ptchg_crd(4,i)
+      quick_molspec%extchg(i) = self%ptchg_crd(4,i)
     enddo
   endif
-
 end subroutine set_quick_molspecs
 
-#if defined(GPU) || defined(MPIV_GPU)
 
+#if defined(GPU) || defined(MPIV_GPU)
 ! uploads molecular information into gpu
 subroutine gpu_upload_molspecs(ierr)
-
-  use quick_molspec_module, only : quick_molspec
+  use quick_molspec_module, only: quick_molspec
   use quick_basis_module
 
   implicit none
+
   integer, intent(inout) :: ierr
 
   call gpu_setup(quick_molspec%natom,nbasis, quick_molspec%nElec, quick_molspec%imult, &
@@ -769,61 +749,57 @@ subroutine gpu_upload_molspecs(ierr)
   quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
 
   call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
-
   call gpu_upload_oei(quick_molspec%nextatom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
-
 end subroutine gpu_upload_molspecs
-
 #endif
 
 
 #ifdef MPIV
-
 ! sets mpi variables in quick api
-subroutine set_quick_mpi(mpi_rank, mpi_size, ierr)
-
-  use quick_mpi_module
+subroutine set_quick_mpi(quick_mpi_comm, ierr)
+  use quick_mpi_module, only: libMPIMode, mpi_world_rank, mpi_world_size, &
+        quick_comm, quick_comm_rank, quick_comm_size, quick_mpi_error
+  use mpi
 
   implicit none
 
-  integer, intent(in) :: mpi_rank, mpi_size
+  integer, intent(in) :: quick_mpi_comm
   integer, intent(out) :: ierr
 
   ! save information in quick_mpi module
-  mpirank    = mpi_rank
-  mpisize    = mpi_size
+  call MPI_Comm_dup(quick_mpi_comm, quick_comm, quick_mpi_error)
+  call MPI_COMM_RANK(quick_comm, quick_comm_rank, quick_mpi_error)
+  call MPI_COMM_SIZE(quick_comm, quick_comm_size, quick_mpi_error)
+  call MPI_COMM_RANK(MPI_COMM_WORLD, mpi_world_rank, quick_mpi_error)
+  call MPI_COMM_SIZE(MPI_COMM_WORLD, mpi_world_size, quick_mpi_error)
   libMPIMode = .true.
   ierr = 0
-  
-
 end subroutine set_quick_mpi
 
-! broadcasts results from master to slaves
 
+! broadcasts results from master to slaves
 subroutine broadcast_quick_mpi_results(self,ierr)
+  use quick_mpi_module, only: quick_mpi_error, quick_comm
   use mpi
 
   implicit none
 
   type(quick_api_type), intent(inout) :: self
-  integer :: mpierror
   integer, intent(inout) :: ierr
 
-  call MPI_BCAST(self%tot_ene,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_BCAST(self%gradient,3*self%natoms,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-  call MPI_BCAST(self%ptchg_grad,3*self%nxt_ptchg,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-
+  call MPI_BCAST(self%tot_ene,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+  call MPI_BCAST(self%gradient,3*self%natoms,mpi_double_precision,0,quick_comm,quick_mpi_error)
+  call MPI_BCAST(self%ptchg_grad,3*self%nxt_ptchg,mpi_double_precision,0,quick_comm,quick_mpi_error)
 end subroutine
-
 #endif
+
 
 ! fialize quick and deallocate memory of quick_api internal arrays
 subroutine delete_quick_job(ierr)
-
-  use quick_files_module
-  use quick_mpi_module
+  use quick_files_module, only: iOutFile
   use quick_exception_module
   use quick_method_module
+  use quick_mpi_module, only: master
 
   implicit none
   integer, intent(out) :: ierr
@@ -843,22 +819,20 @@ subroutine delete_quick_job(ierr)
 
   ! deallocate memory
   call delete_quick_api_type(quick_api,ierr)
-
 end subroutine delete_quick_job
 
 
 ! deallocates memory for quick_api_type variable
 subroutine delete_quick_api_type(self,ierr)
-
   implicit none
+
   type(quick_api_type), intent(inout) :: self
   integer, intent(inout) :: ierr
 
-  if ( allocated(self%atm_type_id))    deallocate(self%atm_type_id, stat=ierr)
-  if ( allocated(self%atomic_numbers)) deallocate(self%atomic_numbers, stat=ierr)
-  if ( allocated(self%coords))         deallocate(self%coords, stat=ierr)
-  if ( allocated(self%gradient))          deallocate(self%gradient, stat=ierr)
-
+  if (allocated(self%atm_type_id)) deallocate(self%atm_type_id, stat=ierr)
+  if (allocated(self%atomic_numbers)) deallocate(self%atomic_numbers, stat=ierr)
+  if (allocated(self%coords)) deallocate(self%coords, stat=ierr)
+  if (allocated(self%gradient)) deallocate(self%gradient, stat=ierr)
 end subroutine delete_quick_api_type
 
 end module quick_api_module

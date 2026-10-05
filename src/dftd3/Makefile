@@ -31,11 +31,11 @@ DFTD3 = $(dftd3objfolder)/common.o $(dftd3objfolder)/sizes.o $(dftd3objfolder)/p
 #  ! Build targets                                                       !
 #  !---------------------------------------------------------------------!
 
-$(DFTD3):$(dftd3objfolder)/%.o:%.f90
+$(DFTD3): $(dftd3objfolder)/%.o:%.f90
 	@echo "[QUICK]  FC $@"
 	$(VB)$(FOR) -c $< -o $@
 
-all:$(DFTD3)
+all: $(DFTD3)
 	$(VB)$(ARCH) $(ARCHFLAGS) $(libfolder)/libdftd3.$(LIBEXT) $(dftd3objfolder)/*.o
 
 #  !---------------------------------------------------------------------!

@@ -28,7 +28,7 @@
 //-----------------------------------------------
 // Query the availability of devices.
 //-----------------------------------------------
-extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
+extern "C" void mgpu_query_(int *mpi_comm_rank, int *mgpu_id, int* ierr)
 {
     int gpuCount = 0;           // Total number of GPU devices available
     cudaError_t status;
@@ -38,13 +38,9 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
     if (gpuCount == 0) {
         *ierr = 24;
         return;
-    } else if (gpuCount < *mpisize) {
-        *ierr = 42;
-        cudaDeviceReset();
-        return;
     }
 
-    int devID = *mpirank % gpuCount;
+    int devID = *mpi_comm_rank % gpuCount;
     cudaDeviceProp devProp;
     status = cudaGetDeviceProperties(&devProp, devID);
     PRINTERROR(status, "cudaGetDeviceProperties failed!");
@@ -63,19 +59,20 @@ extern "C" void mgpu_query_(int* mpisize, int *mpirank, int *mgpu_id, int* ierr)
 //-----------------------------------------------
 // Initialize the devices
 //-----------------------------------------------
-extern "C" void mgpu_init_device_(int *mpirank, int *mpisize, int *device, int* ierr)
+extern "C" void mgpu_init_device_(int *mpi_comm_f, int *mpi_comm_rank, int *mpi_comm_size, int *device, int* ierr)
 {
     cudaError_t status;
     cudaDeviceProp deviceProp;
 
     PRINTDEBUG("BEGIN MULTI GPU INITIALIZATION");
 
-    gpu->mpirank = *mpirank;
-    gpu->mpisize = *mpisize;
+    gpu->mpi_comm = MPI_Comm_f2c((MPI_Fint) (*mpi_comm_f));
+    gpu->mpi_comm_rank = *mpi_comm_rank;
+    gpu->mpi_comm_size = *mpi_comm_size;
     gpu->gpu_dev_id = *device;
 
 #ifdef DEBUG
-    fprintf(gpu->debugFile,"mpirank %i mpisize %i dev_id %i \n", *mpirank, *mpisize, *device);
+    fprintf(gpu->debugFile,"mpi_comm_rank %i mpi_comm_size %i dev_id %i \n", *mpi_comm_rank, *mpi_comm_size, *device);
 #endif
 
     status = cudaSetDevice(gpu->gpu_dev_id);
@@ -95,22 +92,22 @@ extern "C" void mgpu_init_device_(int *mpirank, int *mpisize, int *device, int* 
     size_t val;
     cudaDeviceGetLimit(&val, cudaLimitStackSize);
 #ifdef DEBUG
-    fprintf(gpu->debugFile,"mpirank: %i Stack size limit:    %zu\n", gpu->mpirank, val);
+    fprintf(gpu->debugFile,"mpi_comm_rank: %i Stack size limit:    %zu\n", gpu->mpi_comm_rank, val);
 #endif
 
     cudaDeviceGetLimit(&val, cudaLimitPrintfFifoSize);
 #ifdef DEBUG
-    fprintf(gpu->debugFile,"mpirank: %i Printf fifo limit:   %zu\n", gpu->mpirank, val);
+    fprintf(gpu->debugFile,"mpi_comm_rank: %i Printf fifo limit:   %zu\n", gpu->mpi_comm_rank, val);
 #endif
 
     cudaDeviceGetLimit(&val, cudaLimitMallocHeapSize);
 #ifdef DEBUG
-    fprintf(gpu->debugFile,"mpirank: %i Heap size limit:     %zu\n", gpu->mpirank, val);
+    fprintf(gpu->debugFile,"mpi_comm_rank: %i Heap size limit:     %zu\n", gpu->mpi_comm_rank, val);
 #endif
 
     cudaDeviceGetLimit(&val, cudaLimitStackSize);
 #ifdef DEBUG
-    fprintf(gpu->debugFile,"mpirank: %i New Stack size limit:    %zu\n", gpu->mpirank, val);
+    fprintf(gpu->debugFile,"mpi_comm_rank: %i New Stack size limit:    %zu\n", gpu->mpi_comm_rank, val);
 #endif
 
     gpu->blocks = deviceProp.multiProcessorCount;
@@ -131,47 +128,47 @@ extern "C" void mgpu_init_device_(int *mpirank, int *mpisize, int *device, int* 
 //--------------------------------------------------------
 void mgpu_oei_greedy_distribute() {
     // Total number of items to distribute
-    int nitems=gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell;
+    int nitems = gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell;
 
     // Array to store total number of items each core would have
-    int tot_pcore[gpu->mpisize];
+    int tot_pcore[gpu->mpi_comm_size];
 
 #ifdef DEBUG
     // Save shell indices for each core
-    int2 mpi_qidx[gpu->mpisize][nitems];
+    int2 mpi_qidx[gpu->mpi_comm_size][nitems];
 
     // Keep track of primitive count
-    int2 mpi_pidx[gpu->mpisize][nitems];
+    int2 mpi_pidx[gpu->mpi_comm_size][nitems];
 
     // Keep track of shell type
-    int2 qtypes[gpu->mpisize][nitems];
+    int2 qtypes[gpu->mpi_comm_size][nitems];
 #endif
 
     // Save a set of flags unique to each core, these will be uploaded
     // to GPU by responsible cores
-    char mpi_flags[gpu->mpisize][nitems];
+    unsigned char mpi_flags[gpu->mpi_comm_size][nitems];
 
     // Keep track of total primitive value of each core
-    int tot_pval[gpu->mpisize];
+    int tot_pval[gpu->mpi_comm_size];
 
     // Keep track of how many shell types each core has
     // ss, sp, sd, ps, pp, pd, dd, dp, dd
-    int qtype_pcore[gpu->mpisize][16];
+    int qtype_pcore[gpu->mpi_comm_size][16];
 
     //set arrays to zero
-    memset(tot_pcore, 0, sizeof(int) * gpu->mpisize);
-    memset(mpi_flags, 0, sizeof(char) * gpu->mpisize * nitems);
-    memset(tot_pval, 0, sizeof(int) * gpu->mpisize);
-    memset(qtype_pcore, 0, sizeof(int) * gpu->mpisize * 16);
+    memset(tot_pcore, 0, sizeof(int) * gpu->mpi_comm_size);
+    memset(mpi_flags, 0, sizeof(unsigned char) * gpu->mpi_comm_size * nitems);
+    memset(tot_pval, 0, sizeof(int) * gpu->mpi_comm_size);
+    memset(qtype_pcore, 0, sizeof(int) * gpu->mpi_comm_size * 16);
 
 #ifdef DEBUG
-    memset(mpi_qidx, 0, sizeof(int2) * gpu->mpisize * nitems);
-    memset(mpi_pidx, 0, sizeof(int2) * gpu->mpisize * nitems);
-    memset(qtypes, 0, sizeof(int2) * gpu->mpisize * nitems);
+    memset(mpi_qidx, 0, sizeof(int2) * gpu->mpi_comm_size * nitems);
+    memset(mpi_pidx, 0, sizeof(int2) * gpu->mpi_comm_size * nitems);
+    memset(qtypes, 0, sizeof(int2) * gpu->mpi_comm_size * nitems);
 #endif
 
 #ifdef DEBUG
-    fprintf(gpu->debugFile," Greedy distribute OEI Qshells= %i number of GPUs= %i \n", nitems, gpu->mpisize);
+    fprintf(gpu->debugFile," Greedy distribute OEI Qshells= %i number of GPUs= %i \n", nitems, gpu->mpi_comm_size);
     int q1_idx, q2_idx;
 #endif
 
@@ -194,7 +191,7 @@ void mgpu_oei_greedy_distribute() {
                         // Find out the core with least number of primitives of the current shell types
                         min_core = 0;       // Assume master has the lowest number of primitives
                         minp = tot_pval[0]; // Set master's primitive count as the lowest
-                        for (int impi = 0; impi < gpu->mpisize; impi++) {
+                        for (int impi = 0; impi < gpu->mpi_comm_size; impi++) {
                             if (minp > tot_pval[impi]) {
                                 minp = tot_pval[impi];
                                 min_core = impi;
@@ -237,18 +234,18 @@ void mgpu_oei_greedy_distribute() {
                 }
 
                 // Reset the primitive counter for current shell type
-                memset(tot_pval, 0, sizeof(int) * gpu->mpisize);
+                memset(tot_pval, 0, sizeof(int) * gpu->mpi_comm_size);
                 a++;
             }
         }
     } else {
         // set all flags of master to true if nitems is less than minimum amount
-        memset(&mpi_flags[0][0], 1, sizeof(char) * nitems);
+        memset(&mpi_flags[0][0], 1, sizeof(unsigned char) * nitems);
     }
 
 #ifdef DEBUG
     // Print information for debugging
-    for (int impi = 0; impi < gpu->mpisize; impi++) {
+    for (int impi = 0; impi < gpu->mpi_comm_size; impi++) {
         for (int icount = 0; icount < tot_pcore[impi]; icount++) {
             fprintf(gpu->debugFile, " Greedy Distribute OEI GPU: %i Qindex= %i %i Qtype= %i %i Prim= %i %i \n ",
                     impi, mpi_qidx[impi][icount].x, mpi_qidx[impi][icount].y,
@@ -256,7 +253,7 @@ void mgpu_oei_greedy_distribute() {
         }
     }
 
-    for (int impi = 0; impi < gpu->mpisize; impi++) {
+    for (int impi = 0; impi < gpu->mpi_comm_size; impi++) {
         fprintf(gpu->debugFile, " Greedy Distribute OEI GPU: %i ss= %i sp= %i sd= %i sf= %i ps= %i pp= %i pd= %i pf= %i ds= %i dp= %i dd= %i df= %i fs= %i fp=%i fd=%i ff=%i \n",
                 impi, qtype_pcore[impi][0], qtype_pcore[impi][1], qtype_pcore[impi][2], qtype_pcore[impi][3],
                 qtype_pcore[impi][4], qtype_pcore[impi][5], qtype_pcore[impi][6], qtype_pcore[impi][7],
@@ -265,13 +262,14 @@ void mgpu_oei_greedy_distribute() {
     }
 
     fprintf(gpu->debugFile, " Greedy Distribute OEI GPU: %i Total shell pairs for this GPU= %i \n",
-            gpu->mpirank, tot_pcore[gpu->mpirank]);
+            gpu->mpi_comm_rank, tot_pcore[gpu->mpi_comm_rank]);
 #endif
 
     // Upload the flags to GPU
     gpu->gpu_basis->mpi_boeicompute = new gpu_buffer_type<unsigned char>(nitems);
 
-    memcpy(gpu->gpu_basis->mpi_boeicompute->_hostData, &mpi_flags[gpu->mpirank][0], sizeof(unsigned char) * nitems);
+    memcpy(gpu->gpu_basis->mpi_boeicompute->_hostData, &mpi_flags[gpu->mpi_comm_rank][0],
+            sizeof(unsigned char) * nitems);
 
     gpu->gpu_basis->mpi_boeicompute->Upload();
     gpu->gpu_sim.mpi_boeicompute = gpu->gpu_basis->mpi_boeicompute->_devData;
@@ -286,92 +284,96 @@ void mgpu_eri_greedy_distribute() {
     int nitems=gpu->gpu_cutoff->sqrQshell;
 
     // Array to store total number of items each core would have
-    int tot_pcore[gpu->mpisize];
+    int tot_pcore[gpu->mpi_comm_size];
 
 #ifdef DEBUG
     // Save shell indices for each core
-    int2 mpi_qidx[gpu->mpisize][nitems];
+    int2 mpi_qidx[gpu->mpi_comm_size][nitems];
 
     // Keep track of primitive count
-    int2 mpi_pidx[gpu->mpisize][nitems];
+    int2 mpi_pidx[gpu->mpi_comm_size][nitems];
 
     // Keep track of shell type
-    int2 qtypes[gpu->mpisize][nitems];
+    int2 qtypes[gpu->mpi_comm_size][nitems];
 #endif
 
     // Save a set of flags unique to each core, these will be uploaded
     // to GPU by responsible cores
-    char mpi_flags[gpu->mpisize][nitems];
+    unsigned char mpi_flags[gpu->mpi_comm_size][nitems];
 
     // Keep track of total primitive value of each core
-    int tot_pval[gpu->mpisize];
+    int tot_pval[gpu->mpi_comm_size];
 
     // Keep track of how many shell types each core has
     // ss, sp, sd, ps, pp, pd, dd, dp, dd
-    int qtype_pcore[gpu->mpisize][16];
+    int qtype_pcore[gpu->mpi_comm_size][16];
 
     //set arrays to zero
-    memset(tot_pcore,0, sizeof(int)*gpu->mpisize);
-    memset(mpi_flags,0,sizeof(char)*gpu->mpisize*nitems);
-    memset(tot_pval,0,sizeof(int)*gpu->mpisize);
-    memset(qtype_pcore,0,sizeof(int)*gpu->mpisize*16);
+    memset(tot_pcore,0, sizeof(int)*gpu->mpi_comm_size);
+    memset(mpi_flags,0,sizeof(unsigned char)*gpu->mpi_comm_size*nitems);
+    memset(tot_pval,0,sizeof(int)*gpu->mpi_comm_size);
+    memset(qtype_pcore,0,sizeof(int)*gpu->mpi_comm_size*16);
 #ifdef DEBUG
-    memset(mpi_qidx,0,sizeof(int2)*gpu->mpisize*nitems);
-    memset(mpi_pidx,0,sizeof(int2)*gpu->mpisize*nitems);
-    memset(qtypes,0,sizeof(int2)*gpu->mpisize*nitems);
+    memset(mpi_qidx,0,sizeof(int2)*gpu->mpi_comm_size*nitems);
+    memset(mpi_pidx,0,sizeof(int2)*gpu->mpi_comm_size*nitems);
+    memset(qtypes,0,sizeof(int2)*gpu->mpi_comm_size*nitems);
 #endif
 
 #ifdef DEBUG
-    fprintf(gpu->debugFile," Greedy distribute sqrQshells= %i number of GPUs= %i \n", nitems, gpu->mpisize);
+    fprintf(gpu->debugFile, " Greedy distribute sqrQshells= %i number of GPUs= %i \n",
+            nitems, gpu->mpi_comm_size);
     int q1_idx, q2_idx;
 #endif
 
-    if(nitems > MPIV_GPU_MIN_BASIS){
-
-        int  q1, q2, p1, p2, psum, minp, min_core;
+    if (nitems > MPIV_GPU_MIN_BASIS) {
+        int q1, q2, p1, p2, psum, minp, min_core;
         // Helps to store shell types per each core
-        int a=0;
+        int a = 0;
 
         // Sort s,p,d for the time being, increase the value by one to facilitate sorting
-        for(int q1_typ=0; q1_typ<4; q1_typ++){
-            for(int q2_typ=0; q2_typ<4; q2_typ++){
+        for (int q1_typ = 0; q1_typ < 4; q1_typ++) {
+            for (int q2_typ = 0; q2_typ < 4; q2_typ++) {
 
                 //Go through items
-                for (int i = 0; i<nitems; i++) {
-
+                for (int i = 0; i < nitems; i++) {
                     // Get the shell type
-                    q1     = gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x];
-                    q2     = gpu->gpu_basis->sorted_Qnumber->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y];
+                    q1 = gpu->gpu_basis->sorted_Qnumber->_hostData[
+                        gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].x];
+                    q2 = gpu->gpu_basis->sorted_Qnumber->_hostData[
+                        gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].y];
 
                     // Check if the picked shell types match currently interested shell types
-                    if(q1 == q1_typ && q2 == q2_typ){
-
+                    if (q1 == q1_typ && q2 == q2_typ) {
                         // Find out the core with least number of primitives of the current shell types
                         min_core = 0;       // Assume master has the lowest number of primitives
                         minp = tot_pval[0]; // Set master's primitive count as the lowest
-                        for(int impi=0; impi<gpu->mpisize;impi++){
-                            if(minp > tot_pval[impi]){
+                        for (int impi = 0; impi < gpu->mpi_comm_size; impi++) {
+                            if (minp > tot_pval[impi]) {
                                 minp = tot_pval[impi];
                                 min_core = impi;
                             }
                         }
 
                         // Store the primitive value in the total primitive value counter
-                        p1 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x]];
-                        p2 = gpu->gpu_basis->kprim->_hostData[gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y]];
-                        psum=p1+p2;
+                        p1 = gpu->gpu_basis->kprim->_hostData[
+                            gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].x]];
+                        p2 = gpu->gpu_basis->kprim->_hostData[
+                            gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].y]];
+                        psum = p1 + p2;
                         tot_pval[min_core] += psum;
 
                         // Save the flag
                         mpi_flags[min_core][i] = 1;
 
                         // Store shell types for debugging
-                        qtype_pcore[min_core][a] +=1;
+                        qtype_pcore[min_core][a] += 1;
 
 #ifdef DEBUG
                         //Get the q indices
-                        q1_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].x];
-                        q2_idx = gpu->gpu_basis->sorted_Q->_hostData[gpu->gpu_cutoff->sorted_YCutoffIJ ->_hostData[i].y];
+                        q1_idx = gpu->gpu_basis->sorted_Q->_hostData[
+                            gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].x];
+                        q2_idx = gpu->gpu_basis->sorted_Q->_hostData[
+                            gpu->gpu_cutoff->sorted_YCutoffIJ->_hostData[i].y];
 
                         //Assign the indices for corresponding core
                         mpi_qidx[min_core][tot_pcore[min_core]].x = q1_idx;
@@ -392,44 +394,50 @@ void mgpu_eri_greedy_distribute() {
                 }
 
                 // Reset the primitive counter for current shell type
-                memset(tot_pval,0,sizeof(int)*gpu->mpisize);
+                memset(tot_pval, 0, sizeof(int) * gpu->mpi_comm_size);
                 a++;
             }
         }
-
-    }else{
+    } else {
         // set all flags of master to true if nitems is less than minimum amount
-        memset(&mpi_flags[0][0],1,sizeof(char)*nitems);
+        memset(&mpi_flags[0][0], 1, sizeof(unsigned char) * nitems);
     }
 
 #ifdef DEBUG
     // Print information for debugging
-    for(int impi=0; impi<gpu->mpisize; impi++){
-        for(int icount=0; icount<tot_pcore[impi]; icount++){
-            fprintf(gpu->debugFile," Greedy Distribute GPU: %i Qindex= %i %i Qtype= %i %i Prim= %i %i \n ",impi, mpi_qidx[impi][icount].x, mpi_qidx[impi][icount].y, \
-                    qtypes[impi][icount].x, qtypes[impi][icount].y, mpi_pidx[impi][icount].x, mpi_pidx[impi][icount].y);
+    for (int impi = 0; impi < gpu->mpi_comm_size; impi++) {
+        for (int icount = 0; icount < tot_pcore[impi]; icount++) {
+            fprintf(gpu->debugFile,
+                    " Greedy Distribute GPU: %i Qindex= %i %i Qtype= %i %i Prim= %i %i \n ",
+                    impi, mpi_qidx[impi][icount].x, mpi_qidx[impi][icount].y,
+                    qtypes[impi][icount].x, qtypes[impi][icount].y,
+                    mpi_pidx[impi][icount].x, mpi_pidx[impi][icount].y);
         }
     }
 
-    for (int impi = 0; impi < gpu->mpisize; impi++) {
+    for (int impi = 0; impi < gpu->mpi_comm_size; impi++) {
         fprintf(gpu->debugFile,
                 " Greedy Distribute GPU: %i ss= %i sp= %i sd= %i sf= %i ps= %i pp= %i pd= %i pf= %i ds= %i dp= %i dd= %i df= %i fs= %i fp=%i fd=%i ff=%i \n",
                 impi, qtype_pcore[impi][0],
-                qtype_pcore[impi][1], qtype_pcore[impi][2], qtype_pcore[impi][3], qtype_pcore[impi][4], qtype_pcore[impi][5],
-                qtype_pcore[impi][6], qtype_pcore[impi][7], qtype_pcore[impi][8], qtype_pcore[impi][9], qtype_pcore[impi][10],
-                qtype_pcore[impi][11], qtype_pcore[impi][12], qtype_pcore[impi][13], qtype_pcore[impi][14], qtype_pcore[impi][15]);
+                qtype_pcore[impi][1], qtype_pcore[impi][2], qtype_pcore[impi][3],
+                qtype_pcore[impi][4], qtype_pcore[impi][5], qtype_pcore[impi][6],
+                qtype_pcore[impi][7], qtype_pcore[impi][8], qtype_pcore[impi][9],
+                qtype_pcore[impi][10], qtype_pcore[impi][11], qtype_pcore[impi][12],
+                qtype_pcore[impi][13], qtype_pcore[impi][14], qtype_pcore[impi][15]);
     }
 
-    fprintf(gpu->debugFile," Greedy Distribute GPU: %i Total shell pairs for this GPU= %i \n", gpu -> mpirank, tot_pcore[gpu -> mpirank]);
+    fprintf(gpu->debugFile," Greedy Distribute GPU: %i Total shell pairs for this GPU= %i \n",
+            gpu->mpi_comm_rank, tot_pcore[gpu->mpi_comm_rank]);
 #endif
 
     // Upload the flags to GPU
-    gpu -> gpu_basis -> mpi_bcompute = new gpu_buffer_type<unsigned char>(nitems);
+    gpu->gpu_basis->mpi_bcompute = new gpu_buffer_type<unsigned char>(nitems);
 
-    memcpy(gpu -> gpu_basis -> mpi_bcompute -> _hostData, &mpi_flags[gpu->mpirank][0], sizeof(unsigned char)*nitems);
+    memcpy(gpu->gpu_basis->mpi_bcompute->_hostData, &mpi_flags[gpu->mpi_comm_rank][0],
+            sizeof(unsigned char) * nitems);
 
-    gpu -> gpu_basis -> mpi_bcompute -> Upload();
-    gpu -> gpu_sim.mpi_bcompute  = gpu -> gpu_basis -> mpi_bcompute  -> _devData;
+    gpu->gpu_basis->mpi_bcompute->Upload();
+    gpu->gpu_sim.mpi_bcompute = gpu->gpu_basis->mpi_bcompute->_devData;
 }
 
 
@@ -443,33 +451,33 @@ void mgpu_eri_greedy_distribute() {
 //    int bin_size = gpu -> gpu_xcq -> bin_size;
 //
 //#ifdef DEBUG
-//    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i nbins= %i bin_size= %i \n", gpu->mpirank, nbins, bin_size);
+//    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i nbins= %i bin_size= %i \n", gpu->mpi_comm_rank, nbins, bin_size);
 //#endif
 //
 //    // array to keep track of how many bins per core
-//    int bins_pcore[gpu->mpisize];
+//    int bins_pcore[gpu->mpi_comm_size];
 //
-//    memset(bins_pcore,0, sizeof(int)*gpu->mpisize);
+//    memset(bins_pcore,0, sizeof(int)*gpu->mpi_comm_size);
 //
-//    int dividend  = (int) (nbins/gpu->mpisize);
-//    int remainder = nbins - (dividend * gpu->mpisize);
+//    int dividend  = (int) (nbins/gpu->mpi_comm_size);
+//    int remainder = nbins - (dividend * gpu->mpi_comm_size);
 //
 //#ifdef DEBUG
-//    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i dividend= %i remainder= %i \n", gpu->mpirank, dividend, remainder);
+//    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i dividend= %i remainder= %i \n", gpu->mpi_comm_rank, dividend, remainder);
 //#endif
 //
-//    for(int i=0; i< gpu->mpisize; i++){
+//    for(int i=0; i< gpu->mpi_comm_size; i++){
 //        bins_pcore[i] = dividend;
 //    }
 //
 //#ifdef DEBUG
-//    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i bins_pcore[0]= %i bins_pcore[1]= %i \n", gpu->mpirank, bins_pcore[0], bins_pcore[1]);
+//    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i bins_pcore[0]= %i bins_pcore[1]= %i \n", gpu->mpi_comm_rank, bins_pcore[0], bins_pcore[1]);
 //#endif
 //
 //    // distribute the remainder among cores
 //    int cremainder = remainder;
-//    for(int i=0; i<remainder; i+=gpu->mpisize ){
-//        for(int j=0; j< gpu->mpisize; j++){
+//    for(int i=0; i<remainder; i+=gpu->mpi_comm_size ){
+//        for(int j=0; j< gpu->mpi_comm_size; j++){
 //            bins_pcore[j] += 1;
 //            cremainder--;
 //
@@ -480,33 +488,33 @@ void mgpu_eri_greedy_distribute() {
 //    }
 //
 //#ifdef DEBUG
-//    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i bins_pcore[0]= %i bins_pcore[1]= %i \n", gpu->mpirank, bins_pcore[0], bins_pcore[1]);
+//    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i bins_pcore[0]= %i bins_pcore[1]= %i \n", gpu->mpi_comm_rank, bins_pcore[0], bins_pcore[1]);
 //#endif
 //
 //    // compute lower and upper grid point limits
 //    int xcstart, xcend, count;
 //    count = 0;
 //
-//    if(gpu->mpirank == 0){
+//    if(gpu->mpi_comm_rank == 0){
 //        xcstart = 0;
-//        xcend   = bins_pcore[gpu->mpirank] * bin_size;
+//        xcend   = bins_pcore[gpu->mpi_comm_rank] * bin_size;
 //    }else{
 //
 //#ifdef DEBUG
-//        fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i setting borders.. \n", gpu -> mpirank);
+//        fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i setting borders.. \n", gpu -> mpi_comm_rank);
 //#endif
 //
-//        for(int i=0; i < gpu->mpirank; i++){
+//        for(int i=0; i < gpu->mpi_comm_rank; i++){
 //            count += bins_pcore[i];
 //#ifdef DEBUG
-//            fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i count= %i \n", gpu -> mpirank, count);
+//            fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i count= %i \n", gpu -> mpi_comm_rank, count);
 //#endif
 //        }
 //
 //        xcstart = count * bin_size;
-//        xcend   = (count + bins_pcore[gpu->mpirank]) * bin_size;
+//        xcend   = (count + bins_pcore[gpu->mpi_comm_rank]) * bin_size;
 //#ifdef DEBUG
-//        fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i start and end points= %i %i \n", gpu -> mpirank, xcstart, xcend);
+//        fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i start and end points= %i %i \n", gpu -> mpi_comm_rank, xcstart, xcend);
 //#endif
 //
 //    }
@@ -517,13 +525,13 @@ void mgpu_eri_greedy_distribute() {
 //#ifdef DEBUG
 //    // print information for debugging
 //
-//    for(int i=0; i<gpu->mpisize; i++){
-//        fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i number of bins for gpu %i = %i \n", gpu -> mpirank, i, bins_pcore[i]);
+//    for(int i=0; i<gpu->mpi_comm_size; i++){
+//        fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i number of bins for gpu %i = %i \n", gpu -> mpi_comm_rank, i, bins_pcore[i]);
 //    }
 //
-//    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i start and end points= %i %i \n", gpu -> mpirank, xcstart, xcend);
+//    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i start and end points= %i %i \n", gpu -> mpi_comm_rank, xcstart, xcend);
 //
-//    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i start and end points= %i %i \n", gpu -> mpirank, gpu -> gpu_sim.mpi_xcstart, gpu -> gpu_sim.mpi_xcend);
+//    fprintf(gpu->debugFile," XC Greedy Distribute GPU: %i start and end points= %i %i \n", gpu -> mpi_comm_rank, gpu -> gpu_sim.mpi_xcstart, gpu -> gpu_sim.mpi_xcend);
 //
 //#endif
 //}
@@ -541,26 +549,26 @@ void mgpu_xc_tpbased_greedy_distribute() {
     int nbins = gpu->gpu_xcq->nbins;
 
 #ifdef DEBUG
-    fprintf(gpu->debugFile, "GPU: %i nbins= %i \n", gpu->mpirank, nbins);
+    fprintf(gpu->debugFile, "GPU: %i nbins= %i \n", gpu->mpi_comm_rank, nbins);
 #endif
 
     // array to keep track of how many true grid points per bin
     int2 tpoints[nbins];
 
     // save a set of flags to indicate if a given node should work on a particular bin
-    char mpi_xcflags[gpu->mpisize][nbins];
+    char mpi_xcflags[gpu->mpi_comm_size][nbins];
 
     // array to keep track of how many bins per gpu
-    int bins_pcore[gpu->mpisize];
+    int bins_pcore[gpu->mpi_comm_size];
 
     // array to keep track of how many true grid points per core
-    int tpts_pcore[gpu->mpisize];
+    int tpts_pcore[gpu->mpi_comm_size];
 
     // initialize all arrays to zero
     //    memset(tpoints, 0, sizeof(int) * nbins);
-    memset(mpi_xcflags, 0, sizeof(char) * nbins * gpu->mpisize);
-    memset(bins_pcore, 0, sizeof(int) * gpu->mpisize);
-    memset(tpts_pcore, 0, sizeof(int) * gpu->mpisize);
+    memset(mpi_xcflags, 0, sizeof(char) * nbins * gpu->mpi_comm_size);
+    memset(bins_pcore, 0, sizeof(int) * gpu->mpi_comm_size);
+    memset(tpts_pcore, 0, sizeof(int) * gpu->mpi_comm_size);
 
     // count how many true grid point in each bin and store in tpoints
     for (int i = 0; i < nbins; ++i) {
@@ -570,7 +578,7 @@ void mgpu_xc_tpbased_greedy_distribute() {
 
 #ifdef DEBUG
     for (int i = 0; i < nbins; i++) {
-        fprintf(gpu->debugFile, "GPU: %i bin= %i true points= %i \n", gpu->mpirank, i, tpoints[i].y);
+        fprintf(gpu->debugFile, "GPU: %i bin= %i true points= %i \n", gpu->mpi_comm_rank, i, tpoints[i].y);
     }
 #endif
 
@@ -599,7 +607,7 @@ void mgpu_xc_tpbased_greedy_distribute() {
         mincore = 0;             // assume master has the lowest number of points
         min_tpts = tpts_pcore[0]; // set master's point count as default
 
-        for (int impi = 0; impi < gpu->mpisize; impi++) {
+        for (int impi = 0; impi < gpu->mpi_comm_size; impi++) {
             if (min_tpts > tpts_pcore[impi]) {
                 mincore = impi;
                 min_tpts = tpts_pcore[impi];
@@ -613,20 +621,20 @@ void mgpu_xc_tpbased_greedy_distribute() {
         mpi_xcflags[mincore][tpoints[i].x] = 1;
     }
 
-    // printf(" XC Greedy Distribute GPU: %i number of points for gpu %i = %i \n", gpu -> mpirank, gpu -> mpirank, tpts_pcore[gpu -> mpirank]);
+    // printf(" XC Greedy Distribute GPU: %i number of points for gpu %i = %i \n", gpu -> mpi_comm_rank, gpu -> mpi_comm_rank, tpts_pcore[gpu -> mpi_comm_rank]);
 
 #ifdef DEBUG
     // print information for debugging
-    for (int i = 0; i < gpu->mpisize; i++) {
+    for (int i = 0; i < gpu->mpi_comm_size; i++) {
         fprintf(gpu->debugFile, " XC Greedy Distribute GPU: %i number of points for gpu %i = %i \n",
-                gpu->mpirank, i, tpts_pcore[i]);
+                gpu->mpi_comm_rank, i, tpts_pcore[i]);
     }
 #endif
 
     // upload flags to gpu
     gpu->gpu_xcq->mpi_bxccompute = new gpu_buffer_type<char>(nbins);
 
-    memcpy(gpu->gpu_xcq->mpi_bxccompute->_hostData, &mpi_xcflags[gpu->mpirank][0], sizeof(char) * nbins);
+    memcpy(gpu->gpu_xcq->mpi_bxccompute->_hostData, &mpi_xcflags[gpu->mpi_comm_rank][0], sizeof(char) * nbins);
 
     gpu->gpu_xcq->mpi_bxccompute->DeleteGPU();
 
@@ -646,7 +654,7 @@ void mgpu_xc_pbased_greedy_distribute() {
     int nbins = gpu->gpu_xcq->nbins;
 
 #ifdef DEBUG
-    fprintf(gpu->debugFile, "GPU: %i nbins= %i \n", gpu->mpirank, nbins);
+    fprintf(gpu->debugFile, "GPU: %i nbins= %i \n", gpu->mpi_comm_rank, nbins);
 #endif
 
     // array to keep track of how many true grid points per bin
@@ -659,28 +667,28 @@ void mgpu_xc_pbased_greedy_distribute() {
     int2 ptpf_pb[nbins];
 
     // save a set of flags to indicate if a given node should work on a particular bin
-    char mpi_xcflags[gpu->mpisize][nbins];
+    char mpi_xcflags[gpu->mpi_comm_size][nbins];
 
     // array to keep track of how many bins per gpu
-    int bins_pcore[gpu->mpisize];
+    int bins_pcore[gpu->mpi_comm_size];
 
     // array to keep track of how many true grid points per gpu
-    int tpts_pcore[gpu->mpisize];
+    int tpts_pcore[gpu->mpi_comm_size];
 
     // array to keep track of how many primitive functions per gpu
-    int primf_pcore[gpu->mpisize];
+    int primf_pcore[gpu->mpi_comm_size];
 
     // array to keep track of the true grid point primf product per gpu
-    int ptpf_pcore[gpu->mpisize];
+    int ptpf_pcore[gpu->mpi_comm_size];
 
     // initialize all arrays to zero
     memset(tpoints, 0, sizeof(int) * nbins);
     memset(primfpb, 0, sizeof(int) * nbins);
-    memset(mpi_xcflags, 0, sizeof(char) * nbins * gpu->mpisize);
-    memset(bins_pcore, 0, sizeof(int) * gpu->mpisize);
-    memset(tpts_pcore, 0, sizeof(int) * gpu->mpisize);
-    memset(primf_pcore, 0, sizeof(int) * gpu->mpisize);
-    memset(ptpf_pcore, 0, sizeof(int) * gpu->mpisize);
+    memset(mpi_xcflags, 0, sizeof(char) * nbins * gpu->mpi_comm_size);
+    memset(bins_pcore, 0, sizeof(int) * gpu->mpi_comm_size);
+    memset(tpts_pcore, 0, sizeof(int) * gpu->mpi_comm_size);
+    memset(primf_pcore, 0, sizeof(int) * gpu->mpi_comm_size);
+    memset(ptpf_pcore, 0, sizeof(int) * gpu->mpi_comm_size);
 
     // count how many primitive functions per each bin
     for (int i = 0; i < nbins; i++) {
@@ -722,7 +730,7 @@ void mgpu_xc_pbased_greedy_distribute() {
 
 #ifdef DEBUG
     for (int i = 0; i < nbins; i++) {
-        fprintf(gpu->debugFile, "GPU: %i bin= %i true points= %i \n", gpu->mpirank, i, tpoints[i]);
+        fprintf(gpu->debugFile, "GPU: %i bin= %i true points= %i \n", gpu->mpi_comm_rank, i, tpoints[i]);
     }
 #endif
 
@@ -734,7 +742,7 @@ void mgpu_xc_pbased_greedy_distribute() {
         mincore = 0;
         min_ptpf = ptpf_pcore[0];
 
-        for (int impi = 0; impi < gpu->mpisize; impi++) {
+        for (int impi = 0; impi < gpu->mpi_comm_size; impi++) {
             if (min_ptpf > ptpf_pcore[impi]) {
                 mincore = impi;
                 min_ptpf = ptpf_pcore[impi];
@@ -754,7 +762,7 @@ void mgpu_xc_pbased_greedy_distribute() {
     // upload flags to gpu
     gpu->gpu_xcq->mpi_bxccompute = new gpu_buffer_type<char>(nbins);
 
-    memcpy(gpu->gpu_xcq->mpi_bxccompute->_hostData, &mpi_xcflags[gpu->mpirank][0], sizeof(char) * nbins);
+    memcpy(gpu->gpu_xcq->mpi_bxccompute->_hostData, &mpi_xcflags[gpu->mpi_comm_rank][0], sizeof(char) * nbins);
 
     gpu->gpu_xcq->mpi_bxccompute->DeleteGPU();
 
@@ -866,8 +874,8 @@ void mgpu_xc_repack() {
     mgpu_xcq->ntotpf = npfidx_ul;
 
 #ifdef DEBUG
-    /*fprintf(gpu->debugFile, " Repack XC data for GPU: original: %i, number of bins= %i, number of points= %i \n", gpu -> mpirank, gpu->gpu_xcq->nbins, gpu->gpu_xcq->npoints);
-      fprintf(gpu->debugFile, " Repack XC data for GPU: original: %i, number of basis functions= %i, number of primitive functions= %i \n", gpu->mpirank, gpu->gpu_xcq->ntotbf, gpu->gpu_xcq->ntotpf);
+    /*fprintf(gpu->debugFile, " Repack XC data for GPU: original: %i, number of bins= %i, number of points= %i \n", gpu -> mpi_comm_rank, gpu->gpu_xcq->nbins, gpu->gpu_xcq->npoints);
+      fprintf(gpu->debugFile, " Repack XC data for GPU: original: %i, number of basis functions= %i, number of primitive functions= %i \n", gpu->mpi_comm_rank, gpu->gpu_xcq->ntotbf, gpu->gpu_xcq->ntotpf);
       */
     for (int i = 0; i < gpu->gpu_xcq->npoints; i++) {
         fprintf(gpu->debugFile, " Repack XC data: original: point= %i x= %f, y= %f, z= %f, sswt= %f, weight= %f, gatm= %i, dweight_ssd= %i \n",
@@ -943,8 +951,8 @@ void mgpu_xc_repack() {
 #ifdef DEBUG
     // print information for debugging
 
-    fprintf(gpu->debugFile, " Repack XC data for GPU: new: %i, number of bins= %i, number of points= %i \n", gpu -> mpirank, mgpu_xcq -> nbins, mgpu_xcq -> npoints);
-    fprintf(gpu->debugFile, " Repack XC data for GPU: new: %i, number of basis functions= %i, number of primitive functions= %i \n", gpu -> mpirank, mgpu_xcq -> ntotbf, mgpu_xcq -> ntotpf);
+    fprintf(gpu->debugFile, " Repack XC data for GPU: new: %i, number of bins= %i, number of points= %i \n", gpu -> mpi_comm_rank, mgpu_xcq -> nbins, mgpu_xcq -> npoints);
+    fprintf(gpu->debugFile, " Repack XC data for GPU: new: %i, number of basis functions= %i, number of primitive functions= %i \n", gpu -> mpi_comm_rank, mgpu_xcq -> ntotbf, mgpu_xcq -> ntotpf);
 
     for(int i=0; i < mgpu_xcq -> npoints; i++){
         fprintf(gpu->debugFile, " Repack XC data: new: point= %i x= %f, y= %f, z= %f, sswt= %f, weight= %f, gatm= %i, dweight_ssd= %i \n", i, mgpu_xcq -> gridx -> _hostData[i], mgpu_xcq -> gridy -> _hostData[i], mgpu_xcq -> gridz -> _hostData[i], mgpu_xcq -> sswt  -> _hostData[i], mgpu_xcq -> weight -> _hostData[i], mgpu_xcq -> gatm   -> _hostData[i], mgpu_xcq -> dweight_ssd -> _hostData[i]);
@@ -966,8 +974,8 @@ void mgpu_xc_repack() {
         }
     }
 
-    /*fprintf(gpu->debugFile, " Repack XC data for GPU: %i, number of bins= %i, number of points= %i \n", gpu -> mpirank, gpu -> gpu_xcq -> nbins, gpu -> gpu_xcq -> npoints);
-      fprintf(gpu->debugFile, " Repack XC data for GPU: %i, number of basis functions= %i, number of primitive functions= %i \n", gpu -> mpirank, gpu -> gpu_xcq -> ntotbf, gpu -> gpu_xcq -> ntotpf);
+    /*fprintf(gpu->debugFile, " Repack XC data for GPU: %i, number of bins= %i, number of points= %i \n", gpu -> mpi_comm_rank, gpu -> gpu_xcq -> nbins, gpu -> gpu_xcq -> npoints);
+      fprintf(gpu->debugFile, " Repack XC data for GPU: %i, number of basis functions= %i, number of primitive functions= %i \n", gpu -> mpi_comm_rank, gpu -> gpu_xcq -> ntotbf, gpu -> gpu_xcq -> ntotpf);
 
       for(int i=0; i < gpu -> gpu_xcq -> npoints; i++){
       fprintf(gpu->debugFile, " Repack XC data: point= %i x= %f, y= %f, z= %f, sswt= %f, weight= %f, gatm= %i, dweight= %i, dweight_ssd= %i \n", i, gpu -> gpu_xcq -> gridx -> _hostData[i], gpu -> gpu_xcq -> gridy -> _hostData[i], gpu -> gpu_xcq -> gridz -> _hostData[i], gpu -> gpu_xcq -> sswt  -> _hostData[i], gpu -> gpu_xcq -> weight -> _hostData[i], gpu -> gpu_xcq -> gatm   -> _hostData[i], gpu -> gpu_xcq -> dweight -> _hostData[i], gpu -> gpu_xcq -> dweight_ssd -> _hostData[i]);
