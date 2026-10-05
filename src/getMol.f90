@@ -239,6 +239,7 @@ subroutine initialGuess(ierr)
    use quick_exception_module
    use quick_io_module, only: chk_read, read_real8_rank3
    use quick_mpi_module, only: master
+#ifdef CUEST
    use quick_cuest_module, only: cuest_correct_P, CUEST_CORRECT_NORM_QUICK_TO_CUEST
 #endif
 
