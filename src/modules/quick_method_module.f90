@@ -109,6 +109,7 @@ module quick_method_module
         logical :: MFCC = .false.      ! MFCC
         logical :: fragxyz = .false.   ! dump fragment geometries as xyz
         logical :: mfccpure = .false.  ! purify the MFCC guess density (MFCCPURE)
+        logical :: mfccfrag = .false.  ! fragment only, no SCF and no guess (MFCCFRAG)
         logical :: densdiis = .false.  ! DnC: Pulay mixing on the density instead
                                        ! of Fock DIIS on FDS-SDF (DENSDIIS)
 
@@ -290,6 +291,7 @@ module quick_method_module
             call MPI_BCAST(self%MFCC,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%fragxyz,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%mfccpure,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%mfccfrag,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%densdiis,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%ifragbasis,1,mpi_integer,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%iSG,1,mpi_integer,0,quick_comm,quick_mpi_error)
@@ -456,6 +458,7 @@ module quick_method_module
             if (self%fragxyz) write(io,'(" WRITE FRAGMENT GEOMETRIES TO XYZ ")')
             if (self%MFCC) write(io,'(" MFCC CONNECTION CUTOFF =",f7.2," A")') self%MFCCCUT
             if (self%mfccpure) write(io,'(" PURIFY THE MFCC GUESS DENSITY ")')
+            if (self%mfccfrag) write(io,'(" MFCC FRAGMENTATION ONLY: NO SCF, NO INITIAL GUESS ")')
             if (self%densdiis) write(io,'(" DIIS ON THE DENSITY RESIDUAL (DIVIDE AND CONQUER) ")')
 
             if (self%FMM)  write(io,'(" FAST MULTIPOLE METHOD = TRUE ")')
@@ -631,6 +634,17 @@ module quick_method_module
             endif
             if (found_keyword(keyWD,'FRAGXYZ'))    self%fragxyz=.true.
             if (found_keyword(keyWD,'MFCCPURE'))   self%mfccpure=.true.
+            ! Fragment and stop. Implies MFCC, because the fragmentation lives
+            ! behind that flag, and FRAGXYZ, because seeing the geometries is
+            ! the entire point of asking for this. SAD is cleared for the same
+            ! reason the MFCC branch clears it: getMol would otherwise reach for
+            ! SAD arrays that were never built.
+            if (found_keyword(keyWD,'MFCCFRAG')) then
+                self%mfccfrag=.true.
+                self%MFCC=.true.
+                self%fragxyz=.true.
+                self%SAD=.false.
+            endif
             if (found_keyword(keyWD,'DENSDIIS'))   self%densdiis=.true.
             if (found_keyword(keyWD,'FMM'))        self%FMM=.true.
             if (found_keyword(keyWD,'MP2'))        self%MP2=.true.
@@ -1100,6 +1114,7 @@ module quick_method_module
             self%MFCC = .false.        ! MFCC
             self%fragxyz = .false.     ! dump fragment geometries as xyz
             self%mfccpure = .false.    ! purify the MFCC guess density (MFCCPURE)
+            self%mfccfrag = .false.    ! fragment only, no SCF (MFCCFRAG)
             self%densdiis = .false.    ! Pulay mixing on the density for DnC (DENSDIIS)
             self%MFCCCUT = 3.0d0       ! contact cutoff for MFCC connection terms
 

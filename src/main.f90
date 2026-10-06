@@ -44,6 +44,8 @@
     use quick_molspec_module, only: quick_molspec, natom, alloc
     use quick_basis_module, only: nbasis
     use quick_files_module, only: write_molden, set_quick_files, print_quick_io_file
+    use quick_files_module, only: mfccXyzFileName
+    use quick_mfcc_module, only: npmfcc, kxiaoconnect
     use quick_molsurface_module, only: generate_MKS_surfaces
 #if defined(GPU) || defined(MPIV_GPU)
     use quick_basis_module, only: quick_basis, aexp, cutprim, dcoeff, itype, &
@@ -148,6 +150,24 @@
 #endif
         SAFE_CALL(mfcc_check_atom_order(ierr))
         call mfcc(quick_molspec%natom)
+
+        ! MFCCFRAG stops here. The point is to look at the fragmentation before
+        ! committing to anything expensive: no basis is read, no fragment SCF is
+        ! run and no guess is assembled, so this costs seconds on a system that
+        ! would otherwise take hours. mfcc() has already written the fragment
+        ! and cap geometries, since MFCCFRAG turns FRAGXYZ on.
+        if (quick_method%mfccfrag) then
+            if (master) then
+                call PrtAct(ioutfile,"MFCC fragmentation only, stopping here")
+                write(ioutfile,'(" Fragments:",i6,"   caps:",i6,"   contacts kept:",i6)') &
+                      npmfcc, npmfcc-1, kxiaoconnect
+                write(ioutfile,'(" Geometries written to ",a)') trim(mfccXyzFileName)
+                write(ioutfile,'(" No SCF and no initial guess were performed.")')
+                call flush(ioutfile)
+            endif
+            call quick_exit(iOutFile,0)
+        endif
+
         SAFE_CALL(mfcc_fragment_scf(ierr))
 #ifdef MPIV
         if (bMPI .and. .not.master) close(iOutFile)
