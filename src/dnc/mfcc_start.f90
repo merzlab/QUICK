@@ -353,13 +353,18 @@ subroutine mfcc(natomsaved)
  write(ioutfile,*) 'MFCC fragment #1'
  write(ioutfile,*) '  '
 
-  do kk=1,mm-1
-!      write(ioutfile,*)mfcc_element(atomname(kk)),(coord(j,kk),j=1,3)
+  ! From pep_first, not from atom 1, and stored at kk-pep_first+1 so the local
+  ! slots line up with matomstart(1) below. Copying from atom 1 pulled whatever
+  ! was numbered ahead of the protein into fragment 1: in the T4-Lysozyme
+  ! structure that is the 24-atom ligand, which ended up sharing a fragment with
+  ! the first two residues. pep_first is 1 for a bare peptide, so this is the
+  ! same arithmetic as before for files with nothing in front of the chain.
+  do kk=pep_first,mm-1
  write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
       mfcc_element(atomname(kk)),(coord(j,kk),j=1,3)
-      mfccatomxiao(kk,1)=mfcc_element(atomname(kk))
+      mfccatomxiao(kk-pep_first+1,1)=mfcc_element(atomname(kk))
       do j=1,3
-        mfcccord(j,kk,1)=coord(j,kk)
+        mfcccord(j,kk-pep_first+1,1)=coord(j,kk)
       enddo
   enddo
 
@@ -375,16 +380,16 @@ subroutine mfcc(natomsaved)
 ! write(ioutfile,*) '======================================'
 ! write(ioutfile,*) '  '
 
- mfccatomxiao(mm,1)='H '
+ mfccatomxiao(mm-pep_first+1,1)='H '
 
- mfcccord(1,mm,1)=xx
- mfcccord(2,mm,1)=yy
- mfcccord(3,mm,1)=zz
+ mfcccord(1,mm-pep_first+1,1)=xx
+ mfcccord(2,mm-pep_first+1,1)=yy
+ mfcccord(3,mm-pep_first+1,1)=zz
 
- mfccatom(1)=mm
+ mfccatom(1)=mm-pep_first+1
 
  mfccstart(1)=1
- mfccfinal(1)=mm-1
+ mfccfinal(1)=mm-pep_first
 
 ! The chain starts at pep_first, not at atom 1: a ligand numbered ahead of the
 ! protein puts its atoms first, as LIG does in the T4-Lysozyme structure.
