@@ -23,6 +23,11 @@ module quick_mfcc_module
     ! mfcc() and therefore thrown away when it returned, which left the
     ! fragment densities impossible to compute afterwards.
     integer :: npmfcc
+    ! Standalone fragments appended after the peptide chain: one per solvent
+    ! molecule, ion or ligand. They carry no caps, because nothing was cut to
+    ! make them, so the cap arrays stay at npmfcc-1 while the fragment arrays
+    ! run to npmfcc+nmfccextra.
+    integer :: nmfccextra = 0
     integer, allocatable :: mfccatom(:), mfccatomcap(:)
     ! Per fragment/cap formal charge. Set from the terminus composition in
     ! mfcc_start; zero for everything else.

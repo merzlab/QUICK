@@ -2,11 +2,15 @@
 
 subroutine mfcc(natomsaved)
    use allmod
+   use quick_mfcc_species_module, only: mfcc_is_amino_acid, mfcc_species_charge, mfcc_species_kind
    use quick_mfcc_module
 !   use quick_method_module
 
    implicit none
-   integer xiaoconnect(100,100)
+   ! Sized from the residue count, not fixed at 100. The contact loops index it
+   ! up to npmfcc+3, so any chain longer than 97 residues wrote past the end:
+   ! Trypsin, at 223 residues, segfaulted here.
+   integer, allocatable :: xiaoconnect(:,:)
    integer :: i,j,j1,j2,j3,number,mm,nn,kk
    integer :: mmm,nnn,nnnn,k,ii,jj
    integer :: ixiao,jxiao,kxiao
@@ -25,6 +29,15 @@ subroutine mfcc(natomsaved)
    integer :: nconskip                                ! contacts with a malformed span
    integer :: ierrxyz                          ! iostat for the fragment xyz dump
    integer :: nterm_h                          ! hydrogens on the N terminal nitrogen
+   ! Residue classification: peptide chain versus everything else.
+   integer, allocatable :: pepidx(:)           ! resSeq -> peptide fragment index, 0 if not peptide
+   integer, allocatable :: xresof(:)           ! resSeq -> standalone fragment index, 0 if peptide
+   integer, allocatable :: xfirst(:), xlast(:) ! atom range of each standalone fragment
+   character(len=3), allocatable :: xname(:)   ! residue name of each standalone fragment
+   integer :: maxres, ires2, npep, nxtra, pep_first, pep_last
+   integer, allocatable :: natres(:)
+   integer :: nsolv, nion, nlig, nunk, kx, nat_x
+   logical :: chgunknown
    logical :: cterm_oxt                        ! C terminus carries OXT
    real(8)::xx,yy,zz,ym,zm
    integer :: mspin(50)
@@ -53,11 +66,7 @@ subroutine mfcc(natomsaved)
    allocate(mselectN(number))
 
 ! Assign values of xiaoconnect to one
-   do i=1,100
-     do j=1,100
-       xiaoconnect(i,j)=1
-     enddo
-   enddo 
+   ! xiaoconnect is allocated and initialised after npmfcc is known.
 
 ! Temporal files for fragmentation tests
 !   open(20,file='initial.gjf')
@@ -111,8 +120,129 @@ subroutine mfcc(natomsaved)
 !  write(*,*) class(i)
 ! enddo
 
-! Number of fragments
- npmfcc=class(number)
+! ---------------------------------------------------------------------
+! Classify residues, then renumber.
+!
+! npmfcc used to be class(number), the residue number of the last atom. In a
+! prepared structure that is the last water molecule: 9382 for T4-Lysozyme,
+! whose protein is 164 residues. The peptide chain has to be separated from the
+! solvent, ions and ligands first, and the chain renumbered 1..npep so every
+! loop below, which compares class against 1..npmfcc, keeps working untouched.
+!
+! Non-peptide residues become standalone fragments appended after the chain:
+! one per water, one per ion, one per ligand, each with no caps because there
+! is no bond to cut.
+! ---------------------------------------------------------------------
+  maxres = 0
+  do i = 1, number
+    maxres = max(maxres, class(i))
+  enddo
+  if (maxres .lt. 1) then
+    call PrtErr(iOutFile,'No residue numbers were read from the pdb file.')
+    call quick_exit(iOutFile,1)
+  endif
+
+  allocate(pepidx(maxres), xresof(maxres))
+  pepidx = 0
+  xresof = 0
+
+  ! Mark which residue numbers are present and whether each is a peptide
+  ! residue. Classification is by residue name; see quick_mfcc_species_module
+  ! for why it cannot be done by looking for backbone atom names.
+  npep = 0
+  nxtra = 0
+  do ires2 = 1, maxres
+    j = 0
+    do i = 1, number
+      if (class(i).eq.ires2) then
+        j = i
+        exit
+      endif
+    enddo
+    if (j .eq. 0) cycle                      ! residue number not used
+    if (mfcc_is_amino_acid(residue(j))) then
+      npep = npep + 1
+      pepidx(ires2) = npep
+    else
+      nxtra = nxtra + 1
+      xresof(ires2) = nxtra
+    endif
+  enddo
+
+  if (npep .lt. 2) then
+    call PrtErr(iOutFile,'MFCC found fewer than two amino acid residues; there is no &
+          &peptide chain to fragment.')
+    call quick_exit(iOutFile,1)
+  endif
+
+  ! Standalone fragment atom ranges, and the peptide atom span.
+  allocate(xfirst(max(nxtra,1)), xlast(max(nxtra,1)), xname(max(nxtra,1)))
+  xfirst = 0
+  xlast = 0
+  xname = '   '
+  pep_first = 0
+  pep_last = 0
+  do i = 1, number
+    if (pepidx(class(i)) .gt. 0) then
+      if (pep_first .eq. 0) pep_first = i
+      pep_last = i
+    else
+      kx = xresof(class(i))
+      if (xfirst(kx) .eq. 0) xfirst(kx) = i
+      xlast(kx) = i
+      xname(kx) = residue(i)
+    endif
+  enddo
+
+  ! The chain is cut as contiguous index ranges, so the peptide atoms have to
+  ! form one unbroken block. In the files this was written for they do: the
+  ! ligand and the solvent sit before and after it. A structure that interleaves
+  ! them cannot be fragmented this way, and saying so beats producing fragments
+  ! that quietly contain somebody else's atoms.
+  do i = pep_first, pep_last
+    if (pepidx(class(i)) .le. 0) then
+      call PrtErr(iOutFile,'Peptide and non-peptide atoms are interleaved in this pdb. &
+            &MFCC cuts fragments as contiguous atom ranges, so the chain must be one &
+            &unbroken block of atoms.')
+      write(ioutfile,'(" First offending atom: ",i8,"  residue ",a3)') i, residue(i)
+      call quick_exit(iOutFile,1)
+    endif
+  enddo
+
+  ! Renumber: peptide residues become 1..npep, everything else 0 so the chain
+  ! loops skip it.
+  do i = 1, number
+    class(i) = pepidx(class(i))
+  enddo
+
+  npmfcc = npep
+  nmfccextra = nxtra
+
+  ! 0 marks a contact, so the array starts at 1 everywhere.
+  allocate(xiaoconnect(npmfcc+3,npmfcc+3))
+  xiaoconnect = 1
+
+  nsolv = 0
+  nion = 0
+  nlig = 0
+  do kx = 1, nxtra
+    nat_x = xlast(kx)-xfirst(kx)+1
+    select case (mfcc_species_kind(xname(kx), nat_x))
+    case (1)
+      nsolv = nsolv + 1
+    case (2)
+      nion = nion + 1
+    case default
+      nlig = nlig + 1
+    end select
+  enddo
+
+  write(ioutfile,'(" MFCC residue classification")')
+  write(ioutfile,'("   peptide residues   :",i7,"   (atoms ",i7," ..",i7,")")') &
+        npep, pep_first, pep_last
+  write(ioutfile,'("   solvent molecules  :",i7)') nsolv
+  write(ioutfile,'("   monatomic ions     :",i7)') nion
+  write(ioutfile,'("   other molecules    :",i7)') nlig
 
  write(ioutfile,*) 'Number of MFCC fragments', ' is ', npmfcc
 
@@ -127,25 +257,40 @@ subroutine mfcc(natomsaved)
 ! residues, plus the two capping hydrogens. Counting that from class needs
 ! nothing but the pdb and so can be done here, before anything is stored.
 ! ---------------------------------------------------------------------
+  ! Atoms per peptide residue first, so the widest three-residue window is a
+  ! sum rather than a rescan. The old form was a loop over residues times a loop
+  ! over atoms, which on a solvated structure with the residue count taken from
+  ! the last water was a hundred million iterations per pass.
+  allocate(natres(npmfcc))
+  natres = 0
+  do i = 1, number
+    if (class(i) .gt. 0) natres(class(i)) = natres(class(i)) + 1
+  enddo
+
   mfccnatmax = 0
   do i = 1, npmfcc
-    mfccnat = 0
-    do j = 1, number
-      if (class(j).ge.i-1 .and. class(j).le.i+1) mfccnat = mfccnat + 1
-    enddo
+    mfccnat = natres(i)
+    if (i .gt. 1)      mfccnat = mfccnat + natres(i-1)
+    if (i .lt. npmfcc) mfccnat = mfccnat + natres(i+1)
     mfccnatmax = max(mfccnatmax, mfccnat)
   enddo
   mfccnatmax = mfccnatmax + 2
+  deallocate(natres)
+
+  ! A standalone fragment has to fit in the same arrays.
+  do kx = 1, nxtra
+    mfccnatmax = max(mfccnatmax, xlast(kx)-xfirst(kx)+1)
+  enddo
 
   mfccierr = 0
-  call mfcc_alloc_frag(npmfcc, mfccnatmax, mfccierr)
+  call mfcc_alloc_frag(npmfcc+nxtra, mfccnatmax, mfccierr)
   if (mfccierr /= 0) then
     call PrtErr(iOutFile,'Could not allocate the MFCC fragment arrays.')
     call quick_exit(iOutFile,1)
   endif
 
-  write(ioutfile,'(" MFCC arrays sized for ",i6," fragments and ",i6, &
-        &" atoms per fragment")') npmfcc, mfccnatmax
+  write(ioutfile,'(" MFCC arrays sized for ",i6," chain fragments +",i7, &
+        &" standalone, ",i6," atoms per fragment")') npmfcc, nxtra, mfccnatmax
 
 !  write(*,*) "Assigned number of fragments"
 
@@ -169,7 +314,12 @@ subroutine mfcc(natomsaved)
    j1=1
    j2=1
    j3=1
+   ! Peptide atoms only. Benzamidine in the Trypsin structure has an atom whose
+   ! name field is exactly ' C  ', so an unfiltered scan picks it up as a
+   ! backbone carbonyl and every fragment boundary after it is wrong. class is
+   ! zero for everything that is not part of the chain.
    do i=1,number
+   if(class(i).le.0) cycle
    if(atomname(i).eq.' C  ')then
      mselectC(j1)=i
 !     write(*,*) mselectC(j1), "C"
@@ -236,7 +386,9 @@ subroutine mfcc(natomsaved)
  mfccstart(1)=1
  mfccfinal(1)=mm-1
 
- matomstart(1)=1
+! The chain starts at pep_first, not at atom 1: a ligand numbered ahead of the
+! protein puts its atoms first, as LIG does in the T4-Lysozyme structure.
+ matomstart(1)=pep_first
  matomfinal(1)=mm-1
 
 ! write(ioutfile,*) '  '
@@ -392,15 +544,17 @@ subroutine mfcc(natomsaved)
   mfcccord(2,1,npmfcc)=ym
   mfcccord(3,1,npmfcc)=zm
   
-  mfccatom(npmfcc)=number-mmm+1+1
+  mfccatom(npmfcc)=pep_last-mmm+1+1
   
   mfccstart(npmfcc)=2
-  mfccfinal(npmfcc)=number-mmm+2
+  mfccfinal(npmfcc)=pep_last-mmm+2
   
   matomstart(npmfcc)=mmm
-  matomfinal(npmfcc)=number  
+  ! Ends at the last peptide atom. 'number' would swallow every solvent
+  ! molecule after the chain into the final fragment.
+  matomfinal(npmfcc)=pep_last
 
-  do kk=mmm,number
+  do kk=mmm,pep_last
     write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
      mfcc_element(atomname(kk)),(coord(j,kk),j=1,3)
 
@@ -421,7 +575,7 @@ subroutine mfcc(natomsaved)
     mfcccord(2,1,npmfcc)=ym
     mfcccord(3,1,npmfcc)=zm
 
-    mfccatom(npmfcc)=number-mm+1+1
+    mfccatom(npmfcc)=pep_last-mm+1+1
 
    mfccstart(npmfcc)=2
    ! This branch spans mm (the nitrogen), not mmm (the alpha carbon): the atoms
@@ -433,12 +587,14 @@ subroutine mfcc(natomsaved)
    ! guess 47 electrons short. Only the proline branch is affected, and only for
    ! the final fragment, so a system without a proline near the C terminus never
    ! shows it.
-   mfccfinal(npmfcc)=number-mm+2
+   mfccfinal(npmfcc)=pep_last-mm+2
 
    matomstart(npmfcc)=mm
-   matomfinal(npmfcc)=number
+   ! Ends at the last peptide atom. 'number' would swallow every solvent
+   ! molecule after the chain into the final fragment.
+   matomfinal(npmfcc)=pep_last
 
-   do kk=mm,number
+   do kk=mm,pep_last
     write(ioutfile,'(4x,A2,6x,F10.4,3x,F10.4,3x,F10.4)') &
      mfcc_element(atomname(kk)),(coord(j,kk),j=1,3)
 
@@ -568,29 +724,79 @@ subroutine mfcc(natomsaved)
 
  enddo
 
+! ---------------------------------------------------------------------
+! Standalone fragments: one per solvent molecule, ion or ligand.
+!
+! Nothing was cut to make these, so they carry no capping hydrogen and no cap
+! partner: the local range is the whole residue, starting at 1 rather than 2.
+! They occupy slots npmfcc+1 .. npmfcc+nmfccextra, after the chain, which is
+! why the cap arrays stay at npmfcc-1 while the fragment loops run further.
+! ---------------------------------------------------------------------
+  nunk = 0
+  do kx = 1, nxtra
+    k = npmfcc + kx
+    nat_x = xlast(kx)-xfirst(kx)+1
+
+    mfccatom(k)    = nat_x
+    mfccstart(k)   = 1
+    mfccfinal(k)   = nat_x
+    matomstart(k)  = xfirst(kx)
+    matomfinal(k)  = xlast(kx)
+    mfcccharge(k)  = mfcc_species_charge(xname(kx), nat_x, chgunknown)
+    if (chgunknown) nunk = nunk + 1
+
+    do kk = xfirst(kx), xlast(kx)
+      mfccatomxiao(kk-xfirst(kx)+1,k) = mfcc_element(atomname(kk))
+      do j = 1, 3
+        mfcccord(j,kk-xfirst(kx)+1,k) = coord(j,kk)
+      enddo
+    enddo
+  enddo
+
+  if (nunk .gt. 0) then
+    call PrtWrn(iOutFile,'Some non-peptide residues have an unrecognised charge.')
+    write(ioutfile,'("|          ",i7," residue(s) were given charge 0 because their name is")') nunk
+    write(ioutfile,'("|          not in the table in quick_mfcc_species_module. If one of them")')
+    write(ioutfile,'("|          is actually charged, its fragment is wrong; a charged species")')
+    write(ioutfile,'("|          with an odd electron count will be caught as an open shell")')
+    write(ioutfile,'("|          later, but an even one will pass silently. Check these:")')
+    do kx = 1, nxtra
+      nat_x = xlast(kx)-xfirst(kx)+1
+      if (mfcc_species_charge(xname(kx), nat_x, chgunknown) .eq. 0 .and. chgunknown) &
+        write(ioutfile,'("|            ",a3,"  (",i6," atoms)")') xname(kx), nat_x
+    enddo
+    write(ioutfile,'(a)')
+    call flush(ioutfile)
+  endif
+
 ! Start the final loop, which concerns neutral terminus.
 
-  do ixiao=2,npmfcc
-    do jxiao=ixiao+3,npmfcc+3
-      do ii=1,number
-        do jj=1,number
-          if((class(ii).eq.ixiao).and.(class(jj).eq.jxiao))then
-            xiaodis=dsqrt((coord(1,ii)-coord(1,jj))**2.0d0+ &
-                          (coord(2,ii)-coord(2,jj))**2.0d0+ &
-                          (coord(3,ii)-coord(3,jj))**2.0d0)
-            ! This used to read 'xiaodis .le. -1.0d0'. A Euclidean distance is
-            ! never negative, so the connection terms could never be generated;
-            ! the whole con/coni/conj layer below was unreachable. The cutoff is
-            ! now a real contact distance, adjustable with the MFCCCUT keyword.
-            if(xiaodis.le.quick_method%MFCCCUT)then
-              xiaoconnect(ixiao,jxiao)=0
-              if(quick_method%debug) print*,ixiao,jxiao,ii,jj, 'ixiao,jxiao,ii,jj'
-            endif
-          endif
-         enddo
-       enddo
-     enddo
-   enddo
+  ! One pass over pairs of peptide atoms, rather than rescanning every atom
+  ! pair for every pair of residues. The original form was four nested loops,
+  ! residues squared times atoms squared, which on a solvated protein is around
+  ! 10^12 iterations; this is the peptide atom count squared, and solvent is
+  ! skipped outright since it is not part of the chain.
+  !
+  ! The residue separation test is unchanged: the first residue is at least 2
+  ! and the second at least three further along, so only non-sequential
+  ! contacts count.
+  do ii=1,number
+    if(class(ii).lt.2) cycle
+    do jj=ii+1,number
+      if(class(jj).lt.class(ii)+3) cycle
+      xiaodis=dsqrt((coord(1,ii)-coord(1,jj))**2.0d0+ &
+                    (coord(2,ii)-coord(2,jj))**2.0d0+ &
+                    (coord(3,ii)-coord(3,jj))**2.0d0)
+      ! This used to read 'xiaodis .le. -1.0d0'. A Euclidean distance is
+      ! never negative, so the connection terms could never be generated;
+      ! the whole con/coni/conj layer below was unreachable. The cutoff is
+      ! now a real contact distance, adjustable with the MFCCCUT keyword.
+      if(xiaodis.le.quick_method%MFCCCUT)then
+        xiaoconnect(class(ii),class(jj))=0
+        if(quick_method%debug) print*,class(ii),class(jj),ii,jj, 'ixiao,jxiao,ii,jj'
+      endif
+    enddo
+  enddo
 
   kxiao=1
   nconskip=0
@@ -678,13 +884,22 @@ subroutine mfcc(natomsaved)
       enddo
       if (irep.gt.0) then
         ! Neutral reference counts: Lys NH2 2, Arg guanidine 4, His ring 1.
-        if (rnm.eq.'LYS' .and. nh.ge.3) atomchg(irep) = 1
-        if (rnm.eq.'ARG' .and. nh.ge.5) atomchg(irep) = 1
-        if ((rnm.eq.'HIS'.or.rnm.eq.'HIP') .and. nh.ge.2) atomchg(irep) = 1
+        ! AMBER writes the protonation state into the residue name, so the
+        ! charged and neutral forms have different names and both have to be
+        ! listed. LYN is neutral lysine, HID and HIE the two neutral histidine
+        ! tautomers, HIP the protonated one. The hydrogen count still decides,
+        ! so a name that disagrees with the geometry loses to the geometry.
+        if ((rnm.eq.'LYS'.or.rnm.eq.'LYN') .and. nh.ge.3) atomchg(irep) = 1
+        if ((rnm.eq.'ARG'.or.rnm.eq.'ARN') .and. nh.ge.5) atomchg(irep) = 1
+        if ((rnm.eq.'HIS'.or.rnm.eq.'HIP'.or.rnm.eq.'HID'.or.rnm.eq.'HIE') &
+             .and. nh.ge.2) atomchg(irep) = 1
       endif
 
       ! --- side chain carboxylates: Asp, Glu ---
-      if (rnm.eq.'ASP' .or. rnm.eq.'GLU') then
+      ! ASH and GLH are the protonated (neutral) acids; they are listed so the
+      ! hydrogen count is actually examined rather than the residue skipped.
+      ! CYM is deprotonated cysteine, whose SG carries the charge.
+      if (rnm.eq.'ASP' .or. rnm.eq.'GLU' .or. rnm.eq.'ASH' .or. rnm.eq.'GLH') then
         nh = 0
         irep = 0
         do i = 1, number
@@ -821,7 +1036,15 @@ subroutine mfcc(natomsaved)
   ! The whole connection layer is disabled downstream when a block turns out
   ! malformed, which is the behaviour this preserves. It becomes live again
   ! once the chain-start span is defined properly.
-  if (nnn-mm+2 .lt. 2 .or. mm-2 .lt. 1) then
+  ! A positive span is not enough: the span has to lie inside the peptide
+  ! chain. T4-Lysozyme numbers its ligand ahead of the protein, so the
+  ! hardcoded mm=9 lands in the ligand, nnn-mm+2 comes out positive, and the
+  ! old test passed a block that starts inside a hydrocarbon and runs into the
+  ! protein. class is zero for every atom that is not part of the chain, which
+  ! is the check that actually means something here.
+  if (nnn-mm+2 .lt. 2 .or. mm-2 .lt. 1 .or. &
+      mm-2 .lt. pep_first .or. nnn .gt. pep_last .or. &
+      class(mm) .le. 0 .or. class(nnn) .le. 0) then
     nconskip = nconskip + 1
     write(ioutfile,'(" MFCC skipping contact between residues ",i4," and ",i4, &
           &": the connection span is empty (start atom ",i6,", end atom ",i6,")")') &
@@ -986,9 +1209,14 @@ subroutine mfcc(natomsaved)
      if (ierrxyz /= 0) then
         call PrtWrn(iOutFile,'Could not open MFCC xyz file, skipping the dump.')
      else
-        do k=1,npmfcc
+        do k=1,npmfcc+nmfccextra
            write(iMfccXyzFile,'(i8)') mfccatom(k)
-           write(iMfccXyzFile,'("mfcc fragment ",i0,"/",i0," | atoms ",i0)') k,npmfcc,mfccatom(k)
+           if (k .le. npmfcc) then
+              write(iMfccXyzFile,'("mfcc fragment ",i0,"/",i0," | atoms ",i0)') k,npmfcc,mfccatom(k)
+           else
+              write(iMfccXyzFile,'("mfcc standalone ",i0,"/",i0," | ",a3," | atoms ",i0, &
+                    &" | charge ",i0)') k-npmfcc,nmfccextra,xname(k-npmfcc),mfccatom(k),mfcccharge(k)
+           endif
            do i=1,mfccatom(k)
               write(iMfccXyzFile,'(a2,3(2x,f14.8))') mfccatomxiao(i,k), &
                     mfcccord(1,i,k),mfcccord(2,i,k),mfcccord(3,i,k)

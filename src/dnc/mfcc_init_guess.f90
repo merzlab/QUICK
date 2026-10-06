@@ -53,7 +53,7 @@ subroutine MFCC_initial_guess
    ! has run readbasis on the whole molecule.
    if (quick_method%debug) then
       write(ioutfile,'(" MFCC index map (global / local basis ranges)")')
-      do ixiao=1,npmfcc
+      do ixiao=1,npmfcc+nmfccextra
          write(ioutfile,'("   fragment ",i3," global ",i5," -",i5,"   local ",i5," -",i5)') &
                ixiao,matombases(ixiao),matombasef(ixiao),mfccbases(ixiao),mfccbasef(ixiao)
       enddo
@@ -89,7 +89,7 @@ subroutine MFCC_initial_guess
       enddo
    enddo
 
-   do ixiao=1,npmfcc
+   do ixiao=1,npmfcc+nmfccextra
       do i=mfccbases(ixiao),mfccbasef(ixiao)
          do j=mfccbases(ixiao),mfccbasef(ixiao)
             quick_qm_struct%dense(matombases(ixiao)+i-mfccbases(ixiao),matombases(ixiao)+j-mfccbases(ixiao)) &

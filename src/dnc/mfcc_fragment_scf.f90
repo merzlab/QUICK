@@ -126,7 +126,7 @@ subroutine mfcc_fragment_scf(ierr)
    ! twice is preferable to guessing a bound or over-allocating.
    ! ---------------------------------------------------------------
    maxbas = 0
-   do k = 1, npmfcc
+   do k = 1, npmfcc+nmfccextra
       call deallocate_calculated
       call mfcc_set_submol(mfccatom(k),mfcccord(1,1,k),mfccatomxiao(1,k),mfcccharge(k),ierr)
       if (ierr /= 0) goto 900
@@ -207,7 +207,7 @@ subroutine mfcc_fragment_scf(ierr)
    ! Everything was allocated zeroed, and each rank writes only its own blocks,
    ! so a single sum over ranks at the end reconstructs the full set. That is
    ! why no packing or variable length gather is needed.
-   do k = 1, npmfcc
+   do k = 1, npmfcc+nmfccextra
       if (mod(k-1,nranks) .ne. myrank) cycle
       call mfcc_run_submol(mfccatom(k),mfcccord(1,1,k),mfccatomxiao(1,k),mfcccharge(k), &
             mfccstart(k),mfccfinal(k),mfccbases(k),mfccbasef(k),nb_frag,ierr)
@@ -314,8 +314,8 @@ subroutine mfcc_fragment_scf(ierr)
       nd1 = size(mfccdens,1); nd2 = size(mfccdens,2); nd3 = size(mfccdens,3)
       call mfcc_reduce_dens(mfccdens,    nd1,nd2,nd3)
       call mfcc_reduce_dens(mfccdenscap, nd1,nd2,nd3)
-      call mfcc_reduce_idx(mfccbases,    npmfcc)
-      call mfcc_reduce_idx(mfccbasef,    npmfcc)
+      call mfcc_reduce_idx(mfccbases,    npmfcc+nmfccextra)
+      call mfcc_reduce_idx(mfccbasef,    npmfcc+nmfccextra)
       call mfcc_reduce_idx(mfccbasescap, npmfcc)
       call mfcc_reduce_idx(mfccbasefcap, npmfcc)
       if (kxiaoconnect .gt. 0) then
