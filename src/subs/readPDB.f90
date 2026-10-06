@@ -81,7 +81,14 @@
     deallocate(residue)
     
     close(inputfile)
-100 format(a6,1x,I4,1x,a4,1x,a3,3x,I3,4x,3f8.3)
+! Residue sequence number is columns 23-26 of a pdb ATOM record. Reading it as
+! 3x,I3 skips column 23 and takes only 24-26, so anything past residue 999 comes
+! back silently truncated to its last three digits: T4-Lysozyme's last water,
+! residue 9382, was read as 382. Every residue above 999 then collapses onto a
+! wrong, already-occupied residue index. 2x,I4 skips the blank and the chain id
+! and reads the whole field. Files with 999 residues or fewer parse identically
+! either way, since column 23 is blank for them.
+100 format(a6,1x,I4,1x,a4,1x,a3,2x,I4,4x,3f8.3)
 200 format(a4,4x,3f8.3)
     
     return
