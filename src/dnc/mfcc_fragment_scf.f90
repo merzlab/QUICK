@@ -20,6 +20,7 @@
 subroutine mfcc_fragment_scf(ierr)
    use allmod
    use quick_exception_module
+   use quick_mfcc_repeat_module, only: MFCC_RPT_MAXREP
    use quick_mpi_module, only: bMPI, master
 #ifdef MPIV
    use quick_mpi_module, only: quick_comm, quick_comm_rank, quick_comm_size, quick_mpi_error
@@ -43,6 +44,11 @@ subroutine mfcc_fragment_scf(ierr)
    integer :: myrank, nranks
    integer :: commsaved, ranksaved, sizesaved
    integer :: nd1, nd2, nd3, nc1, nc2, nc3
+   logical :: do_rpt
+   integer :: nrep
+   double precision :: rmsdmax
+   integer, allocatable :: rpt_repof(:), rpt_repslot(:)
+   double precision, allocatable :: rpt_rotof(:,:,:)
    double precision, allocatable :: xyzsaved(:,:)
    type(quick_method_type) :: quick_method_save
    type(quick_molspec_type) :: quick_molspec_save
@@ -121,12 +127,39 @@ subroutine mfcc_fragment_scf(ierr)
    if (real_master) call PrtAct(ioutfile,"Begin MFCC fragment densities")
 
    ! ---------------------------------------------------------------
+   ! With RPT, work out which standalone fragments are copies of which before
+   ! anything else. The grouping needs only the fragment geometries, which
+   ! mfcc_start has already produced, and knowing it here lets Pass 1 skip the
+   ! copies as well: a copy's basis is its representative's, so sizing it would
+   ! mean running readbasis thousands of times for an answer already known. That
+   ! sizing pass, not the SCF, is what dominated the standalone fragments once
+   ! their SCFs were no longer being run.
+   !
+   ! The assignment is a function of the geometries alone, so every rank
+   ! computes the same one without communicating.
+   ! ---------------------------------------------------------------
+   do_rpt = (quick_method%mfccrpt .and. nmfccextra .gt. 0)
+   if (do_rpt) then
+      allocate(rpt_repof(nmfccextra), rpt_repslot(MFCC_RPT_MAXREP), &
+               rpt_rotof(3,3,nmfccextra), stat=ierr)
+      if (ierr /= 0) then
+         ierr = 34
+         goto 900
+      endif
+      call mfcc_rpt_assign(rpt_repof,rpt_repslot,rpt_rotof,nrep,rmsdmax,ierr)
+      if (ierr /= 0) goto 900
+   endif
+
+   ! ---------------------------------------------------------------
    ! Pass 1: build each fragment basis to learn how large the density
    ! blocks must be. readbasis is cheap next to the SCF, so paying for it
    ! twice is preferable to guessing a bound or over-allocating.
    ! ---------------------------------------------------------------
    maxbas = 0
    do k = 1, npmfcc+nmfccextra
+      if (do_rpt .and. k .gt. npmfcc) then
+         if (rpt_repof(k-npmfcc) .gt. 0) cycle   ! a copy, sized with its representative
+      endif
       call deallocate_calculated
       call mfcc_set_submol(mfccatom(k),mfcccord(1,1,k),mfccatomxiao(1,k),mfcccharge(k),ierr)
       if (ierr /= 0) goto 900
@@ -213,7 +246,11 @@ subroutine mfcc_fragment_scf(ierr)
    ! Everything was allocated zeroed, and each rank writes only its own blocks,
    ! so a single sum over ranks at the end reconstructs the full set. That is
    ! why no packing or variable length gather is needed.
-   do k = 1, npmfcc+nmfccextra
+   !
+   ! The peptide fragments are all different from one another, so they are always
+   ! solved one by one. Only the standalone fragments repeat, and only they are
+   ! eligible for the RPT shortcut below.
+   do k = 1, npmfcc
       if (mod(k-1,nranks) .ne. myrank) cycle
       call mfcc_run_submol(mfccatom(k),mfcccord(1,1,k),mfccatomxiao(1,k),mfcccharge(k), &
             mfccstart(k),mfccfinal(k),mfccbases(k),mfccbasef(k),nb_frag,ierr)
@@ -228,6 +265,24 @@ subroutine mfcc_fragment_scf(ierr)
       if (real_master) write(ioutfile,'("   fragment ",i4," basis ",i5," local range ",i5," -",i5)') &
             k,nb_frag,mfccbases(k),mfccbasef(k)
    enddo
+
+   if (nmfccextra .gt. 0) then
+      if (do_rpt) then
+         call mfcc_rpt_standalone(rpt_repof,rpt_repslot,rpt_rotof,nrep,rmsdmax, &
+               maxbas,myrank,nranks,real_master,ierr)
+         if (ierr /= 0) goto 900
+      else
+         do k = npmfcc+1, npmfcc+nmfccextra
+            if (mod(k-1,nranks) .ne. myrank) cycle
+            call mfcc_run_submol(mfccatom(k),mfcccord(1,1,k),mfccatomxiao(1,k),mfcccharge(k), &
+                  mfccstart(k),mfccfinal(k),mfccbases(k),mfccbasef(k),nb_frag,ierr)
+            if (ierr /= 0) goto 900
+            nloc = mfccbasef(k)-mfccbases(k)+1
+            mfccdens(k,1:nloc,1:nloc) = &
+                  quick_qm_struct%dense(mfccbases(k):mfccbasef(k),mfccbases(k):mfccbasef(k))
+         enddo
+      endif
+   endif
 
    do k = 1, npmfcc-1
       if (mod(k-1,nranks) .ne. myrank) cycle
@@ -364,10 +419,278 @@ subroutine mfcc_fragment_scf(ierr)
 #endif
    master = mastersaved
    deallocate(xyzsaved)
-   if (allocated(concord)) deallocate(concord)
-   if (allocated(consym))  deallocate(consym)
+   if (allocated(concord))     deallocate(concord)
+   if (allocated(consym))      deallocate(consym)
+   if (allocated(rpt_repof))   deallocate(rpt_repof)
+   if (allocated(rpt_repslot)) deallocate(rpt_repslot)
+   if (allocated(rpt_rotof))   deallocate(rpt_rotof)
 
 end subroutine mfcc_fragment_scf
+
+
+!-------------------------------------------------------
+! mfcc_rpt_standalone
+!-------------------------------------------------------
+! The RPT (repeat) path for the standalone fragments.
+!
+! A standalone fragment is a whole solvent molecule, ion or ligand, solved in
+! isolation: the MFCC guess never gives it a neighbour, so two copies of the
+! same species differ only by where they sit and how they are turned. The
+! density does not depend on position at all, and the dependence on orientation
+! is an exact linear transformation of the cartesian shells, so one SCF per
+! distinct species is enough.
+!
+! Three steps:
+!
+!   1. Scan the fragments and pick representatives. A fragment joins an existing
+!      representative when it has the same elements in the same order, the same
+!      charge, and superposes onto it; otherwise it becomes a representative
+!      itself. This uses geometry only, so every rank reaches the same answer
+!      without communicating.
+!
+!   2. Solve the representatives. Every rank solves all of them rather than
+!      sharing them out, because there are only as many as there are distinct
+!      species -- water, a few kinds of ion, perhaps a ligand -- and each rank
+!      needs every reference density locally to rotate its own share in step 3.
+!      Only rank zero stores them into mfccdens, or the sum over ranks at the
+!      end would count each one once per rank.
+!
+!   3. Rotate. Each rank takes its share of the remaining fragments and forms
+!      U^T D U, which costs two small matrix products instead of an SCF.
+!
+! A fragment that fails to align against any representative is solved on its
+! own, so an unexpected species or a flexible molecule in several conformations
+! stays correct; it simply does not benefit.
+!-------------------------------------------------------
+
+subroutine mfcc_rpt_assign(repof,repslot,rotof,nrep,rmsdmax,ierr)
+   use allmod
+   use quick_mfcc_module
+   use quick_mfcc_repeat_module
+   implicit none
+
+   integer, intent(out) :: repof(nmfccextra)            ! <0 is a representative,
+   integer, intent(out) :: repslot(MFCC_RPT_MAXREP)     ! >0 names one, 0 is neither
+   double precision, intent(out) :: rotof(3,3,nmfccextra)
+   integer, intent(out) :: nrep
+   double precision, intent(out) :: rmsdmax
+   integer, intent(inout) :: ierr
+
+   integer :: kx, k, ir, nat
+   integer, allocatable :: zref(:), ztgt(:)
+   double precision :: rot(3,3), rmsd
+   logical :: ok
+
+   repof = 0
+   repslot = 0
+   rotof = 0.0d0
+   nrep = 0
+   rmsdmax = 0.0d0
+
+   do kx = 1, nmfccextra
+      k = npmfcc + kx
+      nat = mfccatom(k)
+      if (allocated(ztgt)) deallocate(ztgt)
+      allocate(ztgt(nat))
+      call mfcc_rpt_zlist(nat,mfccatomxiao(1,k),ztgt,ierr)
+      if (ierr /= 0) return
+
+      do ir = 1, nrep
+         if (mfccatom(repslot(ir)) .ne. nat) cycle
+         if (mfcccharge(repslot(ir)) .ne. mfcccharge(k)) cycle
+         ! mfccbases/mfccbasef are derived from these, so a representative with
+         ! a different real-atom range would give the follower the wrong block.
+         if (mfccstart(repslot(ir)) .ne. mfccstart(k)) cycle
+         if (mfccfinal(repslot(ir)) .ne. mfccfinal(k)) cycle
+         if (allocated(zref)) deallocate(zref)
+         allocate(zref(nat))
+         call mfcc_rpt_zlist(nat,mfccatomxiao(1,repslot(ir)),zref,ierr)
+         if (ierr /= 0) return
+         call mfcc_rpt_align(nat,zref,mfcccord(1,1,repslot(ir)), &
+                             ztgt,mfcccord(1,1,k),rot,rmsd,ok)
+         if (ok) then
+            repof(kx) = ir
+            rotof(1:3,1:3,kx) = rot
+            rmsdmax = max(rmsdmax,rmsd)
+            exit
+         endif
+      enddo
+
+      if (repof(kx) .eq. 0 .and. nrep .lt. MFCC_RPT_MAXREP) then
+         nrep = nrep + 1
+         repslot(nrep) = k
+         repof(kx) = -nrep          ! marks "is the representative itself"
+      endif
+   enddo
+
+   if (allocated(zref)) deallocate(zref)
+   if (allocated(ztgt)) deallocate(ztgt)
+
+end subroutine mfcc_rpt_assign
+
+
+!-------------------------------------------------------
+! mfcc_rpt_standalone
+!-------------------------------------------------------
+! Steps 2 and 3 of the RPT path: solve one sub-molecule per species, then
+! produce every other copy from it by rotation. mfcc_rpt_assign has already
+! decided which fragment represents which.
+!-------------------------------------------------------
+
+subroutine mfcc_rpt_standalone(repof,repslot,rotof,nrep,rmsdmax,maxbas, &
+                               myrank,nranks,real_master,ierr)
+   use allmod
+   use quick_mfcc_module
+   use quick_mfcc_repeat_module
+   implicit none
+
+   integer, intent(in) :: repof(nmfccextra), repslot(MFCC_RPT_MAXREP)
+   double precision, intent(in) :: rotof(3,3,nmfccextra)
+   integer, intent(in) :: nrep
+   double precision, intent(in) :: rmsdmax
+   integer, intent(in) :: maxbas, myrank, nranks
+   logical, intent(in) :: real_master
+   integer, intent(inout) :: ierr
+
+   integer :: kx, k, ir, nb_frag, nloc, ia
+   integer :: nself, nrot
+   integer, allocatable :: nbrep(:)                ! basis size of each representative
+   double precision, allocatable :: drep(:,:,:)    ! its density
+   type(mfcc_layout_type), allocatable :: layrep(:)
+   double precision, allocatable :: u(:,:), dtmp(:,:)
+   double precision :: t1, t2, t3
+
+   allocate(nbrep(nrep), layrep(nrep), stat=ia)
+   if (ia /= 0) then
+      ierr = 34
+      return
+   endif
+   nbrep = 0
+
+   ! ---------------------------------------------------------------
+   ! Step 2: solve each representative, on every rank.
+   ! ---------------------------------------------------------------
+   call cpu_time(t1)
+   allocate(drep(maxbas,maxbas,nrep), stat=ia)
+   if (ia /= 0) then
+      ierr = 34
+      return
+   endif
+   drep = 0.0d0
+
+   do ir = 1, nrep
+      k = repslot(ir)
+      call mfcc_run_submol(mfccatom(k),mfcccord(1,1,k),mfccatomxiao(1,k),mfcccharge(k), &
+            mfccstart(k),mfccfinal(k),mfccbases(k),mfccbasef(k),nb_frag,ierr)
+      if (ierr /= 0) return
+      nbrep(ir) = nb_frag
+      drep(1:nb_frag,1:nb_frag,ir) = quick_qm_struct%dense(1:nb_frag,1:nb_frag)
+      ! The shell layout has to be taken now, while this sub-molecule is still
+      ! the active one: the next mfcc_run_submol releases quick_basis.
+      call mfcc_rpt_snapshot_layout(layrep(ir),ierr)
+      if (ierr /= 0) return
+
+      if (myrank .eq. 0) then
+         nloc = mfccbasef(k)-mfccbases(k)+1
+         mfccdens(k,1:nloc,1:nloc) = &
+               quick_qm_struct%dense(mfccbases(k):mfccbasef(k),mfccbases(k):mfccbasef(k))
+      endif
+   enddo
+
+   ! ---------------------------------------------------------------
+   ! Step 3: rotate the rest, or solve it if it matched nothing.
+   ! ---------------------------------------------------------------
+   call cpu_time(t2)
+   allocate(u(maxbas,maxbas), dtmp(maxbas,maxbas), stat=ia)
+   if (ia /= 0) then
+      ierr = 34
+      return
+   endif
+
+   ! Counted from repof rather than from the loop below, so the figures reported
+   ! describe the whole job and not just this rank's share of it.
+   nrot = count(repof .gt. 0)
+   nself = count(repof .eq. 0)
+
+   do kx = 1, nmfccextra
+      k = npmfcc + kx
+      if (repof(kx) .lt. 0) cycle                     ! already solved in step 2
+      if (mod(kx-1,nranks) .ne. myrank) cycle
+
+      if (repof(kx) .eq. 0) then
+         ! Matched no representative: no shortcut available, solve it.
+         call mfcc_run_submol(mfccatom(k),mfcccord(1,1,k),mfccatomxiao(1,k),mfcccharge(k), &
+               mfccstart(k),mfccfinal(k),mfccbases(k),mfccbasef(k),nb_frag,ierr)
+         if (ierr /= 0) return
+         nloc = mfccbasef(k)-mfccbases(k)+1
+         mfccdens(k,1:nloc,1:nloc) = &
+               quick_qm_struct%dense(mfccbases(k):mfccbasef(k),mfccbases(k):mfccbasef(k))
+         cycle
+      endif
+
+      ir = repof(kx)
+      nb_frag = nbrep(ir)
+      call mfcc_rpt_ao_rotation(layrep(ir),rotof(1:3,1:3,kx),u(1:nb_frag,1:nb_frag),ierr)
+      if (ierr /= 0) return
+      call mfcc_rpt_rotate_density(nb_frag,drep(1:nb_frag,1:nb_frag,ir), &
+            u(1:nb_frag,1:nb_frag),dtmp(1:nb_frag,1:nb_frag))
+
+      ! Same species, same real-atom range, so the local basis range is the
+      ! representative's.
+      mfccbases(k) = mfccbases(repslot(ir))
+      mfccbasef(k) = mfccbasef(repslot(ir))
+      nloc = mfccbasef(k)-mfccbases(k)+1
+      mfccdens(k,1:nloc,1:nloc) = dtmp(mfccbases(k):mfccbasef(k),mfccbases(k):mfccbasef(k))
+   enddo
+
+   call cpu_time(t3)
+
+   if (real_master) then
+      write(ioutfile,'("   RPT: ",i6," standalone fragments, ",i4," distinct species solved")') &
+            nmfccextra,nrep
+      write(ioutfile,'("        ",i6," reused by rotation, ",i6," solved individually")') nrot,nself
+      write(ioutfile,'("        largest superposition rmsd ",es10.3," A")') rmsdmax
+      write(ioutfile,'("        cpu: species scf ",f8.2," s   rotate ",f8.2," s")') t2-t1, t3-t2
+      if (nrep .ge. MFCC_RPT_MAXREP) then
+         call PrtWrn(iOutFile,'RPT reached its representative limit; the remaining &
+               &standalone fragments were solved individually.')
+      endif
+   endif
+
+   if (allocated(layrep)) then
+      do ir = 1, nrep
+         call mfcc_rpt_free_layout(layrep(ir))
+      enddo
+      deallocate(layrep)
+   endif
+   if (allocated(nbrep))   deallocate(nbrep)
+   if (allocated(drep))    deallocate(drep)
+   if (allocated(u))       deallocate(u)
+   if (allocated(dtmp))    deallocate(dtmp)
+
+end subroutine mfcc_rpt_standalone
+
+
+!-------------------------------------------------------
+! mfcc_rpt_zlist
+!-------------------------------------------------------
+! Atomic numbers of one fragment, in the order its atoms are stored.
+!-------------------------------------------------------
+
+subroutine mfcc_rpt_zlist(nat,sym,z,ierr)
+   implicit none
+   integer, intent(in) :: nat
+   character(len=2), intent(in) :: sym(*)
+   integer, intent(out) :: z(nat)
+   integer, intent(inout) :: ierr
+   integer :: i
+
+   do i = 1, nat
+      call mfcc_symbol_to_z(sym(i),z(i),ierr)
+      if (ierr /= 0) return
+   enddo
+
+end subroutine mfcc_rpt_zlist
 
 
 !-------------------------------------------------------

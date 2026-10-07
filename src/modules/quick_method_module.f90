@@ -110,6 +110,7 @@ module quick_method_module
         logical :: fragxyz = .false.   ! dump fragment geometries as xyz
         logical :: mfccpure = .false.  ! purify the MFCC guess density (MFCCPURE)
         logical :: mfccfrag = .false.  ! fragment only, no SCF and no guess (MFCCFRAG)
+        logical :: mfccrpt = .false.   ! reuse one SCF per repeated species (MFCC RPT)
         logical :: densdiis = .false.  ! DnC: Pulay mixing on the density instead
                                        ! of Fock DIIS on FDS-SDF (DENSDIIS)
 
@@ -292,6 +293,7 @@ module quick_method_module
             call MPI_BCAST(self%fragxyz,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%mfccpure,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%mfccfrag,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%mfccrpt,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%densdiis,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%ifragbasis,1,mpi_integer,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%iSG,1,mpi_integer,0,quick_comm,quick_mpi_error)
@@ -459,6 +461,7 @@ module quick_method_module
             if (self%MFCC) write(io,'(" MFCC CONNECTION CUTOFF =",f7.2," A")') self%MFCCCUT
             if (self%mfccpure) write(io,'(" PURIFY THE MFCC GUESS DENSITY ")')
             if (self%mfccfrag) write(io,'(" MFCC FRAGMENTATION ONLY: NO SCF, NO INITIAL GUESS ")')
+            if (self%mfccrpt) write(io,'(" REUSE ONE MFCC FRAGMENT SCF PER REPEATED SPECIES (RPT) ")')
             if (self%densdiis) write(io,'(" DIIS ON THE DENSITY RESIDUAL (DIVIDE AND CONQUER) ")')
 
             if (self%FMM)  write(io,'(" FAST MULTIPOLE METHOD = TRUE ")')
@@ -645,6 +648,13 @@ module quick_method_module
                 self%fragxyz=.true.
                 self%SAD=.false.
             endif
+            ! RPT (repeat) modifies MFCC rather than standing on its own: solve one
+            ! sub-molecule per distinct repeated species and reuse its density for
+            ! the other copies. Only the standalone fragments (solvent, ions,
+            ! ligands) ever repeat, so plain MFCC is unaffected by this flag and
+            ! stays the default. Asking for it without MFCC is a no-op, which is
+            ! reported in check() rather than silently ignored.
+            if (found_keyword(keyWD,'RPT'))        self%mfccrpt=.true.
             if (found_keyword(keyWD,'DENSDIIS'))   self%densdiis=.true.
             if (found_keyword(keyWD,'FMM'))        self%FMM=.true.
             if (found_keyword(keyWD,'MP2'))        self%MP2=.true.
@@ -1115,6 +1125,7 @@ module quick_method_module
             self%fragxyz = .false.     ! dump fragment geometries as xyz
             self%mfccpure = .false.    ! purify the MFCC guess density (MFCCPURE)
             self%mfccfrag = .false.    ! fragment only, no SCF (MFCCFRAG)
+            self%mfccrpt = .false.     ! reuse one SCF per repeated species (MFCC RPT)
             self%densdiis = .false.    ! Pulay mixing on the density for DnC (DENSDIIS)
             self%MFCCCUT = 3.0d0       ! contact cutoff for MFCC connection terms
 
@@ -1204,6 +1215,13 @@ module quick_method_module
                 self%gradCutoff=1.0d-8
                 self%XCCutoff=1.0d-10
                 self%basisCutoff=1.0d-7
+            endif
+
+            ! RPT only has meaning as a modifier of the MFCC guess, so say so
+            ! rather than leaving the user to wonder why it changed nothing.
+            if (self%mfccrpt .and. .not.self%MFCC) then
+                call PrtWrn(io,"RPT ONLY APPLIES TO THE MFCC GUESS AND IS IGNORED WITHOUT THE MFCC KEYWORD")
+                self%mfccrpt = .false.
             endif
 
             ! OPT not available for MP2
