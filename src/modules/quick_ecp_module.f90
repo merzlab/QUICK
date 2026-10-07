@@ -45,4 +45,46 @@ module quick_ecp_module
    double precision, allocatable, dimension(:) :: eta
    integer, allocatable, dimension(:) :: kmin,kmax,ktypecp
 
+contains
+
+   !---------------------------------------------------
+   ! Deallocate all ECP module arrays (call at cleanup)
+   !---------------------------------------------------
+   subroutine deallocate_quick_ecp()
+      implicit none
+
+      ! ECP atom/primitive arrays (allocated in ecp.f90:allocateatoms_ecp)
+      if (allocated(nelecp))    deallocate(nelecp)
+      if (allocated(lmaxecp))   deallocate(lmaxecp)
+      if (allocated(clp))       deallocate(clp)
+      if (allocated(zlp))       deallocate(zlp)
+      if (allocated(nlp))       deallocate(nlp)
+      if (allocated(kfirst))    deallocate(kfirst)
+      if (allocated(klast))     deallocate(klast)
+
+      ! ECP integral/scratch arrays (allocated in basis.f90 when ecp=.true.)
+      if (allocated(kmin))      deallocate(kmin)
+      if (allocated(kmax))      deallocate(kmax)
+      if (allocated(eta))       deallocate(eta)
+      if (allocated(ecp_int))   deallocate(ecp_int)
+      if (allocated(kvett))     deallocate(kvett)
+      if (allocated(gout))      deallocate(gout)
+      if (allocated(ktypecp))   deallocate(ktypecp)
+      if (allocated(zlm))       deallocate(zlm)
+      if (allocated(flmtx))     deallocate(flmtx)
+      if (allocated(lf))        deallocate(lf)
+      if (allocated(lmf))       deallocate(lmf)
+      if (allocated(lml))       deallocate(lml)
+      if (allocated(lmx))       deallocate(lmx)
+      if (allocated(lmy))       deallocate(lmy)
+      if (allocated(lmz))       deallocate(lmz)
+      if (allocated(mc))        deallocate(mc)
+      if (allocated(mr))        deallocate(mr)
+      if (allocated(dfac))      deallocate(dfac)
+      if (allocated(dfaci))     deallocate(dfaci)
+      if (allocated(factorial))  deallocate(factorial)
+      if (allocated(fprod))     deallocate(fprod)
+
+   end subroutine deallocate_quick_ecp
+
 end module quick_ecp_module
