@@ -1,4 +1,4 @@
-DFT B3LYP BASIS=def2-tzvp cutoff=1.0e-9 denserms=1.0e-8 energy
+DFT B3LYP BASIS=def2-tzvp cutoff=1.0e-9 denserms=1.0e-8 energy DIPOLE
 
 C     -2.27492    0.11633   -0.03642
 C     -2.54032    1.10642   -1.18173

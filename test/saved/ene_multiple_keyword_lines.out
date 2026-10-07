@@ -22,7 +22,7 @@
 | **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
 | **                                                                                                     **
 | **                                                                                                     **
-| **                                         Copyright (c) 2024                                          **
+| **                                         Copyright (c) 2026                                          **
 | **                          Regents of the University of California San Diego                          **
 | **                                    & Michigan State University                                      **
 | **                                        All Rights Reserved.                                         **
@@ -32,16 +32,18 @@
 | *********************************************************************************************************
 |                                                                                                          
 | Cite this work as:                                                                                       
-| Manathunga, M.; Shajan, A.; Smith, J.; Miao, Y.; He, X.; Ayers, K.; Brothers, E.; Goetz, A.W.; Merz, K.M.
-| QUICK-24.03 University of California San Diego, CA and Michigan State University, East Lansing, MI, 2024 
+| Manathunga, M.; O'Hearn, K. A.; Shajan, A.; Smith, J.; Miao, Y.; He, X.; Ayers, K.;                      
+| Brothers, E.; Palos, E.; Tripathy, V.; Goetz, A.W.; Merz, K.M. QUICK-26.03.                              
+| University of California,San Diego, CA and                                                               
+| Michigan State University, East Lansing, MI, 2026                                                        
 |                                                                                                          
 | If you have any comments or queries, please reach out to us on GitHub issues or discussion sections:     
 | https://github.com/merzlab/QUICK.                                                                        
 |                                                                                                          
-| TASK STARTS ON: Tue Mar  4 13:43:06 2025
-| INPUT FILE :    multiple_keyword_lines.in
-| OUTPUT FILE:    multiple_keyword_lines.out
-| BASIS SET PATH: /scratch/vtripathy/QUICK/install_cuda/basis
+| TASK STARTS ON: Sat Aug  1 23:24:09 2026
+| INPUT FILE :    ene_multiple_keyword_lines.in
+| OUTPUT FILE:    ene_multiple_keyword_lines.out
+| BASIS SET PATH: /scratch/vtripathy/QUICK/install_ffun/basis
 
 |------------ GPU INFORMATION ---------------
 | CUDA ENABLED DEVICE         :        1
@@ -49,13 +51,13 @@
 | CUDA DEVICE NAME            : NVIDIA GeForce RTX 2080
 | CUDA DEVICE PM              :       46
 | CUDA DEVICE CORE FREQ(GHZ)  :     1.71
-| CUDA DEVICE MEMORY SIZE (MB):     7788
+| CUDA DEVICE MEMORY SIZE (MB):     7776
 | SUPPORTING CUDA VERSION     :      7.5
 |--------------------------------------------
 
  @ Read Job And Atom
 
-  KEYWORD=B3LYP CHARGE=-1 CUTOFF=1.0E-9 BASIS=DEF2-SVP DENSERMS=1.0E-6
+  KEYWORD=B3LYP CHARGE=-1 CUTOFF=1.0E-9 DIPOLE BASIS=DEF2-SVP DENSERMS=1.0E-6
  ============== JOB CARD =============
  METHOD = DENSITY FUNCTIONAL THEORY
  DENSITY FUNCTIONAL = B3LYP
@@ -64,19 +66,24 @@
  USE DIIS SCF
  PRINT ENERGY EVERY CYCLE
  READ SAD GUESS FROM FILE
+ DIPOLE
  STANDARD GRID = SG1
+ Level shifting allowed after cycle    3
+ DIIS error must exceed 0.100 for level shifting
+ Max HOMO-LUMO gap to allow level shifting = 0.200
  MAX SCF CYCLES =    200
  MAX DIIS CYCLES =   10
  DELTA DENSITY START CYCLE =    3
  COMPUTATIONAL CUTOFF: 
-      TWO-e INTEGRAL   =  0.100E-08
-      BASIS SET PRIME  =  0.100E-09
-      MATRIX ELEMENTS  =  0.100E-09
-      BASIS FUNCTION   =  0.100E-05
+      TWO-e INTEGRAL         =  0.100E-08
+      BASIS SET PRIME        =  0.100E-09
+      MATRIX ELEMENTS        =  0.100E-09
+      BASIS FUNCTION         =  0.100E-05
+      NEAR-LINEAR DEPENDENCY =  0.100E-04
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = DEF2-SVP,  TYPE = CARTESIAN
-| BASIS FILE = /scratch/vtripathy/QUICK/install_cuda/basis/DEF2-SVP.BAS
-| DATA FILE  =    multiple_keyword_lines.dat
+| BASIS FILE = /scratch/vtripathy/QUICK/install_ffun/basis/DEF2-SVP.BAS
+| DATA FILE  =    ene_multiple_keyword_lines.dat
 
  @ Finish reading job
 
@@ -150,51 +157,75 @@
 
  @ Begin Energy Calculation
 
+| condition number of overlap matrix:    1.749E+03
+| Smallest eigenvalue of overlap matrix:    3.922E-03
+
                                          SCF ENERGY
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -228.479105249      ------         0.237     1        0.01      0.23      0.00    0.1956E+01  0.3912E-01  0.4859E+00
-|  2   -228.093110616  -.385995E+00       0.204     2        0.01      0.20      0.00    0.3038E+00  0.1176E+00  0.5291E+01
-|  3   -227.640947241  -.452163E+00       0.204     3        0.01      0.20      0.00    0.5641E+00  0.1054E+00  0.4754E+01
-|  4   -228.227623489  0.586676E+00       0.203     4        0.01      0.20      0.00    0.1433E+00  0.9884E-02  0.1282E+00
-|  5   -228.302234107  0.746106E-01       0.203     5        0.01      0.20      0.00    0.4865E-01  0.2707E-02  0.4739E-01
-|  6   -228.304097160  0.186305E-02       0.202     6        0.01      0.20      0.00    0.3178E-01  0.1102E-02  0.1746E-01
-|  7   -228.306012574  0.191541E-02       0.201     7        0.01      0.19      0.00    0.3367E-02  0.3002E-03  0.4944E-02
-|  8   -228.306048751  0.361777E-04       0.201     8        0.01      0.19      0.00    0.7470E-03  0.7531E-04  0.1981E-02
-|  9   -228.306050497  0.174608E-05       0.200     9        0.01      0.19      0.00    0.1422E-03  0.1482E-04  0.2291E-03
-| 10   -228.306050575  0.780950E-07       0.199    10        0.01      0.19      0.00    0.3038E-04  0.2799E-05  0.4805E-04
-| 11   -228.306050579  0.364389E-08       0.195     1        0.01      0.19      0.00    0.7549E-05  0.6417E-06  0.6051E-05
+|  1   -228.479105249      ------         0.379     1        0.01      0.37      0.00    0.1956E+01  0.3912E-01  0.4859E+00
+|  2   -228.093110616  -.385995E+00       0.371     2        0.00      0.37      0.00    0.3038E+00  0.1176E+00  0.5291E+01
+|  3   -227.640947241  -.452163E+00       0.369     3        0.01      0.36      0.00    0.5641E+00  0.7994E-01  0.3733E+01
+|   ***  Level shifting applied  ( HOMO-LUMO gap =  0.032 au ) ***
+|  4   -228.267243844  0.626297E+00       0.368     4        0.00      0.36      0.00    0.1177E+00  0.2700E-01  0.1123E+01
+|  5   -228.304122607  0.368788E-01       0.366     5        0.00      0.36      0.00    0.3437E-01  0.2116E-02  0.3634E-01
+|  6   -228.304840192  0.717585E-03       0.364     6        0.00      0.36      0.00    0.2587E-01  0.9399E-03  0.1511E-01
+|  7   -228.306031053  0.119086E-02       0.364     7        0.00      0.36      0.00    0.2175E-02  0.3317E-03  0.6333E-02
+|  8   -228.306048475  0.174215E-04       0.358     8        0.00      0.35      0.00    0.8125E-03  0.8362E-04  0.2285E-02
+|  9   -228.306050425  0.195004E-05       0.357     9        0.00      0.35      0.00    0.2068E-03  0.2286E-04  0.3759E-03
+| 10   -228.306050575  0.150563E-06       0.355    10        0.00      0.35      0.00    0.1845E-04  0.3561E-05  0.6794E-04
+| 11   -228.306050576  0.482828E-09       0.347     1        0.01      0.34      0.00    0.4652E-05  0.5028E-06  0.1257E-04
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER  11 CYCLES
-| MAX ERROR = 0.754852E-05   RMS CHANGE = 0.641732E-06   MAX CHANGE = 0.605051E-05
+| MAX ERROR = 0.465238E-05   RMS CHANGE = 0.502849E-06   MAX CHANGE = 0.125695E-04
 | -----------------------------------------------
- ALPHA ELECTRON DENSITY    =    15.9999782972
- BETA ELECTRON DENSITY     =    15.9999782972
- ELECTRONIC ENERGY    =   -336.630574457
+ ALPHA ELECTRON DENSITY    =    15.9999782964
+ BETA ELECTRON DENSITY     =    15.9999782964
+ ELECTRONIC ENERGY    =   -336.630574453
  CORE_CORE REPULSION  =    108.324523877
- TOTAL ENERGY         =   -228.306050579
+ TOTAL ENERGY         =   -228.306050576
 
  @ End Energy calculation
 
   Skipping one-electron property calculation.
 
+ @ Begin Charge and Dipole Calculation
+
+    ATOMIC CHARGES
+   ATOM          MULLIKEN            LOWDIN
+   C              0.0961            -0.2454
+   H             -0.0355             0.0550
+   C             -0.0310             0.0207
+   O             -0.3649            -0.3690
+   H             -0.0367             0.0561
+   O             -0.5647            -0.5591
+   H             -0.0633             0.0416
+   TOTAL        -1.0000            -1.0000
+
+    DIPOLE (DEBYE)
+      X         Y         Z        TOTAL
+   -3.7818    0.0494   -0.0126    3.7821
+
+ @ End Charge and Dipole Calculation
+
+
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.274813000(  9.11%)
-| DFT GRID OPERATIONS =     0.048444000(  1.61%)
-| TOTAL SCF TIME      =     2.254183000( 74.71%)
-|       TOTAL OP TIME      =     2.180053000( 72.26%)
-|             TOTAL 1e TIME      =     0.004005000(  0.13%)
-|             TOTAL 2e TIME      =     0.305509000( 10.13%)
-|             TOTAL EXC TIME     =     1.865853000( 61.84%)
-|       TOTAL DII TIME      =     0.074043000(  2.45%)
-|             TOTAL DIAG TIME    =     0.051794000(  1.72%)
-| TOTAL TIME          =     3.017056000
+| INITIAL GUESS TIME  =     0.344403000(  7.33%)
+| DFT GRID OPERATIONS =     0.036269000(  0.77%)
+| TOTAL SCF TIME      =     4.000812000( 85.13%)
+|       TOTAL OP TIME      =     3.945634000( 83.96%)
+|             TOTAL 1e TIME      =     0.001631000(  0.03%)
+|             TOTAL 2e TIME      =     0.746019000( 15.87%)
+|             TOTAL EXC TIME     =     3.195845000( 68.00%)
+|       TOTAL DII TIME      =     0.055066000(  1.17%)
+|             TOTAL DIAG TIME    =     0.039553000(  0.84%)
+| TOTAL TIME          =     4.699445000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  0 minutes  3.0 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes  4.7 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Tue Mar  4 13:43:09 2025
+| Normal Termination. Task Finished on: Sat Aug  1 23:24:14 2026

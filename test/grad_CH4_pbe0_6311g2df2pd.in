@@ -1,4 +1,4 @@
-DFT PBE0 BASIS=6-311G(2df,2pd) cutoff=1.0e-9 denserms=1.0e-8 gradient
+DFT PBE0 BASIS=6-311G(2df,2pd) cutoff=1.0e-9 denserms=1.0e-8 gradient DIPOLE
 
 C     -2.26648    0.08484   -0.00000
 H     -1.49765    0.44914   -0.71200
