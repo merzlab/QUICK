@@ -191,10 +191,16 @@ subroutine mfcc_fragment_scf(ierr)
    enddo
 
    ncon = max(kxiaoconnect,1)
-   call allocate_MFCC(npmfcc,ncon,maxbas)
+   ! The fragment slots run 1..npmfcc+nmfccextra: the peptide fragments first,
+   ! then one standalone fragment per solvent molecule, ion or ligand. The cap
+   ! slots only run 1..npmfcc-1, but both density arrays are allocated with the
+   ! same first dimension, so size them for the larger of the two. Sized at
+   ! npmfcc, every standalone fragment wrote past the end of mfccdens: silent
+   ! corruption with a hundred waters, a segfault with four hundred.
+   call allocate_MFCC(npmfcc+nmfccextra,ncon,maxbas)
 
-   if (real_master) write(ioutfile,'(" MFCC fragments =",i4,"  caps =",i4, &
-         &"  connections =",i4,"  max basis =",i5)') npmfcc,npmfcc-1,kxiaoconnect,maxbas
+   if (real_master) write(ioutfile,'(" MFCC fragments =",i4,"  standalone =",i6,"  caps =",i4, &
+         &"  connections =",i4,"  max basis =",i5)') npmfcc,nmfccextra,npmfcc-1,kxiaoconnect,maxbas
 
    ! ---------------------------------------------------------------
    ! Pass 2: converge each sub-molecule and keep its density.

@@ -152,7 +152,21 @@ subroutine inidivcon(natomsaved)
      case (2)
         rbuffer1=5.0d0
         rbuffer2=0.0d0
-        np=class(natomt)        ! residue basis: read from pdb file
+        ! Residue basis: one fragment per residue of the pdb file.
+        !
+        ! This used to be np=class(natomt), the residue number of the last atom,
+        ! which assumes the residue numbers run 1..n with no gaps and that the
+        ! last atom belongs to the last residue. Neither holds for a solvated
+        ! structure: waters and ions usually carry their own numbering, often
+        ! starting well above the protein's. More importantly np has to agree
+        ! with the number of core groups the scan below actually produces,
+        ! because every loop from here on runs 1..np. Counting the runs of equal
+        ! residue number gives exactly that, and reduces to the old value for a
+        ! bare peptide numbered from one.
+        np=1
+        do i=2,natomt
+           if (class(i).ne.class(i-1)) np=np+1
+        enddo
      case (3)
         rbuffer1=6.0d0
         rbuffer2=0.0d0
@@ -307,7 +321,19 @@ subroutine inidivcon(natomsaved)
 
      do i=2,natomt
         if(quick_method%ifragbasis.eq.2) then            ! Residue-based method
-           if(atomname(i).eq.' N  ')then
+           ! A new fragment starts wherever the pdb residue number changes.
+           !
+           ! This used to test atomname(i).eq.' N  ', i.e. it cut the system at
+           ! every backbone nitrogen. For a protein the two agree, since a pdb
+           ! residue begins with its N and only the backbone nitrogen carries
+           ! that name. But water is O,H,H and a metal ion is a single atom:
+           ! neither has a nitrogen, so neither could ever start a fragment, and
+           ! every solvent atom was swallowed into whichever residue preceded
+           ! it. A solvated protein therefore produced one enormous subsystem
+           ! holding the last residue plus the entire solvent box, while the
+           ! remaining np-j2 fragments stayed empty with zero core atoms, which
+           ! PrtLab then indexed as Ftmp(1) of an empty slice.
+           if(class(i).ne.class(i-1))then
               j2=j2+1
               selectN(j2)=i
            endif

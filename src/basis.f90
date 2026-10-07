@@ -195,7 +195,12 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
 
          ! MFCC
          if(i.eq.natomstart)nbasisstart=nbasis+1
-         do ixiao=1,npmfcc
+         ! Up to npmfcc+nmfccextra, not npmfcc: the standalone fragments for
+         ! solvent, ions and ligands live in the slots after the peptide chain,
+         ! and if their global basis offset is never filled it stays zero and
+         ! MFCC_initial_guess indexes the density at zero. The cap loops below
+         ! stay at npmfcc-1, because standalone fragments have no caps.
+         do ixiao=1,npmfcc+nmfccextra
             if(matomstart(ixiao).eq.i)then
                matombases(ixiao)=nbasis+1
                !         print*,ixiao,'matombases(ixiao)=',matomstart(ixiao),matombases(ixiao)
@@ -236,7 +241,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
 
          ! MFCC
          if(i.eq.natomfinal)nbasisfinal=nbasis
-         do ixiao=1,npmfcc
+         do ixiao=1,npmfcc+nmfccextra
             if(matomfinal(ixiao).eq.i)matombasef(ixiao)=nbasis
          enddo
 

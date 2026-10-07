@@ -20,13 +20,23 @@ subroutine PrtLab(line,kk,Ktmp)
 
   line=' '; ini=1; fc=1
 
+  ! An empty list is a real case, not a caller error: a fragment whose nearest
+  ! neighbour lies beyond the buffer radius has no buffer atoms at all, which is
+  ! what an isolated water or ion in a sparse box looks like. Ktmp is then a zero
+  ! length array and Ktmp(1) is out of bounds, so the blank line is the answer.
+  if (kk.le.0) return
+
   write(line1,*) Ktmp(1)
   call EffChar(line1,1,100,k1,k2)
   line(ini:ini+k2-k1)=line1(k1:k2)
   ini=ini+k2-k1+1
   nz=0
-  if (Ktmp(1)==0.and.Ktmp(2)==0) then
-     fc=0; nz=1; ini=1
+  ! The Ktmp(2) test only makes sense with a second element to look at; a one
+  ! element list read past the end of the array.
+  if (kk.ge.2) then
+     if (Ktmp(1)==0.and.Ktmp(2)==0) then
+        fc=0; nz=1; ini=1
+     endif
   endif
 
   do 110 i=2,kk
