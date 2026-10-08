@@ -18,10 +18,9 @@
 !---------------------------------------------------------------------!
 
 module quick_sad_guess_module
+  implicit none
 
-  implicit double precision(a-h,o-z)
   private
-
   public :: getSadGuess, getSadDense
 
 interface getSadGuess
@@ -39,24 +38,29 @@ contains
      use quick_gridpoints_module
      use quick_files_module
      use quick_exception_module
-
 #ifdef CEW 
      use quick_cew_module, only : quick_cew
 #endif
+     use quick_mpi_module, only: bMPI, master
   
-     implicit double precision(a-h,o-z)
-  
+     implicit none
+
      logical :: present, MPIsaved, readSAD
-     double precision:: xyzsaved(3,natom)
+     double precision :: xyzsaved(3,natom)
      character(len=80) :: keywd
      character(len=20) :: tempstring
      character(len=340) :: sadfile
-     integer natomsaved
+     integer :: natomsaved
      type(quick_method_type) quick_method_save
      type(quick_molspec_type) quick_molspec_save
      integer, intent(inout) :: ierr
      logical :: use_cew_save
+     integer :: iitemp, i, j, ii, jj, nsenhai
+     double precision :: diagelement, diagelementb, temp
   
+     ! If density will be read from checkpoint, the SAD guess is not needed.
+     if (quick_method%readden) return
+
      ! first save some important value
      quick_method_save=quick_method
      quick_molspec_save=quick_molspec
@@ -68,11 +72,6 @@ contains
      natomsaved=natom
      xyzsaved=xyz
      MPIsaved=bMPI
-  
-     istart = 1
-     ifinal = 80
-     ibasisstart = 1
-     ibasisend = 80
   
      ! Then give them new value
      bMPI=.false.
@@ -118,7 +117,8 @@ contains
            quick_molspec%nelec = quick_molspec%iattype(1)
            if ((quick_method%DFT .OR. quick_method%SEDFT).and.quick_method%isg.eq.1) &
                  call gridformSG1()
-           call check_quick_method_and_molspec(ioutfile,quick_molspec,quick_method)
+           call check_quick_method_and_molspec(ioutfile,quick_molspec,quick_method,ierr)
+           CHECK_ERROR(ierr)
   
            !-------------------------------------------
            ! At this point we have the positions and identities of the atoms. We also
@@ -153,19 +153,13 @@ contains
            !if (quick_method%DFT .OR. quick_method%SEDFT) call get_sigrad
   
            ! Initialize Density arrays. Create initial density matrix guess.
-           present = .false.
-           if (quick_method%readdmx) inquire (file=dmxfilename,exist=present)
-           if (present) then
-              return
-           else
-              ! Initial Guess
-              diagelement=dble(quick_molspec%nelec)/dble(nbasis)
-              diagelementb=dble(quick_molspec%nelecb)/dble(nbasis)+1.d-8
-              do I=1,nbasis
-                 quick_qm_struct%dense(I,I)=diagelement
-                 quick_qm_struct%denseb(I,I)=diagelementb
-              enddo
-           endif
+           ! Initial Guess
+           diagelement=dble(quick_molspec%nelec)/dble(nbasis)
+           diagelementb=dble(quick_molspec%nelecb)/dble(nbasis)+1.d-8
+           do I=1,nbasis
+              quick_qm_struct%dense(I,I)=diagelement
+              quick_qm_struct%denseb(I,I)=diagelementb
+           enddo
   
            ! AWG Check if SAD file is present when requesting readSAD
            ! AWG If not present fall back to computing SAD guess
@@ -237,13 +231,10 @@ contains
   !   quick_molspec%nelec = quick_molspec_save%nelec
   
      bMPI=MPIsaved
-  
-     return
-  
   end subroutine getmolsad
 
-  subroutine get_sad_density_matrix
 
+  subroutine get_sad_density_matrix
     use quick_constants_module, only: symbol
     use quick_basis_module, only: atombasis, atomdens 
     use quick_molspec_module, only: natom
@@ -251,6 +242,7 @@ contains
     use quick_calculated_module, only: quick_qm_struct
 
     implicit none 
+
     integer :: n, Iatm, sadAtom, i, j
 
     n=0
@@ -297,7 +289,9 @@ contains
      ! this subroutine is to do scf job for restricted system
      !-------------------------------------------------------
      use allmod
+     use quick_mpi_module, only: master
      use quick_overlap_module, only: fullx
+
      implicit none
 
      logical :: done
@@ -338,9 +332,6 @@ contains
      endif
 
      jscf=jscf+1
-
-     return
-
   end subroutine sad_uscf
 
 
@@ -712,9 +703,8 @@ contains
   
         ! Now diagonalize the operator matrix.
   
-        call DIAG(nbasis,quick_qm_struct%o,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%E,&
-              quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
-
+        call MAT_DIAG(quick_qm_struct%o, nbasis, nbasis, quick_qm_struct%E, &
+                quick_qm_struct%vec)
   
         ! Calculate C = XC' and form a new density matrix.
         ! The C' is from the above diagonalization.  Also, save the previous
@@ -775,8 +765,8 @@ contains
 
         ! Now diagonalize the operator matrix.
 
-        call DIAG(nbasis,quick_qm_struct%ob,nbasis,quick_method%DMCutoff,V2,quick_qm_struct%EB,&
-              quick_qm_struct%idegen,quick_qm_struct%vec,IERROR)
+        call MAT_DIAG(quick_qm_struct%ob, nbasis, nbasis, quick_qm_struct%EB, &
+                quick_qm_struct%vec)
 
         ! Calculate C = XC' and form a new density matrix.
         ! The C' is from the above diagonalization.  Also, save the previous
@@ -869,8 +859,6 @@ contains
   
   
      call deallocate_quick_uscf(ierr)
-  
-     return
   end subroutine sad_uelectdiis
 
 
@@ -945,9 +933,6 @@ contains
   
   !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
      if(quick_method%printEnergy) call getOshellEriEnergy
-  
-  return
-  
   end subroutine sad_uscf_operator
 
 end module quick_sad_guess_module

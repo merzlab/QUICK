@@ -68,12 +68,12 @@ contains
 
 subroutine get1e(deltaO)
    use allmod
-
 #ifdef CEW
    use quick_cew_module, only : quick_cew, quick_cew_prescf
 #endif
-
-#ifdef MPIV
+   use quick_mpi_module, only: master
+#if defined(MPIV)
+   use quick_mpi_module, only: bMPI, quick_comm_rank
    use mpi
 #endif
    
@@ -189,8 +189,8 @@ subroutine get1e(deltaO)
       !-----------------------------------------------------------------
       RECORD_TIME(timer_begin%T1eT)
 
-      do i=1,mpi_nbasisn(mpirank)
-         Ibas=mpi_nbasis(mpirank,i)
+      do i=1,mpi_nbasisn(quick_comm_rank)
+         Ibas=mpi_nbasis(quick_comm_rank,i)
          call kineticO(Ibas)
       enddo
       RECORD_TIME(timer_end%T1eT)
@@ -204,16 +204,16 @@ subroutine get1e(deltaO)
       if(.not. quick_method%hasF) then
         call gpu_get_oei(quick_qm_struct%o)
       else
-        do i=1,mpi_jshelln(mpirank)
-           IIsh=mpi_jshell(mpirank,i)
+        do i=1,mpi_jshelln(quick_comm_rank)
+           IIsh=mpi_jshell(quick_comm_rank,i)
            do JJsh=IIsh,jshell
               call attrashell(IIsh,JJsh)
            enddo
         enddo
       endif
 #else
-      do i=1,mpi_jshelln(mpirank)
-         IIsh=mpi_jshell(mpirank,i)
+      do i=1,mpi_jshelln(quick_comm_rank)
+         IIsh=mpi_jshell(quick_comm_rank,i)
          do JJsh=IIsh,jshell
             call attrashell(IIsh,JJsh)
          enddo

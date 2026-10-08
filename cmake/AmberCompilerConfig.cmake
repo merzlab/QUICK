@@ -2,7 +2,7 @@
 
 # Handle the COMPILER option
 # --------------------------------------------------------------------
-set(ALL_COMPILER_VALUES GNU INTEL INTELLLVM ONEAPI PGI CRAY CLANG MSVC AUTO MANUAL)
+set(ALL_COMPILER_VALUES GNU INTEL INTELLLVM ONEAPI PGI CRAY CLANG LLVM MSVC AUTO MANUAL)
 
 # help message displayed when COMPILER is unset or invalid
 set(COMPILER_HELP "
@@ -16,6 +16,7 @@ set(COMPILER_HELP "
       ONEAPI     |     icx      |      icpx      |     ifx            | 2023, 2024
       PGI        |     pgcc     |      pgc++     |     pgf90          | 14.9, 15.4, 16.5
       CLANG      |     clang    |      clang++   |     gfortran       | 
+      LLVM       |     clang    |      clang++   |     flang          | 
       CRAY       |     cc       |      CC        |     ftn            | 8.4.6*
   --------------------------------------------------------------------------------------
       AUTO       |   <uses the default CMake-chosen compilers>
@@ -27,7 +28,7 @@ set(COMPILER_HELP "
 
 
 #create actual option
-set(COMPILER "" CACHE STRING "Compiler to build Amber with.  Valid values: GNU, INTEL, INTELLLVM, ONEAPI, PGI, CRAY, CLANG, MSVC, AUTO, MANUAL.  If 'auto', autodetect the host compiler, or use the CC,CXX,and FC variables if they are set.
+set(COMPILER "" CACHE STRING "Compiler to build Amber with.  Valid values: GNU, INTEL, INTELLLVM, ONEAPI, PGI, CRAY, CLANG, LLVM, MSVC, AUTO, MANUAL.  If 'auto', autodetect the host compiler, or use the CC,CXX,and FC variables if they are set.
  This option can ONLY be set the first time CMake is run.  If you want to change it, delete the build directory and start over.")
  
 set(COMPILER_VALID FALSE)
@@ -80,9 +81,9 @@ if(CROSSCOMPILE)
 	endif()
 	
 	#check if the compiler can crosscompile
-	list_contains(CAN_CROSSCOMPILE ${COMPILER} GNU CLANG MANUAL)
+	list_contains(CAN_CROSSCOMPILE ${COMPILER} GNU CLANG LLVM MANUAL)
 	if(NOT CAN_CROSSCOMPILE)
-		message(FATAL_ERROR "Cannot crosscompile with compiler ${COMPILER}.  Please explicitly set COMPILER to either GNU, CLANG, or MANUAL.")
+		message(FATAL_ERROR "Cannot crosscompile with compiler ${COMPILER}.  Please explicitly set COMPILER to either GNU, CLANG, LLVM, or MANUAL.")
 	endif()
 	
 	if("${CMAKE_SYSTEM_NAME}" STREQUAL "")
@@ -140,6 +141,10 @@ if(FIRST_RUN)
 		else()
 			set_compiler(Fortran gfortran)
 		endif()
+	elseif(${COMPILER} STREQUAL LLVM)
+		set_compiler(C clang)
+		set_compiler(CXX "clang++")
+		set_compiler(Fortran flang)
 	elseif(${COMPILER} STREQUAL INTEL)
 		set_compiler(C icc)
 		set_compiler(CXX icpc)

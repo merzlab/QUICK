@@ -292,7 +292,7 @@ extern "C" void gpu_get_cshell_xcgrad_(QUICKDouble *grad)
 #endif
 {
 #if defined(CEW) && !defined(USE_LEGACY_ATOMICS)
-    gpu->cew_grad = new gpu_buffer_type<QUICKDouble>(3 * gpu->nextatom);
+    gpu->cew_grad = new gpu_buffer_type<QUICKDouble>(3 * gpu->natom);
 #endif
 
     // calculate smem size
@@ -455,7 +455,11 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
     }
 
     // ptchg_grad is no longer needed. reclaim the memory.
-    if (gpu->nextatom > 0 && !gpu->gpu_sim.use_cew) {
+    if (gpu->nextatom > 0
+#if defined(CEW)
+            && !gpu->gpu_sim.use_cew
+#endif
+    ) {
         SAFE_DELETE(gpu->ptchg_grad);
 #if defined(USE_LEGACY_ATOMICS)
         SAFE_DELETE(gpu->ptchg_gradULL);
@@ -592,7 +596,7 @@ extern "C" void gpu_getcew_grad_quad_(QUICKDouble* grad)
 #if defined(USE_LEGACY_ATOMICS)
     memset(gpu->grad->_hostData, 0, sizeof(QUICKDouble) * 3 * gpu->natom);
 #else
-    gpu->cew_grad = new gpu_buffer_type<QUICKDouble>(3 * gpu->nextatom);
+    gpu->cew_grad = new gpu_buffer_type<QUICKDouble>(3 * gpu->natom);
 #endif
 
     // calculate smem size

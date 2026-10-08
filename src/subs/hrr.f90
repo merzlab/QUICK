@@ -282,7 +282,7 @@ subroutine hrrwhole
 
    end select
    111 continue
-!  write(*,*) IJKLtype,mpirank, iii,jjj,kkk,lll,Y
+!  write(*,*) IJKLtype,quick_comm_rank, iii,jjj,kkk,lll,Y
 end subroutine hrrwhole
 
 

@@ -100,19 +100,18 @@ contains
   end subroutine load_test_data
 
 #ifdef MPIV
-  ! initialize mpi library and save mpirank and mpisize
+  ! initialize MPI library and save MPI rank and MPI comm size
   subroutine mpi_initialize(mpisize, mpirank, master, mpierror)
-
     use mpi
+
     implicit none
 
     integer, intent(inout) :: mpisize, mpirank, mpierror
     logical, intent(inout) :: master
 
     call MPI_INIT(mpierror)
-    call MPI_COMM_RANK(MPI_COMM_WORLD,mpirank,mpierror)
-    call MPI_COMM_SIZE(MPI_COMM_WORLD,mpisize,mpierror)
-    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+    call MPI_COMM_RANK(MPI_COMM_WORLD, mpirank, mpierror)
+    call MPI_COMM_SIZE(MPI_COMM_WORLD, mpisize, mpierror)
 
     if(mpirank .eq. 0) then
       master = .true.
@@ -123,33 +122,33 @@ contains
   end subroutine mpi_initialize
 
   ! prints mpi output sequentially
-  subroutine printQuickMPIOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchg_grad, mpirank)
+  subroutine printQuickMPIOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchg_grad, quick_comm_rank)
 
     implicit none
 
-    integer, intent(in)          :: natoms, nxt_charges, mpirank
+    integer, intent(in)          :: natoms, nxt_charges, quick_comm_rank
     integer, intent(in)          :: atomic_numbers(natoms)
     double precision, intent(in) :: totEne
     double precision, intent(in) :: gradients(3,natoms)
     double precision, intent(in) :: ptchg_grad(3,nxt_charges)
 
     write(*,*) ""
-    write(*,'(A11, 1X, I3, 1x, A3)') "--- MPIRANK", mpirank, "---"
+    write(*,'(A11, 1X, I3, 1x, A3)') "--- MPIRANK", quick_comm_rank, "---"
     write(*,*) ""
 
     call printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchg_grad)
-
   end subroutine printQuickMPIOutput
 
-  subroutine mpi_exit
 
+  subroutine mpi_exit
     use mpi
+
     implicit none
+
     integer :: mpierror
 
     call MPI_FINALIZE(mpierror)
     call exit(0)
-
   end subroutine mpi_exit
 
 #endif

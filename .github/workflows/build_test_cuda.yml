@@ -1,0 +1,153 @@
+name: 'Build and Test QUICK CUDA Version'
+
+defaults:
+  run:
+    shell: bash
+
+on: 
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - '**.md'
+      - '.github/workflows/build_test_serial.yml'
+      - '.github/workflows/build_test_mpi.yml'
+      - '.github/workflows/build_test_cuda_enablef.yml'
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}-cuda
+  cancel-in-progress: true
+
+jobs:
+  build-and-test-cuda-cmake:
+    # The specific label for the self-hosted GPU runner
+    runs-on: [self-hosted, linux-gpu-cuda]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        # Only one configuration based on versions provided inside of runner
+          - os: 'ubuntu-22.04'
+            compiler-type: 'GNU'
+            compiler-version: '11'
+            cuda-version: '12.4'
+            c-compiler: 'gcc'
+            cxx-compiler: 'g++'
+            fortran-compiler: 'gfortran'
+
+    name: ${{ matrix.os }} - CUDA ${{ matrix.cuda-version }} - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
+
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Setup Environment Variables for Building and Running Tests'
+        run: |
+          echo "QUICK_BASIS=$PWD/install/basis" >> "$GITHUB_ENV"
+          echo "CUDA_PATH=/usr/local/cuda-${{ matrix.cuda-version }}" >> "$GITHUB_ENV"
+          # Add CUDA binaries and libs to paths
+          echo "PATH=$PWD/install/bin:/usr/local/cuda-${{ matrix.cuda-version }}/bin:$PATH" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PWD/install/lib:/usr/local/cuda-${{ matrix.cuda-version }}/lib64:$LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=$PWD/install/lib:/usr/local/cuda-${{ matrix.cuda-version }}/lib64:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
+          echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
+          echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
+
+      - name: 'Log Software Environment Configuration'
+        run: |
+          echo "OS version:"
+          cat /etc/os-release
+          echo
+          echo "Kernel version:"
+          uname -a
+          echo
+          echo "Glibc version:"
+          ldd --version
+          echo
+          echo "Fortran compiler version:"
+          ${{ matrix.fortran-compiler }} --version
+          echo
+          echo "CMake version:"
+          cmake --version
+          echo
+          echo "GPU Information:"
+          nvidia-smi
+          echo "CUDA Compiler version:"
+          nvcc --version
+
+      - name: 'Detect GPU Architecture'
+        run: |
+          
+          # Get the first GPU name from nvidia-smi
+          GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader | head -n 1)
+          echo "Detected GPU: $GPU_NAME"
+
+          case "$GPU_NAME" in
+            # Ampere Architecture
+            *"A2"*|*"A10"*|*"A40"*|*"A100"*|*"3090"*|*"A4000"*|*"A5000"*|*"A6000"*)
+              GPU_ARCH="ampere"
+            ;;
+            # Turing Architecture
+            *"T4"*|*"2080"*|*"8000"*|*"TITAN-RTX"*|*"6000"*)
+              GPU_ARCH="turing"
+            ;;
+            # Ada lovelace Architecture
+            *L4*|*L40*|*4090*|*Ada*)
+              GPU_ARCH="adalovelace"
+            ;;
+            *V100*)
+              GPU_ARCH="volta"
+            ;;
+            *)
+              echo "Unknown GPU: ${GPU_NAME}. Defaulting to 'ampere'."
+              GPU_ARCH="ampere"
+            ;;
+          esac
+          
+          echo "Setting QUICK_USER_ARCH to: $GPU_ARCH"
+          echo "QUICK_USER_ARCH=$GPU_ARCH" >> "$GITHUB_ENV"
+
+      # cleans up in case previous builds/installs persist
+      - name: 'Cleanup Previous Builds'
+        run: |
+          rm -rf build/
+          rm -rf install/
+
+      - name: 'Configure CUDA Version'
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCOMPILER=${{ matrix.compiler-type }} \
+            -DCUDA=TRUE -DQUICK_USER_ARCH=${{ env.QUICK_USER_ARCH }} -DCMAKE_INSTALL_PREFIX=$PWD/../install -DENABLEF=FALSE
+
+      - name: 'Build and Install'
+        run: |
+          cd build
+          cmake --build . --parallel 3 --verbose
+          cmake --install .
+
+      - name: 'Run Tests'
+        run: |
+          cd install
+          ./runtest --cuda --full
+
+      - name: 'Upload Test Artifacts for CUDA Version'
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cuda-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type}}-${{ matrix.compiler-version }}-${{ matrix.cuda-version }}
+          path: |
+            ${{ github.workspace }}/install/runtest.log
+            ${{ github.workspace }}/install/runtest-verbose.log
+            ${{ github.workspace }}/install/test/runs/cuda
+          retention-days: 3
+          compression-level: 6
+
+      - name: 'Download Test Artifacts for CUDA Version'
+        uses: actions/download-artifact@v4
+        with:
+          name: cuda-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type}}-${{ matrix.compiler-version }}-${{ matrix.cuda-version }}
+
+      - name: 'Display Artifacts'
+        run: |
+          ls -R 

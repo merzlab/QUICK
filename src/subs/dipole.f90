@@ -8,7 +8,7 @@
     subroutine dipole
     use allmod
     implicit double precision(a-h,o-z)
-    real*8 xyzdipole(3,natom)
+    double precision xyzdipole(3,natom)
 !-------------------------------------------------------
 ! The purpose of this subroutine is to generate the Mulliken and Lowdin
 ! charges, and then calculate the dipole moment.
@@ -23,30 +23,11 @@
     ! muliplier.  Also note we are using the total denisity matrix. Store
     ! this is HOLD.
     IF ( .NOT. quick_method%unrst) THEN
-        DO I=1,nbasis
-            DO J=1,nbasis
-                HOLDIJ = 0.0D0
-                DO K=1,nbasis
-                    HOLDIJ = HOLDIJ + quick_qm_struct%dense(K,I)*quick_qm_struct%s(K,J)
-                ENDDO
-                quick_scratch%hold(I,J) = HOLDIJ
-            ENDDO
-        ENDDO
+        call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
+             nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold, nbasis)
     ELSE
-        DO I=1,nbasis
-            DO J=1,nbasis
-                quick_scratch%hold2(J,I) = quick_qm_struct%dense(J,I)+quick_qm_struct%denseB(J,I)
-            ENDDO
-        ENDDO
-        DO I=1,nbasis
-            DO J=1,nbasis
-                HOLDIJ = 0.0D0
-                DO K=1,nbasis
-                    HOLDIJ = HOLDIJ + quick_scratch%hold2(K,I)*quick_qm_struct%s(K,J)
-                ENDDO
-                quick_scratch%hold(I,J) = HOLDIJ
-            ENDDO
-        ENDDO
+        call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense+quick_qm_struct%denseB, &
+             nbasis, quick_qm_struct%s, nbasis, 0.0d0, quick_scratch%hold, nbasis)
     ENDIF
 
     ! Mulliken Charge of atom A = core charge A - (Sum over u on A) PS(uu)
@@ -61,42 +42,51 @@
     ! charges:
     ! Lowdin Charge of atom A = core charge A -
     ! - (Sum over u on A)[S^(1/2)PS^(1/2)](uu)
-    ! Now remember S^(-1/2) = X.  Thus we have to calculate
-    ! XSPSX = S^(-1/2)SPSS^(-1/2)= S^(1/2)PS^(1/2)
 
+    ! If there is no near-linear dependency, S^(-1/2) = X.  Thus we have to calculate
+    ! XSPSX = S^(-1/2)SPSS^(-1/2)= S^(1/2)PS^(1/2)
     ! Currently, HOLD contains PS.  Use the fast multiplier to get SPS and place
     ! it in HOLD2.
-    DO I=1,nbasis
-        DO J=1,nbasis
-            HOLDIJ = 0.0D0
-            DO K=1,nbasis
-                HOLDIJ = HOLDIJ + quick_qm_struct%s(K,I)*quick_scratch%hold(K,J)
-            ENDDO
-            quick_scratch%hold2(I,J) = HOLDIJ
-        ENDDO
-    ENDDO
+    if(NBSuse .eq. nbasis) then
+        call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%s, &
+             nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2, nbasis)
+        call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%x, &
+             nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_scratch%hold, nbasis)
+        call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold, &
+             nbasis, quick_qm_struct%x, nbasis, 0.0d0, quick_scratch%hold2, nbasis)
+    ! If there is near-linear dependency in basis set, quick_qm_struct%x does not contain S(-1/2).
+    ! In such scenario, we will compute S^(1/2) from scratch.
+    ! XSPSX = S^(1/2)PS^(1/2)
+    ! quick_scratch%Sminhalf will contain the eigen values of overlap matrix
+    ! quick_scratch%tmphold, quick_scratch%hold and quick_scratch%hold2 will be used to store intermediates
+    else
+        if(.not. allocated(quick_scratch%Sminhalf)) allocate(quick_scratch%Sminhalf(nbasis))
+        if(.not. allocated(quick_scratch%tmphold)) allocate(quick_scratch%tmphold(nbasis,nbasis))
+        quick_scratch%Sminhalf=0.0d0
+        quick_scratch%tmphold=0.0d0
+        call copyDMat(quick_qm_struct%s, quick_scratch%hold, nbasis)
+        call MAT_DIAG(quick_scratch%hold, nbasis, nbasis, quick_scratch%Sminhalf, quick_scratch%hold2)
+        do J=1,nbasis
+            quick_scratch%tmphold(J,J) = quick_scratch%Sminhalf(J)**(0.5d0)
+        enddo
 
-    ! Now we have two slow multiplication steps to get to XSPSX.
-    DO I=1,nbasis
-        DO J=1,nbasis
-            HOLDIJ = 0.0D0
-            DO K=1,nbasis
-                HOLDIJ = HOLDIJ + quick_qm_struct%x(I,K)*quick_scratch%hold2(K,J)
-            ENDDO
-            quick_scratch%hold(I,J) = HOLDIJ
-        ENDDO
-    ENDDO
-
-    DO I=1,nbasis
-        DO J=1,nbasis
-            HOLDIJ = 0.0D0
-            DO K=1,nbasis
-                HOLDIJ = HOLDIJ + quick_scratch%hold(I,K)*quick_qm_struct%x(K,J)
-            ENDDO
-            quick_scratch%hold2(I,J) = HOLDIJ
-        ENDDO
-    ENDDO
-
+        call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold2, &
+             nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%hold,nbasis)
+        call MAT_DGEMM ('n', 't', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%hold, &
+             nbasis, quick_scratch%hold2, nbasis, 0.0d0, quick_scratch%tmphold,nbasis)
+        IF ( .NOT. quick_method%unrst) THEN
+            call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense, &
+                 nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%hold, nbasis)
+        ELSE
+            call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_qm_struct%dense+quick_qm_struct%denseB, &
+                 nbasis, quick_scratch%tmphold, nbasis, 0.0d0, quick_scratch%hold, nbasis)
+        ENDIF
+        call MAT_DGEMM ('n', 'n', nbasis, nbasis, nbasis, 1.0d0, quick_scratch%tmphold, &
+             nbasis, quick_scratch%hold, nbasis, 0.0d0, quick_scratch%hold2, nbasis)
+        deallocate(quick_scratch%Sminhalf)
+        deallocate(quick_scratch%tmphold)
+    endif
+    
     ! So now HOLD2 contains XSPSX.  Use this to calculate the Lowdin charges.
     DO I=1,natom
         quick_qm_struct%Lowdin(I) = quick_molspec%chg(I)

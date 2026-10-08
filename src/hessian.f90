@@ -49,6 +49,7 @@ subroutine fdhessian(failed)
   use quick_grad_cshell_module, only: cshell_gradient
   use quick_grad_oshell_module, only: oshell_gradient
   use quick_exception_module, only: RaiseException
+  use quick_mpi_module, only: master
   implicit double precision(a-h,o-z)
 
   character(len=1) cartsym(3)
@@ -120,7 +121,7 @@ subroutine HFHessian
   use quick_oei_module, only: ekinetic
   use quick_cutoff_module, only: cshell_density_cutoff, cshell_dnscreen
   use quick_eri_fock1_cshell_module
- 
+
   implicit double precision(a-h,o-z)
   ! dimension W(2*(maxbasis/2)**2,2*(maxbasis/2)**2),
   dimension itype2(3,2),ielecfld(3)

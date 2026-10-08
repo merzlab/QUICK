@@ -33,14 +33,14 @@ module quick_oeproperties_module
    use quick_molsurface_module, only: generate_MKS_surfaces
    use quick_molspec_module, only: quick_molspec
    use quick_calculated_module, only: quick_qm_struct
-#ifdef MPIV
+#if defined(MPIV)
+   use quick_mpi_module, only: master, quick_comm, quick_mpi_error
    use mpi
-   use quick_mpi_module, only: master, mpierror
 #endif
    implicit none
 
    logical fail
-   integer ierr, nbasis
+   integer ierr, nbasis, alloc_status
 
    if (quick_method%ext_grid) then
       call compute_oeprop_grid(quick_molspec%nextpoint,quick_molspec%extpointxyz)
@@ -52,11 +52,17 @@ module quick_oeproperties_module
         call generate_MKS_surfaces()
 #ifdef MPIV
       endif
-      call MPI_BCAST(quick_molspec%nvdwpoint,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_molspec%nvdwpoint,1,mpi_integer,0,quick_comm,quick_mpi_error)
       if(.not.master)then
-        allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint))
+        allocate(quick_molspec%vdwpointxyz(3,quick_molspec%nvdwpoint), stat=alloc_status)
+
+        if(alloc_status /= 0) then
+          call PrtErr(OUTFILEHANDLE, '!!quick_molspec%vdwpointxyz array reallocation failed in compute_oeprop!!')
+          call quick_exit(OUTFILEHANDLE,1)
+        endif
+      
       endif
-      call MPI_BCAST(quick_molspec%vdwpointxyz,quick_molspec%nvdwpoint*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(quick_molspec%vdwpointxyz,quick_molspec%nvdwpoint*3,mpi_double_precision,0,quick_comm,quick_mpi_error)
 #endif
 
       call compute_oeprop_grid(quick_molspec%nvdwpoint,quick_molspec%vdwpointxyz)
@@ -80,17 +86,22 @@ module quick_oeproperties_module
    use quick_files_module, only: iESPFile, espFileName, iVdwSurfFile, VdwSurfFileName
    use quick_method_module, only: quick_method
    use quick_timer_module, only : timer_begin, timer_end, timer_cumer
-#ifdef MPIV
+#if defined(MPIV)
    use quick_mpi_module, only: master
 #endif
 
    implicit none
-   integer :: ierr, npoints
+   integer :: ierr, npoints, alloc_status
    double precision, allocatable :: esp_on_points(:)
    double precision, intent(in) :: xyz_points(:,:)
 
-   allocate(esp_on_points(npoints))
+   allocate(esp_on_points(npoints), stat=alloc_status)
 
+   if(alloc_status /= 0) then
+     call PrtErr(OUTFILEHANDLE, '!!esp_on_points array reallocation failed in compute_oeprop_grid!!')
+     call quick_exit(OUTFILEHANDLE,1)
+   endif
+      
    ierr = 0
 
    ! Electrostatic Potential
@@ -168,21 +179,21 @@ module quick_oeproperties_module
  !     2. esp_shell_pair: Computes the electronic contribution to the ESP     !
  !----------------------------------------------------------------------------!
  subroutine compute_esp(npoints,xyz_points,esp)
-   use quick_timer_module, only : timer_begin, timer_end, timer_cumer
    use quick_basis_module, only: jshell
    use quick_calculated_module, only: quick_qm_struct
-#ifdef MPIV
-    use mpi
+   use quick_timer_module, only : timer_begin, timer_end, timer_cumer
+#if defined(MPIV)
     use quick_basis_module, only: mpi_jshelln, mpi_jshell
-    use quick_mpi_module, only: mpirank, mpierror 
+    use quick_mpi_module, only: quick_comm, quick_comm_rank, quick_mpi_error
+    use mpi
 #endif
-#if defined CUDA || defined CUDA_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
     use quick_method_module, only: quick_method
 #endif
 
-
    implicit none
-   integer :: ierr
+
+   integer :: ierr, alloc_status
    integer :: IIsh, JJsh
    integer :: igridpoint, npoints
 
@@ -197,10 +208,28 @@ module quick_oeproperties_module
    ierr = 0
    
    ! Allocates ESP_NUC and ESP_ELEC arrays
-   allocate(esp_nuclear(npoints))
-   allocate(esp_electronic(npoints))
+   allocate(esp_nuclear(npoints), stat=alloc_status)
+
+   if(alloc_status /= 0) then
+     call PrtErr(OUTFILEHANDLE, '!! esp_nuclear array reallocation failed in compute_esp!!')
+     call quick_exit(OUTFILEHANDLE,1)
+   endif
+      
+   allocate(esp_electronic(npoints), stat=alloc_status)
+
+   if(alloc_status /= 0) then
+     call PrtErr(OUTFILEHANDLE, '!! esp_electronic array reallocation failed in compute_esp!!')
+     call quick_exit(OUTFILEHANDLE,1)
+   endif
+      
 #ifdef MPIV
    allocate(esp_electronic_aggregate(npoints))
+
+   if(alloc_status /= 0) then
+     call PrtErr(OUTFILEHANDLE, '!! esp_electronic_aggregate array reallocation failed in compute_esp!!')
+     call quick_exit(OUTFILEHANDLE,1)
+   endif
+      
 #endif
 
    ! ESP_ELEC array need initialization as we will be iterating
@@ -213,28 +242,28 @@ module quick_oeproperties_module
    call esp_nuc(npoints, xyz_points, esp_nuclear)
 
    ! Computes ESP_ELEC
-#if defined CUDA || defined CUDA_MPIV
+#if defined(GPU) || defined(MPIV_GPU)
    call gpu_upload_oeprop(npoints, xyz_points, esp_electronic, ierr)
    call gpu_upload_density_matrix(quick_qm_struct%dense)
    if (quick_method%UNRST) call gpu_upload_beta_density_matrix(quick_qm_struct%denseb)
    call gpu_get_oeprop(esp_electronic)
 #if defined MPIV
    call MPI_REDUCE(esp_electronic, esp_electronic_aggregate, npoints, &
-     MPI_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, mpierror)
+     MPI_double_precision, MPI_SUM, 0, quick_comm, quick_mpi_error)
 #endif
    ! Sum over contributions from different shell pairs
 #elif defined MPIV
    ! MPI parallellization is performed over shell-pairs
    ! Different processes consider different shell-pairs
-   do Ish=1,mpi_jshelln(mpirank)
-      IIsh=mpi_jshell(mpirank,Ish)
+   do Ish=1,mpi_jshelln(quick_comm_rank)
+      IIsh=mpi_jshell(quick_comm_rank,Ish)
       do JJsh=IIsh,jshell
          call esp_shell_pair(IIsh, JJsh, npoints, xyz_points, esp_electronic)
       enddo
    enddo
    ! MPI_REDUCE is called to sum over esp_electronic obtained from all the processes
    call MPI_REDUCE(esp_electronic, esp_electronic_aggregate, npoints, &
-     MPI_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, mpierror)
+     MPI_double_precision, MPI_SUM, 0, quick_comm, quick_mpi_error)
 #else
    do IIsh = 1, jshell
       do JJsh = IIsh, jshell
@@ -278,7 +307,7 @@ module quick_oeproperties_module
    use quick_files_module, only: ioutfile
    use quick_exception_module, only: RaiseException
    use quick_constants_module, only : symbol
-#ifdef MPIV
+#if defined(MPIV)
    use quick_mpi_module, only: master
 #endif
 
@@ -332,13 +361,9 @@ module quick_oeproperties_module
      end do
 
      ! Using the inverse distance matrix to form the matrix A and vector B.
-#if defined CUDA
-     call CUBLAS_DGEMV('N',natom,npoints,One,invdist_arr,natom,esp,1,Zero,B,1)
-     call CUBLAS_DGEMM('N', 'T', natom, natom, npoints, One, invdist_arr, natom, invdist_arr, natom, Zero, A(1:natom,1:natom), natom)
-#else
-     call DGEMV('N',natom,npoints,One,invdist_arr,natom,esp,1,Zero,B,1)
-     call DGEMM('N', 'T', natom, natom, npoints, One, invdist_arr, natom, invdist_arr, natom, Zero, A(1:natom,1:natom), natom)
-#endif
+     call DGEMV('N', natom, npoints, One, invdist_arr, natom, esp, 1, Zero, B, 1)
+     call MAT_DGEMM('N', 'T', natom, natom, npoints, One, invdist_arr, natom, &
+             invdist_arr, natom, Zero, A(1:natom,1:natom), natom)
 
      deallocate(invdist_arr)
 
@@ -369,11 +394,7 @@ module quick_oeproperties_module
 
 !  q = A-1*B
 
-#if defined CUDA
-   call CUBLAS_DGEMV('N',natom+1,natom+1,One,A,LDA,B,1,Zero,q,1)
-#else
-   call DGEMV('N',natom+1,natom+1,One,A,LDA,B,1,Zero,q,1)
-#endif
+   call DGEMV('N', natom+1, natom+1, One, A, LDA, B, 1, Zero, q, 1)
 
 !  B is copied to charge array.
 
@@ -509,10 +530,10 @@ module quick_oeproperties_module
   use quick_files_module, only: iEFIELDFile, efieldFileName
   use quick_molspec_module, only: quick_molspec
   use quick_timer_module, only: timer_begin, timer_end, timer_cumer
-#ifdef MPIV
-   use mpi
+#if defined(MPIV)
    use quick_basis_module, only: mpi_jshelln, mpi_jshell
-   use quick_mpi_module, only: master, mpirank, mpierror
+   use quick_mpi_module, only: master, quick_comm, quick_comm_rank, quick_mpi_error
+   use mpi
 #endif
 
    implicit none
@@ -551,14 +572,14 @@ module quick_oeproperties_module
    ! Computes EField_ELEC by summing over contrbutions from individual shell-pairs
 
 #ifdef MPIV
-   do Ish=1,mpi_jshelln(mpirank)
-      IIsh=mpi_jshell(mpirank,Ish)
+   do Ish=1,mpi_jshelln(quick_comm_rank)
+      IIsh=mpi_jshell(quick_comm_rank,Ish)
       do JJsh=IIsh,jshell
          call efield_shell_pair(IIsh, JJsh, efield_electronic)
       enddo
    enddo
    call MPI_REDUCE(efield_electronic, efield_electronic_aggregate, 3 * quick_molspec%nextpoint, &
-     MPI_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, mpierror)
+     MPI_double_precision, MPI_SUM, 0, quick_comm, quick_mpi_error)
 #else
    do IIsh = 1, jshell
       do JJsh = IIsh, jshell
