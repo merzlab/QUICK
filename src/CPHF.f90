@@ -467,6 +467,9 @@ subroutine xc_fock
      use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
      use xc_f90_types_m
      use xc_f90_lib_m
+#if defined(MPIV)
+     use quick_mpi_module, only: bMPI, quick_comm_rank
+#endif
      implicit none
 
 #ifdef MPIV
