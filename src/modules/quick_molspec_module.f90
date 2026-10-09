@@ -151,15 +151,24 @@ contains
 
       if (.not. allocated(xyz)) allocate(xyz(3,natom))
       if (.not. allocated(self%distnbor))  allocate(self%distnbor(natom))
-      if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
-      if (.not. allocated(self%iatmass)) allocate(self%iatmass(natom))
+      ! iattype/iatmass may already be populated here (e.g. restored from a
+      ! checkpoint by read_quick_molspec, called earlier in read_Job_and_Atom);
+      ! only zero them out on genuine first allocation, not on every call to
+      ! this subroutine, or a restart's restored atom types get silently
+      ! wiped back to 0 before set_quick_molspec ever uses them.
+      if (.not. allocated(self%iattype)) then
+         allocate(self%iattype(natom))
+         self%iattype(:) = 0
+      endif
+      if (.not. allocated(self%iatmass)) then
+         allocate(self%iatmass(natom))
+         self%iatmass(:) = 0d0
+      endif
       if (.not. allocated(self%chg)) allocate(self%chg(natom))
       if (.not. allocated(self%AtomDistance)) allocate(self%AtomDistance(natom,natom))
       if (.not. allocated(self%dlfind_freezeatm)) allocate(self%dlfind_freezeatm(natom))
       do i=1,natom
          self%distnbor(i)=0
-         self%iattype(i)=0
-         self%iatmass(i)=0d0
          self%chg(i)=0d0
          self%dlfind_freezeatm(i) = 0
          do j=1,3
