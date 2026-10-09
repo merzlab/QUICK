@@ -472,9 +472,6 @@ subroutine xc_fock
 #endif
      implicit none
 
-#ifdef MPIV
-     include "mpif.h"
-#endif
      double precision, dimension(1) :: libxc_rho
      double precision, dimension(1) :: libxc_sigma
      double precision, dimension(1) :: libxc_exc
