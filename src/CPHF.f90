@@ -1091,7 +1091,7 @@ end subroutine xc_fock
 !---------------------------------------------------
       implicit real*8 (a-h,o-z)
       parameter (zero=0.d0,one=1.0d0,two=2.d0)
-      dimension fock(*),cvec(ncf,ncf),eval(ncf),d1(*)
+      dimension fock(*),smat(*),cvec(ncf,ncf),eval(ncf),d1(*)
       dimension w1(ncf,ncf),w2(ncf*(ncf-nocc)),w3(nocc,ncf)
       dimension w222(ncf,nocc),w22(nocc,ncf),w11(nocc,ncf-nocc)
 !
@@ -1104,13 +1104,14 @@ end subroutine xc_fock
                  one, cvec, ncf, w1, ncf, &
                  zero, w2, nocc)
 !  expand the overlap matrix to quadratic
-!  (smat has no explicit dimension statement in this routine, so it is
-!  typed as a scalar by implicit typing; the actual argument passed in by
-!  the caller is really an ntri-element array slice. Passing it directly
-!  relies on Fortran's by-reference call convention to reach the full
-!  array through smat's address -- do NOT wrap it in an array constructor
-!  (/smat/), which instead copies smat's scalar *value* into a fresh
-!  1-element temporary, causing quad to read out-of-bounds garbage.)
+!  (smat used to have no explicit dimension statement here, so it was
+!  implicitly typed as a scalar even though callers pass an ntri-element
+!  array slice; a later fix wrapped the call as quad((/smat/),...) to
+!  quiet the resulting rank-mismatch warning, but an array constructor
+!  copies smat's scalar *value* into a fresh 1-element temporary, so quad
+!  read out-of-bounds garbage past that one element. Giving smat its
+!  proper dimension(*) below -- matching fock/d1 above -- fixes the type
+!  at its root instead of relying on pass-by-reference leniency.)
       call quad(smat,w1,one,ncf)
 !  W3=Cocc(T)*S
       call dgemm('t','n',nocc,ncf,ncf, &
