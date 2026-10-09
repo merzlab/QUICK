@@ -515,8 +515,8 @@ subroutine xc_fock
 
 #if defined MPIV && !defined CUDA_MPIV && !defined HIP_MPIV
         if(bMPI) then
-           irad_init = quick_dft_grid%igridptll(mpirank+1)
-           irad_end = quick_dft_grid%igridptul(mpirank+1)
+           irad_init = quick_dft_grid%igridptll(quick_comm_rank+1)
+           irad_end = quick_dft_grid%igridptul(quick_comm_rank+1)
         else
            irad_init = 1
            irad_end = quick_dft_grid%nbins
