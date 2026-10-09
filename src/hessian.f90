@@ -2246,9 +2246,7 @@ subroutine get_eri_hessian
         call hess2elec(I,I,I,J,constant)
 
         ! Find all the (ij|ij) integrals
-        constant = (2.0d0*DENSEJI*DENSEJI-0.5d0*quick_method%x_hybrid_coeff*DENSEJJ*DENSEJI &
-                  -0.5d0*quick_method%x_hybrid_coeff*DENSEJJ*DENSEII)
-!        constant =(1.5d0*DENSEJI*DENSEJI-0.50d0*quick_method%x_hybrid_coeff*DENSEJJ*DENSEII)
+        constant = (1.5d0*DENSEJI*DENSEJI-0.50d0*quick_method%x_hybrid_coeff*DENSEJJ*DENSEII)
         call hess2elec(I,J,I,J,constant)
 
         do K=J+1,nbasis

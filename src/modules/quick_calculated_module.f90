@@ -358,14 +358,14 @@ contains
          if (quick_method%unrst) then
             if(.not. allocated(self%obd)) allocate(self%obd(3*natom,ntri))
             if(.not. allocated(self%fbd)) allocate(self%fbd(3*natom,ntri))
+            if(.not. allocated(self%Eb)) allocate(self%Eb(nbasis))
+            if(.not. allocated(self%cob)) allocate(self%cob(nbasis,nbasis))
             idimA = (nbasis-nelec)*nelec + (nbasis-nelecB)*nelecB
          else
             idimA = 2*(nbasis-(nelec/2))*(nelec/2)
          endif
          if(.not. allocated(self%CPHFA)) allocate(self%CPHFA(idimA,idimA))
          if(.not. allocated(self%CPHFB)) allocate(self%CPHFB(idimA,natom*3))
-         if(.not. allocated(self%Eb)) allocate(self%Eb(nbasis))
-         if(.not. allocated(self%cob)) allocate(self%cob(nbasis,nbasis))
       endif
 
       ! if unrestricted, some more variables need to be allocated
@@ -683,7 +683,7 @@ contains
          if (allocated(self%cob))  call zeroMatrix(self%cob,nbasis)
          call zeroMatrix(self%denseab,nbasis)
          call zeroMatrix(self%denseb,nbasis)
-         if (allocated(self%Eb))   call zeroVec(self%Eb,self%NBSuse)
+         if (allocated(self%Eb) .and. associated(self%NBSuse))   call zeroVec(self%Eb,self%NBSuse)
       endif
 
    end subroutine

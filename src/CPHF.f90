@@ -1104,7 +1104,14 @@ end subroutine xc_fock
                  one, cvec, ncf, w1, ncf, &
                  zero, w2, nocc)
 !  expand the overlap matrix to quadratic
-      call quad((/smat/),w1,one,ncf)
+!  (smat has no explicit dimension statement in this routine, so it is
+!  typed as a scalar by implicit typing; the actual argument passed in by
+!  the caller is really an ntri-element array slice. Passing it directly
+!  relies on Fortran's by-reference call convention to reach the full
+!  array through smat's address -- do NOT wrap it in an array constructor
+!  (/smat/), which instead copies smat's scalar *value* into a fresh
+!  1-element temporary, causing quad to read out-of-bounds garbage.)
+      call quad(smat,w1,one,ncf)
 !  W3=Cocc(T)*S
       call dgemm('t','n',nocc,ncf,ncf, &
                  one, cvec, ncf, w1, ncf, &
