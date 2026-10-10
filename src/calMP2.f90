@@ -7,15 +7,16 @@ subroutine calmp2
   use allmod
   use quick_gaussian_class_module
   use quick_cutoff_module, only: cshell_density_cutoff
+
   implicit double precision(a-h,o-z)
 
   double precision cutoffTest,testtmp,testCutoff
   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-    integer :: nelec,nelecb
+  integer :: nelec,nelecb
 
-    nelec = quick_molspec%nelec
-    nelecb = quick_molspec%nelecb
+  nelec = quick_molspec%nelec
+  nelecb = quick_molspec%nelecb
 
   call PrtAct(ioutfile,"Begin MP2 Calculation")
   cutoffmp2=1.0d-8  ! cutoff criteria
@@ -246,15 +247,18 @@ end subroutine calmp2
 
 
 #ifdef MPIV
-
 ! Ed Brothers. November 27, 2001
 ! Xiao HE. September 14,2008
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 subroutine MPI_calmp2
   use allmod
+  use quick_basis_module, only: mpi_jshell, mpi_jshelln
   use quick_gaussian_class_module
   use quick_cutoff_module, only: cshell_density_cutoff
+  use quick_mpi_module, only: bMPI, master, quick_comm, quick_comm_rank, &
+        quick_comm_size, quick_mpi_error, quick_mpi_status
   use mpi
+
   implicit double precision(a-h,o-z)
 
   double precision cutoffTest,testtmp,testCutoff
@@ -267,9 +271,9 @@ subroutine MPI_calmp2
     nelecb = quick_molspec%nelecb
 
   if (bMPI) then
-!     call MPI_BCAST(DENSE,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-!     call MPI_BCAST(CO,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-!     call MPI_BCAST(E,nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+!     call MPI_BCAST(DENSE,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+!     call MPI_BCAST(CO,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+!     call MPI_BCAST(E,nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
   endif
 
 
@@ -341,8 +345,8 @@ subroutine MPI_calmp2
      call initialOrbmp2k331(orbmp2k331,nstep,nbasis,ivir,iocc,nsteplength)
 
      !---------------- MPI/ ALL NODES -----------------------------
-     do i=1,mpi_jshelln(mpirank)
-        II=mpi_jshell(mpirank,i)
+     do i=1,mpi_jshelln(quick_comm_rank)
+        II=mpi_jshell(quick_comm_rank,i)
         !     do II=1,jshell
         do JJ=II,jshell
 
@@ -480,12 +484,12 @@ subroutine MPI_calmp2
            enddo
         enddo
         ! send 3 indices integrals to master node
-        call MPI_SEND(temp4d,nbasis*ivir*iocc*nsteplength,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+        call MPI_SEND(temp4d,nbasis*ivir*iocc*nsteplength,mpi_double_precision,0,quick_comm_rank,quick_comm,IERROR)
         ! master node will receive infos from every nodes
      else
-        do i=1,mpisize-1
+        do i=1,quick_comm_size-1
            ! receive integrals from slave nodes
-           call MPI_RECV(temp4d,nbasis*ivir*iocc*nsteplength,mpi_double_precision,i,i,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
+           call MPI_RECV(temp4d,nbasis*ivir*iocc*nsteplength,mpi_double_precision,i,i,quick_comm,QUICK_MPI_STATUS,IERROR)
            ! and sum them into operator
            do j1=1,nbasis
               do k1=1,ivir
@@ -503,7 +507,7 @@ subroutine MPI_calmp2
 
      !---------------- MPI/ MASTER -------------------------------
 
-     call MPI_Reduce(ntemp, total_ntemp, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD,IERROR);
+     call MPI_Reduce(ntemp, total_ntemp, 1, MPI_INT, MPI_SUM, 0, quick_comm, IERROR);
      if (master) then
         !write (ioutfile,'("EFFECT INTEGRALS    =",i8)') total_ntemp
 
@@ -543,7 +547,7 @@ subroutine MPI_calmp2
      !---------------- ALL MPI/ MASTER ---------------------------
 
      ! sync all nodes
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
   enddo
 
   if (master) then

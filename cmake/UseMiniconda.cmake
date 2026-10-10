@@ -2,8 +2,7 @@
 # This script does not work when crosscompiling.
 #  Note: to make the initial changes as limited as possible the phrase
 #   "MINICONDA" is retained for now, but the actual download and
-#   installation comes from Miniforge3.  Only tests on Linux x86_64 so 
-#   far, not (for example) on OSX.
+#   installation comes from Miniforge3.
 
 # Send the version variables up one scope level from the caller of this macro
 macro(proxy_python_version)
@@ -28,12 +27,14 @@ function(download_and_use_miniconda)
 	if(TARGET_WINDOWS)
 		set(MINICONDA_PYTHON ${MINICONDA_INSTALL_DIR}/python.exe)
 		set(CONDA ${MINICONDA_INSTALL_DIR}/Scripts/conda.exe)
+		set(MAMBA ${MINICONDA_INSTALL_DIR}/Scripts/mamba.exe)
 		set(PIP ${MINICONDA_INSTALL_DIR}/Scripts/pip.exe)
 	else()
 		set(MINICONDA_PYTHON ${MINICONDA_INSTALL_DIR}/bin/python)
 
 		# execute using interpreter in case the miniconda install folder is in a long path and the script shebang doesn't work
-		set(CONDA ${MINICONDA_PYTHON} ${MINICONDA_INSTALL_DIR}/bin/conda) 
+		set(CONDA ${MINICONDA_PYTHON} ${MINICONDA_INSTALL_DIR}/bin/conda)
+		set(MAMBA ${MINICONDA_INSTALL_DIR}/bin/mamba) 
 		set(PIP ${MINICONDA_PYTHON} ${MINICONDA_INSTALL_DIR}/bin/pip)
 	endif()
 	
@@ -158,26 +159,15 @@ function(download_and_use_miniconda)
 	# if the miniconda version has been specified (-DMINICONDA_VERSION=...)
 	# then do not update conda
 	if(MINICONDA_AUTO)
-    
-		# not needed for miniforge:
-		# execute_process(COMMAND ${CONDA} install -y --solver=classic conda-forge::conda-libmamba-solver conda-forge::libmamba conda-forge::libmambapy conda-forge::libarchive)
-		# execute_process(COMMAND ${CONDA} update --all -y)
 		execute_process(COMMAND ${CONDA} update conda -y)
 	endif()
+	execute_process(COMMAND ${CONDA} install -y python=3.12)
 	execute_process(COMMAND ${MINICONDA_PYTHON} -m pip install pip --upgrade)
 
-	# Prefer non-mkl packages.
-	# This is because if Amber is using MKL, when Python programs run they will try to talk to two
-	# different MKL libraries at the same time: the MKL Miniconda python was linked with, and the MKL
-	# Amber was linked with.
-	# So, to fix this, we make sure Miniconda is not using MKL.
-	execute_process(COMMAND ${CONDA} install -y nomkl)
+	execute_process(COMMAND ${MINICONDA_PYTHON} -m pip install --no-cache-dir --no-binary=mpi4py mpi4py)
 
-	execute_process(COMMAND ${CONDA} install -y -c conda-forge f90nml mrcfile pdb2pqr)
-	execute_process(COMMAND ${CONDA} install -y pandas)
-	
-	execute_process(COMMAND ${CONDA} install -y -q conda-build numpy=1.26.4 scipy cython=0.29 ipython notebook pytest 
-		RESULT_VARIABLE PACKAGE_INSTALL_RETVAL)
+	execute_process(COMMAND ${CONDA} install -y -c conda-forge nomkl f90nml mrcfile pdb2pqr pandas numba gemmi rdkit conda-build numpy=1.26.4 cython=0.29 scipy ipython notebook pytest mock biopython rich freesasa scikit-learn sympy pydantic psutil networkx RESULT_VARIABLE PACKAGE_INSTALL_RETVAL)
+
 	if(NOT ${PACKAGE_INSTALL_RETVAL} EQUAL 0)
 		message(FATAL_ERROR "Installation of packages failed!  Please fix what's wrong, or disable Miniconda.")
 	endif()
@@ -192,6 +182,14 @@ function(download_and_use_miniconda)
 		if(NOT ${MATPLOTLIB_RETVAL} EQUAL 0)
 			message(FATAL_ERROR "Failed to install matplotlib!  Please fix what's wrong, or disable Miniconda.")
 		endif()
+	endif()
+
+	# tmtools (used by proprep for TM-align structure-based alignment) is not
+	# on conda-forge for osx-arm64. Install via pip and treat as optional,
+	# since proprep degrades gracefully if tmtools is missing.
+	execute_process(COMMAND ${MINICONDA_PYTHON} -m pip --cache-dir=${MINICONDA_INSTALL_DIR}/pkgs install tmtools RESULT_VARIABLE TMTOOLS_RETVAL)
+	if(NOT ${TMTOOLS_RETVAL} EQUAL 0)
+		message(WARNING "Could not install tmtools via pip; proprep's TM-align structure-based alignment will be unavailable. All other proprep functionality is unaffected.")
 	endif()
 	
 	# It's hack-and-patch time!  In a battle royale between inane Distutils and CPython code, and our fair hero UseMiniconda.cmake, 

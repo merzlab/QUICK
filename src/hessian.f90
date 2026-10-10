@@ -49,6 +49,7 @@ subroutine fdhessian(failed)
   use quick_grad_cshell_module, only: cshell_gradient
   use quick_grad_oshell_module, only: oshell_gradient
   use quick_exception_module, only: RaiseException
+  use quick_mpi_module, only: master
   implicit double precision(a-h,o-z)
 
   character(len=1) cartsym(3)
@@ -120,7 +121,7 @@ subroutine HFHessian
   use quick_oei_module, only: ekinetic
   use quick_cutoff_module, only: cshell_density_cutoff, cshell_dnscreen
   use quick_eri_fock1_cshell_module
- 
+
   implicit double precision(a-h,o-z)
   ! dimension W(2*(maxbasis/2)**2,2*(maxbasis/2)**2),
   dimension itype2(3,2),ielecfld(3)
@@ -180,7 +181,9 @@ subroutine HFHessian
   !  4) If DFT, the second derivative of exchahnge correlation  term
   !---------------------------------------------------------------------
 
-!  call get_xc_hessian
+  if (quick_method%DFT) then
+     call get_xc_hessian
+  endif
 
   !---------------------------------------------------------------------
   !  5) The CPHF part
@@ -436,24 +439,30 @@ subroutine get_xc_hessian
     type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_func
     type(xc_f90_pointer_t), dimension(quick_method%nof_functionals) ::xc_info
     double precision :: tgrd(3), tsum(3)
-    integer :: i,k,oi
+    integer :: i,ii,k,kk,l,oi,j,jj,ict,jct,ntri
     double precision,allocatable :: dp(:,:)
     double precision :: gwt(3,natom)
     double precision :: hwt(3,natom,3,natom)
     double precision :: VM, ValM, ValX
     double precision,allocatable :: DA(:), DM(:)
     double precision :: hess(3,natom,3,natom),fda(3,natom,nbasis*(nbasis+1)/2)
+    double precision :: hesst(3,natom,3,natom),fdat(3,natom,nbasis*(nbasis+1)/2)
     double precision :: gden(3)
     double precision :: thrsh,wght
 
      allocate(DA(NBASIS*(NBASIS+1)/2)) 
      allocate(DM(NBASIS))
 
-     fda=0.0d0
-     hess=0.0d0
 print*,'inside xc_hessian'
 
-!     call formMaxDen(nbasis,quick_qm_struct%dense,DA,DM)
+     allocate( dp(3,natom) )
+     dp = 0.d0
+
+     call formMaxDen(nbasis,quick_qm_struct%dense,DA,DM)
+     fda=0.0d0
+     hess=0.0d0
+
+     ntri=nbasis*(nbasis+1)/2
 
      if(quick_method%uselibxc) then
   !  Initiate the libxc functionals
@@ -464,15 +473,14 @@ print*,'inside xc_hessian'
      endif
 
         do Ibin=1, quick_dft_grid%nbins
-print*,'Ibin:',Ibin
   !  Calculate the weight of the grid point in the SSW scheme.  If
   !  the grid point has a zero weight, we can skip it.
 
           Igp=quick_dft_grid%bin_counter(Ibin)+1
 
           do while(Igp < quick_dft_grid%bin_counter(Ibin+1)+1)
-print*,'Igp:',Igp
-
+             fdat=0.0d0
+             hesst=0.0d0
              gridx=quick_dft_grid%gridxb(Igp)
              gridy=quick_dft_grid%gridyb(Igp)
              gridz=quick_dft_grid%gridzb(Igp)
@@ -492,18 +500,18 @@ print*,'Igp:',Igp
                  do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
                     Ibas=quick_dft_grid%basf(icount)+1
 
-!                    call pt3dr(gridx,gridy,gridz,phi,phix(1:3),&
-!                    phixx(1:6),phixxx(1:10),Ibas,icount)
+                    call pt3dr(gridx,gridy,gridz,phi,phix(1:3),&
+                    phixx(1:6),phixxx(1:10),Ibas,icount)
 
                     iao(Ibas)=phi
                     iaox(:,Ibas)=phix
                     iaoxx(:,Ibas)=phixx
                     iaoxxx(:,Ibas)=phixxx
 
-                    ValX = MAX(Abs(IAO(I)),Abs(IAOX(1,I)),Abs(IAOX(2,I)), &
-                           Abs(IAOX(3,I)),Abs(IAOXX(1,I)),Abs(IAOXX(2,I)), &
-                           Abs(IAOXX(3,I)),Abs(IAOXX(4,I)),Abs(IAOXX(5,I)), &
-                           Abs(IAOXX(6,I)))
+                    ValX = MAX(Abs(IAO(Ibas)),Abs(IAOX(1,Ibas)),Abs(IAOX(2,Ibas)), &
+                           Abs(IAOX(3,Ibas)),Abs(IAOXX(1,Ibas)),Abs(IAOXX(2,Ibas)), &
+                           Abs(IAOXX(3,Ibas)),Abs(IAOXX(4,Ibas)),Abs(IAOXX(5,Ibas)), &
+                           Abs(IAOXX(6,Ibas)))
 
                     icount=icount+1
                     If(ValX.GT.ValM) ValM = ValX
@@ -573,38 +581,106 @@ print*,'Igp:',Igp
                           end select
 
                         excpp=excpp+libxc_exc(1)
-                        dfdr=dfdr+libxc_vrho(1)
-                        dfdgaa=dfdgaa+libxc_vsigma(1)
-                        df2dr2=df2dr2+libxc_v2rho2(1)
-                        df2drdgaa=df2drdgaa+libxc_v2rhosigma(1)
-                        df2dgaa2=df2dgaa2+libxc_v2sigma2(1)
-
                        enddo
 
                        zkec=(density+densityb)*excpp
 
-                       xdot = 4.0d0*dfdgaa*gax
-                       ydot = 4.0d0*dfdgaa*gay
-                       zdot = 4.0d0*dfdgaa*gaz
-
-!                       call ssw2der(gridx,gridy,gridz,iatm,natom,xyz(1:3,1:natom),zkec,gwt,hwt)     
-!                       gden(1) = gax
-!                       gden(2) = gay
-!                       gden(3) = gaz
-!                       thrsh = quick_method%maxIntegralCutoff
-!                       wght = weight/sswt
-!                       call formFdHess(nbasis,natom,thrsh,DA,DM,gden,wght, &
-!                                libxc_vrho(1),libxc_v2rho2(1),libxc_v2rho2(2), &
-!                                libxc_vsigma(1),libxc_vsigma(2), &
-!                                libxc_v2rhosigma(1),libxc_v2rhosigma(3),libxc_v2rhosigma(2), &
-!                                libxc_v2sigma2(1),libxc_v2sigma2(3), &
-!                                libxc_v2sigma2(2),libxc_v2sigma2(4), &
-!                                Ibin,iao,iaox,iaoxx,iaoxxx,VM,iatm,gwt,hwt,fda,hess)
-
-                    endif
-                 endif
+                       if (sswt == 1.d0) then
+                          continue
+                       else
+                          wght = weight/sswt
+                          call ssw2der(gridx,gridy,gridz,iatm,natom,xyz,wght,zkec,gwt,hwt)     
+!print*,'gw:',gwt
+!                       call getsswanader(gridx,gridy,gridz,Iatm,natom,xyz,gwt)
+!print*,'dp:',dp
+                          gden(1) = gax
+                          gden(2) = gay
+                          gden(3) = gaz
+                          thrsh = quick_method%maxIntegralCutoff
+                          call formFdHess(nbasis,natom,thrsh,DA,DM,gden,weight, &
+                                   libxc_vrho(1),libxc_v2rho2(1),libxc_v2rho2(2), &
+                                   libxc_vsigma(1),libxc_vsigma(2), &
+                                   libxc_v2rhosigma(1),libxc_v2rhosigma(3),libxc_v2rhosigma(2), &
+                                   libxc_v2sigma2(1),libxc_v2sigma2(3), &
+                                   libxc_v2sigma2(2),libxc_v2sigma2(4), &
+                                   Ibin,iao,iaox,iaoxx,iaoxxx,VM,iatm,gwt,hwt,fdat,hesst)
+                       endif
+                     endif
+                  endif
               endif
+              call trinvaf(fdat,natom,nbasis,iatm)
+              call addfd(fdat,FDA,natom,ntri)
+              call trinvah(hesst,natom,iatm) 
+              call addhess(HESS,hesst,natom)
         Igp=Igp+1
+        enddo
+     enddo
+
+     write(ioutfile,*) ' Direct Hessian contribution is:'
+     do i=1,natom
+!        ii = 3*(i-1)+1
+        do j=1,natom
+!           jj = 3*(j-1)+1
+           write(ioutfile,*) ' Atom: ',i,' with Atom: ',j
+           write(ioutfile,1112) hess(1,j,1,i),hess(1,j,2,i),hess(1,j,3,i)
+           write(ioutfile,1112) hess(2,j,1,i),hess(2,j,2,i),hess(2,j,3,i)
+           write(ioutfile,1112) hess(3,j,1,i),hess(3,j,2,i),hess(3,j,3,i)
+     enddo
+     enddo
+
+     write(ioutfile,*) ' Fock-Derivative matrices are:'
+     do i=1,natom
+!        ii = 3*(i-1)+1
+        write(ioutfile,*) ' Atom:',i,' X-derivative Fock matrix is:'
+        do k=1,nbasis
+          kk = (k*(k-1))/2
+          write(ioutfile,1112) (fda(1,i,kk+l),l=1,k)
+        enddo
+        write(ioutfile,*) ' Atom:',i,' Y-derivative Fock matrix is:'
+        do k=1,nbasis
+          kk = (k*(k-1))/2
+          write(ioutfile,1112) (fda(2,i,kk+l),l=1,k)
+        enddo
+        write(ioutfile,*) ' Atom:',i,' Z-derivative Fock matrix is:'
+        do k=1,nbasis
+          kk = (k*(k-1))/2
+          write(ioutfile,1112) (fda(3,i,kk+l),l=1,k)
+        enddo
+     enddo
+
+ 1112 format(1x,6(2x,F10.6))
+
+              do i=1,natom*3,3
+                 ict=(i+2)/3
+                 do j=1,ntri
+                    quick_qm_struct%fd(i,j)   = fda(1,ict,j)+quick_qm_struct%fd(i,j)
+                    quick_qm_struct%fd(i+1,j) = fda(2,ict,j)+quick_qm_struct%fd(i+1,j)
+                    quick_qm_struct%fd(i+2,j) = fda(3,ict,j)+quick_qm_struct%fd(i+2,j)
+                 enddo
+                 do j=i,natom*3,3
+                    jct=(j+2)/3
+                    quick_qm_struct%hessian(i,j)     = hess(1,ict,1,jct)+quick_qm_struct%hessian(i,j)
+                    quick_qm_struct%hessian(i+1,j)   = hess(2,ict,1,jct)+quick_qm_struct%hessian(i+1,j)
+                    quick_qm_struct%hessian(i+2,j)   = hess(3,ict,1,jct)+quick_qm_struct%hessian(i+2,j)
+                    quick_qm_struct%hessian(i,j+1)   = hess(1,ict,2,jct)+quick_qm_struct%hessian(i,j+1)
+                    quick_qm_struct%hessian(i+1,j+1) = hess(2,ict,2,jct)+quick_qm_struct%hessian(i+1,j+1)
+                    quick_qm_struct%hessian(i+2,j+1) = hess(3,ict,2,jct)+quick_qm_struct%hessian(i+2,j+1)
+                    quick_qm_struct%hessian(i,j+2)   = hess(1,ict,3,jct)+quick_qm_struct%hessian(i,j+2)
+                    quick_qm_struct%hessian(i+1,j+2) = hess(2,ict,3,jct)+quick_qm_struct%hessian(i+1,j+2)
+                    quick_qm_struct%hessian(i+2,j+2) = hess(3,ict,3,jct)+quick_qm_struct%hessian(i+2,j+2)
+                 enddo
+              enddo
+
+     write(ioutfile,*)
+     write(ioutfile,*)"  Derivative Fock after DFT  "
+     write(ioutfile,*)"     X             Y             Z "
+     do I = 1, natom*3, 3
+        write(ioutfile,*)" Atom no : ", (I+2)/3
+        do J = 1, ntri
+           do K= 1, nbasis
+           write(ioutfile,'(i3,2X,3(F9.6,7X))')J,quick_qm_struct%fd(I,J), &
+           quick_qm_struct%fd(I+1,J),quick_qm_struct%fd(I+2,J)
+           enddo
         enddo
      enddo
 
@@ -617,6 +693,137 @@ print*,'Igp:',Igp
 
 
 end subroutine get_xc_hessian
+! =================================================================
+!
+!
+      SUBROUTINE addfd(ft,f,natoms,ntri)
+      implicit real*8 (a-h,o-z)
+      dimension f(3,natoms,ntri)
+      dimension ft(3,natoms,ntri)
+!
+!  Adds two vectors:   C = A + B
+!
+      do i=1,ntri
+      do iat=1,natoms
+         f(1,iat,i)=f(1,iat,i)+ft(1,iat,i)
+         f(2,iat,i)=f(2,iat,i)+ft(2,iat,i)
+         f(3,iat,i)=f(3,iat,i)+ft(3,iat,i)
+      enddo
+      enddo
+
+      RETURN
+      END
+!======================================================================
+      subroutine addhess(h,ht,natoms)
+      implicit real*8 (a-h,o-z)
+      dimension ht(3,natoms,3,natoms)
+      dimension  h(3,natoms,3,natoms)
+      do ia=1,natoms
+      do ja=ia,natoms
+        h(1,ia,1,ja)=h(1,ia,1,ja)+ht(1,ia,1,ja)
+        h(2,ia,1,ja)=h(2,ia,1,ja)+ht(2,ia,1,ja)
+        h(3,ia,1,ja)=h(3,ia,1,ja)+ht(3,ia,1,ja)
+        h(1,ia,2,ja)=h(1,ia,2,ja)+ht(1,ia,2,ja)
+        h(2,ia,2,ja)=h(2,ia,2,ja)+ht(2,ia,2,ja)
+        h(3,ia,2,ja)=h(3,ia,2,ja)+ht(3,ia,2,ja)
+        h(1,ia,3,ja)=h(1,ia,3,ja)+ht(1,ia,3,ja)
+        h(2,ia,3,ja)=h(2,ia,3,ja)+ht(2,ia,3,ja)
+        h(3,ia,3,ja)=h(3,ia,3,ja)+ht(3,ia,3,ja)
+      enddo
+      enddo
+      return
+      end
+!======================================================================
+      subroutine trinvaf(f,natoms,nbas,ic)
+!
+!    this subroutine uses translational invariance
+!    to obtain the contribution of center ic to
+!    derivative fock matrices
+!
+      implicit real*8 (a-h,o-z)
+      dimension f(3,natoms,nbas*(nbas+1)/2)
+!
+      ntri=nbas*(nbas+1)/2
+      do ia=1,natoms
+        if(ia.ne.ic)then
+          do ij=1,ntri
+            f(1,ic,ij)=f(1,ic,ij)-f(1,ia,ij)
+            f(2,ic,ij)=f(2,ic,ij)-f(2,ia,ij)
+            f(3,ic,ij)=f(3,ic,ij)-f(3,ia,ij)
+          enddo
+        endif
+      enddo
+!
+      return
+!
+      end
+!======================================================================
+      subroutine trinvah(hess,natoms,ic)
+
+!    this subroutine uses translational invariance
+!    to obtain the contribution of center ic to
+!    the hessian matrix
+!
+      implicit real*8 (a-h,o-z)
+      dimension hess(3,natoms,3,natoms)
+!
+      if(ic.ne.1)then
+        do k1=1,3
+          do ia=1,ic-1
+            do ja=1,natoms
+              if(ja.ne.ic)then
+                if(ja.ge.ia)then
+                  hess(1,ia,k1,ic)=hess(1,ia,k1,ic)-hess(1,ia,k1,ja)
+                  hess(2,ia,k1,ic)=hess(2,ia,k1,ic)-hess(2,ia,k1,ja)
+                  hess(3,ia,k1,ic)=hess(3,ia,k1,ic)-hess(3,ia,k1,ja)
+                else
+                  hess(1,ia,k1,ic)=hess(1,ia,k1,ic)-hess(k1,ja,1,ia)
+                  hess(2,ia,k1,ic)=hess(2,ia,k1,ic)-hess(k1,ja,2,ia)
+                  hess(3,ia,k1,ic)=hess(3,ia,k1,ic)-hess(k1,ja,3,ia)
+                endif
+              endif
+            enddo
+          enddo
+        enddo
+      endif
+      if(ic.ne.natoms)then
+        do k1=1,3
+          do ia=ic+1,natoms
+            do ja=1,natoms
+              if(ja.ne.ic)then
+                if(ja.ge.ia)then
+                  hess(k1,ic,1,ia)=hess(k1,ic,1,ia)-hess(1,ia,k1,ja)
+                  hess(k1,ic,2,ia)=hess(k1,ic,2,ia)-hess(2,ia,k1,ja)
+                  hess(k1,ic,3,ia)=hess(k1,ic,3,ia)-hess(3,ia,k1,ja)
+                else
+                  hess(k1,ic,1,ia)=hess(k1,ic,1,ia)-hess(k1,ja,1,ia)
+                  hess(k1,ic,2,ia)=hess(k1,ic,2,ia)-hess(k1,ja,2,ia)
+                  hess(k1,ic,3,ia)=hess(k1,ic,3,ia)-hess(k1,ja,3,ia)
+                endif
+              endif
+            enddo
+          enddo
+        enddo
+      endif
+      do k1=1,3
+        do ja=1,natoms
+          if(ja.lt.ic)then
+            hess(k1,ic,1,ic)=hess(k1,ic,1,ic)-hess(k1,ja,1,ic)
+            hess(k1,ic,2,ic)=hess(k1,ic,2,ic)-hess(k1,ja,2,ic)
+            hess(k1,ic,3,ic)=hess(k1,ic,3,ic)-hess(k1,ja,3,ic)
+          else if(ja.gt.ic)then
+            hess(k1,ic,1,ic)=hess(k1,ic,1,ic)-hess(1,ic,k1,ja)
+            hess(k1,ic,2,ic)=hess(k1,ic,2,ic)-hess(2,ic,k1,ja)
+            hess(k1,ic,3,ic)=hess(k1,ic,3,ic)-hess(3,ic,k1,ja)
+          endif
+        enddo
+      enddo
+!
+      return
+!
+      end
+!======================================================================
+
 
 subroutine hess_total
   use allmod
@@ -2024,22 +2231,22 @@ subroutine get_eri_hessian
 
         ! Find  all the (ii|jj) integrals.
 
-        constant = (DENSEII*DENSEJJ-.5d0*DENSEJI*DENSEJI)
+        constant = (DENSEII*DENSEJJ-.5d0*quick_method%x_hybrid_coeff*DENSEJI*DENSEJI)
 
         call hess2elec(I,I,J,J,constant)
 
         ! Find  all the (ij|jj) integrals.
 
-        constant =  DENSEJJ*DENSEJI
+        constant = 2.0d0*DENSEJJ*DENSEJI-quick_method%x_hybrid_coeff*DENSEJJ*DENSEJI
         call hess2elec(I,J,J,J,constant)
 
 
         ! Find  all the (ii|ij) integrals.
-        constant= DENSEJI*DENSEII
+        constant= 2.0d0*DENSEJI*DENSEII-quick_method%x_hybrid_coeff*DENSEJI*DENSEII
         call hess2elec(I,I,I,J,constant)
 
         ! Find all the (ij|ij) integrals
-        constant =(1.5d0*DENSEJI*DENSEJI-0.50d0*DENSEJJ*DENSEII)
+        constant = (1.5d0*DENSEJI*DENSEJI-0.50d0*quick_method%x_hybrid_coeff*DENSEJJ*DENSEII)
         call hess2elec(I,J,I,J,constant)
 
         do K=J+1,nbasis
@@ -2057,22 +2264,24 @@ subroutine get_eri_hessian
 
            ! Find all the (ij|ik) integrals where j>i,k>j
 
-           constant = (3.0d0*DENSEJI*DENSEKI-DENSEKJ*DENSEII)
+           constant = (4.0d0*DENSEJI*DENSEKI-quick_method%x_hybrid_coeff*DENSEJI*DENSEKI &
+                     -quick_method%x_hybrid_coeff*DENSEKJ*DENSEII)
+!           constant = (3.0d0*DENSEJI*DENSEKI-quick_method%x_hybrid_coeff*DENSEKJ*DENSEII)
            call hess2elec(I,J,I,K,constant)
 
            ! Find all the (ij|kk) integrals where j>i, k>j.
 
-           constant=(2.d0*DENSEJI*DENSEKK-DENSEKI*DENSEKJ)
+           constant=(2.d0*DENSEJI*DENSEKK-quick_method%x_hybrid_coeff*DENSEKI*DENSEKJ)
            call hess2elec(I,J,K,K,constant)
 
            ! Find all the (ik|jj) integrals where j>i, k>j.
 
-           constant= (2.d0*DENSEKI*DENSEJJ-DENSEKJ*DENSEJI)
+           constant= (2.d0*DENSEKI*DENSEJJ-quick_method%x_hybrid_coeff*DENSEKJ*DENSEJI)
            call hess2elec(I,K,J,J,constant)
 
            ! Find all the (ii|jk) integrals where j>i, k>j.
 
-           constant = (2.d0*DENSEKJ*DENSEII-DENSEJI*DENSEKI)
+           constant = (2.d0*DENSEKJ*DENSEII-quick_method%x_hybrid_coeff*DENSEJI*DENSEKI)
            call hess2elec(I,I,J,K,constant)
         enddo
 
@@ -2099,8 +2308,8 @@ subroutine get_eri_hessian
               ! Find the (ij|kl) integrals where j>i,k>i,l>k. Note that k and j
               ! can be equal.
 
-              constant = (4.d0*DENSEJI*DENSELK-DENSEKI*DENSELJ &
-                   -DENSELI*DENSEKJ)
+              constant = (4.d0*DENSEJI*DENSELK-quick_method%x_hybrid_coeff*DENSEKI*DENSELJ &
+                   -quick_method%x_hybrid_coeff*DENSELI*DENSEKJ)
               call hess2elec(I,J,K,L,constant)
 
            enddo
@@ -5047,8 +5256,6 @@ end function elctfldrecurse
     RETURN
     end SUBROUTINE hessEIGVEC
 
-
-
     SUBROUTINE hessORTHOG(NDIM,NVECT,JSTART,VECT,ORTH)
 
 ! CONSTRUCTS A SET OF ORTHONORMAL VECTORS FROM THE NVECT LINEARLY
@@ -5089,7 +5296,7 @@ end function elctfldrecurse
                 40 enddo
             60 enddo
         endif
-    
+
     ! NORMALIZE COLUMN J.
     
         VJNORM = 0.0D0
@@ -5111,7 +5318,6 @@ end function elctfldrecurse
     120 enddo
     1000 RETURN
     end SUBROUTINE hessORTHOG
-
 
 subroutine PriHessian(io,n,mat,fm) ! format: f(x.y) x>7 sugg 12.5,12.7,14.9
   implicit none
@@ -5135,8 +5341,7 @@ subroutine PriHessian(io,n,mat,fm) ! format: f(x.y) x>7 sugg 12.5,12.7,14.9
     endif
     write(name(i),'(i4,a1)') iatom,cartsym(imom)
   enddo
-    
-  
+
   n5=n/5
   nf=mod(n,5)
   fm2=fm

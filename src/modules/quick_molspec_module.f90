@@ -83,9 +83,6 @@ module quick_molspec_module
       integer, dimension(:), allocatable ::dlfind_freezeatm
       integer, dimension(:,:), allocatable :: dlfind_constr
 
-      ! basis set number
-      integer, pointer:: nbasis
-
    end type quick_molspec_type
 
    type (quick_molspec_type), save :: quick_molspec
@@ -141,26 +138,37 @@ contains
    !-------------------
    ! allocate
    !-------------------
-   subroutine allocate_quick_molspec(self,ierr)
+   subroutine allocate_quick_molspec(self, readxyz, ierr)
       use quick_exception_module
+
       implicit none
-      integer i,j
-      integer, intent(inout) :: ierr
 
       type (quick_molspec_type), intent(inout) :: self
+      integer, intent(in) :: readxyz
+      integer, intent(inout) :: ierr
+
+      integer i, j
 
       if (.not. allocated(xyz)) allocate(xyz(3,natom))
-!      allocate(self%xyz(3,natom))
       if (.not. allocated(self%distnbor))  allocate(self%distnbor(natom))
-      if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
-      if (.not. allocated(self%iatmass)) allocate(self%iatmass(natom))
+      ! iattype/iatmass may already be populated here (e.g. restored from a
+      ! checkpoint by read_quick_molspec, called earlier in read_Job_and_Atom);
+      ! only zero them out on genuine first allocation, not on every call to
+      ! this subroutine, or a restart's restored atom types get silently
+      ! wiped back to 0 before set_quick_molspec ever uses them.
+      if (.not. allocated(self%iattype)) then
+         allocate(self%iattype(natom))
+         self%iattype(:) = 0
+      endif
+      if (.not. allocated(self%iatmass)) then
+         allocate(self%iatmass(natom))
+         self%iatmass(:) = 0d0
+      endif
       if (.not. allocated(self%chg)) allocate(self%chg(natom))
       if (.not. allocated(self%AtomDistance)) allocate(self%AtomDistance(natom,natom))
       if (.not. allocated(self%dlfind_freezeatm)) allocate(self%dlfind_freezeatm(natom))
       do i=1,natom
          self%distnbor(i)=0
-         self%iattype(i)=0
-         self%iatmass(i)=0d0
          self%chg(i)=0d0
          self%dlfind_freezeatm(i) = 0
          do j=1,3
@@ -246,7 +254,6 @@ contains
          deallocate(self%extpointxyz, stat=ierr)
          allocate(self%extpointxyz(3,self%nextpoint), stat=ierr)
        endif
-       self%extchg=0.0d0
        self%extpointxyz=0.0d0
      endif
 
@@ -289,7 +296,7 @@ contains
 
       if (allocated(xyz)) deallocate(xyz)
       if (allocated(self%distnbor)) deallocate(self%distnbor)
-!      deallocate(self%xyz)
+      if (allocated(self%AtomDistance)) deallocate(self%AtomDistance)
       if (allocated(self%iattype)) deallocate(self%iattype)
       if (allocated(self%iatmass)) deallocate(self%iatmass)
       if (allocated(self%chg)) deallocate(self%chg)
@@ -317,44 +324,45 @@ contains
    ! broadcast variable list
    !-------------------
    subroutine broadcast_quick_molspec(self,ierr)
-      use quick_mpi_module
       use quick_exception_module
+      use quick_mpi_module, only: quick_comm, quick_mpi_error
       use mpi
 
       implicit none
+
       type (quick_molspec_type), intent(inout) :: self
-      integer natom2
       integer, intent(inout) :: ierr
 
-      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%natom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      integer natom2
+
+      call MPI_BCAST(self%natom,1,mpi_integer,0,quick_comm,quick_mpi_error)
 
       natom2=natom**2
-      call MPI_BCAST(self%nelec,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nelecb,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nextatom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%imult,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%molchg,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nNonHAtom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nHAtom,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%iAtomType,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%atom_type_sym,20,mpi_character,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%distnbor,natom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%AtomDistance,natom*natom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      !call MPI_BCAST(self%xyz,natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      !call MPI_BCAST(self%nbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%nelec,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%nelecb,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%nextatom,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%imult,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%molchg,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%nNonHAtom,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%nHAtom,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%iAtomType,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%atom_type_sym,20,mpi_character,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%distnbor,natom,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%AtomDistance,natom*natom,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      !call MPI_BCAST(self%xyz,natom*3,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      !call MPI_BCAST(self%nbasis,1,mpi_integer,0,quick_comm,quick_mpi_error)
 
       if (self%nextatom.gt.0) then
-         call MPI_BCAST(self%extxyz,self%nextatom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%extchg,self%nextatom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%extxyz,self%nextatom*3,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%extchg,self%nextatom,mpi_double_precision,0,quick_comm,quick_mpi_error)
       endif
 
       if (self%nextpoint.gt.0) then
-         call MPI_BCAST(self%extpointxyz,self%nextpoint*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%extpointxyz,self%nextpoint*3,mpi_double_precision,0,quick_comm,quick_mpi_error)
       endif
 
-      call MPI_BCAST(self%iattype,natom,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%chg,natom,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%iattype,natom,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%chg,natom,mpi_integer,0,quick_comm,quick_mpi_error)
 
    end subroutine broadcast_quick_molspec
 #endif
@@ -370,6 +378,8 @@ contains
     use quick_exception_module
     use quick_method_module, only: quick_method
     use quick_files_module, only : iDataFile, dataFileName
+    use quick_io_module, only: chk_read
+    use quick_input_parser_module, only: read, found_keyword
 
     implicit none
 
@@ -377,14 +387,14 @@ contains
 
     type (quick_molspec_type), intent(inout) :: self
     integer, intent(inout) :: ierr
-    integer :: input,rdinml,i,j,k
+    integer :: input,i,j,k
     integer :: ierror
     integer :: iAtomType
     integer :: nextatom
     integer :: nextpoint
     integer :: nconsatom
     integer :: nfreezeatom
-    double precision :: temp,rdnml
+    double precision :: temp
     character(len=STR_LEN) :: keywd
     character(len=STR_LEN) :: tempstring
     logical :: is_extcharge = .false.
@@ -417,38 +427,35 @@ contains
     call upcase(keywd,STR_LEN)
 
     ! Read Charge
-    if (index(keywd,'CHARGE=') /= 0) self%molchg = rdinml(keywd,'CHARGE')
+    if(found_keyword(keywd,'CHARGE')) call read(keywd,'CHARGE', self%molchg)
 
     ! read multipilicity
-    if (index(keywd,'MULT=') /= 0) self%imult = rdinml(keywd,'MULT')
+    if(found_keyword(keywd,'MULT')) call read(keywd,'MULT', self%imult)
 
     ! determine if external charge exists
-    if (index(keywd,'EXTCHARGES') /= 0) is_extcharge=.true.
+    if (found_keyword(keywd,'EXTCHARGES')) is_extcharge=.true.
 
     ! determine if external grid points exist
-    if (index(keywd,'ESP_GRID') /= 0) is_extgrid=.true.
+    if (found_keyword(keywd,'ESP_GRID')) is_extgrid=.true.
    
     ! determine if external grid points exist
-    if (index(keywd,'EFIELD_GRID') /= 0) is_extgrid=.true.
+    if (found_keyword(keywd,'EFIELD_GRID')) is_extgrid=.true.
    
     ! determine if external grid points exist
-    if (index(keywd,'EFG_GRID') /= 0) is_extgrid=.true.
+    if (found_keyword(keywd,'EFG_GRID')) is_extgrid=.true.
 
     ! determine if constraints exists
-    if (index(keywd,'CONSTRAIN') /= 0) is_constrain=.true.
+    if (found_keyword(keywd,'CONSTRAIN')) is_constrain=.true.
 
     ! get the atom number, type and number of external charges
 
     if( .not. isTemplate) then
 
-      ! If reading from data file
-      if(quick_method%read_coord)then
-
-        open(unit=iDataFile,file=dataFileName,status='OLD',form='UNFORMATTED')
-        call rchk_int(iDataFile, "natom", natom, fail)
+      ! read atom positions from checkpoint file
+      if (quick_method%readxyz .ge. 0) then
+        call chk_read('natom', natom)
         if (.not. allocated(self%iattype)) allocate(self%iattype(natom))
-        call rchk_iarray(iDataFile, "iattype", natom, 1, 1, self%iattype, fail)
-        close(iDataFile)
+        call chk_read('iattype', natom, self%iattype)
 
         ! Reading external charges from data file is not yet implemented
         nextatom = 0

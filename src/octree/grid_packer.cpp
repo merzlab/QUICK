@@ -26,27 +26,29 @@
 
 
 // initialize data structure for grid partitioning algorithm
+#if defined(MPIV) && !defined(MPIV_GPU)
+void gpack_initialize_(int *comm_f)
+#else
 void gpack_initialize_()
+#endif
 {
     gps = new gpack_type;
     gps->totalGPACKMemory = 0;
 
 #if defined(MPIV) && !defined(MPIV_GPU)
-    MPI_Comm_rank(MPI_COMM_WORLD, &mpirank);
-    MPI_Comm_size(MPI_COMM_WORLD, &mpisize);
+    mpi_comm = MPI_Comm_f2c((MPI_Fint) (*comm_f));
+    MPI_Comm_rank(mpi_comm, &mpi_rank);
+    MPI_Comm_size(mpi_comm, &mpi_size);
 #endif
 
-// setup debug file if necessary
 #ifdef DEBUG
-
-#if defined(MPIV) && !defined(MPIV_GPU)
+#  if defined(MPIV) && !defined(MPIV_GPU)
     char fname[16];
-    sprintf(fname, "debug.oct.%i", mpirank);
+    sprintf(fname, "debug.oct.%i", mpi_rank);
     gpackDebugFile = fopen(fname, "w+");
-#else
+#  else
     gpackDebugFile = fopen("debug.oct", "w+");
-#endif
-
+#  endif
     gps->gpackDebugFile = gpackDebugFile;
 #endif
 }
@@ -64,8 +66,7 @@ void gpack_finalize_()
     delete gps->itype;
 
 #if defined(MPIV) && !defined(MPIV_GPU)
-    if(mpirank == 0)
-    {
+    if (mpi_rank == 0) {
 #endif
       delete gps->gridx;
       delete gps->gridy;
@@ -88,11 +89,9 @@ void gpack_finalize_()
 #if defined(MPIV) && !defined(MPIV_GPU)
     }
 #endif
-
 #if defined(GPU) || defined(MPIV_GPU)
     delete gps->bin_locator;    
 #endif
-
     delete gps;
 
 #ifdef DEBUG
@@ -146,25 +145,30 @@ void get_cpu_grid_info_(double *gridx, double *gridy, double *gridz, double *ssw
 
 
 /*Fortran accessible method to pack grid points*/
-void gpack_pack_pts_(double *grid_ptx, double *grid_pty, double *grid_ptz, int *grid_atm, double *grid_sswt, double *grid_weight, int *arr_size, int *natoms, int *nbasis, int *maxcontract, double *DMCutoff, double *XCCutoff, double *sigrad2, int *ncontract, double *aexp, double *dcoeff, int *ncenter, int *itype, double *xyz, int *ngpts, int *nbins, int *nbtotbf, int *nbtotpf, double *toct, double *tprscrn){
+void gpack_pack_pts_(double *grid_ptx, double *grid_pty, double *grid_ptz, int
+        *grid_atm, double *grid_sswt, double *grid_weight, int *arr_size, int
+        *natoms, int *nbasis, int *maxcontract, double *DMCutoff, double
+        *XCCutoff, double *sigrad2, int *ncontract, double *aexp, double
+        *dcoeff, int *ncenter, int *itype, double *xyz, int *ngpts, int *nbins,
+        int *nbtotbf, int *nbtotpf, double *toct, double *tprscrn)
+{
+    gps->arr_size    = *arr_size;
+    gps->natoms      = *natoms;
+    gps->nbasis      = *nbasis;
+    gps->maxcontract = *maxcontract;
+    gps->DMCutoff    = *DMCutoff;
+    gps->XCCutoff   = *XCCutoff;
 
-        gps->arr_size    = *arr_size;
-        gps->natoms      = *natoms;
-        gps->nbasis      = *nbasis;
-        gps->maxcontract = *maxcontract;
-        gps->DMCutoff    = *DMCutoff;
-        gps->XCCutoff   = *XCCutoff;
-
-        gps->sigrad2     = new gpack_buffer_type<double>(sigrad2, gps->nbasis);
-        gps->ncontract   = new gpack_buffer_type<int>(ncontract, gps->nbasis);
-        gps->aexp        = new gpack_buffer_type<double>(aexp, gps->maxcontract, gps->nbasis);
-        gps->dcoeff      = new gpack_buffer_type<double>(dcoeff, gps->maxcontract, gps->nbasis);
-        gps->xyz         = new gpack_buffer_type<double>(xyz, 3, gps->natoms);
-        gps->ncenter     = new gpack_buffer_type<int>(ncenter, gps->nbasis);
-        gps->itype       = new gpack_buffer_type<int>(itype, 3, gps->nbasis);
+    gps->sigrad2     = new gpack_buffer_type<double>(sigrad2, gps->nbasis);
+    gps->ncontract   = new gpack_buffer_type<int>(ncontract, gps->nbasis);
+    gps->aexp        = new gpack_buffer_type<double>(aexp, gps->maxcontract, gps->nbasis);
+    gps->dcoeff      = new gpack_buffer_type<double>(dcoeff, gps->maxcontract, gps->nbasis);
+    gps->xyz         = new gpack_buffer_type<double>(xyz, 3, gps->natoms);
+    gps->ncenter     = new gpack_buffer_type<int>(ncenter, gps->nbasis);
+    gps->itype       = new gpack_buffer_type<int>(itype, 3, gps->nbasis);
 
 #if defined(MPIV) && !defined(MPIV_GPU)
-    if(mpirank==0){
+    if (mpi_rank == 0) {
 #endif
         gps->gridx       = new gpack_buffer_type<double>(grid_ptx, gps->arr_size);
         gps->gridy       = new gpack_buffer_type<double>(grid_pty, gps->arr_size);
@@ -174,29 +178,26 @@ void gpack_pack_pts_(double *grid_ptx, double *grid_pty, double *grid_ptz, int *
         gps->grid_atm    = new gpack_buffer_type<int>(grid_atm, gps->arr_size);
 
         get_ssw_pruned_grid();
-
 #if defined(MPIV) && !defined(MPIV_GPU)
     }
 #endif
 
-        pack_grid_pts();
+    pack_grid_pts();
 
 #if defined(MPIV) && !defined(MPIV_GPU)
-    if(mpirank==0){
+    if (mpi_rank ==0 ) {
 #endif
-
 	*ngpts   = gps->gridb_count;
 	*nbins   = gps->nbins;
 	*nbtotbf = gps->nbtotbf;
 	*nbtotpf = gps->nbtotpf;
 	*toct    = gps->time_octree;
 	*tprscrn = gps->time_bfpf_prescreen;
-
 #if defined(MPIV) && !defined(MPIV_GPU)
    }
 #endif
-
 }
+
 
 //Prints the spatial grid used to generate the octree.
 void write_vmd_grid(vector<node> octree, string filename){
@@ -374,7 +375,7 @@ void pack_grid_pts(){
 	vector<node> octree;
 
 #if defined(MPIV) && !defined(MPIV_GPU)
-    if(mpirank==0){
+    if(mpi_rank==0){
 #endif
 
 	start = clock();
@@ -402,7 +403,7 @@ void pack_grid_pts(){
 #  if defined(MPIV) && !defined(MPIV_GPU)
     }
 
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(mpi_comm);
 #  endif
 
     cpu_get_pfbased_basis_function_lists_new_imp(&octree);
@@ -839,7 +840,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
         weight= (double*) malloc(init_arr_size * sizeof(double));
 
 #if defined(MPIV) && !defined(MPIV_GPU)
-        MPI_Bcast(&leaf_count, 1, MPI_INT, 0, MPI_COMM_WORLD); 
+        MPI_Bcast(&leaf_count, 1, MPI_INT, 0, mpi_comm); 
 #endif
 	tmp_gpweight = (unsigned char*) malloc(init_arr_size * sizeof(unsigned char));
 	tmp_cfweight = (unsigned int*) malloc(leaf_count * gps->nbasis * sizeof(unsigned int));
@@ -865,7 +866,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 	double mpi_run_time;
 	double mpi_post_proc_time;
 
-        if(mpirank == 0){
+        if(mpi_rank == 0){
 #endif
 
         start = clock();
@@ -930,7 +931,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 
 	setup_gpack_mpi_2(leaf_count, gridx, gridy, gridz, gpweight, tmp_gpweight, cfweight, tmp_cfweight, pfweight, tmp_pfweight, sswt, weight, iatm, bs_tracker);
 
-	if(mpirank == 0){
+	if(mpi_rank == 0){
 	    end = clock();
 
             mpi_prep_time = ((double) (end - start)) / CLOCKS_PER_SEC;
@@ -944,8 +945,8 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 	int bstart, bend;
 
 #if defined(MPIV) && !defined(MPIV_GPU)
-        bstart=mpi_binlst[mpirank];
-        bend=mpi_binlst[mpirank+1];
+        bstart=mpi_binlst[mpi_rank];
+        bend=mpi_binlst[mpi_rank+1];
 #else
         bstart=0;
         bend=leaf_count;        
@@ -958,7 +959,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
 	}
 
 #if defined(MPIV) && !defined(MPIV_GPU)
-        if(mpirank == 0){
+        if(mpi_rank == 0){
             end = clock();
 
             mpi_run_time = ((double) (end - start)) / CLOCKS_PER_SEC;
@@ -970,7 +971,7 @@ void cpu_get_pfbased_basis_function_lists_new_imp(vector<node> *octree){
         
         get_slave_primf_contraf_lists(leaf_count, gpweight, tmp_gpweight, cfweight, tmp_cfweight, pfweight, tmp_pfweight, bs_tracker);
 
-        if(mpirank == 0){
+        if(mpi_rank == 0){
 
 	  end = clock();
 
@@ -1295,7 +1296,7 @@ void cpu_get_primf_contraf_lists_method_new_imp(double gridx, double gridy, doub
 #if defined(MPIV) && !defined(MPIV_GPU)
 void setup_gpack_mpi_1()
 {
-	MPI_Bcast(&gps->arr_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&gps->arr_size, 1, MPI_INT, 0, mpi_comm);
 }
 
 
@@ -1305,16 +1306,16 @@ void setup_gpack_mpi_2(unsigned int nbins, double *gridx, double *gridy,
 		unsigned int *tmp_pfweight, double *sswt, double *weight, int *iatm,
 		unsigned int *bs_tracker)
 {
-	unsigned int tmp_arr[mpisize];
+	unsigned int tmp_arr[mpi_size];
 	unsigned int *tmp_mpi_binlst;
 
-	tmp_mpi_binlst = (unsigned int*) malloc((mpisize+1)*sizeof(unsigned int));
+	tmp_mpi_binlst = (unsigned int*) malloc((mpi_size+1)*sizeof(unsigned int));
 	
-        if(mpirank == 0){
+        if(mpi_rank == 0){
 
 	//Set array values to zero
 	tmp_mpi_binlst[0]=0;
-	for(unsigned int i=1;i<mpisize+1;i++){
+	for(unsigned int i=1;i<mpi_size+1;i++){
 		tmp_mpi_binlst[i]=0;
 		tmp_arr[i-1]=0;
 	}
@@ -1323,7 +1324,7 @@ void setup_gpack_mpi_2(unsigned int nbins, double *gridx, double *gridy,
 	unsigned int ndist = nbins;
 	do{
 
-		for(unsigned int j=0; j<mpisize; j++){
+		for(unsigned int j=0; j<mpi_size; j++){
 
 			if(ndist < 1 ){
                                 break;
@@ -1338,7 +1339,7 @@ void setup_gpack_mpi_2(unsigned int nbins, double *gridx, double *gridy,
 
 	//Set bin ranges for each cpu
 	tmp_mpi_binlst[0]=0;
-	for(unsigned int i=1; i<mpisize+1; i++){
+	for(unsigned int i=1; i<mpi_size+1; i++){
 		tmp_mpi_binlst[i] = tmp_mpi_binlst[i-1] + tmp_arr[i-1];
 	}
 
@@ -1347,21 +1348,19 @@ void setup_gpack_mpi_2(unsigned int nbins, double *gridx, double *gridy,
 
         mpi_binlst = tmp_mpi_binlst;
 
-	MPI_Bcast(mpi_binlst, mpisize+1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(bs_tracker, nbins+1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(gridx, gps->arr_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(gridy, gps->arr_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(gridz, gps->arr_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(gpweight, gps->arr_size, MPI_UNSIGNED_CHAR, 0, MPI_COMM_WORLD);
-	MPI_Bcast(cfweight, nbins*gps->nbasis, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(pfweight, nbins*gps->nbasis*gps->maxcontract, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(sswt, gps->arr_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(weight, gps->arr_size, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Bcast(iatm, gps->arr_size, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(mpi_binlst, mpi_size+1, MPI_INT, 0, mpi_comm);
+	MPI_Bcast(bs_tracker, nbins+1, MPI_INT, 0, mpi_comm);
+	MPI_Bcast(gridx, gps->arr_size, MPI_DOUBLE, 0, mpi_comm);
+	MPI_Bcast(gridy, gps->arr_size, MPI_DOUBLE, 0, mpi_comm);
+	MPI_Bcast(gridz, gps->arr_size, MPI_DOUBLE, 0, mpi_comm);
+	MPI_Bcast(gpweight, gps->arr_size, MPI_UNSIGNED_CHAR, 0, mpi_comm);
+	MPI_Bcast(cfweight, nbins*gps->nbasis, MPI_INT, 0, mpi_comm);
+	MPI_Bcast(pfweight, nbins*gps->nbasis*gps->maxcontract, MPI_INT, 0, mpi_comm);
+	MPI_Bcast(sswt, gps->arr_size, MPI_DOUBLE, 0, mpi_comm);
+	MPI_Bcast(weight, gps->arr_size, MPI_DOUBLE, 0, mpi_comm);
+	MPI_Bcast(iatm, gps->arr_size, MPI_INT, 0, mpi_comm);
 
-	MPI_Barrier(MPI_COMM_WORLD);
-
-
+	MPI_Barrier(mpi_comm);
 }
 
 
@@ -1372,21 +1371,17 @@ void get_slave_primf_contraf_lists(unsigned int nbins, unsigned char *gpweight,
         MPI_Status status;
 	clock_t start, end;
 
-        if(mpirank != 0){
-
-                        MPI_Send(gpweight, gps->arr_size, MPI_UNSIGNED_CHAR, 0, mpirank+600, MPI_COMM_WORLD);
-                        MPI_Send(cfweight, nbins*gps->nbasis, MPI_INT, 0, mpirank+700, MPI_COMM_WORLD);
-                        MPI_Send(pfweight, nbins*gps->nbasis*gps->maxcontract, MPI_INT, 0, mpirank+800, MPI_COMM_WORLD);
-
+        if(mpi_rank != 0){
+                        MPI_Send(gpweight, gps->arr_size, MPI_UNSIGNED_CHAR, 0, mpi_rank+600, mpi_comm);
+                        MPI_Send(cfweight, nbins*gps->nbasis, MPI_INT, 0, mpi_rank+700, mpi_comm);
+                        MPI_Send(pfweight, nbins*gps->nbasis*gps->maxcontract, MPI_INT, 0, mpi_rank+800, mpi_comm);
         }else{
-
 		start=clock();
 
-		for(unsigned int i=1; i< mpisize; i++){
-
-			MPI_Recv(tmp_gpweight, gps->arr_size, MPI_UNSIGNED_CHAR, i, i+600, MPI_COMM_WORLD, &status);
-			MPI_Recv(tmp_cfweight, nbins*gps->nbasis, MPI_INT, i, i+700, MPI_COMM_WORLD, &status);
-			MPI_Recv(tmp_pfweight, nbins*gps->nbasis*gps->maxcontract, MPI_INT, i, i+800, MPI_COMM_WORLD, &status);
+		for(unsigned int i=1; i< mpi_size; i++){
+			MPI_Recv(tmp_gpweight, gps->arr_size, MPI_UNSIGNED_CHAR, i, i+600, mpi_comm, &status);
+			MPI_Recv(tmp_cfweight, nbins*gps->nbasis, MPI_INT, i, i+700, mpi_comm, &status);
+			MPI_Recv(tmp_pfweight, nbins*gps->nbasis*gps->maxcontract, MPI_INT, i, i+800, mpi_comm, &status);
 
 		        unsigned int bstart=mpi_binlst[i];
 			unsigned int bend=mpi_binlst[i+1];	
@@ -1420,8 +1415,7 @@ void get_slave_primf_contraf_lists(unsigned int nbins, unsigned char *gpweight,
 
         }
 
-        MPI_Barrier(MPI_COMM_WORLD);
-
+        MPI_Barrier(mpi_comm);
 }
 
 

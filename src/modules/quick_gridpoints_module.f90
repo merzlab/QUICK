@@ -23,7 +23,7 @@ module quick_gridpoints_module
 ! radii and radii^3 of the atoms.
 
     use quick_size_module
-    use quick_MPI_module
+
     implicit double precision(a-h,o-z)
 
     type quick_xc_grid_type
@@ -118,7 +118,6 @@ module quick_gridpoints_module
     end type quick_xcg_tmp_type
 
 
-
     type(quick_xc_grid_type), save :: quick_dft_grid
     type(quick_xcg_tmp_type), save :: quick_xcg_tmp
 
@@ -148,15 +147,21 @@ module quick_gridpoints_module
     use quick_molspec_module, only: quick_molspec, xyz, natom
     use quick_basis_module
     use quick_timer_module
+#if defined(MPIV)
+    use quick_mpi_module, only: bMPI, master, quick_comm, quick_comm_rank
+#endif
 
-    implicit double precision(a-h,o-z)
-    type(quick_xc_grid_type) self
-    type(quick_xcg_tmp_type) xcg_tmp
-    double precision :: t_octree, t_prscrn
+    implicit none
+
+    type(quick_xc_grid_type), intent(inout) :: self
+    type(quick_xcg_tmp_type), intent(inout) :: xcg_tmp
+
+    integer :: Iang, Iatm, idx, idx_grid, iiangt, Irad, Iradtemp, ist, iend
+    double precision :: t_octree, t_prscrn, rad, rad3
+    double precision, external :: SSW
 
     !Form the quadrature and store coordinates and other information
     !Measure the time to form grid
-
     
     call alloc_xcg_tmp_variables(xcg_tmp)
     xcg_tmp%sswt = 0.0d0
@@ -165,7 +170,6 @@ module quick_gridpoints_module
 #ifdef MPIV
    if(master) then
 #endif
-   
    if (quick_method%iSG.eq.1) call gridformSG1() 
 
 #ifdef MPIV
@@ -183,7 +187,7 @@ module quick_gridpoints_module
     !if(quick_method%iSG.eq.1) call gridformSG1()
 
     idx_grid = 0
-    do Iatm=1,natom
+    do Iatm = 1, natom
         if(quick_method%iSG.eq.1)then
             Iradtemp=50
         else
@@ -201,18 +205,17 @@ module quick_gridpoints_module
                 call gridformSG0(iatm,Iradtemp+1-Irad,iiangt,RGRID,RWT)
                 rad = radii2(quick_molspec%iattype(iatm))
             endif
-            rad3 = rad*rad*rad
-            do Iang=1,iiangt
-                idx_grid=idx_grid+1
-                xcg_tmp%init_grid_ptx(idx_grid)=xyz(1,Iatm)+rad*RGRID(Irad)*XANG(Iang)
-                xcg_tmp%init_grid_pty(idx_grid)=xyz(2,Iatm)+rad*RGRID(Irad)*YANG(Iang)
-                xcg_tmp%init_grid_ptz(idx_grid)=xyz(3,Iatm)+rad*RGRID(Irad)*ZANG(Iang)
-                xcg_tmp%init_grid_atm(idx_grid)=Iatm
+            rad3 = rad * rad * rad
+            do Iang = 1, iiangt
+                idx_grid = idx_grid+1
+                xcg_tmp%init_grid_ptx(idx_grid) = xyz(1,Iatm) + rad * RGRID(Irad) * XANG(Iang)
+                xcg_tmp%init_grid_pty(idx_grid) = xyz(2,Iatm) + rad * RGRID(Irad) * YANG(Iang)
+                xcg_tmp%init_grid_ptz(idx_grid) = xyz(3,Iatm) + rad * RGRID(Irad) * ZANG(Iang)
+                xcg_tmp%init_grid_atm(idx_grid) = Iatm
                 xcg_tmp%arr_wtang(idx_grid) = WTANG(Iang)
                 xcg_tmp%arr_rwt(idx_grid) = RWT(Irad)
                 xcg_tmp%arr_rad3(idx_grid) = rad3
             enddo
-
         enddo
     enddo
 
@@ -238,7 +241,6 @@ module quick_gridpoints_module
 
     !Calculate the grid weights and store them
 #if defined(GPU) || defined(MPIV_GPU)
-
     call gpu_get_ssw(xcg_tmp%init_grid_ptx, xcg_tmp%init_grid_pty, xcg_tmp%init_grid_ptz, &
     xcg_tmp%arr_wtang, xcg_tmp%arr_rwt, xcg_tmp%arr_rad3, &
     xcg_tmp%sswt, xcg_tmp%weight, xcg_tmp%init_grid_atm, self%init_ngpts)
@@ -246,47 +248,40 @@ module quick_gridpoints_module
 #else
 
 #if defined(MPIV) && !defined(MPIV_GPU)
-
    if(bMPI) then
-
       call setup_ssw_mpi
 
-      ist=self%igridptll(mpirank+1)
-      iend=self%igridptul(mpirank+1)
+      ist=self%igridptll(quick_comm_rank+1)
+      iend=self%igridptul(quick_comm_rank+1)
    else
       ist=1
       iend = idx_grid
    endif
 
-   do idx=ist, iend
+   do idx = ist, iend
 #else
-   do idx=1, idx_grid
+   do idx = 1, idx_grid
 #endif
-        xcg_tmp%sswt(idx)=SSW(xcg_tmp%init_grid_ptx(idx), xcg_tmp%init_grid_pty(idx), xcg_tmp%init_grid_ptz(idx), &
-        xcg_tmp%init_grid_atm(idx))
-        xcg_tmp%weight(idx)=xcg_tmp%sswt(idx)*xcg_tmp%arr_wtang(idx)*xcg_tmp%arr_rwt(idx)*xcg_tmp%arr_rad3(idx)
+        xcg_tmp%sswt(idx) = SSW(xcg_tmp%init_grid_ptx(idx), xcg_tmp%init_grid_pty(idx), &
+                xcg_tmp%init_grid_ptz(idx), xcg_tmp%init_grid_atm(idx))
+        xcg_tmp%weight(idx) = xcg_tmp%sswt(idx) * xcg_tmp%arr_wtang(idx) * xcg_tmp%arr_rwt(idx) &
+                * xcg_tmp%arr_rad3(idx)
     enddo
 
 #if defined(MPIV) && !defined(MPIV_GPU)
    if(bMPI) then
       call get_mpi_ssw
    endif
-
 #endif
-
 #endif
 
 #if defined(MPIV)
    if(master) then
 #endif
-
-    RECORD_TIME(timer_end%TDFTGrdWt)
-
-    timer_cumer%TDFTGrdWt = timer_cumer%TDFTGrdWt + timer_end%TDFTGrdWt - timer_begin%TDFTGrdWt
-
     !Measure time to pack grid points
+    RECORD_TIME(timer_end%TDFTGrdWt)
+    timer_cumer%TDFTGrdWt = timer_cumer%TDFTGrdWt + timer_end%TDFTGrdWt - timer_begin%TDFTGrdWt
     RECORD_TIME(timer_begin%TDFTGrdPck)
-
 #if defined(MPIV)
    endif
 #endif
@@ -295,12 +290,12 @@ module quick_gridpoints_module
 #if defined(MPIV_GPU)
    if(master) then
 #endif
-
-      
     ! initialize cpp data structure for octree and grid point packing
+#if defined(MPIV) && !defined(MPIV_GPU)
+    call gpack_initialize(quick_comm)
+#else
     call gpack_initialize()
-
-
+#endif
     
     ! run octree, pack grid points and get the array sizes for f90 memory allocation
     call gpack_pack_pts(xcg_tmp%init_grid_ptx, xcg_tmp%init_grid_pty, xcg_tmp%init_grid_ptz, &
@@ -308,19 +303,14 @@ module quick_gridpoints_module
     nbasis, maxcontract, quick_method%DMCutoff, quick_method%XCCutoff, sigrad2, ncontract, &
     aexp, dcoeff, quick_basis%ncenter, itype, xyz, &
     self%gridb_count, self%nbins, self%nbtotbf, self%nbtotpf, t_octree, t_prscrn)
-
-
-
     
     timer_cumer%TDFTGrdOct = timer_cumer%TDFTGrdOct + t_octree
     timer_cumer%TDFTPrscrn = timer_cumer%TDFTPrscrn + t_prscrn
-
 #if defined(MPIV_GPU)
     endif
 #endif
 
 #ifdef MPIV
-
     if(master) then
 #endif
 !    write(*,*) "quick_grid_point_module: Total grid pts", self%gridb_count,"bin count:", self%nbins, "total bfs:", self%nbtotbf, &
@@ -328,7 +318,6 @@ module quick_gridpoints_module
 #ifdef MPIV
     endif
 #endif
-
 
 #ifdef MPIV
    call setup_xc_mpi_1
@@ -339,16 +328,13 @@ module quick_gridpoints_module
 #ifdef MPIV
     if(master) then
 #endif
-
 #if defined(GPU) || defined(MPIV_GPU)
 #if defined(MPIV_GPU)
    if(master) then
 #endif
-
-    ! save packed grid information into f90 data structures
+     ! save packed grid information into f90 data structures
      call get_gpu_grid_info(self%gridxb, self%gridyb, self%gridzb, self%gridb_sswt, self%gridb_weight, self%gridb_atm, &
      self%bin_locator, self%basf, self%primf, self%basf_counter, self%primf_counter, self%bin_counter)
-
 #if defined(MPIV_GPU)
     endif
 #endif
@@ -357,7 +343,6 @@ module quick_gridpoints_module
     ! save packed grid information into f90 data structures
     call get_cpu_grid_info(self%gridxb, self%gridyb, self%gridzb, self%gridb_sswt, self%gridb_weight, self%gridb_atm, &
     self%basf, self%primf, self%basf_counter, self%primf_counter, self%bin_counter)
-
 #endif
 
 #ifdef MPIV
@@ -382,7 +367,6 @@ module quick_gridpoints_module
 !            enddo
 !    enddo
 #endif
-
 
 !    do i=1, self%nbins
 !        nid=self%basf_counter(i+1)-self%basf_counter(i)
@@ -423,19 +407,19 @@ module quick_gridpoints_module
 !    write(*,*) "DFT grid timings: Grid form:", timer_cumer%TDFTGrdGen, "Compute grid weights:", timer_cumer%TDFTGrdWt, &
 !    "Octree:",timer_cumer%TDFTGrdOct,"Prescreening:",timer_cumer%TDFTPrscrn, "Pack points:",timer_cumer%TDFTGrdPck
 
-
 #ifdef MPIV
     endif
 #endif
-
     end subroutine
+
 
     ! allocate memory for radius of significance, phi and dphi for host xc
     ! version
     subroutine allocate_sigrad_phi
-
         use quick_basis_module, only: nbasis, quick_basis, alloc
+
         implicit double precision(a-h,o-z)
+
         logical :: isDFT                 
 
         if (.not. allocated(sigrad2)) allocate(sigrad2(nbasis))
@@ -444,14 +428,15 @@ module quick_gridpoints_module
         isDFT = .true.
         call alloc(quick_basis, isDFT)
 #endif
-
     end subroutine allocate_sigrad_phi
+
 
     ! deallocate sigrad2, phi, dphi
     subroutine deallocate_sigrad_phi
-
         use quick_basis_module, only: quick_basis, dealloc
+
         implicit double precision(a-h,o-z)
+
         logical :: isDFT
 
         if (allocated(sigrad2)) deallocate(sigrad2)
@@ -465,8 +450,8 @@ module quick_gridpoints_module
 
     ! Allocate memory for dft grid variables
     subroutine alloc_grid_variables(self)
-        use quick_MPI_module
         implicit none
+
         type(quick_xc_grid_type) self
 
         if (.not. allocated(self%gridxb)) allocate(self%gridxb(self%gridb_count))
@@ -484,13 +469,16 @@ module quick_gridpoints_module
         if (.not. allocated(self%bin_locator)) allocate(self%bin_locator(self%gridb_count))
 #endif
         if (.not. allocated(self%bin_counter)) allocate(self%bin_counter(self%nbins+1))
-
     end subroutine
+
 
     subroutine alloc_xcg_tmp_variables(xcg_tmp)
         use quick_molspec_module, only: natom
+
         implicit none
-        type(quick_xcg_tmp_type) xcg_tmp
+
+        type(quick_xcg_tmp_type), intent(inout) :: xcg_tmp
+
         integer :: tot_gps
 
         tot_gps = natom*xcg_tmp%rad_gps*xcg_tmp%ang_gps
@@ -524,14 +512,17 @@ module quick_gridpoints_module
 #endif
     end subroutine
 
+
 #ifdef MPIV
     subroutine alloc_mpi_grid_variables(self)
-        use quick_MPI_module
-        implicit none
-        type(quick_xc_grid_type) self
+        use quick_mpi_module, only: quick_comm_size
 
-        if (.not. allocated(self%igridptul)) allocate(self%igridptul(mpisize))
-        if (.not. allocated(self%igridptll)) allocate(self%igridptll(mpisize))
+        implicit none
+
+        type(quick_xc_grid_type), intent(inout) :: self
+
+        if (.not. allocated(self%igridptul)) allocate(self%igridptul(quick_comm_size))
+        if (.not. allocated(self%igridptll)) allocate(self%igridptll(quick_comm_size))
 
         self%igridptul = 0
         self%igridptll = 0
@@ -540,8 +531,10 @@ module quick_gridpoints_module
 
     ! Deallocate memory reserved for dft grid variables
     subroutine dealloc_grid_variables(self)
-        use quick_MPI_module
+        use quick_mpi_module, only: bMPI
+
         implicit none
+
         type(quick_xc_grid_type) self
 
         if (allocated(self%gridxb)) deallocate(self%gridxb)
@@ -567,11 +560,12 @@ module quick_gridpoints_module
 #endif
         ! deallocate sigrad2, phi, dphi and etc. 
         call deallocate_sigrad_phi()
-
     end subroutine
+
 
     subroutine dealloc_xcg_tmp_variables(xcg_tmp)
         implicit none
+
         type(quick_xcg_tmp_type) xcg_tmp
 
         if (allocated(xcg_tmp%init_grid_atm)) deallocate(xcg_tmp%init_grid_atm)
@@ -587,15 +581,13 @@ module quick_gridpoints_module
         if (allocated(xcg_tmp%tmp_sswt)) deallocate(xcg_tmp%tmp_sswt)
         if (allocated(xcg_tmp%tmp_weight)) deallocate(xcg_tmp%tmp_weight)
 #endif
-
- 
-
     end subroutine
+
 
 #ifdef MPIV
     subroutine dealloc_mpi_grid_variables(self)
-        use quick_MPI_module
         implicit none
+
         type(quick_xc_grid_type) self
 
         if (allocated(self%igridptul)) deallocate(self%igridptul)
@@ -603,12 +595,15 @@ module quick_gridpoints_module
    end subroutine
 #endif
 
+
    subroutine print_grid_information(self)
      use quick_files_module
      use quick_method_module
      use quick_molspec_module, only: quick_molspec
      use quick_basis_module
+
      implicit none
+
      type(quick_xc_grid_type) self
 
      write (ioutfile,'(" OCTAGO: OCTree Algorithm for Grid Operations ")')
@@ -617,11 +612,10 @@ module quick_gridpoints_module
      write (ioutfile,'("|   FINAL GRID POINTS    =",I12)') self%gridb_count
      write (ioutfile,'("|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =",I12)') self%nbtotbf
      write (ioutfile,'("|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =",I12)') self%nbtotpf
-
    end subroutine print_grid_information
 
+
    subroutine get_sigrad
-   
       ! calculate the radius of the sphere of basis function signifigance.
       ! (See Stratmann,Scuseria,and Frisch, Chem. Phys. Lett., 257, 1996, page 213-223 Section 5.)
       ! Also, the radius of the sphere comes from the spherical average of
@@ -646,8 +640,10 @@ module quick_gridpoints_module
       ! 2
       use allmod
 #ifdef MPIV
+      use quick_mpi_module, only: master
       use mpi
 #endif
+
       implicit double precision(a-h,o-z)
    
 #ifdef MPIV
@@ -712,9 +708,7 @@ module quick_gridpoints_module
 #ifdef MPIV
          endif
 #endif
-   
       enddo
-   
    end subroutine get_sigrad
    
    
@@ -725,7 +719,9 @@ module quick_gridpoints_module
    
    subroutine gridformSG0(iitype,ILEB,iiang,RGRIDt,RWTt)
       use allmod
+
       implicit double precision(a-h,o-z)
+
       parameter(MAXGNUMBER=30)
       double precision RGRIDt(MAXGNUMBER),RWTt(MAXGNUMBER)
    
@@ -1117,13 +1113,14 @@ module quick_gridpoints_module
       do I=1,iiang
          wtang(I)=wtang(I)*12.56637061435917295385d0
       enddo
-   
    end subroutine gridformSG0
    
+
    ! Xiao HE 1/9/07
    ! SG-1 standard grid Peter MWG, Benny GJ and Pople JA, CPL 209,506,1993,
    subroutine gridformnew(iitype,distance,iiang)
       use allmod
+
       implicit double precision(a-h,o-z)
    
       double precision :: hpartpara(4),lpartpara(4),npartpara(4)
@@ -1201,12 +1198,14 @@ module quick_gridpoints_module
       do I=1,iiang
          wtang(I)=wtang(I)*12.56637061435917295385d0
       enddo
-   
    end subroutine gridformnew
+
 
    subroutine gridformSG1
       use allmod
+
       implicit none
+
       integer itemp,i
       itemp=50
       do I=1,itemp
@@ -1216,6 +1215,7 @@ module quick_gridpoints_module
       enddo
    end subroutine gridformSG1
    
+
 #include "./include/labedev.fh"
    
 end module quick_gridpoints_module

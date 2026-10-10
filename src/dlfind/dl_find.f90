@@ -354,16 +354,18 @@ subroutine dlf_run(ierr2 &
   use quick_method_module,only: quick_method
   use quick_files_module, only: write_molden
   use quick_molden_module, only: quick_molden
+  use quick_mpi_module, only: master
 #ifdef MPIV
+  use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
   use mpi
-  use quick_mpi_module, only: bMPI, mpierror
 #endif
+  use quick_io_module, only: chk_append_opt_traj
   implicit none
 #ifdef GAMESS
   real(rk) :: core(*) ! GAMESS memory, not used in DL-FIND
 #endif
   integer  :: iimage,ivar,status,image_status,taskfarm_mode
-  integer  :: icount, kiter, iat, jat
+  integer  :: icount, kiter, iat, jat, fail
   real(rk) :: svar
   logical  :: tconv,trestarted,trerun_energy
   logical  :: needhessian ! do we need a Hessian?
@@ -852,6 +854,13 @@ subroutine dlf_run(ierr2 &
        quick_molden%iexport_snapshot = quick_molden%iexport_snapshot + 1
     endif
 
+     ! Append the current geometry to the optimisation trajectory dataset
+     ! and rewrite the flat 'xyz' dataset so the latest geometry is always
+     ! readily available for restart.
+     if (master .and. quick_method%writechk) then
+        call chk_append_opt_traj(glob%nat, glob%xcoords)
+     endif
+
 
     ! if trust-radius, test for step acceptance. 
     ! If rejected, do not form a new step and keep old energy.
@@ -897,12 +906,12 @@ subroutine dlf_run(ierr2 &
          if (glob%imicroiter < 2) then
             ! Standard convergence test
 #ifdef MPIV
-    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+    call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
             call convergence_test(stat%ccycle,.true.,tconv)
 #ifdef MPIV
-    call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-    if (bMPI)call MPI_BCAST(tconv,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+    call MPI_BARRIER(quick_comm,quick_mpi_error)
+    if (bMPI) call MPI_BCAST(tconv,1,mpi_logical,0,quick_comm,quick_mpi_error)
 #endif
             if (tconv) then
               if (printl > 0) then

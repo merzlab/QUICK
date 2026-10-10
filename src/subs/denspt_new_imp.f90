@@ -44,12 +44,20 @@ subroutine denspt_new_imp(gridx, gridy, gridz, densitya, densityb, &
    do while (icount < quick_dft_grid%basf_counter(Ibin+1)+1)
       Ibas=quick_dft_grid%basf(icount)+1
 
-      DENSEIJ=quick_qm_struct%dense(Ibas,Ibas)
-      if(DABS(quick_qm_struct%dense(Ibas,Ibas)) < quick_method%DMCutoff) then
+      if (quick_method%CalcFock_d1g0) then
+         DENSEIJ=quick_qm_struct%psdense(Ibas,Ibas) 
+      else 
+         DENSEIJ=quick_qm_struct%dense(Ibas,Ibas)
+      endif
+      if(DABS(DENSEIJ) < quick_method%DMCutoff) then
          continue
       else
 
-         DENSEBIJ=quick_qm_struct%dense(Ibas,Ibas)
+         if (quick_method%CalcFock_d1g0) then
+             DENSEBIJ=quick_qm_struct%psdense(Ibas,Ibas)
+         else
+             DENSEBIJ=quick_qm_struct%dense(Ibas,Ibas)
+         endif
          phi=phixiao(Ibas)
          dphidx=dphidxxiao(Ibas)
          dphidy=dphidyxiao(Ibas)
@@ -72,7 +80,11 @@ subroutine denspt_new_imp(gridx, gridy, gridz, densitya, densityb, &
             do while( jcount<quick_dft_grid%basf_counter(Ibin+1)+1)
                Jbas = quick_dft_grid%basf(jcount)+1
 
-               DENSEIJ=quick_qm_struct%dense(Jbas,Ibas)
+               if (quick_method%CalcFock_d1g0) then
+                   DENSEIJ=quick_qm_struct%psdense(Jbas,Ibas)
+               else
+                   DENSEIJ=quick_qm_struct%dense(Jbas,Ibas)
+               endif
                phi2=phixiao(Jbas)
                
                densitya=densitya+DENSEIJ*phi*phi2

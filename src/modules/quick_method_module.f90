@@ -45,11 +45,9 @@ module quick_method_module
         ! the second section includes some advanced option
         logical :: debug =  .false.    ! debug mode
         logical :: nodirect = .false.  ! conventional scf
-        logical :: readDMX =  .false.  ! flag to read density matrix
         logical :: readden = .false.  ! flag to read density matrix
-        logical :: read_coord = .false.  ! flag to read coordinates
-        logical :: writeden = .false. ! flag to write density matrix
-        logical :: writexyz = .false. ! flag to write coordinates
+        integer :: readxyz = -1       ! flag to read coordinates
+        logical :: writechk = .false. ! flag to checkpoint data
         logical :: readSAD = .true.    ! flag to read SAD guess
         logical :: writeSAD = .false.  ! flag to write SAD guess
         logical :: diisSCF =  .false.  ! DIIS SCF
@@ -74,6 +72,7 @@ module quick_method_module
         logical :: hasF= .false.       ! If f functions present
         logical :: calcDens = .false.  ! calculate density
         logical :: calcDensLap = .false. !calculate density lap
+        logical :: sadmo = .false.     ! Force SAD to become idempotent and generate MO coefficients
 
         double precision :: gridSpacing = 0.1d0
                                        ! Density file gridspacing
@@ -93,6 +92,11 @@ module quick_method_module
 
         ! this is DFT grid
         integer :: iSG = 1             ! =0. SG0, =1. SG1(DEFAULT)
+
+        ! Level shift
+        integer :: LShift_cycle = 3              ! After what cycle allow Level shifting
+        double precision :: LShift_err = 0.1d0   ! Minimum error for allowing Level shifting
+        double precision :: LShift_gap = 0.2d0   ! Maximum HOMO-LUMO gap to allow Level shifting
 
         ! Initial guess part
         logical :: SAD = .true.        ! SAD initial guess(default)
@@ -115,17 +119,19 @@ module quick_method_module
 
         ! following are some cutoff criteria
         double precision :: coreIntegralCutoff = 1.0d-12 ! cutoff for 1e integral prescreening
-        double precision :: integralCutoff = 1.0d-7   ! integral cutoff
+        double precision :: integralCutoff = 1.0d-10   ! integral cutoff
         double precision :: leastIntegralCutoff = LEASTCUTOFF  ! the smallest cutoff
         double precision :: maxIntegralCutoff = 1.0d-12
-        double precision :: primLimit      = 1.0d-8   ! prime cutoff
+        double precision :: primLimit      = 1.0d-11   ! prime cutoff
         double precision :: gradCutoff     = 1.0d-7   ! gradient cutoff
         double precision :: DMCutoff       = 1.0d-10  ! density matrix cutoff
-        double precision :: XCCutoff       = 1.0d-7   ! exchange correlation cutoff
+        double precision :: XCCutoff       = 1.0d-8   ! exchange correlation cutoff
+        logical :: isDefaultCutoff         = .true.
         logical :: isDefaultXCCutoff       = .true.
         !tol
         double precision :: pmaxrms        = 1.0d-6   ! density matrix convergence criteria
         double precision :: basisCutoff    = 1.0d-6  ! basis set cutoff
+        double precision :: overlapCutoff  = 1.0d-5  ! cutoff for near-linear dependency
         !signif
 
         ! following are some gradient cutoff criteria
@@ -205,8 +211,8 @@ module quick_method_module
         ! Broadcast quick_method
         !------------------------
         subroutine broadcast_quick_method(self, ierr)
-            use quick_MPI_module
             use quick_exception_module            
+            use quick_mpi_module, only: quick_comm, quick_mpi_error
             use mpi
 
             implicit none
@@ -214,89 +220,86 @@ module quick_method_module
             type(quick_method_type) self
             integer, intent(inout) :: ierr
 
-            call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%HF,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%DFT,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%MP2,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%B3LYP,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%BLYP,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%BPW91,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%MPW91LYP,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%MPW91PW91,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%PBSOL,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%UNRST,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%debug,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%nodirect,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%readDMX,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%diisSCF,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%prtGap,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%opt,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%grad,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%analGrad,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%analHess,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%esp_charge,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%espgrid_spacing,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%vdw_radii,5,mpi_character,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%esp_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%efield_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%efg_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%diisOpt,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%core,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%annil,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%freq,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%SEDFT,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%Zmat,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%dipole,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%ecp,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%custECP,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%printEnergy,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%hasF,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%calcDens,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%calcDensLap,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%gridspacing,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%lapGridSpacing,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%readden,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%read_coord,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%writeden,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%writexyz,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%extCharges,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%ext_grid,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%extgrid_angstrom,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%PDB,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%SAD,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%FMM,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%DIVCON,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%MFCC,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%ifragbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%iSG,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%iscf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%iscf_sad,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%iopt,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%maxdiisscf,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%ncyc,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%leastIntegralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%maxIntegralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%gradCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%DMCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%XCCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%pmaxrms,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%basisCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%stepMax,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%geoMaxCrt,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%gRMSCrt,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%gradMaxCrt,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%gNormCrt,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%HF,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%DFT,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%MP2,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%B3LYP,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%BLYP,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%BPW91,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%MPW91LYP,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%MPW91PW91,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%PBSOL,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%UNRST,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%debug,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%nodirect,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%diisSCF,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%prtGap,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%opt,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%grad,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%analGrad,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%analHess,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%esp_charge,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%espgrid_spacing,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%vdw_radii,5,mpi_character,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%esp_grid,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%efield_grid,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%efg_grid,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%diisOpt,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%core,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%annil,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%freq,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%SEDFT,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%Zmat,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%dipole,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%ecp,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%custECP,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%printEnergy,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%hasF,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%calcDens,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%calcDensLap,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%gridspacing,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%lapGridSpacing,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%readden,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%readxyz,1,mpi_integer,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%writechk,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%extCharges,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%ext_grid,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%extgrid_angstrom,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%PDB,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%SAD,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%FMM,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%DIVCON,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%MFCC,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%ifragbasis,1,mpi_integer,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%iSG,1,mpi_integer,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%iscf,1,mpi_integer,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%iscf_sad,1,mpi_integer,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%iopt,1,mpi_integer,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%maxdiisscf,1,mpi_integer,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%ncyc,1,mpi_integer,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%integralCutoff,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%leastIntegralCutoff,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%maxIntegralCutoff,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%primLimit,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%gradCutoff,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%DMCutoff,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%XCCutoff,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%pmaxrms,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%basisCutoff,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%stepMax,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%geoMaxCrt,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%gRMSCrt,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%gradMaxCrt,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%gNormCrt,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
 
             !mpi variables for libxc implementation
-            call MPI_BCAST(self%uselibxc,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%nof_functionals,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%functional_id,FUNCTIONAL_ID_SIZE,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%x_hybrid_coeff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%xc_polarization,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%usedlfind,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-            call MPI_BCAST(self%allow_bad_scf,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+            call MPI_BCAST(self%uselibxc,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%nof_functionals,1,mpi_integer,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%functional_id,FUNCTIONAL_ID_SIZE,mpi_integer,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%x_hybrid_coeff,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%xc_polarization,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%usedlfind,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%allow_bad_scf,1,mpi_logical,0,quick_comm,quick_mpi_error)
 
         end subroutine broadcast_quick_method
 #endif
@@ -433,11 +436,9 @@ module quick_method_module
             if (self%prtGap)    write(io,'(" PRINT HOMO-LUMO GAP")')
             if (self%printEnergy) write(io,'(" PRINT ENERGY EVERY CYCLE")')
 
-            if (self%readDMX)   write(io,'(" READ DENSITY MATRIX FROM FILE")')
-            if (self%read_coord) write(io,'(" READ COORDINATES From DATAFILE")')
-            if (self%readden) write(io,'(" READ DENSITY MATRIX From DATAFILE")')
-            if (self%writeden) write(io,'(" WRITE DENSITY MATRIX TO DATA FILE")')
-            if (self%writexyz) write(io,'(" WRITE COORDINATES TO DATA FILE")')
+            if (self%readxyz .ge. 0) write(io,'(" READ COORDINATES FROM DATA FILE")')
+            if (self%readden) write(io,'(" READ DENSITY MATRIX FROM DATA FILE")')
+            if (self%writechk) write(io,'(" CHECKPOINTING TO DATA FILE")')
             if (self%readSAD)   write(io,'(" READ SAD GUESS FROM FILE")')
             if (self%writeSAD)   write(io,'(" WRITE SAD GUESS TO FILE")')
     
@@ -455,6 +456,10 @@ module quick_method_module
                 if (self%iSG .eq. 0) write(io,'(" STANDARD GRID = SG0")')
                 if (self%iSG .eq. 1) write(io,'(" STANDARD GRID = SG1")')
             endif
+
+           write(io,'(" Level shifting allowed after cycle ", I4)') self%LShift_cycle
+           write(io,'(" DIIS error must exceed ", F5.3," for level shifting")') self%LShift_err
+           write(io,'(" Max HOMO-LUMO gap to allow level shifting = ", F5.3)') self%LShift_gap
 
             if (self%opt) then
                 write(io,'(" GEOMETRY OPTIMIZATION")',advance="no")
@@ -525,10 +530,11 @@ module quick_method_module
 
             ! cutoff size
             write (io,'(" COMPUTATIONAL CUTOFF: ")')
-            write (io,'("      TWO-e INTEGRAL   = ",E10.3)') self%integralcutoff
-            write (io,'("      BASIS SET PRIME  = ",E10.3)') self%primLimit
-            write (io,'("      MATRIX ELEMENTS  = ",E10.3)') self%DMCutoff
-            write (io,'("      BASIS FUNCTION   = ",E10.3)') self%basisCutoff
+            write (io,'("      TWO-e INTEGRAL         = ",E10.3)') self%integralcutoff
+            write (io,'("      BASIS SET PRIME        = ",E10.3)') self%primLimit
+            write (io,'("      MATRIX ELEMENTS        = ",E10.3)') self%DMCutoff
+            write (io,'("      BASIS FUNCTION         = ",E10.3)') self%basisCutoff
+            write (io,'("      NEAR-LINEAR DEPENDENCY = ",E10.3)') self%overlapCutoff
             if (self%grad) then
                 write (io,'("      GRADIENT CUTOFF  = ",E10.3)') self%gradCutoff
             endif
@@ -548,49 +554,52 @@ module quick_method_module
         !------------------------
         subroutine read_quick_method(self,keywd,ierr)
             use quick_exception_module
-            use quick_mpi_module
+            use quick_mpi_module, only: master
             use quick_files_module, only : write_molden
+            use quick_input_parser_module, only: found_keyword
+
             implicit none
+
             character(len=300) :: keyWD
             character(len=300) :: tempstring
-            integer :: itemp,i,j
+            integer :: i,j
             type (quick_method_type) self
             integer, intent(inout) :: ierr
 
             call upcase(keyWD,300)
-            if (index(keyWD,'PDB').ne. 0)       self%PDB=.true.
-            if (index(keyWD,'MFCC').ne.0)       self%MFCC=.true.
-            if (index(keyWD,'FMM').ne.0)        self%FMM=.true.
-            if (index(keyWD,'MP2').ne.0)        self%MP2=.true.
-            if (index(keyWD,'HF').ne.0)         self%HF=.true.
-            if (index(keyWD,'DFT').ne.0)        self%DFT=.true.
-            if (index(keyWD,'UHF').ne.0) then
+            if (found_keyword(keyWD,'PDB'))        self%PDB=.true.
+            if (found_keyword(keyWD,'MFCC'))       self%MFCC=.true.
+            if (found_keyword(keyWD,'FMM'))        self%FMM=.true.
+            if (found_keyword(keyWD,'MP2'))        self%MP2=.true.
+            if (found_keyword(keyWD,'HF'))         self%HF=.true.
+            if (found_keyword(keyWD,'DFT'))        self%DFT=.true.
+            if (found_keyword(keyWD,'UHF')) then
                 self%HF=.true.
                 self%UNRST=.true.
             endif
-            if (index(keyWD,'UDFT').ne.0) then
+            if (found_keyword(keyWD,'UDFT')) then
                 self%DFT=.true.
                 self%UNRST=.true.
             endif
-            if (index(keyWD,'SEDFT').ne.0)      self%SEDFT=.true.
-            if (index(keyWD,'PBSOL').ne.0)      self%PBSOL=.true.
-            if (index(keyWD,'ANNIHILATE').ne.0) self%annil=.true.
-            if (index(keyWD,'BPW91').ne.0)      self%BPW91=.true.
-            if (index(keyWD,'MPW91LYP').ne.0)   self%MPW91LYP=.true.
-            if (index(keyWD,'MPW91PW91').ne.0)  self%MPW91PW91=.true.
+            if (found_keyword(keyWD,'SEDFT'))      self%SEDFT=.true.
+            if (found_keyword(keyWD,'PBSOL'))      self%PBSOL=.true.
+            if (found_keyword(keyWD,'ANNIHILATE')) self%annil=.true.
+            if (found_keyword(keyWD,'BPW91'))      self%BPW91=.true.
+            if (found_keyword(keyWD,'MPW91LYP'))   self%MPW91LYP=.true.
+            if (found_keyword(keyWD,'MPW91PW91'))  self%MPW91PW91=.true.
 
-            if (index(keyWD,'CORE').ne.0)       self%CORE=.true.
-            if (index(keyWD,'OPT').ne.0) then
+            if (found_keyword(keyWD,'CORE'))       self%CORE=.true.
+            if (found_keyword(keyWD,'OPT') .or. found_keyword(keyWD,'OPTIMIZE')) then
                 self%opt=.true.
                 self%grad=.true.
             endif
-            if (index(keyWD,'GRADIENT').ne.0) self%grad=.true.
+            if (found_keyword(keyWD,'GRADIENT')) self%grad=.true.
 
             !Read dft functional keywords and set variable values
-            if (index(keyWD,'LIBXC').ne.0) then
+            if (found_keyword(keyWD,'LIBXC')) then
                 self%uselibxc=.true.
                 call set_libxc_func_info(keyWD, self, ierr)
-            elseif(index(keyWD,'B3LYP').ne.0) then
+            elseif(found_keyword(keyWD,'B3LYP')) then
                 ! Native b3lyp is only implemented for closed shell
                 if (self%UNRST) then
                   self%uselibxc=.true.
@@ -600,50 +609,57 @@ module quick_method_module
                   self%B3LYP=.true.
                   self%x_hybrid_coeff =0.2d0
                 endif
-            elseif(index(keyWD,'BLYP').ne.0) then
+            elseif(found_keyword(keyWD,'BLYP')) then
                 self%uselibxc=.true.
                 tempstring='LIBXC=GGA_X_B88,GGA_C_LYP'
                 call set_libxc_func_info(tempstring, self, ierr)
-                !self%BLYP=.true.
-                !self%x_hybrid_coeff =0.0d0
-            elseif(index(keyWD,'BP86').ne.0) then
+            elseif(found_keyword(keyWD,'BP86')) then
                 self%uselibxc=.true.
                 tempstring='LIBXC=GGA_X_B88,GGA_C_P86'
                 call set_libxc_func_info(tempstring, self, ierr)
-            elseif(index(keyWD,'B97-GGA1').ne.0) then
+            elseif(found_keyword(keyWD,'B97-GGA1')) then
                 self%uselibxc=.true.
                 tempstring='LIBXC=GGA_XC_B97_GGA1'
                 call set_libxc_func_info(tempstring, self, ierr)
-            elseif(index(keyWD,'PW91').ne.0) then
+            elseif(found_keyword(keyWD,'PW91')) then
                 self%uselibxc=.true.
                 tempstring='LIBXC=GGA_X_PW91,GGA_C_PW91'
                 call set_libxc_func_info(tempstring, self, ierr)
-            elseif(index(keyWD,'OLYP').ne.0) then
+            elseif(found_keyword(keyWD,'OLYP')) then
                 self%uselibxc=.true.
                 tempstring='LIBXC=GGA_X_OPTX,GGA_C_LYP'
                 call set_libxc_func_info(tempstring, self, ierr)
-            elseif(index(keyWD,'B97').ne.0) then
+            elseif(found_keyword(keyWD,'B97')) then
                 self%uselibxc=.true.
                 tempstring='LIBXC=HYB_GGA_XC_B97'
                 call set_libxc_func_info(tempstring, self, ierr)
-            elseif(index(keyWD,'O3LYP').ne.0) then
+            elseif(found_keyword(keyWD,'O3LYP')) then
                 self%uselibxc=.true.
                 tempstring='LIBXC=HYB_GGA_XC_O3LYP'
                 call set_libxc_func_info(tempstring, self, ierr)
-            elseif(index(keyWD,'PBE0').ne.0) then
+            elseif(found_keyword(keyWD,'PBE0')) then
                 self%uselibxc=.true.
                 tempstring='LIBXC=HYB_GGA_XC_PBEH'
                 call set_libxc_func_info(tempstring, self, ierr)
-            elseif(index(keyWD,'REVPBE').ne.0) then
+            elseif(found_keyword(keyWD,'REVPBE')) then
                 self%uselibxc=.true.
                 tempstring='LIBXC=GGA_X_PBE_R,GGA_C_PBE'
                 call set_libxc_func_info(tempstring, self, ierr)
-            elseif(index(keyWD,'PBE').ne.0) then
+            elseif(found_keyword(keyWD,'PBE')) then
                 self%uselibxc=.true.
                 tempstring='LIBXC=GGA_X_PBE,GGA_C_PBE'
                 call set_libxc_func_info(tempstring, self, ierr)
             endif
             CHECK_ERROR(ierr)
+
+            if (index(keyWD,'HESSIAN').ne.0) then
+               self%analHess=.true.
+               if(index(keyWD,'B3LYP').ne.0) then
+                  self%uselibxc=.true.
+                  tempstring='LIBXC=HYB_GGA_XC_B3LYP'
+                  call set_libxc_func_info(tempstring, self, ierr)
+               endif
+            endif
 
             if(self%B3LYP .or. self%BLYP .or. self%BPW91 .or. self%MPW91PW91 .or. &
                 self%MPW91LYP .or. self%uselibxc) self%DFT=.true.
@@ -651,53 +667,51 @@ module quick_method_module
             if(self%DFT .and. self%UNRST .and. self%uselibxc) self%xc_polarization=1 
 
             ! set dispersion correction options
-            if (index(keyWD,'D2').ne.0) then
+            if (found_keyword(keyWD,'D2')) then
               self%DFTD2=.true.
-            elseif (index(keyWD,'D3BJ').ne.0) then
+            elseif (found_keyword(keyWD,'D3BJ')) then
               self%DFTD3BJ=.true.
-            elseif (index(keyWD,'D3MBJ').ne.0) then
+            elseif (found_keyword(keyWD,'D3MBJ')) then
               self%DFTD3MBJ=.true.
-            elseif (index(keyWD,'D3M').ne.0) then
+            elseif (found_keyword(keyWD,'D3M')) then
               self%DFTD3M=.true.
-            elseif (index(keyWD,'D3').ne.0) then
+            elseif (found_keyword(keyWD,'D3')) then
               self%DFTD3=.true.
             endif
 
             if(self%DFTD2 .or. self%DFTD3 .or. self%DFTD3BJ .or. self%DFTD3M &
               .or. self%DFTD3MBJ) self%edisp=.true.
 
-            if (index(keyWD,'DIIS-OPTIMIZE').ne.0)self%diisOpt=.true.
-            if (index(keyWD,'GAP').ne.0)        self%prtGap=.true.
-            if (index(keyWD,'GRAD').ne.0)       self%analGrad=.true.
-            if (index(keyWD,'HESSIAN').ne.0)    self%analHess=.true.
-            if (index(keyWD,'FREQ').ne.0)       self%freq=.true.
-            if (index(keywd,'DEBUG').ne.0)      self%debug=.true.
-            if (index(keyWD,'READ').ne.0)       self%readDMX=.true.
-            if (index(keyWD,'RDSAD').ne.0)      self%readSAD=.true.  ! READSAD would clash with READ
-            if (index(keyWD,'WRSAD').ne.0) then
+            if (found_keyword(keyWD,'DIIS-OPTIMIZE')) self%diisOpt=.true.
+            if (found_keyword(keyWD,'GAP'))           self%prtGap=.true.
+            if (found_keyword(keyWD,'GRAD'))          self%analGrad=.true.
+            if (found_keyword(keyWD,'HESSIAN'))       self%analHess=.true.
+            if (found_keyword(keyWD,'FREQ'))          self%freq=.true.
+            if (found_keyword(keywd,'DEBUG'))         self%debug=.true.
+            if (found_keyword(keyWD,'RDSAD'))         self%readSAD=.true.  ! READSAD would clash with READ
+            if (found_keyword(keyWD,'WRSAD')) then
                self%writeSAD = .true.
                self%readSAD = .false. ! switch off reading of SAD guess which was set to true by default
             end if
-            if (index(keyWD,'ZMAKE').ne.0)      self%zmat=.true.
-            if (index(keyWD,'DIPOLE').ne.0)     self%dipole=.true.
-            if (index(keyWD,'WRITE').ne.0)then
-                self%writeden=.true.
-                self%writexyz=.true.
+            if (found_keyword(keyWD,'ZMAKE'))      self%zmat=.true.
+            if (found_keyword(keyWD,'DIPOLE'))     self%dipole=.true.
+            if (found_keyword(keyWD,'CHK_WRITE')) then
+                self%writechk = .true.
             end if
 
-            if (index(keyWD,'EXTCHARGES').ne.0) self%EXTCHARGES=.true.
-            if (index(keyWD,'EXTGRID').ne.0) self%ext_grid=.true.
-            if (index(keyWD,'FORCE').ne.0)      self%grad=.true.
+            if (found_keyword(keyWD,'EXTCHARGES')) self%EXTCHARGES=.true.
+            if (found_keyword(keyWD,'EXTGRID')) self%ext_grid=.true.
+            if (found_keyword(keyWD,'FORCE'))      self%grad=.true.
 
-            if (index(keyWD,'NODIRECT').ne.0)      self%NODIRECT=.true.
+            if (found_keyword(keyWD,'NODIRECT'))      self%NODIRECT=.true.
 
-            if (index(keywd,'DIVCON') .ne. 0) then
+            if (found_keyword(keywd,'DIVCON')) then
                 self%divcon = .true.
-                if (index(keywd,'ATOMBASIS') /= 0) then
+                if (found_keyword(keywd,'ATOMBASIS')) then
                     self%ifragbasis=1
-                else if (index(keywd,'RESIDUEBASIS') /= 0) then
+                else if (found_keyword(keywd,'RESIDUEBASIS')) then
                     self%ifragbasis=2
-                else if (index(keywd,'NHAB') /= 0) then
+                else if (found_keyword(keywd,'NHAB')) then
                     self%ifragbasis=3
                 else
                     self%ifragbasis=1
@@ -705,13 +719,18 @@ module quick_method_module
             endif
 
             !Read density matrix
-            if (index(keyWD,'READDEN').ne.0) self%readden=.true.
+            if (found_keyword(keyWD,'CHK_READ_DEN'))then
+               self%readden=.true.
+            endif
 
             !Read coordinates
-            if (index(keyWD,'READ_COORD').ne.0) self%read_coord=.true.
+            if (found_keyword(keyWD,'CHK_READ_XYZ'))then
+                self%readxyz=0
+                call read(keywd, 'CHK_READ_XYZ', self%readxyz, .false.)
+            endif
 
             if (self%DFT) then
-                if (index(keyWD,'SG0').ne.0) then
+                if (found_keyword(keyWD,'SG0')) then
                     self%iSG=0
                 else
                     self%iSG=1
@@ -722,120 +741,128 @@ module quick_method_module
             self%sad=.true.
             self%diisSCF=.true.
 
-            if (index(keyWD,'ECP').ne.0)  then
+            if (found_keyword(keyWD,'ECP'))  then
                 self%ECP=.true.
                 call read(keywd, 'ECP', tempstring)
                 if (tempstring .eq. 'CUSTOM') self%custECP=.true.
             endif
 
-            if (index(keyWD,'USEDFT').ne.0) then
+            if (found_keyword(keyWD,'USEDFT')) then
                 self%SEDFT=.true.
                 self%UNRST=.true.
             endif
 
             ! Density map
             ! JOHN FAVER 12/2008
-            if (index(keywd,'DENSITYMAP') /= 0) then
+            if (found_keyword(keywd,'DENSITYMAP')) then
                 call read(keywd, 'DENSITYMAP', self%gridspacing)
                 self%calcdens = .true.
             endif
             
             ! Density lapmap
-            if (index(keywd,'DENSITYLAPMAP') /= 0) then
+            if (found_keyword(keywd,'DENSITYLAPMAP')) then
                 call read(keywd, 'DENSITYLAPMAP', self%lapgridspacing)
                 self%calcdenslap = .true.
             endif
 
             ! opt cycls
-            if (index(keywd,'OPTIMIZE') /= 0) then
+            if (found_keyword(keywd,'OPTIMIZE')) then
                 call read(keywd, 'OPTIMIZE', self%iopt, .false.)
             endif
 
             ! scf cycles
-            if (index(keywd,'SCF') /= 0) then
+            if (found_keyword(keywd,'SCF')) then
                 call read(keywd, 'SCF', self%iscf)
             endif
 
             ! DM Max RMS
-            if (index(keywd,'DENSERMS') /= 0) then
+            if (found_keyword(keywd,'DENSERMS')) then
                 call read(keywd, 'DENSERMS', self%pmaxrms)
             endif
 
             ! 2e-cutoff
-            if (index(keywd,'CUTOFF') /= 0) then
+            if (found_keyword(keywd,'CUTOFF')) then
                 call read(keywd, 'CUTOFF', self%integralCutoff)
                 self%primLimit=self%integralCutoff*1.0d-1
+                self%isDefaultCutoff = .false.
+            endif
+
+            ! Overlap-cutoff
+            if (found_keyword(keywd,'OVCUT')) then
+                call read(keywd, 'OVCUT', self%overlapCutoff)
             endif
 
             ! Grad cutoff
-            if (index(keywd,'GRADCUTOFF') /= 0) then
+            if (found_keyword(keywd,'GRADCUTOFF')) then
                 call read(keywd, 'GRADCUTOFF', self%gradCutoff)
             endif
         
             ! Max DIIS cycles
-            if (index(keywd,'MAXDIIS') /= 0) then
+            if (found_keyword(keywd,'MAXDIIS')) then
                 call read(keywd, 'MAXDIIS', self%maxdiisscf)
             endif
 
             ! Delta DM Cycle Start
-            if (index(keywd,'NCYC') /= 0) then
+            if (found_keyword(keywd,'NCYC')) then
                 call read(keywd, 'NCYC', self%ncyc)
             endif
 
             ! DM cutoff
-            if (index(keywd,'MATRIXZERO') /= 0) then
+            if (found_keyword(keywd,'MATRIXZERO')) then
                 call read(keywd,'MATRIXZERO', self%DMCutoff)
             endif
 
-            if (index(keywd,'XCCUTOFF') /= 0) then           
+            if (found_keyword(keywd,'XCCUTOFF')) then           
                 call read(keywd,'XCCUTOFF', self%XCCutoff)
                 self%isDefaultXCCutoff = .false.
             endif
 
             ! Basis cutoff
-            if (index(keywd,'BASISCUTOFF=') /= 0) then
+            if (found_keyword(keywd,'BASISCUTOFF')) then
                 call read(keywd,'BASISCUTOFF', self%basisCutoff)
             endif
 
-           if (index(keyWD,'ALLOW_BAD_SCF').ne.0)         self%allow_bad_scf=.true.
+           if (found_keyword(keyWD,'ALLOW_BAD_SCF'))         self%allow_bad_scf=.true.
 
             ! Legacy Optimizer
-            if (index(keyWD,'LOPT').ne.0)         self%usedlfind=.false.
+            if (found_keyword(keyWD,'LOPT'))         self%usedlfind=.false.
 
-            if (index(keywd,'GTOL=') /= 0) then
+            if (found_keyword(keywd,'GTOL')) then
                 call read(keywd,'GTOL', self%gradMaxCrt)
                 self%gNormCrt  = self%gradMaxCrt / 1.5D0
                 self%geoMaxCrt = self%gradMaxCrt * 4.D0
                 self%gRMSCrt   = self%gradMaxCrt * 8.D0/3.D0
             endif
 
-            if (index(keywd,'ETOL=') /= 0) then
+            if (found_keyword(keywd,'ETOL')) then
                 call read(keywd,'ETOL', self%EChange)
             endif
 
-            if (index(keywd,'DLFIND=') /= 0) then
+            if (found_keyword(keywd,'DLFIND')) then
                 self%usedlfind = .true.
                 call read(keywd,'DLFIND', self%dlfind_iopt)
             endif
 
-            if (index(keywd,'ICOORD=') /= 0) then
+            if (found_keyword(keywd,'ICOORD')) then
                 call read(keywd,'ICOORD', self%dlfind_icoord)
             endif
 
-            if (index(keyWD,'BASIS=').ne.0)  then
+            if (found_keyword(keyWD,'BASIS'))  then
                 tempstring=' '
                 call read(keywd, 'BASIS', tempstring)
-                if(index(tempstring,'+') /= 0) self%diffuse_basis_funcs=.true.
+                if(index(tempstring,'+') /= 0 .or. index(tempstring,'AUG-') /= 0 .or. &
+                   (index(tempstring,'DEF2-') /= 0 .and. &
+                    tempstring(len_trim(tempstring):len_trim(tempstring)) == 'D') ) self%diffuse_basis_funcs=.true.
             endif
 
-            if (index(keyWD,'COARSEINT').ne.0) self%coarse_cutoff=.true.
-            if (index(keyWD,'TIGHTINT').ne.0) self%tight_cutoff=.true.
+            if (found_keyword(keyWD,'COARSEINT')) self%coarse_cutoff=.true.
+            if (found_keyword(keyWD,'TIGHTINT')) self%tight_cutoff=.true.
 
             ! read and enable exporting
-            if (index(KeyWD,'EXPORT=') .ne. 0) then
+            if (found_keyword(KeyWD,'EXPORT')) then
                 tempstring=' '
                 call read(keyWD, 'EXPORT', tempstring)
-                if(index(tempstring,'MOLDEN') /= 0) then
+                if(found_keyword(tempstring,'MOLDEN')) then
                     write_molden=.true.
                 else
                     ierr=35
@@ -844,31 +871,44 @@ module quick_method_module
             CHECK_ERROR(ierr)
 
            ! Electrostatic Potential(ESP), Field (EF), Field Gradient (EFG) on a grid
-           if (index(keyWD,'EFG_GRID').ne.0) then
+           if (found_keyword(keyWD,'EFG_GRID')) then
                self%efg_grid=.true.
                self%ext_grid=.true.
            endif
-           if (index(keyWD,'EFIELD_GRID').ne.0) then
+           if (found_keyword(keyWD,'EFIELD_GRID')) then
                self%efield_grid=.true.
                self%ext_grid=.true.
            endif
-           if (index(keyWD,'ESP_GRID').ne.0) then
+           if (found_keyword(keyWD,'ESP_GRID')) then
                self%esp_grid=.true.
                self%ext_grid=.true.
            endif
-           if (index(keyWD,'ESP_CHARGE').ne.0) then
+           if (found_keyword(keyWD,'ESP_CHARGE')) then
                self%esp_charge=.true.
-               if (index(keyWD,'ESPGRID_SPACING').ne.0) then
+               if (found_keyword(keyWD,'ESPGRID_SPACING')) then
                  call read(keywd,'ESPGRID_SPACING', self%espgrid_spacing)
                endif
-               if (index(keyWD,'VDW_RADII').ne.0) then
+               if (found_keyword(keyWD,'VDW_RADII')) then
                  call read(keywd,'VDW_RADII', tempstring)
                  self%vdw_radii = trim(tempstring)
                endif
            endif
-           if (index(keyWD,'EXTGRID_ANGSTROM').ne.0) then
+           if (found_keyword(keyWD,'EXTGRID_ANGSTROM')) then
                self%extgrid_angstrom=.true.
                self%ext_grid=.true.
+           endif
+           if (found_keyword(keyWD,'LSHIFT_CYCLE')) then
+               call read(keywd,'LSHIFT_CYCLE', self%LShift_cycle)
+           endif
+           if (found_keyword(keyWD,'LSHIFT_ERR')) then
+               call read(keywd,'LSHIFT_ERR', self%LShift_err)
+           endif
+           if (found_keyword(keyWD,'LSHIFT_GAP')) then
+               call read(keywd,'LSHIFT_GAP', self%LShift_gap)
+           endif
+
+           if (index(keyWD, 'SADMO').ne.0) then
+               self%sadmo = .true.
            endif
         end subroutine read_quick_method
 
@@ -904,7 +944,6 @@ module quick_method_module
 
             self%debug =  .false.     ! debug mode
             self%nodirect = .false.   ! conventional SCF
-            self%readDMX =  .false.   ! flag to read density matrix
             self%readSAD =  .true.    ! flag to read sad guess
             self%writeSAD = .false.   ! flag to write sad guess
             self%diisSCF =  .false.   ! DIIS SCF
@@ -920,6 +959,10 @@ module quick_method_module
             self%efield_grid = .false.     ! Electric field (EFIELD) evaluated on grid
             self%efg_grid = .false.        ! Electric field gradient (EFG)
 
+            self%LShift_cycle = 3     ! After what cycle allow Level shifting
+            self%LShift_err = 0.1d0   ! Minimum error for allowing Level shifting
+            self%LShift_gap = 0.2d0   ! HOMO-LUMO gap after Level shifting
+
             self%diisOpt =  .false.  ! DIIS Optimization
             self%core =  .false.     !
             self%annil =  .false.    !
@@ -933,9 +976,8 @@ module quick_method_module
             self%calcDens = .false.    ! calculate density
             self%calcDensLap = .false. ! calculate density lap
             self%readden = .false.    ! Input density matrix
-            self%read_coord = .false.    ! Input coordinates
-            self%writeden = .false.   ! Write density matrix to data file
-            self%writexyz = .false.   ! Write coordinates to data file
+            self%readxyz = -1         ! Input coordinates
+            self%writechk = .false.   ! Checkpoint information to data file
             self%extCharges = .false.  ! external charge
             self%ext_grid = .false.    ! external grid points
             self%extgrid_angstrom = .false.   ! external grid points (same as above) output in angstrom
@@ -954,19 +996,21 @@ module quick_method_module
             self%iopt = 0
             self%ncyc = 3
 
-            self%integralCutoff = 1.0d-7   ! integral cutoff
+            self%integralCutoff = 1.0d-10   ! integral cutoff
             self%leastIntegralCutoff = LEASTCUTOFF
                                            ! smallest integral cutoff, used in conventional SCF
             self%maxIntegralCutoff = 1.0d-12
                                            ! smallest integral cutoff, used in conventional SCF
-            self%primLimit      = 1.0d-8   ! prime cutoff
+            self%primLimit      = 1.0d-11   ! prime cutoff
             self%gradCutoff     = 1.0d-7   ! gradient cutoff
             self%DMCutoff       = 1.0d-10  ! density matrix cutoff
-            self%XCCutoff       = 1.0d-7   ! exchange correlation cutoff
+            self%XCCutoff       = 1.0d-8   ! exchange correlation cutoff
+            self%isDefaultCutoff = .true.   ! is Cutoff default or user specified
             self%isDefaultXCCutoff = .true. ! is XCCutoff default or user specified
 
             self%pmaxrms        = 1.0d-6   ! density matrix convergence criteria
             self%basisCutoff    = 1.0d-6  ! basis set cutoff
+            self%overlapCutoff  = 1.0d-5  ! Near-linear dependency check cutoff
 
             self%stepMax        = .1d0/0.529177249d0
                                            ! max change of one step
@@ -1014,27 +1058,22 @@ module quick_method_module
                 self%grad = .true.
             endif
 
-            if(self%pmaxrms.lt.0.0001d0)then
-                !self%integralCutoff=min(1.0d-7,self%integralCutoff)
-                !self%primLimit=min(1.0d-7,self%primLimit)
-            endif
-
             if(self%coarse_cutoff) then
                 self%pmaxrms=1.0d-5
-                self%integralCutoff=1.0e-6
-                self%primLimit=self%integralCutoff*0.1d0
-                self%gradCutoff=1.0e-6
-                self%XCCutoff=1.0e-6
-                self%basisCutoff=1.0e-5
+                self%integralCutoff=1.0d-8
+                self%primLimit=self%integralCutoff*1.0d-1
+                self%gradCutoff=1.0d-6
+                self%XCCutoff=1.0d-7
+                self%basisCutoff=1.0d-5
             endif
 
             if(self%tight_cutoff) then
                 self%pmaxrms=1.0d-7
-                self%integralCutoff=1.0e-8
-                self%primLimit=self%integralCutoff*0.1d0
-                self%gradCutoff=1.0e-8
-                self%XCCutoff=1.0e-8
-                self%basisCutoff=1.0e-7
+                self%integralCutoff=1.0d-12
+                self%primLimit=self%integralCutoff*1.0d-1
+                self%gradCutoff=1.0d-8
+                self%XCCutoff=1.0d-10
+                self%basisCutoff=1.0d-7
             endif
 
             ! OPT not available for MP2
@@ -1050,7 +1089,13 @@ module quick_method_module
             endif
 
             ! tighten XCCutoff if diffuse functions exist
-            if(self%diffuse_basis_funcs .and. self%DFT .and. self%isDefaultXCCutoff) self%XCCutoff=self%XCCutoff*0.1d0
+            if(self%diffuse_basis_funcs) then
+                if(self%isDefaultCutoff)then
+                    self%integralCutoff=self%integralCutoff*1.0d-1
+                    self%primLimit=self%integralCutoff*1.0d-1
+                endif
+                if(self%DFT .and. self%isDefaultXCCutoff) self%XCCutoff=self%XCCutoff*1.0d-1
+            endif
         end subroutine check_quick_method
 
 
@@ -1088,17 +1133,17 @@ module quick_method_module
 
              if(PRMS.le.TEN_TO_MINUS5 .and. self%integralCutoff.gt.1.0d0/(10.0d0**8.5d0))then
                 self%integralCutoff=TEN_TO_MINUS9
-                self%primLimit=min(self%integralCutoff,self%primLimit)
+                self%primLimit=self%integralCutoff*1.0D-1
              endif
 
             if(PRMS.le.TEN_TO_MINUS6 .and. self%integralCutoff.gt.1.0d0/(10.0d0**9.5d0))then
                 self%integralCutoff=TEN_TO_MINUS10
-                self%primLimit=min(self%integralCutoff,self%primLimit)
+                self%primLimit=self%integralCutoff*1.0D-1
             endif
 
             if(PRMS.le.TEN_TO_MINUS7 .and.quick_method%integralCutoff.gt.1.0d0/(10.0d0**10.5d0))then
             quick_method%integralCutoff=TEN_TO_MINUS11
-            quick_method%primLimit=min(quick_method%integralCutoff,self%primLimit)
+            quick_method%primLimit=self%integralCutoff*1.0D-1
             endif
         end subroutine adjust_Cutoff
 
@@ -1153,11 +1198,11 @@ module quick_method_module
         nof_f=0
         do f_id=0,1000
            call xc_f90_functional_get_name(f_id,functional_name)
-           if((index(functional_name,'unknown') .eq. 0) &
-            .and. (index(functional_name,'mgga') .eq. 0))  then
+           if((index(functional_name,'unknown').eq.0) &
+            .and. (index(functional_name,'mgga').eq.0))  then
                 functional_name=trim(functional_name)
 
-                call upcase(functional_name,256)
+                call upcase(functional_name, 256)
 
                 if((trim(functional_name) == trim(func1)) .or. (trim(functional_name) == trim(func2))) then 
                         nof_f=nof_f+1

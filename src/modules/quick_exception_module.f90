@@ -68,7 +68,11 @@ contains
       msg='Failed to open basis file.'
 
     case(16)
+#if defined(RESTART_HDF5)
+      msg='Failed to open .h5 file.'
+#else
       msg='Failed to open .dat file.'
+#endif
 
     case(17)
       msg='Failed to open file.'

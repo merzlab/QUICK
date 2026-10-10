@@ -19,17 +19,18 @@
 
 #include "util.fh"
 
+
 #ifdef OSHELL
 module quick_grad_oshell_module
 #else
 module quick_grad_cshell_module
 #endif
+  implicit none
 
-  implicit double precision(a-h,o-z)
   private
 
 #ifdef OSHELL
-   public  :: oshell_gradient, uscf_gradient, get_oshell_oneen_grad
+  public  :: oshell_gradient, uscf_gradient, get_oshell_oneen_grad
 #else
   public  :: cshell_gradient, get_cshell_oneen_grad, scf_gradient, get_nuclear_repulsion_grad, get_ijbas_derivative
   public :: allocate_quick_gradient, deallocate_quick_gradient, tmp_grad, tmp_ptchg_grad
@@ -38,12 +39,14 @@ module quick_grad_cshell_module
   double precision, allocatable, dimension(:) :: tmp_ptchg_grad
 #endif
 
+
 contains
+
 
 #ifndef OSHELL
   subroutine allocate_quick_gradient()
-
     use quick_molspec_module, only : quick_molspec, natom
+
     implicit none
 
     if(.not. allocated(tmp_grad)) allocate(tmp_grad(3*natom))
@@ -56,9 +59,10 @@ contains
 
   end subroutine allocate_quick_gradient
 
-  subroutine deallocate_quick_gradient()
 
+  subroutine deallocate_quick_gradient()
     use quick_molspec_module, only : quick_molspec
+
     implicit none
 
     if(allocated(tmp_grad)) deallocate(tmp_grad) 
@@ -71,27 +75,30 @@ contains
 #endif
 
 
+!------------------------------------------------------------------
+! This subroutine carries out a gradient calculation 
+!------------------------------------------------------------------
 #ifdef OSHELL 
   subroutine oshell_gradient(ierr)
 #else
   subroutine cshell_gradient(ierr)
 #endif
-  
-  !------------------------------------------------------------------
-  ! This subroutine carries out a gradient calculation 
-  !------------------------------------------------------------------
-  
-     use allmod
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_files_module, only: ioutfile
+     use quick_method_module, only: quick_method
+     use quick_molspec_module, only: quick_molspec, natom, xyz
      use quick_lri_grad_module
-#ifdef MPIV
+#if defined(MPIV)
+     use quick_mpi_module, only: master
      use mpi
 #endif
-     implicit double precision(a-h,o-z)
+
+     implicit none
   
      integer, intent(inout) :: ierr
+
      character(len=1) cartsym(3)
-     double precision :: c_coords(3),c_zeta,c_chg ! for testing lri gradients
-     integer :: c_idx  ! for testing lri gradients
+     integer :: j, k, Iatm, Imomentum
   
   !  Curently, only analytical gradients are available. This should be changed later.
      quick_method%analgrad=.true.
@@ -165,9 +172,6 @@ contains
 #ifdef MPIV
      endif
 #endif
-  
-     return
-
 #ifdef OSHELL
   end subroutine oshell_gradient
 #else
@@ -187,13 +191,21 @@ contains
 #ifdef OSHELL
      use quick_grad_cshell_module
 #endif
-#ifdef MPIV
+#if defined(MPIV)
+     use quick_mpi_module, only: master, quick_mpi_error, quick_comm
      use mpi
 #endif
-     implicit double precision(a-h,o-z)
+
+     implicit none
   
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,ierr
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+#if defined(MPIV)
+     integer :: IERROR
+#endif
+#if defined(DEBUG)
+     integer :: Iatm, Imomentum
+#endif
   
   !---------------------------------------------------------------------
   !  The purpose of this subroutine is to calculate the gradient of
@@ -281,7 +293,7 @@ contains
   !  3) The derivative of the electron repulsion term
   !---------------------------------------------------------------------
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
   
      RECORD_TIME(timer_begin%T2eGrad)
@@ -298,7 +310,7 @@ contains
   !  4) If DFT, calculate the derivative of exchahnge correlation  term
   !---------------------------------------------------------------------
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
   
      if (quick_method%DFT) then
@@ -338,19 +350,19 @@ contains
   
 #ifdef MPIV
   
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
   
      RECORD_TIME(timer_begin%TGradred) 
   
   ! sum up all gradient contributions
-     call MPI_REDUCE(quick_qm_struct%gradient, tmp_grad, 3*natom, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+     call MPI_REDUCE(quick_qm_struct%gradient, tmp_grad, 3*natom, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
      if(quick_molspec%nextatom.gt.0) call MPI_REDUCE(quick_qm_struct%ptchg_gradient, tmp_ptchg_grad, 3*quick_molspec%nextatom,& 
-                                     mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+                                     mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
      if(master) then
        quick_qm_struct%gradient(:) = tmp_grad(:)
        if(quick_molspec%nextatom.gt.0) quick_qm_struct%ptchg_gradient(:) = tmp_ptchg_grad(:)
      endif
-     call MPI_BCAST(quick_qm_struct%gradient, natom*3, mpi_double_precision, 0, MPI_COMM_WORLD, IERROR)
+     call MPI_BCAST(quick_qm_struct%gradient, natom*3, mpi_double_precision, 0, quick_comm, IERROR)
   
      RECORD_TIME(timer_end%TGradred)
   
@@ -369,7 +381,7 @@ contains
   
   !!!!!!!!!!!!!!!!!!!!!!!Madu!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef MPIV
-  !   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+  !   call MPI_BARRIER(quick_comm,quick_mpi_error)
   if(master) then
 #endif
   
@@ -425,15 +437,19 @@ contains
   end subroutine scf_gradient
 #endif
   
+
 #ifndef OSHELL
   subroutine get_nuclear_repulsion_grad
-  
      use allmod
-     implicit double precision(a-h,o-z)
+     use quick_mpi_module, only: master
+
+     implicit none
   
      double precision, external :: rootSquare
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+     integer :: Iatm,Jatm,ISTART,JSTART
+     double precision :: rij, XBminXA, YBminYA, ZBminZA, ZAZBdivRIJ3
   
   !  This subroutine calculates the nuclear repulsion gradients. 
   
@@ -513,7 +529,6 @@ contains
 #else
   subroutine get_cshell_oneen_grad
 #endif  
-
     use allmod
     use quick_oei_module, only:attrashellopt
 #ifdef OSHELL
@@ -521,10 +536,13 @@ contains
 #else
     use quick_cutoff_module, only: cshell_density_cutoff
 #endif
-#ifdef MPIV
-     use mpi
+#if defined(MPIV)
+    use quick_mpi_module, only: bMPI, master, quick_mpi_error, quick_comm_rank, quick_comm
+    use mpi
 #endif
+
     implicit none
+
     integer :: Iatm, Imomentum, IIsh, JJsh, i, j, nshell_mpi
   
   !---------------------------------------------------------------------
@@ -593,14 +611,14 @@ contains
 
 #if defined(MPIV_GPU)
      if (bMPI) then
-        nshell_mpi = mpi_jshelln(mpirank)
+        nshell_mpi = mpi_jshelln(quick_comm_rank)
      else
         nshell_mpi = jshell
      endif
 
      do i=1,nshell_mpi
         if (bMPI) then
-           IIsh = mpi_jshell(mpirank,i)
+           IIsh = mpi_jshell(quick_comm_rank,i)
         else
            IIsh = i
         endif
@@ -617,14 +635,14 @@ contains
 #else 
 #ifdef MPIV
      if (bMPI) then
-        nshell_mpi = mpi_jshelln(mpirank)
+        nshell_mpi = mpi_jshelln(quick_comm_rank)
      else
         nshell_mpi = jshell
      endif
   
      do i=1,nshell_mpi
         if (bMPI) then
-           IIsh = mpi_jshell(mpirank,i)
+           IIsh = mpi_jshell(quick_comm_rank,i)
         else
            IIsh = i
         endif
@@ -641,7 +659,7 @@ contains
      timer_cumer%T1eVGrad=timer_cumer%T1eVGrad+timer_end%T1eVGrad-timer_begin%T1eVGrad
   
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
   
 #ifdef MPIV
@@ -682,19 +700,25 @@ contains
 #else
   subroutine get_cshell_kinetic_grad
 #endif 
-
      use allmod
 #ifdef OSHELL
      use quick_grad_cshell_module, only: get_ijbas_derivative
 #endif
-#ifdef MPIV
+#if defined(MPIV)
+     use quick_mpi_module, only: bMPI, master, quick_mpi_error, quick_comm_rank, quick_comm
      use mpi
 #endif
-     implicit double precision(a-h,o-z)
+
+     implicit none
   
-     integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+     integer I,II,J,JJ,K,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+     integer Imomentum, Ibas, Jbas, ISTART, JSTART
+     double precision :: DENSEJI, HOLDJI
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      logical :: ijcon
+#if defined(MPIV)
+     integer :: nbasis_mpi
+#endif
   
   !  1)  The negative of the energy weighted density matrix element i j
   !   with the derivative of the ij overlap.
@@ -740,7 +764,7 @@ contains
      enddo
 #ifdef MPIV
      endif
-     call MPI_BCAST(quick_scratch%hold,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+     call MPI_BCAST(quick_scratch%hold,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
 #endif
   
      if (quick_method%debug) then
@@ -767,14 +791,14 @@ contains
   !  Note that the negative on the final term comes from the form of (x-XA).
 #ifdef MPIV
      if (bMPI) then
-        nbasis_mpi = mpi_nbasisn(mpirank)
+        nbasis_mpi = mpi_nbasisn(quick_comm_rank)
      else
         nbasis_mpi = nbasis
      endif
   
      do i=1,nbasis_mpi
         if (bMPI) then
-           Ibas = mpi_nbasis(mpirank,i)
+           Ibas = mpi_nbasis(quick_comm_rank,i)
         else
            Ibas = i
      endif
@@ -808,7 +832,7 @@ contains
         enddo
   
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
   
      return
@@ -825,7 +849,6 @@ contains
 #else
   subroutine get_cshell_eri_grad
 #endif
-  
      use allmod
 #ifdef OSHELL
    use quick_cutoff_module, only: oshell_density_cutoff, oshell_dnscreen
@@ -834,13 +857,22 @@ contains
    use quick_cutoff_module, only:cshell_density_cutoff, cshell_dnscreen
    use quick_eri_grad_cshell_module, only: cshell_eri_grad
 #endif
-#ifdef MPIV
-     use mpi
+#if defined(MPIV)
+   use quick_mpi_module, only: bMPI, quick_mpi_error, quick_comm_rank, quick_comm
+   use mpi
 #endif
-     implicit double precision(a-h,o-z)
+
+     implicit none
   
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+     double precision :: cutoffTest, testCutoff, Testtmp
+#if defined(MPIV) && !defined(MPIV_GPU)
+     integer :: i, nshell_mpi
+#endif
+#if defined(DEBUG)
+     integer :: Iatm, Imomentum
+#endif
   
   !  This subroutine calculates the derivative of 4center 2e- 
   !  terms with respect to X times the coefficient found in the energy.
@@ -871,16 +903,15 @@ contains
 #endif
   
 #if defined(MPIV) && !defined(MPIV_GPU)
-  
      if (bMPI) then
-        nshell_mpi = mpi_jshelln(mpirank)
+        nshell_mpi = mpi_jshelln(quick_comm_rank)
      else
         nshell_mpi = jshell
      endif
   
      do i=1,nshell_mpi
         if (bMPI) then
-           II = mpi_jshell(mpirank,i)
+           II = mpi_jshell(quick_comm_rank,i)
         else
            II = i
      endif
@@ -930,7 +961,7 @@ contains
 #endif
   
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
   
      return
@@ -942,54 +973,53 @@ contains
 #endif
   
   
+!-------------------------------------------------------------------------
+!  This subroutine will calculate:
+!  1) The derivative of the exchange/correlation functional energy
+!  with respect to nuclear displacement.
+!  2) The derivative of the weight of the quadrature points with respect
+!  to nuclear displacement.
+!
+!  These two terms arise because of the quadrature used to calculate the
+!  XC terms.
+!  Exc = (Sum over grid points) W(g) f(g)
+!  dExc/dXA = (Sum over grid points) dW(g)/dXA f(g) + W(g) df(g)/dXA
+!
+!  For the W(g) df(g)/dXA term, the derivation was done by Ed Brothers and
+!  is a varient of the method found in the Johnson-Gill-Pople paper.  It can
+!  be found in Ed's thesis, assuming he ever writes it.
+!
+!  One of the actuals element is:
+!  dExc/dXa =2*Dense(Mu,nu)*(Sum over mu centered on A)(Sumover all nu)
+!  Integral((df/drhoa dPhimu/dXA Phinu)-
+!  (2 df/dgaa Grad(rho a) + df/dgab Grad(rho b))
+!  DOT Grad(dPhimu/dXa Phinu))
+!
+!  where F alpha mu nu is the the alpha spin portion of the operator matrix
+!  element mu, nu,
+!  df/drhoa is the derivative of the functional by the alpha density,
+!  df/dgaa is the derivative of the functional by the alpha gradient
+!  invariant, i.e. the dot product of the gradient of the alpha
+!  density with itself.
+!  df/dgab is the derivative of the functional by the dot product of
+!  the gradient of the alpha density with the beta density.
+!  Grad(Phimu Phinu) is the gradient of Phimu times Phinu.
+!-------------------------------------------------------------------------
 #ifdef OSHELL
   subroutine get_oshell_xc_grad
 #else
   subroutine get_cshell_xc_grad
 #endif
-  
-  !-------------------------------------------------------------------------
-  !  This subroutine will calculate:
-  !  1) The derivative of the exchange/correlation functional energy
-  !  with respect to nuclear displacement.
-  !  2) The derivative of the weight of the quadrature points with respect
-  !  to nuclear displacement.
-  !
-  !  These two terms arise because of the quadrature used to calculate the
-  !  XC terms.
-  !  Exc = (Sum over grid points) W(g) f(g)
-  !  dExc/dXA = (Sum over grid points) dW(g)/dXA f(g) + W(g) df(g)/dXA
-  !
-  !  For the W(g) df(g)/dXA term, the derivation was done by Ed Brothers and
-  !  is a varient of the method found in the Johnson-Gill-Pople paper.  It can
-  !  be found in Ed's thesis, assuming he ever writes it.
-  !
-  !  One of the actuals element is:
-  !  dExc/dXa =2*Dense(Mu,nu)*(Sum over mu centered on A)(Sumover all nu)
-  !  Integral((df/drhoa dPhimu/dXA Phinu)-
-  !  (2 df/dgaa Grad(rho a) + df/dgab Grad(rho b))
-  !  DOT Grad(dPhimu/dXa Phinu))
-  !
-  !  where F alpha mu nu is the the alpha spin portion of the operator matrix
-  !  element mu, nu,
-  !  df/drhoa is the derivative of the functional by the alpha density,
-  !  df/dgaa is the derivative of the functional by the alpha gradient
-  !  invariant, i.e. the dot product of the gradient of the alpha
-  !  density with itself.
-  !  df/dgab is the derivative of the functional by the dot product of
-  !  the gradient of the alpha density with the beta density.
-  !  Grad(Phimu Phinu) is the gradient of Phimu times Phinu.
-  !-------------------------------------------------------------------------
-  
-    use allmod
-    use quick_method_module, only : quick_method
+     use allmod
      use quick_gridpoints_module
      use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
+     use quick_method_module, only: quick_method
      use xc_f90_types_m
      use xc_f90_lib_m
-#ifdef MPIV 
-     use mpi
+#if defined(MPIV)
+     use quick_mpi_module, only: bMPI, quick_comm_rank
 #endif
+
      implicit none
   
      integer :: iatm, ibas, ibin, icount, ifunc, igp, jbas, jcount, ibasstart, irad_init, &
@@ -1053,8 +1083,8 @@ contains
   
 #if defined(MPIV) && !defined(MPIV_GPU)
         if(bMPI) then
-           irad_init = quick_dft_grid%igridptll(mpirank+1)
-           irad_end = quick_dft_grid%igridptul(mpirank+1)
+           irad_init = quick_dft_grid%igridptll(quick_comm_rank+1)
+           irad_end = quick_dft_grid%igridptul(quick_comm_rank+1)
         else
            irad_init = 1
            irad_end = quick_dft_grid%nbins
@@ -1413,10 +1443,15 @@ contains
      use allmod
      use quick_overlap_module, only: gpt, opf, overlap
      use quick_oei_module, only: ekinetic
-     implicit double precision(a-h,o-z)
-     logical :: ijcon   
-     double precision g_table(200), valopf
-     integer i,j,k,ii,jj,kk,g_count
+
+     implicit none
+     integer, intent(in) :: Imomentum, Ibas, Jbas, mbas, mstart
+     double precision, intent(in) :: DENSEJI
+     logical, intent(in) :: ijcon   
+
+     double precision :: g_table(200), valopf, a, b, dKEM, dSM
+     integer :: i,j,k,ii,jj,kk,g_count,Icon,Jcon,mcon
+     double precision :: Ax, Ay, Az, Bx, By, Bz, Px, Py, Pz
   
      dSM = 0.0d0
      dKEM = 0.0d0

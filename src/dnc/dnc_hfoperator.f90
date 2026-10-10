@@ -284,7 +284,7 @@ subroutine hfoperatordc(oneElecO)
 end subroutine hfoperatordc
 
 
-#ifdef MPIV
+#if defined(MPIV)
 !*******************************************************
 ! mpi_hfoperatordc
 !-------------------------------------------------------
@@ -298,7 +298,9 @@ subroutine mpi_hfoperatordc(oneElecO)
    use quick_gaussian_class_module
    use quick_cutoff_module, only: cshell_density_cutoff
    use quick_eri_cshell_module, only: getCshellEriEnergy
+   use quick_mpi_module, only: master, quick_mpi_error, quick_comm_rank, quick_comm_size, quick_comm
    use mpi
+
    implicit double precision(a-h,o-z)
 
    double precision testtmp,cutoffTest,oneElecO(nbasis,nbasis)
@@ -394,7 +396,7 @@ subroutine mpi_hfoperatordc(oneElecO)
 !-----------------Madu----------------
 
    ! sync every nodes
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,quick_mpi_error)
 
    !------------------------------------------------------------------
    ! Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
@@ -403,8 +405,8 @@ subroutine mpi_hfoperatordc(oneElecO)
 
    ! every nodes will take about jshell/nodes shells integrals
    ! such as 1 water, which has 4 jshell, and 2 nodes will take 2 jshell respectively
-   do i=1,mpi_jshelln(mpirank)
-      ii=mpi_jshell(mpirank,i)
+   do i=1,mpi_jshelln(quick_comm_rank)
+      ii=mpi_jshell(quick_comm_rank,i)
       call get2edc
    enddo
 
@@ -421,13 +423,13 @@ subroutine mpi_hfoperatordc(oneElecO)
          enddo
       enddo
       ! send operator to master node
-      call MPI_SEND(temp2d,nbasis*nbasis,mpi_double_precision,0,mpirank,MPI_COMM_WORLD,IERROR)
+      call MPI_SEND(temp2d,nbasis*nbasis,mpi_double_precision,0,quick_comm_rank,quick_comm,IERROR)
 
       ! master node will receive infos from every nodes
    else
-      do i=1,mpisize-1
+      do i=1,quick_comm_size-1
          ! receive opertors from slave nodes
-         call MPI_RECV(temp2d,nbasis*nbasis,mpi_double_precision,i,i,MPI_COMM_WORLD,QUICK_MPI_STATUS,IERROR)
+         call MPI_RECV(temp2d,nbasis*nbasis,mpi_double_precision,i,i,quick_comm,QUICK_MPI_STATUS,IERROR)
          ! and sum them into operator
          do ii=1,nbasis
             do jj=1,nbasis
@@ -438,7 +440,7 @@ subroutine mpi_hfoperatordc(oneElecO)
    endif
 
    ! sync all nodes
-   call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+   call MPI_BARRIER(quick_comm,quick_mpi_error)
 
 !-----------------Madu----------------
    if(master) then

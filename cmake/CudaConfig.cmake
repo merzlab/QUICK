@@ -13,8 +13,14 @@ else()
 
 		set(CUDA_HOST_COMPILER ${CMAKE_CXX_COMPILER})
 
-		#SM9.0 = GH200
+		#SM12.0 = B200 - Geforce - RTX5090 etc
+		set(SM120FLAGS -gencode arch=compute_120,code=sm_120)
+		#SM10.0 = B200
+		set(SM100FLAGS -gencode arch=compute_100,code=sm_100)
+		#SM9.0 = H200
 		set(SM90FLAGS -gencode arch=compute_90,code=sm_90)
+		#SM8.9 = RTX4090
+		set(SM89FLAGS -gencode arch=compute_89,code=sm_89)
 		#SM8.6  -- not currently used, but should be tested on Cuda 11.1
 		set(SM86FLAGS -gencode arch=compute_86,code=sm_86)
 		#SM8.0 = A100
@@ -64,28 +70,49 @@ else()
 
 		elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 11.0) AND (${CUDA_VERSION} VERSION_LESS 11.8))
 			# Implement the standard compilation rather than a warp-synchronous one, which is deprecated as of CUDA 11
-
 			message(STATUS "Configuring for SM3.5, SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0, SM7.5 and SM8.0")
 			list(APPEND CUDA_NVCC_FLAGS ${SM35FLAGS} ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} -Wno-deprecated-gpu-targets -Wno-deprecated-declarations)
-		elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 11.8) AND (${CUDA_VERSION} VERSION_LESS_EQUAL 12.5))
-			message(STATUS "Configuring for SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0, SM7.5, SM8.0, SM8.6, and SM9.0")
-			list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM90FLAGS} -Wno-deprecated-gpu-targets -Wno-deprecated-declarations)
+
+		elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 11.8) AND (${CUDA_VERSION} VERSION_LESS 12.7))
+			message(STATUS "Configuring for SM5.0, SM5.2, SM5.3, SM6.0, SM6.1, SM7.0, SM7.5, SM8.0, SM8.6, SM8.9 and SM9.0")
+			list(APPEND CUDA_NVCC_FLAGS ${SM50FLAGS} ${SM52FLAGS} ${SM53FLAGS} ${SM60FLAGS} ${SM61FLAGS} ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM89FLAGS} ${SM90FLAGS} -Wno-deprecated-gpu-targets -Wno-deprecated-declarations)
+
+       elseif((${CUDA_VERSION} VERSION_GREATER_EQUAL 12.7) AND (${CUDA_VERSION} VERSION_LESS 12.9))
+           message(STATUS "Configuring for SM7.0, SM7.5, SM8.0, SM8.6, SM8.9, SM9.0, SM10.0 and SM12.0")
+           list(APPEND CUDA_NVCC_FLAGS ${SM70FLAGS} ${SM75FLAGS} ${SM80FLAGS} ${SM86FLAGS} ${SM89FLAGS} ${SM90FLAGS} ${SM100FLAGS} ${SM120FLAGS} -Wno-deprecated-gpu-targets -Wno-deprecated-declarations -std=c++14)
 
 		else()
-			message(FATAL_ERROR "Error: Untested CUDA version. AMBER currently requires CUDA version >= 7.5 and <=  12.5.")
+			message(FATAL_ERROR "Error: Untested CUDA version. AMBER currently requires CUDA version >= 7.5 and < 12.9.")
 		endif()
 
-		#  Check maximum GNU compiler versions wrt cuda:
+		# If building a Debug configuration, include lineinfo for nsight/system profiling
+		# This causes nvcc to emit line information required by `nsys`/`nsight` capture.
+		if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+			list(APPEND CUDA_NVCC_FLAGS -lineinfo)
+		endif()
+
+		#  Check maximum GNU compiler versions supported by cuda:
 		#  Note that this check is independent of the check(s) elsewhere
-		#  for the cuda versions supported by Amber.
+		#  for the cuda versions supported by Amber.  And this check has
+		#  nothing specific to Amber.
 		#  PROGRAMMER WARNING:  This code is NOT trivial.  Before you
 		#  modify it, read and understand it and the stackoverflow link !
+		#  In fact, please ask SRB to update it rather than doing it
+		#  yourself.  Why did the chicken cross the road?
+		#  It was too dam cocky for its own good! :)
 		#  https://stackoverflow.com/questions/6622454/cuda-incompatible-with-my-gcc-version
 		#  VERSION_EQUAL 10 means 10.0, so use ranges to compare major versions.
 		if ( "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" AND (
-		       ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15
-			AND CUDA_VERSION VERSION_GREATER_EQUAL 12.4
-			AND CUDA_VERSION VERSION_LESS_EQUAL 12.6 )
+		       ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 16
+			AND CUDA_VERSION VERSION_GREATER_EQUAL 13.0
+			AND CUDA_VERSION VERSION_LESS_EQUAL 13.1 )
+		    OR ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15
+			AND CUDA_VERSION VERSION_GREATER_EQUAL 12.8
+			AND CUDA_VERSION VERSION_LESS_EQUAL 12.9 )
+		    # 13.3 and 12.6 is a special case where stackoverflow and
+		    # nvidia disagree; allow based on Gerald Monard's testing.
+		    OR ( CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 13.3
+			AND CUDA_VERSION VERSION_EQUAL 12.6 )
 		    OR ( CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.3
 			AND CUDA_VERSION VERSION_GREATER_EQUAL 12.4
 			AND CUDA_VERSION VERSION_LESS_EQUAL 12.6 )
@@ -122,8 +149,8 @@ else()
 		) )
 			message(STATUS "Checking CUDA and GNU versions -- compatible")
 		elseif ( "${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" AND (
-		    CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.2
-			OR CUDA_VERSION VERSION_GREATER 12.5
+		    CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 16
+			OR CUDA_VERSION VERSION_GREATER 13.1
 		) )
 			message(STATUS "Checking CUDA and GNU versions -- compatibility unknown")
 			message(STATUS "    See https://stackoverflow.com/questions/6622454/cuda-incompatible-with-my-gcc-version")
@@ -192,7 +219,7 @@ else()
 		list(APPEND CUDA_NVCC_FLAGS
 			-DAMBER_PLATFORM_AMD
 			-fPIC
-			-std=c++14
+			-std=c++17
 		)
 
 		add_compile_definitions(AMBER_PLATFORM_AMD)

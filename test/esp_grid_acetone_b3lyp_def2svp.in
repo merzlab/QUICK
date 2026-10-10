@@ -1,4 +1,4 @@
-B3LYP BASIS=def2-svp xccutoff=1.0e-12 basiscutoff=1.0e-12 cutoff=1.0e-12 denserms=1.0e-8 ESP_GRID
+B3LYP BASIS=def2-svp xccutoff=1.0e-12 basiscutoff=1.0e-12 cutoff=1.0e-12 denserms=4.0e-8 ESP_GRID
 
 C   0.0   0.0   0.0
 O   1.22731534   -1.0400000000077014e-06   -0.00201325

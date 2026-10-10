@@ -1,4 +1,5 @@
-B3LYP CHARGE=-1 cutoff=1.0e-9 BASIS=def2-svp denserms=1.0e-6 writeden
+$DATA=chk_acetate_density.dat
+B3LYP CHARGE=-1 cutoff=1.0e-9 BASIS=def2-svp denserms=1.0e-6 chk_read_den
 
 C -1.372717 -0.239147 -0.003757
 H -1.610834 -0.823154  0.885252
