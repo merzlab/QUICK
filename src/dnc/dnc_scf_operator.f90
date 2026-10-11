@@ -66,7 +66,7 @@
 
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-     if (quick_method%bCUDA) then
+     if (quick_method%bGPU) then
 
         call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
         quick_qm_struct%vec,quick_qm_struct%dense)
@@ -102,7 +102,7 @@
      RECORD_TIME(timer_begin%T2e)
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-        if (quick_method%bCUDA) then
+        if (quick_method%bGPU) then
            call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)
         else
 #endif

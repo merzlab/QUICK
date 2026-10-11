@@ -28,11 +28,21 @@ module quick_io_module
   integer :: chk_unit = -1
 
   !-------------------------------------------------------------------!
+  ! Module-level file unit for the independent QMDATA_WRITE export    !
+  ! (-1 = closed). Entirely separate from chk_unit/dataFileName above !
+  ! -- QMDATA_WRITE is its own keyword/file, independent of CHK_WRITE !
+  ! (the original density/geometry restart mechanism). Binary format  !
+  ! only; no RESTART_HDF5 backend for this export.                    !
+  !-------------------------------------------------------------------!
+  integer :: qmdata_unit = -1
+
+  !-------------------------------------------------------------------!
   ! Public API                                                        !
   !-------------------------------------------------------------------!
   public :: chk_init, chk_close
   public :: chk_write, chk_read, chk_update
   public :: chk_create_opt_traj, chk_append_opt_traj, chk_read_opt_traj
+  public :: qmdata_init, qmdata_close, qmdata_write
   public :: read_real8_rank3
 
   !-------------------------------------------------------------------!
@@ -40,11 +50,13 @@ module quick_io_module
   ! Resolved by type/rank of the data argument:                       !
   !   integer scalar          -> chk_write_int_scalar                 !
   !   integer rank-1 array    -> chk_write_int_rank1                  !
+  !   real8   rank-1 array    -> chk_write_real8_rank1                !
   !   real8   rank-2 array    -> chk_write_real8_rank2                !
   !-------------------------------------------------------------------!
   interface chk_write
      module procedure chk_write_int_scalar
      module procedure chk_write_int_rank1
+     module procedure chk_write_real8_rank1
      module procedure chk_write_real8_rank2
   end interface chk_write
 
@@ -53,11 +65,13 @@ module quick_io_module
   ! Resolved by type/rank of the data argument:                       !
   !   integer scalar          -> chk_read_int_scalar                  !
   !   integer rank-1 array    -> chk_read_int_rank1                   !
+  !   real8   rank-1 array    -> chk_read_real8_rank1                 !
   !   real8   rank-2 array    -> chk_read_real8_rank2                 !
   !-------------------------------------------------------------------!
   interface chk_read
      module procedure chk_read_int_scalar
      module procedure chk_read_int_rank1
+     module procedure chk_read_real8_rank1
      module procedure chk_read_real8_rank2
   end interface chk_read
 
@@ -71,6 +85,21 @@ module quick_io_module
   interface chk_update
      module procedure chk_update_real8_rank2
   end interface chk_update
+
+  !-------------------------------------------------------------------!
+  ! Generic interface: qmdata_write                                   !
+  ! Independent export written by QMDATA_WRITE (separate file/unit    !
+  ! from chk_write/CHK_WRITE). Binary key/value format only.          !
+  ! Resolved by type/rank of the data argument:                       !
+  !   integer rank-1 array    -> qmdata_write_int_rank1                !
+  !   real8   rank-1 array    -> qmdata_write_real8_rank1              !
+  !   real8   rank-2 array    -> qmdata_write_real8_rank2              !
+  !-------------------------------------------------------------------!
+  interface qmdata_write
+     module procedure qmdata_write_int_rank1
+     module procedure qmdata_write_real8_rank1
+     module procedure qmdata_write_real8_rank2
+  end interface qmdata_write
 
 contains
 
@@ -353,6 +382,105 @@ contains
 
   end subroutine read_hdf5_int_rank1
 
+  !---------------------------------------------------------------------!
+  ! read_hdf5_real8_rank1: read a 1-D double precision array from the   !
+  ! HDF5 checkpoint, starting at index "ind".                           !
+  !---------------------------------------------------------------------!
+  subroutine read_hdf5_real8_rank1(datasetname, ind, n, data8)
+    use HDF5
+    use quick_files_module, only: dataFileName
+
+    implicit none
+
+    character(len=*), intent(in) :: datasetname
+    integer, intent(in) :: ind
+    integer, intent(in) :: n
+    double precision, dimension(n), intent(out) :: data8
+
+    integer, parameter :: rank = 1
+    double precision, dimension(:), allocatable :: dbuf
+    integer :: hdferr
+    integer(HID_T) :: file_id, dset, space_id, file_space ! Handles
+    integer(HSIZE_T), dimension(1) :: dims
+    integer(HSIZE_T), dimension(1) :: start, stride, countn, blockn
+
+    ! index at which the data is located
+    dims(1) = n
+    start  = [ind - 1]
+    stride = [1]
+    countn = [1]
+    blockn = [n]
+
+    ! Initialize FORTRAN interface.
+    call h5open_f(hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Error initializing HDF5 Fortran interface (read_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+    ! Open file
+    call h5fopen_f(dataFileName, H5F_ACC_RDONLY_F, file_id, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Failed to open HDF5 data file (read_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+    ! open dataset
+    call h5dopen_f(file_id, datasetname, dset, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Failed to open HDF5 dataset (read_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+    ! Get the file_space
+    call h5dget_space_f(dset, file_space, hdferr)
+    call h5sselect_hyperslab_f(file_space, 0, start, stride, hdferr, countn, blockn)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Error getting space in the HDF5 dataset (read_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+    ! create a simple dataspace
+    call h5screate_simple_f(rank, dims, space_id, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Error creating space in the HDF5 dataset (read_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+    ! Read the array in dataset "datasetname"
+    allocate(dbuf(n))
+    call h5dread_f(dset, H5T_NATIVE_DOUBLE, dbuf, dims, hdferr, mem_space_id=space_id, file_space_id=file_space)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Error reading data from dataset (read_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+    ! The data in the buffer is transferred to return to the calling program
+    data8 = dbuf
+
+    if(allocated(dbuf)) deallocate(dbuf)
+
+    ! Close file and dataset
+    call h5sclose_f(space_id, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Error closing HDF5 dataspace (read_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+    call h5dclose_f(dset, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Error closing HDF5 dataset (read_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+    call h5fclose_f(file_id, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Error closing HDF5 interface (read_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+  end subroutine read_hdf5_real8_rank1
+
   subroutine write_hdf5_info(natom, nbasis)
     use HDF5
     use quick_files_module, only: dataFileName
@@ -504,6 +632,85 @@ contains
     endif
 
   end subroutine write_hdf5_int_rank1
+
+  !---------------------------------------------------------------------!
+  ! write_hdf5_real8_rank1: write a 1-D double precision array to the   !
+  ! HDF5 checkpoint as a new dataset.                                    !
+  !---------------------------------------------------------------------!
+  subroutine write_hdf5_real8_rank1(Array, length, datasetname)
+    use HDF5
+    use quick_files_module, only: dataFileName
+
+    implicit none
+
+    integer, intent(in) :: length
+    double precision, dimension(length), intent(in) :: Array
+    character(len=*), intent(in) :: datasetname
+
+    integer, parameter :: rank = 1
+    integer(HSIZE_T), dimension(rank) :: lenArr
+    integer :: hdferr
+    integer(HID_T) :: file_id, space_id, dset ! Handles
+
+    lenArr = shape(Array)
+
+    ! Initialize FORTRAN interface.
+    call h5open_f(hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Error initializing HDF5 Fortran interface (write_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+    ! Open file.
+    call h5fopen_f(dataFileName, H5F_ACC_RDWR_F, file_id, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Failed to open HDF5 data file (write_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+    ! Create a simple dataspace
+    call h5screate_simple_f(rank, lenArr, space_id, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Error creating space in the HDF5 dataset (write_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+    ! Create dataset
+    call h5dcreate_f(file_id, datasetname, H5T_NATIVE_DOUBLE, space_id, dset, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Failed to create HDF5 dataset (write_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+    ! Write the array to a dataset "datasetname"
+    call h5dwrite_f(dset, H5T_NATIVE_DOUBLE, Array, lenArr, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Error writing data to dataset (write_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+    ! Close dataset
+    call h5dclose_f(dset, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Error closing HDF5 dataset (write_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+    ! Close dataspace
+    call h5sclose_f(space_id, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Error closing HDF5 dataspace (write_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+    ! Close file and interface
+    call h5fclose_f(file_id, hdferr)
+    if (hdferr /= 0) then
+      call PrtErr(OUTFILEHANDLE, 'Error closing HDF5 interface (write_hdf5_real8_rank1)')
+      call quick_exit(OUTFILEHANDLE, 1)
+    endif
+
+  end subroutine write_hdf5_real8_rank1
 
   subroutine write_hdf5_real8_rank2(Array, length1, length2, datasetname)
     use HDF5
@@ -1068,6 +1275,43 @@ contains
   end subroutine chk_write_int_rank1
 
   !---------------------------------------------------------------------!
+  ! chk_write_real8_rank1: write a 1-D double precision array.          !
+  ! non-HDF5: writes '#key', 'R1', element count, then the array to     !
+  !           chk_unit.                                                  !
+  ! HDF5: calls write_hdf5_real8_rank1.                                 !
+  !---------------------------------------------------------------------!
+  subroutine chk_write_real8_rank1(key, n, array)
+    implicit none
+    character(len=*),               intent(in)  :: key
+    integer,                        intent(in)  :: n
+    double precision, dimension(n), intent(in)  :: array
+    integer                                     :: fail
+
+    integer   :: i, k, l
+    character :: kline*40
+
+#if defined(RESTART_HDF5)
+    call write_hdf5_real8_rank1(array, n, key)
+#else
+    l = len(key)
+    if (l >= 40) then
+       kline = key(1:40)
+    else
+       kline(1:l) = key(1:l)
+       do k = l+1, 40
+          kline(k:k) = ' '
+       enddo
+    endif
+    fail = 0
+    write(chk_unit) '#'//kline(1:40)
+    write(chk_unit) 'R1'
+    write(chk_unit) n
+    write(chk_unit) (array(i), i=1,n)
+    fail = 1
+#endif
+  end subroutine chk_write_real8_rank1
+
+  !---------------------------------------------------------------------!
   ! chk_write_real8_rank2: write a rank-2 double precision array.       !
   ! non-HDF5: writes '#key', 'RR', element count, then the array in     !
   !           column-major order to chk_unit.                            !
@@ -1189,6 +1433,56 @@ contains
   end subroutine chk_read_int_rank1
 
   !---------------------------------------------------------------------!
+  ! chk_read_real8_rank1: read a 1-D double precision array.            !
+  ! non-HDF5: opens the binary file, searches for the key with type     !
+  !           'R1' and element count n, reads the array, closes.        !
+  ! HDF5: calls read_hdf5_real8_rank1 starting at index 1.              !
+  !---------------------------------------------------------------------!
+  subroutine chk_read_real8_rank1(key, n, array)
+    use quick_files_module, only: iDataFile, dataFileName
+    implicit none
+    character(len=*),               intent(in)  :: key
+    integer,                        intent(in)  :: n
+    double precision, dimension(n), intent(out) :: array
+    integer                                     :: fail
+
+    integer   :: i, k, l, num
+    character :: kline*40, ktype*2, line*41
+
+#if defined(RESTART_HDF5)
+    call read_hdf5_real8_rank1(key, 1, n, array)
+#else
+    l = len(key)
+    if (l >= 40) then
+       kline = key(1:40)
+    else
+       kline(1:l) = key(1:l)
+       do k = l+1, 40
+          kline(k:k) = ' '
+       enddo
+    endif
+    fail = 0
+    open(unit=iDataFile, file=dataFileName, status='OLD', form='UNFORMATTED')
+    rewind(iDataFile)
+    do
+       read(iDataFile, end=100, err=120) line
+       if (line(1:1) .ne. '#') cycle
+       if (index(line, kline) == 0) cycle
+       read(iDataFile, end=100, err=100) ktype
+       if (ktype .ne. 'R1') exit
+       read(iDataFile, end=100, err=100) num
+       if (num .ne. n) exit
+       read(iDataFile, end=100, err=100) (array(i), i=1,n)
+       fail = 1
+       exit
+    120 continue
+    enddo
+    100 continue
+    close(iDataFile)
+#endif
+  end subroutine chk_read_real8_rank1
+
+  !---------------------------------------------------------------------!
   ! chk_read_real8_rank2: read a rank-2 double precision array.         !
   ! non-HDF5: opens the binary file, searches for the key with type     !
   !           'RR' and element count n1*n2, reads the array, closes.    !
@@ -1259,6 +1553,128 @@ contains
     call write_hdf5_real8_rank2(array, n1, n2, key)
 #endif
   end subroutine chk_update_real8_rank2
+
+  !=====================================================================!
+  ! QMDATA_WRITE: independent export of basis/MO/SCF data for external  !
+  ! packages (e.g. PySCF). Separate keyword and file from CHK_WRITE/    !
+  ! chk_write above, which remains the original density/geometry        !
+  ! restart mechanism. Binary key/value format only; always available   !
+  ! regardless of RESTART_HDF5.                                         !
+  !=====================================================================!
+
+  !---------------------------------------------------------------------!
+  ! qmdata_init: open the qmdata file and record natom/nbasis.          !
+  !---------------------------------------------------------------------!
+  subroutine qmdata_init(natom, nbasis)
+    use quick_files_module, only: iQMDataFile, qmDataFileName
+    implicit none
+    integer, intent(in)  :: natom, nbasis
+    integer :: fail
+
+    qmdata_unit = iQMDataFile
+    open(unit=qmdata_unit, file=qmDataFileName, status='UNKNOWN', &
+         form='UNFORMATTED', action='WRITE')
+    call write_int_rank0(qmdata_unit, 'natom',  natom,  fail)
+    call write_int_rank0(qmdata_unit, 'nbasis', nbasis, fail)
+    if(fail .ne. 1) then
+        call PrtErr(OUTFILEHANDLE, 'failed to write natom and nbasis to qmdata file in write_int_rank0')
+        call quick_exit(OUTFILEHANDLE, 1)
+    endif
+  end subroutine qmdata_init
+
+  !---------------------------------------------------------------------!
+  ! qmdata_close: close the qmdata file.                                !
+  !---------------------------------------------------------------------!
+  subroutine qmdata_close()
+    implicit none
+
+    if (qmdata_unit /= -1) then
+      close(qmdata_unit)
+      qmdata_unit = -1
+    end if
+  end subroutine qmdata_close
+
+  !---------------------------------------------------------------------!
+  ! qmdata_write_int_rank1: write a 1-D integer array to the qmdata     !
+  ! file as '#key', 'II', element count, then the array.                !
+  !---------------------------------------------------------------------!
+  subroutine qmdata_write_int_rank1(key, n, array)
+    implicit none
+    character(len=*),      intent(in)  :: key
+    integer,               intent(in)  :: n
+    integer, dimension(n), intent(in)  :: array
+
+    integer   :: i, k, l
+    character :: kline*40
+
+    l = len(key)
+    if (l >= 40) then
+       kline = key(1:40)
+    else
+       kline(1:l) = key(1:l)
+       do k = l+1, 40
+          kline(k:k) = ' '
+       enddo
+    endif
+    write(qmdata_unit) '#'//kline(1:40)
+    write(qmdata_unit) 'II'
+    write(qmdata_unit) n
+    write(qmdata_unit) (array(i), i=1,n)
+  end subroutine qmdata_write_int_rank1
+
+  !---------------------------------------------------------------------!
+  ! qmdata_write_real8_rank1: write a 1-D double precision array.       !
+  !---------------------------------------------------------------------!
+  subroutine qmdata_write_real8_rank1(key, n, array)
+    implicit none
+    character(len=*),               intent(in)  :: key
+    integer,                        intent(in)  :: n
+    double precision, dimension(n), intent(in)  :: array
+
+    integer   :: i, k, l
+    character :: kline*40
+
+    l = len(key)
+    if (l >= 40) then
+       kline = key(1:40)
+    else
+       kline(1:l) = key(1:l)
+       do k = l+1, 40
+          kline(k:k) = ' '
+       enddo
+    endif
+    write(qmdata_unit) '#'//kline(1:40)
+    write(qmdata_unit) 'R1'
+    write(qmdata_unit) n
+    write(qmdata_unit) (array(i), i=1,n)
+  end subroutine qmdata_write_real8_rank1
+
+  !---------------------------------------------------------------------!
+  ! qmdata_write_real8_rank2: write a rank-2 double precision array.    !
+  !---------------------------------------------------------------------!
+  subroutine qmdata_write_real8_rank2(key, n1, n2, array)
+    implicit none
+    character(len=*),                   intent(in)  :: key
+    integer,                            intent(in)  :: n1, n2
+    double precision, dimension(n1,n2), intent(in)  :: array
+
+    integer   :: i, j, k, l
+    character :: kline*40
+
+    l = len(key)
+    if (l >= 40) then
+       kline = key(1:40)
+    else
+       kline(1:l) = key(1:l)
+       do k = l+1, 40
+          kline(k:k) = ' '
+       enddo
+    endif
+    write(qmdata_unit) '#'//kline(1:40)
+    write(qmdata_unit) 'RR'
+    write(qmdata_unit) n1*n2
+    write(qmdata_unit) ((array(i,j), i=1,n1), j=1,n2)
+  end subroutine qmdata_write_real8_rank2
 
   !---------------------------------------------------------------------!
   ! chk_create_opt_traj: create the extendable optimisation trajectory  !

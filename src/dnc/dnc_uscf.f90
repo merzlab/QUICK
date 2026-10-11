@@ -148,7 +148,7 @@
 #endif
   
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-     if(quick_method%bCUDA) then
+     if(quick_method%bGPU) then
   
         if (quick_method%DFT) then
 
@@ -615,18 +615,13 @@ endif
 
 #if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
 
-          RECORD_TIME(timer_begin%TDiag)
-          call cuda_diag(Odcsubtemp, Xdcsubtemp, quick_scratch%hold,&
-                EVAL1temp, IDEGEN1temp, &
-                VECtemp, dcco, &
-                Vtemp, NtempN)
-           RECORD_TIME(timer_end%TDiag)
+           call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Odcsubtemp, &
+                 NtempN, Xdcsubtemp, NtempN, 0.0d0, holddc,NtempN)
 
            call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
                  NtempN, holddc, NtempN, 0.0d0, Odcsubtemp,NtempN)
-#else
 
-#if defined HIP || defined HIP_MPIV
+#elif defined HIP || defined HIP_MPIV
 
            call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Odcsubtemp, &
                  NtempN, Xdcsubtemp, NtempN, 0.0d0, holddc,NtempN)
@@ -640,17 +635,17 @@ endif
 
            call DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
                  NtempN, holddc, NtempN, 0.0d0, Odcsubtemp,NtempN)
-#endif  
+#endif
 
            ! Now diagonalize the operator matrix. MAT_DIAG is the architecture
            ! agnostic wrapper; it dispatches to MAGMA/rocSOLVER/LAPACK as
-           ! appropriate for the current build.
+           ! appropriate for the current build. See dnc_scf.f90's matching
+           ! fix (gly6 6-31G*, GPU MFCC+DIVCON, 2026-10-09) for why the CUDA
+           ! branch used to call a broken 9-argument "cuda_diag" that
+           ! silently linked against the unrelated 5-parameter CUDA_DIAG.
            RECORD_TIME(timer_begin%TDiag)
            call MAT_DIAG(Odcsubtemp, NtempN, NtempN, EVAL1temp, VECtemp)
            RECORD_TIME(timer_end%TDiag)
-
-#endif
-
 
            Ttmp=Ttmp+timer_end%TDiag-timer_begin%TDiag
            timer_cumer%TDiag=timer_end%TDiag-timer_begin%TDiag
@@ -766,18 +761,13 @@ endif
 
 #if (defined(CUDA) || defined(CUDA_MPIV)) && !defined(HIP)
 
-          RECORD_TIME(timer_begin%TDiag)
-          call cuda_diag(Odcsubtemp, Xdcsubtemp, quick_scratch%hold,&
-                EVAL1temp, IDEGEN1temp, &
-                VECtemp, dcco, &
-                Vtemp, NtempN)
-           RECORD_TIME(timer_end%TDiag)
+           call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Odcsubtemp, &
+                 NtempN, Xdcsubtemp, NtempN, 0.0d0, holddc,NtempN)
 
            call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
                  NtempN, holddc, NtempN, 0.0d0, Odcsubtemp,NtempN)
-#else
 
-#if defined HIP || defined HIP_MPIV
+#elif defined HIP || defined HIP_MPIV
 
            call GPU_DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Odcsubtemp, &
                  NtempN, Xdcsubtemp, NtempN, 0.0d0, holddc,NtempN)
@@ -791,14 +781,16 @@ endif
 
            call DGEMM ('n', 'n', NtempN, NtempN, NtempN, 1.0d0, Xdcsubtemp, &
                  NtempN, holddc, NtempN, 0.0d0, Odcsubtemp,NtempN)
-#endif  
+#endif
            ! Now diagonalize the operator matrix. MAT_DIAG is the architecture
            ! agnostic wrapper; it dispatches to MAGMA/rocSOLVER/LAPACK as
-           ! appropriate for the current build.
+           ! appropriate for the current build. See dnc_scf.f90's matching
+           ! fix (gly6 6-31G*, GPU MFCC+DIVCON, 2026-10-09) for why the CUDA
+           ! branch used to call a broken 9-argument "cuda_diag" that
+           ! silently linked against the unrelated 5-parameter CUDA_DIAG.
            RECORD_TIME(timer_begin%TDiag)
            call MAT_DIAG(Odcsubtemp, NtempN, NtempN, EVAL1temp, VECtemp)
            RECORD_TIME(timer_end%TDiag)
-#endif
 
          Ttmp=Ttmp+timer_end%TDiag-timer_begin%TDiag
          timer_cumer%TDiag=timer_cumer%TDiag+timer_end%TDiag-timer_begin%TDiag
@@ -1068,12 +1060,7 @@ endif
 #if (defined CUDA || defined CUDA_MPIV) && !defined(HIP)
      if(master .and. write_molden) then
          quick_molden%nscf_snapshots(quick_molden%iexport_snapshot)=jscf
-     endif  
-
-     ! sign of the coefficient matrix resulting from cusolver is not consistent
-     ! with rest of the code (e.g. gradients). We have to correct this.
-     call scalarMatMul(quick_qm_struct%co,nbasis,nbasis,-1.0d0)
-     call scalarMatMul(quick_qm_struct%cob,nbasis,nbasis,-1.0d0)
+     endif
 #endif
   
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV

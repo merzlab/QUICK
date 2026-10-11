@@ -90,15 +90,15 @@ contains
   
 #if defined(GPU) || defined(MPIV_GPU)
      if (quick_method%bGPU) then
-  
+
         call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
         quick_qm_struct%vec,quick_qm_struct%dense)
         call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff, &
                                 quick_method%coreIntegralCutoff)
-  
+
      endif
 #endif
- 
+
      call get1e(deltaO)
 
      if(quick_method%printEnergy) call get1eEnergy(deltaO)
@@ -124,9 +124,9 @@ contains
      RECORD_TIME(timer_begin%T2e)
 
 #if defined(GPU) || defined(MPIV_GPU)
-        if (quick_method%bGPU) then          
-           call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
-        else                                  
+        if (quick_method%bGPU) then
+           call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)
+        else
 #endif
   !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)
   !  Reference: Strout DL and Scuseria JCP 102(1995),8448.

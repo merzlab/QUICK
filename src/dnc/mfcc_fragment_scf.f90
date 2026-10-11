@@ -126,6 +126,25 @@ subroutine mfcc_fragment_scf(ierr)
 
    if (real_master) call PrtAct(ioutfile,"Begin MFCC fragment densities")
 
+   ! main.f90 allocates this once, for the whole job, right after getMol
+   ! (gpu_allocate_scratch -> the devSim.store/store2/YVerticalTemp workspace
+   ! the OEI/ERI kernels use for Hermite/recursion intermediates). It is sized
+   ! only from fixed launch-config constants (blocks * threads * STOREDIM),
+   ! never from natom/nbasis, so one allocation covers every fragment; no need
+   ! to repeat it per fragment the way gpu_setup/gpu_upload_* above must be.
+   ! Without it, the kernels index through whatever devSim.store was at job
+   ! start (unallocated at this point, since mfcc_fragment_scf runs before
+   ! getMol/main.f90's own gpu_allocate_scratch call) -- compute-sanitizer
+   ! caught this as an "Invalid __global__ write", address ~23TB before the
+   ! nearest real allocation, inside getOEI_kernel (gly6, GPU MFCC, 2026-10-09).
+   ! Freed again below (gpu_deallocate_scratch) so main.f90's own call still
+   ! gets a clean allocation for the real job.
+#if defined(GPU) || defined(MPIV_GPU)
+   if (quick_method%bGPU) then
+      call gpu_allocate_scratch(.false.)
+   endif
+#endif
+
    ! ---------------------------------------------------------------
    ! With RPT, work out which standalone fragments are copies of which before
    ! anything else. The grouping needs only the fragment geometries, which
@@ -360,6 +379,15 @@ subroutine mfcc_fragment_scf(ierr)
    if (real_master) call PrtAct(ioutfile,"Finish MFCC fragment densities")
 
 900 continue
+
+   ! Matches the gpu_allocate_scratch above; unconditional so it also runs on
+   ! the error path (goto 900), freeing the fragment-phase scratch so
+   ! main.f90's own gpu_allocate_scratch call gets a clean allocation.
+#if defined(GPU) || defined(MPIV_GPU)
+   if (quick_method%bGPU) then
+      call gpu_deallocate_scratch(.false.)
+   endif
+#endif
 
 #ifdef MPIV
    ! Collect the blocks. quick_comm is still MPI_COMM_SELF at this point, so
@@ -797,6 +825,26 @@ subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibas
 
    quick_qm_struct%nbasis => nbasis
 
+   ! main.f90 does this whole sequence once, for the real molecule, right
+   ! after getMol -- gpu_setup/gpu_upload_xyz/gpu_upload_atom_and_chg sized
+   ! by that natom/nbasis, then (after getEriPrecomputables/schwarzoff)
+   ! gpu_upload_basis/gpu_upload_cutoff_matrix/gpu_upload_oei. mfcc_fragment_scf
+   ! runs before getMol and rebuilds the CPU-side basis per fragment above, but
+   ! never told the GPU about any of it, so scf_operator's gpu_get_cshell_eri
+   ! ran against whatever gpu_new/gpu_init_device left at job start -- no
+   ! basis, no geometry. Segfaulted on the very first fragment (gly6 and
+   ! trpcage, GPU MFCC, 2026-10-09). Redone here per fragment, since each one
+   ! is a different sub-molecule with its own natom/nbasis/basis set.
+#if defined(GPU) || defined(MPIV_GPU)
+   if (quick_method%bGPU) then
+      call upload(quick_method, ierr)
+      call gpu_setup(natom, nbasis, quick_molspec%nElec, quick_molspec%imult, &
+                     quick_molspec%molchg, quick_molspec%iAtomType)
+      call gpu_upload_xyz(xyz)
+      call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
+   endif
+#endif
+
    ! deallocate_calculated above released quick_basis, and with it the
    ! primitive-pair arrays the ERI engine works through: Apri, Kpri, Ppri,
    ! cutprim and Xcoeff, all dimensioned by jbasis. readbasis sets jbasis but
@@ -820,6 +868,25 @@ subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibas
    call getEriPrecomputables
    call schwarzoff
 
+   ! Second half of the per-fragment GPU upload: the basis and Schwarz
+   ! cutoff data that getEriPrecomputables/schwarzoff just computed above,
+   ! same order as main.f90.
+#if defined(GPU) || defined(MPIV_GPU)
+   if (quick_method%bGPU) then
+      call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
+        ncontract, itype, aexp, dcoeff, &
+        quick_basis%first_basis_function, quick_basis%last_basis_function, &
+        quick_basis%first_shell_basis_function, quick_basis%last_shell_basis_function, &
+        quick_basis%ncenter, quick_basis%kstart, quick_basis%katom, &
+        quick_basis%ktype, quick_basis%kprim, quick_basis%kshell,quick_basis%Ksumtype, &
+        quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal, quick_basis%Qsbasis, quick_basis%Qfbasis, &
+        quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
+      call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
+      call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
+      if (ierr /= 0) return
+   endif
+#endif
+
    ! Crude diagonal starting density, as the SAD guess does for atoms.
    diagelement = dble(quick_molspec%nelec)/dble(nbasis)
    do i = 1, nbasis
@@ -830,6 +897,25 @@ subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibas
    ! runs the SCF, while skipping the DFT grid and the verbose banners.
    quick_method%scf_conv = .false.
    call getEnergy(.true.,ierr)
+
+   ! gpu_setup (above) freshly "new"s gpu->gpu_basis/gpu->gpu_calculated every
+   ! call without freeing the previous fragment's, and gpu_upload_basis/_xyz/
+   ! _atom_and_chg/_oei/_cutoff_matrix each "new" their own buffers the same
+   ! way. With ~10-20 fragments+caps per MFCC run that leaked enough device
+   ! memory that the real job's own GPU diagonalization (CUDA_DIAG) then
+   ! failed its cudaMalloc and the DnC Fermi-level search never converged
+   ! (gly6, GPU MFCC, 2026-10-09). gpu_cleanup_fragment (gpu.cu) frees exactly
+   ! what those upload calls allocated -- everything gpu_cleanup() does except
+   ! gpu->gpu_cutoff->cutMatrix, which belongs to the per-SCF-cycle
+   ! gpu_upload_cutoff call inside scf_operator, not to this per-fragment
+   ! setup; deleting it here segfaulted even though the plain gpu_cleanup()
+   ! call is safe in quick_optimizer_module's analogous per-opt-step loop.
+   ! Run unconditionally regardless of how getEnergy returned, so every
+   ! fragment starts the next gpu_setup from a clean slate.
+#if defined(GPU) || defined(MPIV_GPU)
+   if (quick_method%bGPU) call gpu_cleanup_fragment()
+#endif
+
    if (ierr /= 0) return
 
    ! A sub-molecule that ran out of cycles leaves an unconverged density behind,

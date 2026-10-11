@@ -71,7 +71,7 @@
 #endif
   
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-     if (quick_method%bCUDA) then
+     if (quick_method%bGPU) then
   
         call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
         quick_qm_struct%vec,quick_qm_struct%dense)
@@ -110,7 +110,7 @@
      RECORD_TIME(timer_begin%T2e)
 
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
-        if (quick_method%bCUDA) then   
+        if (quick_method%bGPU) then   
        
            call gpu_get_oshell_eri(deltaO, quick_qm_struct%o, quick_qm_struct%ob)
 
@@ -313,7 +313,7 @@
   
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
   
-     if(quick_method%bCUDA) then
+     if(quick_method%bGPU) then
         if(deltaO) then
           call gpu_upload_density_matrix(quick_qm_struct%dense)
           call gpu_upload_beta_density_matrix(quick_qm_struct%denseb)

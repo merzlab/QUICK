@@ -48,6 +48,7 @@ module quick_method_module
         logical :: readden = .false.  ! flag to read density matrix
         integer :: readxyz = -1       ! flag to read coordinates
         logical :: writechk = .false. ! flag to checkpoint data
+        logical :: writeqmdata = .false. ! flag to export basis/MO/SCF data for external packages
         logical :: readSAD = .true.    ! flag to read SAD guess
         logical :: writeSAD = .false.  ! flag to write SAD guess
         logical :: diisSCF =  .false.  ! DIIS SCF
@@ -282,6 +283,7 @@ module quick_method_module
             call MPI_BCAST(self%readden,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%readxyz,1,mpi_integer,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%writechk,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%writeqmdata,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%extCharges,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%ext_grid,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%extgrid_angstrom,1,mpi_logical,0,quick_comm,quick_mpi_error)
@@ -477,6 +479,7 @@ module quick_method_module
             if (self%readxyz .ge. 0) write(io,'(" READ COORDINATES FROM DATA FILE")')
             if (self%readden) write(io,'(" READ DENSITY MATRIX FROM DATA FILE")')
             if (self%writechk) write(io,'(" CHECKPOINTING TO DATA FILE")')
+            if (self%writeqmdata) write(io,'(" EXPORTING BASIS/MO/SCF DATA TO QMDATA FILE")')
             if (self%readSAD)   write(io,'(" READ SAD GUESS FROM FILE")')
             if (self%writeSAD)   write(io,'(" WRITE SAD GUESS TO FILE")')
     
@@ -790,6 +793,9 @@ module quick_method_module
 
             if (found_keyword(keyWD,'CHK_WRITE')) then
                 self%writechk = .true.
+            end if
+            if (found_keyword(keyWD,'QMDATA_WRITE')) then
+                self%writeqmdata = .true.
             end if
 
             if (found_keyword(keyWD,'EXTCHARGES')) self%EXTCHARGES=.true.
@@ -1107,6 +1113,7 @@ module quick_method_module
             self%readden = .false.    ! Input density matrix
             self%readxyz = -1         ! Input coordinates
             self%writechk = .false.   ! Checkpoint information to data file
+            self%writeqmdata = .false. ! Export basis/MO/SCF data to qmdata file
             self%extCharges = .false.  ! external charge
             self%ext_grid = .false.    ! external grid points
             self%extgrid_angstrom = .false.   ! external grid points (same as above) output in angstrom

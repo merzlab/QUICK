@@ -1149,30 +1149,30 @@ end subroutine get_cshell_eri_energy
 
 
 ! Drivers to dump integrals into files. Currently not working.
-subroutine writeInt(iIntFile, intDim, a, b, int)
+subroutine writeInt(iIntFile, intDim, a, b, intval)
    Implicit none
 
    integer i,intDim, iIntFile
    integer a(intDim), b(intDim)
-   double precision int(intDim)
+   double precision intval(intDim)
 
-   write(iIntFile) a, b, int
+   write(iIntFile) a, b, intval
 
 !do i = 1, intDim
- !  write(*,*) i, a(i),b(i),int(i)
+ !  write(*,*) i, a(i),b(i),intval(i)
 !enddo
 end subroutine writeInt
 
 
-subroutine readInt(iIntFile, intDim, a, b, int)
+subroutine readInt(iIntFile, intDim, a, b, intval)
    Implicit none
 
    integer, parameter :: llInt = selected_int_kind (16)
    integer iIntFile, i
    integer(kind=llInt) intDim
    integer a(intDim), b(intDim)
-   double precision int(intDim)
-   read(iIntFile) a, b, int
+   double precision intval(intDim)
+   read(iIntFile) a, b, intval
 end subroutine readInt
 
 

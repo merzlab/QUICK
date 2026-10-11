@@ -173,6 +173,8 @@ jobs:
           echo "LIBRARY_PATH=$PWD/install/lib/mpi:/usr/lib/`uname -m`-linux-gnu/hdf5/serial:$LIBRARY_PATH" >> "$GITHUB_ENV"
           echo "LD_LIBRARY_PATH=$PWD/install/lib/mpi:/usr/lib/`uname -m`-linux-gnu/hdf5/serial:$LD_LIBRARY_PATH" >> "$GITHUB_ENV"
           echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
+          echo "UCX_TLS=tcp,self,sm" >> "$GITHUB_ENV"
+          echo "FI_PROVIDER=tcp" >> "$GITHUB_ENV"
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
@@ -211,9 +213,12 @@ jobs:
           path: |
             ${{ github.workspace }}/install/runtest.log
             ${{ github.workspace }}/install/runtest-verbose.log
+            ${{ github.workspace }}/install/.quick.mpi.runtest.log
+            ${{ github.workspace }}/install/.quick.mpi.runtest-verbose.log
             ${{ github.workspace }}/install/test/runs/mpi
           retention-days: 3
           compression-level: 6
+          include-hidden-files: true
       - name: 'Download Test Artifacts for MPI Version'
         uses: actions/download-artifact@v4
         with:
@@ -450,6 +455,8 @@ jobs:
             fi
           fi
           echo "DO_PARALLEL=mpirun -np 2" >> "$GITHUB_ENV"
+          echo "UCX_TLS=tcp,self,sm" >> "$GITHUB_ENV"
+          echo "FI_PROVIDER=tcp" >> "$GITHUB_ENV"
           echo "CC=${{ matrix.c-compiler }}" >> "$GITHUB_ENV"
           echo "CXX=${{ matrix.cxx-compiler }}" >> "$GITHUB_ENV"
           echo "FC=${{ matrix.fortran-compiler }}" >> "$GITHUB_ENV"
@@ -615,9 +622,12 @@ jobs:
           path: |
             ${{ github.workspace }}/install/runtest.log
             ${{ github.workspace }}/install/runtest-verbose.log
+            ${{ github.workspace }}/install/.quick.mpi.runtest.log
+            ${{ github.workspace }}/install/.quick.mpi.runtest-verbose.log
             ${{ github.workspace }}/install/test/runs/mpi
           retention-days: 3
           compression-level: 6
+          include-hidden-files: true
       - name: 'Download Test Artifacts for MPI Version'
         uses: actions/download-artifact@v4
         with:

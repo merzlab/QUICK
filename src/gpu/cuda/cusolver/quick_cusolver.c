@@ -107,7 +107,15 @@ void CUDA_DIAG (double * o, const int * dim1, const int * dim2, const double * E
     double* devPtr_M = NULL;
     cudaStat1 = cudaMalloc((void**)&devPtr_M, sizeof(double) * dim * dim);
     if (cudaStat1 != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed in CUDA_DIAG\n");
+        size_t diag_free = 0, diag_total = 0;
+        cudaError_t diag_meminfo_stat = cudaMemGetInfo(&diag_free, &diag_total);
+        fprintf(stderr, "cudaMalloc failed in CUDA_DIAG: dim=%d bytes=%zu error=%s (code %d)\n",
+                dim, sizeof(double) * (size_t)dim * (size_t)dim,
+                cudaGetErrorString(cudaStat1), (int)cudaStat1);
+        if (diag_meminfo_stat == cudaSuccess) {
+            fprintf(stderr, "  at failure: free=%zu MB total=%zu MB\n",
+                    diag_free / (1024*1024), diag_total / (1024*1024));
+        }
         cudaFree(devPtr_M);
         return;
     }

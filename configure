@@ -1584,6 +1584,7 @@ rocblasfolder=$QUICK_HOME/src/gpu/hip/rocblas
 rocsolverfolder=$QUICK_HOME/src/gpu/hip/rocsolver
 octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules
+dncfolder=$QUICK_HOME/src/dnc
 
 # build directories
 exefolder=$QUICK_HOME/build/bin
@@ -1713,6 +1714,7 @@ cudafolder=$QUICK_HOME/src/gpu/cuda
 hipfolder=$QUICK_HOME/src/gpu/hip
 octfolder=$QUICK_HOME/src/octree
 modfolder=$QUICK_HOME/src/modules
+dncfolder=$QUICK_HOME/src/dnc
 
 EOF
 

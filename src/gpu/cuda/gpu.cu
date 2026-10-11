@@ -2932,6 +2932,64 @@ extern "C" void gpu_cleanup_()
 }
 
 
+//-----------------------------------------------
+// Per-fragment cleanup for mfcc_fragment_scf's repeated gpu_setup/
+// gpu_upload_basis/... cycle (one tiny sub-molecule SCF per fragment/cap).
+// Same as gpu_cleanup_ but skips gpu->gpu_cutoff->cutMatrix: that buffer
+// belongs to gpu_upload_cutoff_ (singular, called every SCF cycle from
+// scf_operator, already a known small per-cycle leak even in the normal
+// whole-job path) rather than to the one-time per-fragment setup sequence
+// this function cleans up after. Deleting it here segfaulted (gly6, GPU
+// MFCC, 2026-10-09; confirmed via gdb -- crash is the very next statement
+// after SAFE_DELETE(gpu->gpu_basis->sorted_Qnumber) succeeds) even though
+// the identical gpu_cleanup_() call is safe in quick_optimizer_module's
+// per-opt-step loop, which also goes through scf_operator/gpu_upload_cutoff_
+// first. Leaving this one small (nshell x nshell) buffer to accumulate
+// across fragments is a trivial, bounded leak for the lifetime of the MFCC
+// phase -- unlike the basis/geometry buffers below, which scale with
+// fragment count and were the original cause of the CUDA_DIAG cudaMalloc
+// failure this function exists to prevent.
+extern "C" void gpu_cleanup_fragment_()
+{
+    SAFE_DELETE(gpu->gpu_basis->ncontract);
+    SAFE_DELETE(gpu->gpu_basis->itype);
+    SAFE_DELETE(gpu->gpu_basis->aexp);
+    SAFE_DELETE(gpu->gpu_basis->dcoeff);
+    SAFE_DELETE(gpu->gpu_basis->ncenter);
+    SAFE_DELETE(gpu->gpu_basis->kstart);
+    SAFE_DELETE(gpu->gpu_basis->katom);
+    SAFE_DELETE(gpu->gpu_basis->kprim);
+    SAFE_DELETE(gpu->gpu_basis->Ksumtype);
+    SAFE_DELETE(gpu->gpu_basis->Qnumber);
+    SAFE_DELETE(gpu->gpu_basis->Qstart);
+    SAFE_DELETE(gpu->gpu_basis->Qfinal);
+    SAFE_DELETE(gpu->gpu_basis->Qsbasis);
+    SAFE_DELETE(gpu->gpu_basis->Qfbasis);
+    SAFE_DELETE(gpu->gpu_basis->gccoeff);
+    SAFE_DELETE(gpu->gpu_basis->cons);
+    SAFE_DELETE(gpu->gpu_basis->gcexpo);
+    SAFE_DELETE(gpu->gpu_basis->KLMN);
+    SAFE_DELETE(gpu->gpu_basis->prim_start);
+    SAFE_DELETE(gpu->gpu_basis->Xcoeff);
+    SAFE_DELETE(gpu->gpu_basis->Xcoeff_oei);
+    SAFE_DELETE(gpu->gpu_basis->expoSum);
+    SAFE_DELETE(gpu->gpu_basis->weightedCenterX);
+    SAFE_DELETE(gpu->gpu_basis->weightedCenterY);
+    SAFE_DELETE(gpu->gpu_basis->weightedCenterZ);
+    SAFE_DELETE(gpu->gpu_calculated->distance);
+    SAFE_DELETE(gpu->xyz);
+    SAFE_DELETE(gpu->gpu_basis->sorted_Q);
+    SAFE_DELETE(gpu->gpu_basis->sorted_Qnumber);
+    SAFE_DELETE(gpu->gpu_cutoff->sorted_YCutoffIJ);
+    SAFE_DELETE(gpu->gpu_cutoff->YCutoff);
+    SAFE_DELETE(gpu->gpu_cutoff->cutPrim);
+
+    SAFE_DELETE(gpu->allxyz);
+    SAFE_DELETE(gpu->allchg);
+    SAFE_DELETE(gpu->gpu_cutoff->sorted_OEICutoffIJ);
+}
+
+
 #if defined(COMPILE_GPU_AOINT)
 static bool debut = true;
 static bool incoreInt = true;

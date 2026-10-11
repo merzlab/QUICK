@@ -35,6 +35,7 @@ module quick_files_module
     character(len=80) :: rstFileName      = ''
     character(len=80) :: CPHFFileName     = ''
     character(len=80) :: dataFileName     = ''
+    character(len=80) :: qmDataFileName   = ''
     character(len=80) :: intFileName      = ''
     character(len=80) :: moldenFileName   = ''
     character(len=80) :: espFileName      = ''
@@ -70,6 +71,7 @@ module quick_files_module
     integer :: iBasisCustFile = BASISCFILEHANDLE     ! custom basis set file
     integer :: iPDBFile       = PDBFILEHANDLE        ! PDB input file
     integer :: iDataFile      = DATAFILEHANDLE       ! Data file, similar to chk file in gaussian
+    integer :: iQMDataFile    = QMDATAFILEHANDLE     ! Independent export of basis/MO/SCF data (QMDATA_WRITE)
     integer :: iIntFile       = INTFILEHANDLE        ! integral file
     integer :: iMoldenFile    = MOLDENFILEHANDLE     ! molden file
     integer :: iESPFile       = ESPFILEHANDLE        ! properties file for esp
@@ -138,6 +140,7 @@ module quick_files_module
         CPHFFileName = trim(adjustl(baseinFileName)) // '.cphf'
         pdbFileName = trim(adjustl(baseinFileName)) // '.pdb'
         dataFileName = trim(adjustl(baseinFileName)) // '.dat'
+        qmDataFileName = trim(adjustl(baseinFileName)) // '.qmdata'
         intFileName = trim(adjustl(baseinFileName)) // '.int'
         moldenFileName = trim(adjustl(baseinFileName)) // '.molden'
         espFileName = trim(adjustl(baseinFileName)) // '.esp'
@@ -168,6 +171,16 @@ module quick_files_module
         integer, intent(in) :: io
 
         write (io,'("| DATA FILE  =    ",a)') trim(dataFileName)
+    end subroutine
+
+
+    subroutine print_qmdata_file(io)
+        implicit none
+
+        ! pass-in Parameter
+        integer, intent(in) :: io
+
+        write (io,'("| QMDATA FILE  =    ",a)') trim(qmDataFileName)
     end subroutine
 
 

@@ -275,6 +275,7 @@
             call chk_close()
 #endif
         endif
+        if (master .and. quick_method%writeqmdata) call wrtQMData
     endif
 
     !------------------------------------------------------------------
@@ -304,8 +305,9 @@
             call chk_close()
         endif
 #endif
+        if (master .and. quick_method%writeqmdata) call wrtQMData
     endif
-    
+
     if (.not.quick_method%opt .and. quick_method%grad) then
         if (quick_method%UNRST) then
             SAFE_CALL(oshell_gradient(ierr))
@@ -327,6 +329,7 @@
             call chk_close()
 #endif
         endif
+        if (master .and. quick_method%writeqmdata) call wrtQMData
 
     endif
 
