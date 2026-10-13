@@ -21,6 +21,8 @@ subroutine mfcc_fragment_scf(ierr)
    use allmod
    use quick_exception_module
    use quick_mfcc_repeat_module, only: MFCC_RPT_MAXREP
+   use quick_sad_guess_module, only: getSadGuess
+   use quick_basis_module, only: atomBasis, atomDens
    use quick_mpi_module, only: bMPI, master
 #ifdef MPIV
    use quick_mpi_module, only: quick_comm, quick_comm_rank, quick_comm_size, quick_mpi_error
@@ -125,6 +127,22 @@ subroutine mfcc_fragment_scf(ierr)
    quick_molspec%imult = 1
 
    if (real_master) call PrtAct(ioutfile,"Begin MFCC fragment densities")
+
+   ! Each fragment SCF below is seeded from a superposition of atomic densities
+   ! (mfcc_sad_fragment_density), which needs atomDens/atomBasis. In practice
+   ! main.f90 has already built them: it calls getSadGuess before the MFCC phase
+   ! and getSadDense, which frees them, not until getMol afterwards. But the MFCC
+   ! branch of the keyword reader is written to clear quick_method%SAD, and if it
+   ! ever takes effect that call would be skipped and every fragment would fall
+   ! back to a flat diagonal -- the guess that stopped T4 lysozyme's fourth
+   ! fragment from converging at all. Build them here rather than depend on
+   ! another routine's flag. The whole molecule is still installed at this point,
+   ! which is what getmolsad needs to enumerate the element types, and it saves
+   ! and restores the global state itself.
+   if (.not.allocated(atomDens) .or. .not.allocated(atomBasis)) then
+      call getSadGuess(ierr)
+      if (ierr /= 0) goto 900
+   endif
 
    ! main.f90 allocates this once, for the whole job, right after getMol
    ! (gpu_allocate_scratch -> the devSim.store/store2/YVerticalTemp workspace
@@ -800,7 +818,6 @@ subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibas
    integer, intent(inout) :: ierr
 
    integer :: i
-   double precision :: diagelement
 
    ! Fragments differ in size, so the previous fragment's basis arrays must be
    ! released before readbasis rebuilds them. getmolsad gets away without this
@@ -887,11 +904,30 @@ subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibas
    endif
 #endif
 
-   ! Crude diagonal starting density, as the SAD guess does for atoms.
-   diagelement = dble(quick_molspec%nelec)/dble(nbasis)
-   do i = 1, nbasis
-      quick_qm_struct%dense(i,i) = diagelement
-   enddo
+   ! Starting density for this fragment's SCF.
+   !
+   ! This used to be a flat diagonal, nelec/nbasis in every diagonal element and
+   ! nothing else. That carries no information about which electrons belong to
+   ! which atom, so the SCF has to find the whole shell structure from scratch,
+   ! and for a fragment of fifty-odd atoms it is a bad enough starting point to
+   ! change the outcome: on T4 lysozyme fragment 3 took 59 cycles where the same
+   ! molecule from atomic densities takes 14, and fragment 4 -- a glutamate
+   ! carboxylate on a dipeptide, with a small HOMO-LUMO gap -- did not converge
+   ! at all. It spent all 200 cycles oscillating between -620 and -913 Hartree
+   ! with the DIIS error stuck at 1.9, on CPU and GPU alike, and the run died in
+   ! the non-convergence guard below. From a superposition of atomic densities
+   ! that same fragment converges in 13 cycles.
+   !
+   ! The atomic densities are already available and cost nothing here. main.f90
+   ! runs getSadGuess (= getmolsad) before the MFCC phase, which leaves
+   ! atomDens/atomBasis populated for every element in the system; getSadDense,
+   ! which consumes and frees them, does not run until getMol, after us. So they
+   ! sit there unused for the whole fragment phase.
+   !
+   ! mfcc_sad_fragment_density falls back to the flat diagonal if they are
+   ! missing or if the fragment's basis layout does not match them, so this
+   ! still works should the SAD phase ever be skipped for MFCC runs.
+   call mfcc_sad_fragment_density()
 
    ! getEnergy with isGuess=.true. builds X and the nuclear repulsion and
    ! runs the SCF, while skipping the DFT grid and the verbose banners.
@@ -932,6 +968,76 @@ subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibas
    endif
 
 end subroutine mfcc_run_submol
+
+
+!-------------------------------------------------------
+! mfcc_sad_fragment_density
+!-------------------------------------------------------
+! Seed the current sub-molecule's density with a superposition of atomic
+! densities, the same guess QUICK uses for an ordinary molecule.
+!
+! This is get_sad_density_matrix (quick_sad_guess_module) applied to the
+! fragment rather than to the whole molecule, with three differences:
+!
+!   - it does not free atomDens/atomBasis, because every following fragment
+!     needs them again and getMol still has its own getSadDense call to make;
+!   - it scans the real number of element types instead of a hardcoded ten;
+!   - it checks that the atomic blocks tile the fragment's basis exactly, and
+!     falls back to a flat diagonal if they do not, rather than writing a
+!     misaligned guess.
+!
+! The element inventory (iatomtype/atom_type_sym) still describes the whole
+! system here: mfcc_set_submol replaces the atom list but not the type table,
+! and a fragment's elements are always a subset of the system's.
+!-------------------------------------------------------
+
+subroutine mfcc_sad_fragment_density()
+   use allmod
+   use quick_basis_module, only: atomBasis, atomDens
+   use quick_constants_module, only: symbol
+   implicit none
+
+   integer :: iatm, sadatom, i, j, n, nb
+   logical :: matched
+
+   quick_qm_struct%dense(1:nbasis,1:nbasis) = 0.0d0
+
+   if (.not.allocated(atomDens) .or. .not.allocated(atomBasis)) goto 100
+
+   n = 0
+   do iatm = 1, natom
+      matched = .false.
+      do sadatom = 1, quick_molspec%iatomtype
+         if (symbol(quick_molspec%iattype(iatm)) .ne. quick_molspec%atom_type_sym(sadatom)) cycle
+         nb = atomBasis(sadatom)
+         ! Writing past the fragment's basis would corrupt whatever follows
+         ! quick_qm_struct%dense; bail out to the flat diagonal instead.
+         if (nb .le. 0 .or. n+nb .gt. nbasis) goto 100
+         do i = 1, nb
+            do j = 1, nb
+               quick_qm_struct%dense(i+n,j+n) = atomDens(sadatom,i,j)
+            enddo
+         enddo
+         n = n + nb
+         matched = .true.
+         exit
+      enddo
+      if (.not.matched) goto 100
+   enddo
+
+   ! The atomic blocks have to account for every basis function of the
+   ! fragment, or they are not aligned with it.
+   if (n .ne. nbasis) goto 100
+   return
+
+   ! Fall back to the flat diagonal: a poor guess, but a valid one.
+100 continue
+   quick_qm_struct%dense(1:nbasis,1:nbasis) = 0.0d0
+   do i = 1, nbasis
+      quick_qm_struct%dense(i,i) = dble(quick_molspec%nelec)/dble(nbasis)
+   enddo
+
+end subroutine mfcc_sad_fragment_density
 
 
 !-------------------------------------------------------
