@@ -3,10 +3,6 @@
 add_subdirectory(libxc)
 add_subdirectory(octree)
 
-if(blas_INTERNAL AND NOT INSIDE_AMBER)
-	add_subdirectory(blas)
-endif()
-
 if(lapack_INTERNAL AND NOT INSIDE_AMBER)
 	add_subdirectory(lapack)
 endif()

@@ -1,0 +1,3 @@
+[submodule "src/lapack"]
+	path = src/lapack
+	url = https://github.com/ohearnk/lapack.git
