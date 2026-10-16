@@ -578,8 +578,13 @@ contains
 
     integer :: Iatm, Imomentum, IIsh, JJsh, i, j, nshell_mpi
 #ifdef CUEST
-    double precision :: cuest_densetmp(nbasis, nbasis)
+    double precision :: cuest_densetmp(nbasis, nbasis), cuest_densetmpb(nbasis, nbasis)
+#ifdef OSHELL
+    double precision :: cuest_cotmp(nbasis, quick_molspec%nelec)
+    double precision :: cuest_cotmpb(nbasis, quick_molspec%nelecb)
+#else
     double precision :: cuest_cotmp(nbasis, quick_molspec%nelec/2)
+#endif
     double precision :: cuest_gradbuf(3*natom)
     double precision :: cuest_gradbuf_ptchg(3*quick_molspec%nextatom)
 #endif
@@ -600,6 +605,12 @@ contains
         cuest_cotmp = quick_qm_struct%co
         call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
         call cuest_correct_C(quick_qm_struct%co, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+#ifdef OSHELL
+        cuest_densetmpb = quick_qm_struct%denseb
+        cuest_cotmpb = quick_qm_struct%cob
+        call cuest_correct_P(quick_qm_struct%denseb, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+        call cuest_correct_C(quick_qm_struct%cob, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+#endif
      endif
 #endif
 
@@ -614,6 +625,10 @@ contains
         ! undo correction
         quick_qm_struct%dense = cuest_densetmp
         quick_qm_struct%co = cuest_cotmp
+#ifdef OSHELL
+        quick_qm_struct%denseb = cuest_densetmpb
+        quick_qm_struct%cob = cuest_cotmpb
+#endif
      endif
 #endif
   
@@ -1006,7 +1021,13 @@ contains
 #else
 #ifdef CUEST
         if (quick_method%usecuest) then
+#ifdef OSHELL
+           call cuest_get_JK_grad(cuest_gradbuf, &
+                                  quick_qm_struct%dense + quick_qm_struct%denseb, &
+                                  quick_qm_struct%co + quick_qm_struct%cob)
+#else
            call cuest_get_JK_grad(cuest_gradbuf, quick_qm_struct%dense, quick_qm_struct%co)
+#endif
            quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
 
 #ifdef CUESTDEBUG
@@ -1196,7 +1217,11 @@ contains
 #else
 #ifdef CUEST
         if (quick_method%usecuest) then
+#ifdef OSHELL
+           call cuest_get_xc_grad(cuest_gradbuf, quick_qm_struct%co + quick_qm_struct%cob)
+#else
            call cuest_get_xc_grad(cuest_gradbuf, quick_qm_struct%co)
+#endif
            quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
 #ifdef CUESTDEBUG
            call cuest_debuglog("======== cuest xc gradient ========")
