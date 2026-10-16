@@ -1262,6 +1262,8 @@ module quick_method_module
 
 #ifdef CUEST
         select case (quick_method%functional_id(1))
+            case (402) ! HYB_GGA_XC_B3LYP
+                self%cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
             case (106) ! GGA_X_B88,GGA_C_LYP
                 self%cuest_fnl_code = CUEST_FUNCTIONAL_BLYP
             case (226) ! HYB_GGA_XC_B97
@@ -1271,7 +1273,7 @@ module quick_method_module
             case (101) ! GGA_X_PBE (accompanied with GGA_C_PBE after)
                 self%cuest_fnl_code = CUEST_FUNCTIONAL_PBE
             case default
-                print *, "CUEST: found unsupported libxc functional"
+                print *, "CUEST: found unsupported libxc functional: ", quick_method%functional_id(1)
                 self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
         end select
 #endif
