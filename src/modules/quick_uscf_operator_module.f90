@@ -40,6 +40,10 @@ contains
      use quick_mpi_module, only: bMPI, master, quick_comm, quick_comm_rank, quick_mpi_error
      use mpi
 #endif
+#ifdef CUEST
+     use quick_method_module, only: quick_method
+     use quick_cuest_module
+#endif
   
      implicit none
   
@@ -48,6 +52,15 @@ contains
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      double precision tst, te, tred
+#ifdef CUEST
+     double precision :: cuest_J(nbasis, nbasis), cuest_Jb(nbasis, nbasis)
+     double precision :: cuest_K(nbasis, nbasis), cuest_Kb(nbasis, nbasis)
+     double precision :: cuest_Vxc(nbasis, nbasis), cuest_Vxcb(nbasis, nbasis)
+     double precision :: cuest_Exc
+     logical :: hasK
+     double precision :: Sum2Mat
+     double precision :: tmp2d(nbasis, nbasis)
+#endif
 #ifdef MPIV
      integer ierror
      double precision :: Eelsum, Excsum, aelec, belec
@@ -63,6 +76,12 @@ contains
      quick_qm_struct%o  = 0.0d0
      quick_qm_struct%ob = 0.0d0
      quick_qm_struct%Eel=0.0d0
+
+#if defined(CUDA) && defined(CUEST)
+     if (quick_method%usecuest) then
+        hasK = quick_method%x_hybrid_coeff /= 0.0d0
+     endif
+#endif
   
   !-----------------------------------------------------------------
   !  Step 1. evaluate 1e integrals
@@ -109,7 +128,9 @@ contains
        quick_qm_struct%ob(:,:) = quick_qm_struct%o(:,:)
      endif
   
-     if(quick_method%printEnergy) call get1eEnergy(deltaO)
+     if(quick_method%printEnergy) then
+         call get1eEnergy(deltaO)
+     endif
 
   !-----------------------------------------------------------------
   ! Step 2. evaluate 2e integrals
@@ -125,7 +146,60 @@ contains
 #if defined(GPU) || defined(MPIV_GPU)
         if (quick_method%bGPU) then   
        
+#ifdef CUEST
+        if (quick_method%usecuest) then
+            call cuest_get_eri_J(cuest_J, quick_qm_struct%dense + quick_qm_struct%denseb)
+
+            ! Jb contains the beta JK contribution
+            if (hasK) then
+                call cuest_get_oshell_eri_K(cuest_K, cuest_Kb, quick_qm_struct%co, quick_qm_struct%cob)
+                ! K fraction is applied in cuEST
+                cuest_Jb = cuest_J - cuest_Kb
+                cuest_J = cuest_J - cuest_K
+            else
+                cuest_Jb = cuest_J
+            endif
+
+            if (hasK .and. deltaO) then
+               quick_qm_struct%o = quick_qm_struct%o + cuest_J + quick_qm_struct%cuest_prev_K
+               quick_qm_struct%ob = quick_qm_struct%ob + cuest_Jb + quick_qm_struct%cuest_prev_Kb
+            else
+               quick_qm_struct%o = quick_qm_struct%o + cuest_J
+               quick_qm_struct%ob = quick_qm_struct%ob + cuest_Jb
+            endif
+     
+            if (hasK) then
+                quick_qm_struct%cuest_prev_K = cuest_K
+                quick_qm_struct%cuest_prev_Kb = cuest_Kb
+            endif
+#ifdef CUESTDEBUG
+            tmp2d = quick_qm_struct%dense
+            call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+            call cuest_debuglog("======== quick alpha density ========")
+            call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+            call cuest_debuglog("====== end quick alpha density ======")
+            tmp2d = quick_qm_struct%denseb
+            call cuest_correct_P(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+            call cuest_debuglog("======== quick beta density ========")
+            call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+            call cuest_debuglog("====== end quick beta density ======")
+            tmp2d = cuest_J
+            call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+            call cuest_debuglog("======== quick J+K alpha ========")
+            call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+            call cuest_debuglog("====== end quick J+K alpha ======")
+            tmp2d = cuest_Jb
+            call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+            call cuest_debuglog("======== quick J+K beta ========")
+            call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+            call cuest_debuglog("====== end quick J+K beta ======")
+#endif
+        else
            call gpu_get_oshell_eri(deltaO, quick_qm_struct%o, quick_qm_struct%ob)
+        endif
+#else ! ifdef CUEST
+           call gpu_get_oshell_eri(deltaO, quick_qm_struct%o, quick_qm_struct%ob)
+#endif ! ifdef CUEST
 
         else                                  
 #endif
@@ -194,7 +268,24 @@ contains
         RECORD_TIME(timer_begin%TEx)
   
   !  Calculate exchange correlation contribution & add to operator    
+#ifdef CUEST
+        if (quick_method%usecuest) then
+            call cuest_get_oshell_xc(cuest_Vxc, cuest_Vxcb, cuest_Exc, quick_qm_struct%co, quick_qm_struct%cob)
+            quick_qm_struct%oxc = cuest_Vxc
+            quick_qm_struct%obxc = cuest_Vxcb
+            quick_qm_struct%o = quick_qm_struct%o + cuest_Vxc
+            quick_qm_struct%ob = quick_qm_struct%ob + cuest_Vxcb
+            quick_qm_struct%Exc = cuest_Exc
+            quick_qm_struct%Eel = quick_qm_struct%Eel + cuest_Exc
+
+            call cuest_get_xc_nelec(quick_qm_struct%co, quick_qm_struct%aelec)
+            call cuest_get_xc_nelec(quick_qm_struct%cob, quick_qm_struct%belec)
+        else
+            call get_oshell_xc(deltaO)
+        endif
+#else
         call get_oshell_xc(deltaO)
+#endif
   
   !  Remember the operator is symmetric
         call copySym(quick_qm_struct%o,nbasis)

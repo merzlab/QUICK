@@ -11,15 +11,23 @@ if(lapack_INTERNAL AND NOT INSIDE_AMBER)
 	add_subdirectory(lapack)
 endif()
 
+if (CUEST AND NOT CUDA)
+    message(FATAL_ERROR "CUDA must be enabled to use cuEST")
+endif()
+
 if(CUDA OR HIP)
-	add_subdirectory(gpu/${QUICK_GPU_TARGET_NAME})
+    if (CUEST)
+       message(STATUS "cuEST: CUEST_INSTALL_DIR=${CUEST_INSTALL_DIR}")
+       find_library(CUEST_LIB NAMES cuest PATHS ${CUEST_INSTALL_DIR}/lib NO_DEFAULT_PATH REQUIRED)
+   endif()
+   add_subdirectory(gpu/${QUICK_GPU_TARGET_NAME})
 endif()
 
 # quick source lists
 # --------------------------------------------------------------------
 
 set(QUICK_MODULES_SOURCES
-	quick_mpi_module.f90 quick_constants_module.f90 quick_method_module.f90 quick_io_module.f90
+	quick_mpi_module.f90 quick_constants_module.f90 quick_method_module.f90
 	quick_molspec_module.f90 quick_gaussian_class_module.f90 quick_size_module.f90
 	quick_basis_module.f90 quick_calculated_module.f90 quick_magma_module.f90 quick_overlap_module.f90
 	quick_divcon_module.f90 quick_ecp_module.f90 quick_electrondensity_module.f90
@@ -33,8 +41,8 @@ set(QUICK_MODULES_SOURCES
 	quick_uscf_module.f90 quick_sad_guess_module.f90 quick_optimizer_module.f90
         quick_cew_module.f90 quick_lri_module.f90 quick_lri_grad_module.f90
 	quick_eri_oshell_module.f90 quick_eri_grad_oshell_module.f90 quick_molsurface_module.f90
-	quick_grad_oshell_module.f90 quick_dftd3_module.f90 quick_molden_module.f90
-	quick_oeproperties_module.f90)
+	quick_grad_oshell_module.f90 quick_dftd3_module.f90 quick_molden_module.f90 quick_oeproperties_module.f90
+	quick_io_module.f90 quick_aux_basis_sph_module.f90 quick_cuest_module.f90)
 
 set(QUICK_SUBS_FORTRAN_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	degen.f90 denspt.f90 dipole.f90 EffChar.f90
@@ -168,12 +176,12 @@ if(MPI)
 	# change link libraries and mod dirs for MPI
 	remove_link_libraries(libquick_mpi octree)
 	target_link_libraries(libquick_mpi PRIVATE octree_mpi)
-
 	if(INSIDE_AMBER)
 		remove_link_libraries(libquick_mpi libcew)
 		target_link_libraries(libquick_mpi PRIVATE libcew_mpi)
 	endif()
 	config_module_dirs(libquick_mpi quick/mpi libxc/serial)
+
 
 	install_libraries(libquick_mpi EXPORT QUICK)
 endif()
@@ -219,8 +227,13 @@ if(CUDA)
 
 		install_libraries(libquick_${QUICK_GPU_TARGET_NAME} EXPORT QUICK)
 	else()
-		copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
-			$<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+        if (CUEST)
+            copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
+                $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> $<TARGET_OBJECTS:cuest_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+        else()
+            copy_target(libquick libquick_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
+                $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+        endif()
 		target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE GPU ${QUICK_GPU_PLATFORM})
 		set_target_properties(libquick_${QUICK_GPU_TARGET_NAME} PROPERTIES OUTPUT_NAME quick_${QUICK_GPU_TARGET_NAME})
 
@@ -228,7 +241,11 @@ if(CUDA)
 		remove_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} xc octree)
 
 		target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu octree_gpu
-			quick_${QUICK_GPU_TARGET_NAME}_kernels cublas cusolver)
+            quick_${QUICK_GPU_TARGET_NAME}_kernels cublas cusolver)
+
+        if(CUEST)
+            target_link_libraries(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE ${CUEST_LIB})
+        endif()
 
 		# INSIDE_AMBER: libcew link library copied from libquick target
 
@@ -236,6 +253,13 @@ if(CUDA)
 
 		install_libraries(libquick_${QUICK_GPU_TARGET_NAME} EXPORT QUICK)
 	endif()
+
+    if(CUEST)
+        target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE CUEST)
+        if(CUEST_DEBUG)
+            target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE CUESTDEBUG)
+        endif()
+    endif()
 endif()
 
 if(MPI AND CUDA)
@@ -276,15 +300,25 @@ if(MPI AND CUDA)
 
 		install_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} EXPORT QUICK)
 	else()
-		copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
-			$<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+        if (CUEST)
+            message(WARNING "cuEST+MPI is currently unsupported. CUDA+MPI will not use cuEST.")
+            copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
+                $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> $<TARGET_OBJECTS:cuest_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+        else()
+            copy_target(libquick_mpi libquick_mpi_${QUICK_GPU_TARGET_NAME} SWAP_SOURCES TO
+                $<TARGET_OBJECTS:cublas_fortran_obj> $<TARGET_OBJECTS:cusolver_obj> ${QUICK_GPU_FORTRAN_SOURCE})
+        endif()
 		target_compile_definitions(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE MPIV_GPU ${QUICK_GPU_PLATFORM}_MPIV)
 		set_target_properties(libquick_mpi_${QUICK_GPU_TARGET_NAME} PROPERTIES OUTPUT_NAME quick_mpi_${QUICK_GPU_TARGET_NAME})
 
 		remove_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} octree_mpi xc)
 
 		target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE xc_gpu xc_${QUICK_GPU_TARGET_NAME} octree_gpu
-			quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi cublas cusolver)
+            quick_${QUICK_GPU_TARGET_NAME}_kernels_mpi cublas cusolver)
+
+        if(CUEST)
+            target_link_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} PRIVATE ${CUEST_LIB})
+        endif()
 
 		# INSIDE_AMBER: libcew_mpi link library copied from libquick target
 
@@ -292,6 +326,13 @@ if(MPI AND CUDA)
 
 		install_libraries(libquick_mpi_${QUICK_GPU_TARGET_NAME} EXPORT QUICK)
 	endif()
+
+    if(CUEST)
+        target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE CUEST)
+        if(CUEST_DEBUG)
+            target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE CUESTDEBUG)
+        endif()
+    endif()
 endif()
 
 # Enable -DLAPACK or -DMKL for non-CUDA versions
@@ -372,6 +413,13 @@ if(CUDA)
 
 	install(TARGETS quick.${QUICK_GPU_TARGET_NAME} DESTINATION ${BINDIR} EXPORT QUICK)
 	install(TARGETS test-api.${QUICK_GPU_TARGET_NAME} DESTINATION ${BINDIR} EXPORT QUICK)
+
+    if(CUEST)
+        target_compile_definitions(quick.${QUICK_GPU_TARGET_NAME} PRIVATE CUEST)
+        if(CUEST_DEBUG)
+            target_compile_definitions(quick.${QUICK_GPU_TARGET_NAME} PRIVATE CUESTDEBUG)
+        endif()
+    endif()
 endif()
 
 if(CUDA AND MPI)
@@ -391,4 +439,11 @@ if(CUDA AND MPI)
 
 	install(TARGETS quick.${QUICK_GPU_TARGET_NAME}.MPI DESTINATION ${BINDIR} EXPORT QUICK)
 	install(TARGETS test-api.${QUICK_GPU_TARGET_NAME}.MPI DESTINATION ${BINDIR} EXPORT QUICK)
+
+    if(CUEST)
+        target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE CUEST)
+        if(CUEST_DEBUG)
+            target_compile_definitions(libquick_${QUICK_GPU_TARGET_NAME} PRIVATE CUESTDEBUG)
+        endif()
+    endif()
 endif()
