@@ -708,6 +708,7 @@ module quick_method_module
             if (found_keyword(keyWD,'HESSIAN'))       self%analHess=.true.
             if (found_keyword(keyWD,'FREQ'))          self%freq=.true.
             if (found_keyword(keywd,'DEBUG'))         self%debug=.true.
+            if (found_keyword(keywd,'GRDBG'))         self%graddebug=.true.
             if (found_keyword(keyWD,'RDSAD'))         self%readSAD=.true.  ! READSAD would clash with READ
             if (found_keyword(keyWD,'WRSAD')) then
                self%writeSAD = .true.
