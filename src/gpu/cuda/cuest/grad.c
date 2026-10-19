@@ -204,28 +204,6 @@ cuest_get_V_grad (double *grad, double *ptchg_grad, double *P)
 }
 
 void
-cuest_init_JK_grad (int64_t dev_buf_siz)
-{
-    cuestHandle_t               handle = quick_cuest_struct.handle;
-    cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
-    uint64_t                    natom  = quick_cuest_data.natom;
-
-    cuestWorkspaceDescriptor_t *vbs = malloc (sizeof (cuestWorkspaceDescriptor_t));
-    vbs->hostBufferSizeInBytes      = 0;
-    vbs->deviceBufferSizeInBytes    = dev_buf_siz;
-    quick_cuest_grad_mem.JK_vbs     = vbs;
-
-    checkCuestErrors (cuestParametersCreate (CUEST_DFSYMMETRICDERIVATIVECOMPUTE_PARAMETERS,
-                                             &quick_cuest_grad_mem.JK_par));
-    checkCuestErrors (cuestDFSymmetricDerivativeComputeWorkspaceQuery (
-        handle, quick_cuest_struct.DFIntPlan, quick_cuest_grad_mem.JK_par, vbs, tmpWD, 0.5, NULL,
-        -1.0, 1, &quick_cuest_data.nocc, NULL, quick_cuest_grad_mem.d_grad));
-
-    MEMLOG_TMPWD ("JK grad");
-    quick_cuest_grad_mem.JK_wksp = allocateWorkspace (tmpWD);
-}
-
-void
 cuest_deinit_JK_grad ()
 {
     freeWorkspace (quick_cuest_grad_mem.JK_wksp);
@@ -233,29 +211,10 @@ cuest_deinit_JK_grad ()
                                               quick_cuest_grad_mem.JK_par));
 }
 
-void
-cuest_get_JK_grad (double *grad, double *P, double *C)
-{
-    cuestHandle_t               handle    = quick_cuest_struct.handle;
-    cuestWorkspaceDescriptor_t *persistWD = quick_cuest_struct.persistWD;
-    cuestAOBasis_t              basis     = quick_cuest_struct.basis;
-    uint64_t                    nbasis    = quick_cuest_data.nbasis;
-    uint64_t                    natom     = quick_cuest_data.natom;
-    uint64_t                    nocc      = quick_cuest_data.nocc;
+#ifndef OSHELL
+#define OSHELL
+#include "grad_subs.h"
+#endif
+#undef OSHELL
 
-    void        *d_P      = quick_cuest_PC_buf.d_P[0];
-    void        *d_C      = quick_cuest_PC_buf.d_C[0];
-    const size_t grad_siz = 3 * natom * sizeof (double);
-    const size_t P_siz    = quick_cuest_PC_buf.P_siz;
-    const size_t C_siz    = quick_cuest_PC_buf.C_siz;
-    cudaMemcpyChecked (d_P, P, P_siz, cudaMemcpyHostToDevice);
-    cudaMemcpyChecked (d_C, C, C_siz, cudaMemcpyHostToDevice);
-
-    // 0.5 densityScale because QUICK already includes factor of 2 in P
-    checkCuestErrors (cuestDFSymmetricDerivativeCompute (
-        handle, quick_cuest_struct.DFIntPlan, quick_cuest_grad_mem.JK_par,
-        quick_cuest_grad_mem.JK_vbs, quick_cuest_grad_mem.JK_wksp, 0.5, d_P, -1.0, 1, &nocc, d_C,
-        quick_cuest_grad_mem.d_grad));
-
-    cudaMemcpyChecked (grad, quick_cuest_grad_mem.d_grad, grad_siz, cudaMemcpyDeviceToHost);
-}
+#include "grad_subs.h"

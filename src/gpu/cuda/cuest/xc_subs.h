@@ -223,3 +223,109 @@ cuest_get_cshell_xc (double *Vxc, double *Exc, double *C)
                        cudaMemcpyDeviceToHost);
 #endif
 }
+
+void
+#ifdef OSHELL
+cuest_init_oshell_xc_grad (int64_t devsiz)
+#else
+cuest_init_cshell_xc_grad (int64_t devsiz)
+#endif
+{
+    cuestWorkspaceDescriptor_t *tmpWD = quick_cuest_struct.tmpWD;
+    uint64_t                    natom = quick_cuest_data.natom;
+
+#ifdef OSHELL
+    checkCuestErrors (cuestParametersCreate (CUEST_XCDERIVATIVEUKSCOMPUTE_PARAMETERS,
+                                             &quick_cuest_grad_mem.xc_par));
+#else
+    checkCuestErrors (cuestParametersCreate (CUEST_XCDERIVATIVERKSCOMPUTE_PARAMETERS,
+                                             &quick_cuest_grad_mem.xc_par));
+#endif
+
+    cuestWorkspaceDescriptor_t *vbs = malloc (sizeof (cuestWorkspaceDescriptor_t));
+    add_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
+    vbs->hostBufferSizeInBytes   = 0;
+    vbs->deviceBufferSizeInBytes = devsiz;
+    quick_cuest_grad_mem.xc_vbs  = vbs;
+
+#ifdef OSHELL
+    checkCuestErrors (cuestXCDerivativeUKSComputeWorkspaceQuery (
+        quick_cuest_struct.handle, quick_cuest_struct.XCIntPlan, quick_cuest_grad_mem.xc_par, vbs,
+        tmpWD, quick_cuest_data.nocc, quick_cuest_data.noccb, NULL, NULL,
+        quick_cuest_grad_mem.d_grad));
+#else
+    checkCuestErrors (cuestXCDerivativeRKSComputeWorkspaceQuery (
+        quick_cuest_struct.handle, quick_cuest_struct.XCIntPlan, quick_cuest_grad_mem.xc_par, vbs,
+        tmpWD, quick_cuest_data.nocc, NULL, quick_cuest_grad_mem.d_grad));
+#endif
+
+    MEMLOG_TMPWD ("xc Gradient Compute");
+    quick_cuest_grad_mem.xc_wksp = allocateWorkspace (tmpWD);
+}
+
+void
+#ifdef OSHELL
+cuest_deinit_oshell_xc_grad ()
+#else
+cuest_deinit_cshell_xc_grad ()
+#endif
+{
+    const uint64_t natom = quick_cuest_data.natom;
+
+    free (quick_cuest_grad_mem.xc_vbs);
+    free_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
+    freeWorkspace (quick_cuest_grad_mem.xc_wksp);
+#ifdef OSHELL
+    checkCuestErrors (cuestParametersDestroy (CUEST_XCDERIVATIVEUKSCOMPUTE_PARAMETERS,
+                                              quick_cuest_grad_mem.xc_par));
+#else
+    checkCuestErrors (cuestParametersDestroy (CUEST_XCDERIVATIVERKSCOMPUTE_PARAMETERS,
+                                              quick_cuest_grad_mem.xc_par));
+#endif
+}
+
+void
+#ifdef OSHELL
+cuest_get_oshell_xc_grad (double *grad, double *C, double *Cb)
+#else
+cuest_get_cshell_xc_grad (double *grad, double *C)
+#endif
+{
+    uint64_t natom  = quick_cuest_data.natom;
+    uint64_t nbasis = quick_cuest_data.nbasis;
+    uint64_t nocc   = quick_cuest_data.nocc;
+#ifdef OSHELL
+    uint64_t noccb = quick_cuest_data.noccb;
+#endif
+
+    cuestHandle_t               handle = quick_cuest_struct.handle;
+    cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
+
+    double *d_C;
+    size_t  d_C_siz = nocc * nbasis * sizeof (double);
+    cudaMallocChecked ((void **)&d_C, d_C_siz);
+    cudaMemcpyChecked (d_C, C, d_C_siz, cudaMemcpyHostToDevice);
+
+#ifdef OSHELL
+    double *d_Cb;
+    size_t  d_Cb_siz = noccb * nbasis * sizeof (double);
+    cudaMallocChecked ((void **)&d_Cb, d_Cb_siz);
+    cudaMemcpyChecked (d_Cb, Cb, d_Cb_siz, cudaMemcpyHostToDevice);
+#endif
+
+#ifdef OSHELL
+    checkCuestErrors (cuestXCDerivativeUKSCompute (
+        handle, quick_cuest_struct.XCIntPlan, quick_cuest_grad_mem.xc_par,
+        quick_cuest_grad_mem.xc_vbs, quick_cuest_grad_mem.xc_wksp, nocc, noccb, d_C, d_Cb,
+        quick_cuest_grad_mem.d_grad));
+#else
+    checkCuestErrors (cuestXCDerivativeRKSCompute (
+        handle, quick_cuest_struct.XCIntPlan, quick_cuest_grad_mem.xc_par,
+        quick_cuest_grad_mem.xc_vbs, quick_cuest_grad_mem.xc_wksp, nocc, d_C,
+        quick_cuest_grad_mem.d_grad));
+#endif
+
+    // copy to host
+    cudaMemcpyChecked (grad, quick_cuest_grad_mem.d_grad, 3 * natom * sizeof (double),
+                       cudaMemcpyDeviceToHost);
+}

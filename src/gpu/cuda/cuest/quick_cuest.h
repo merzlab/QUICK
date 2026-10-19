@@ -219,13 +219,19 @@ void cuest_init_V_grad ();
 void cuest_deinit_V_grad ();
 void cuest_get_V_grad (double *dVdR_bas, double *dVdR_ptchg, double *P);
 
-void cuest_init_JK_grad (int64_t dev_buf_siz);
+void cuest_init_cshell_JK_grad (int64_t dev_buf_siz);
+void cuest_init_oshell_JK_grad (int64_t dev_buf_siz);
 void cuest_deinit_JK_grad ();
-void cuest_get_JK_grad (double *dJKdR, double *P, double *C);
+void cuest_get_cshell_JK_grad (double *dJKdR, double *P, double *C);
+void cuest_get_oshell_JK_grad (double *dJKdR, double *P, double *C, double *Cb);
 
-void cuest_init_xc_grad (int64_t devsiz);
-void cuest_deinit_xc_grad ();
-void cuest_get_xc_grad (double *grad, double *C);
+// DFT
+void cuest_init_cshell_xc_grad (int64_t devsiz);
+void cuest_init_oshell_xc_grad (int64_t devsiz);
+void cuest_deinit_cshell_xc_grad ();
+void cuest_deinit_oshell_xc_grad ();
+void cuest_get_cshell_xc_grad (double *grad, double *C);
+void cuest_get_oshell_xc_grad (double *grad, double *C, double *Cb);
 
 // Other
 void cuest_debuglog (const char *str);

@@ -126,8 +126,18 @@ contains
 
 #ifdef CUEST
      if (quick_method%usecuest) then
-        if(quick_method%DFT) call cuest_init_xc_grad(int(2000000000, c_int64_t))
-        call cuest_init_JK_grad(int(2000000000, c_int64_t))
+        if(quick_method%DFT) then
+#ifdef OSHELL
+           call cuest_init_oshell_xc_grad(int(2000000000, c_int64_t))
+#else
+           call cuest_init_cshell_xc_grad(int(2000000000, c_int64_t))
+#endif
+        endif
+#ifdef OSHELL
+        call cuest_init_oshell_JK_grad(int(2000000000, c_int64_t))
+#else
+        call cuest_init_cshell_JK_grad(int(2000000000, c_int64_t))
+#endif
         call cuest_init_V_grad
         call cuest_init_T_grad
         call cuest_init_S_grad
@@ -157,7 +167,13 @@ contains
         call cuest_deinit_T_grad
         call cuest_deinit_V_grad
         call cuest_deinit_JK_grad
-        if(quick_method%DFT) call cuest_deinit_xc_grad
+        if(quick_method%DFT) then
+#ifdef OSHELL
+           call cuest_deinit_oshell_xc_grad
+#else
+           call cuest_deinit_cshell_xc_grad
+#endif
+        endif
      endif
 #endif
   
@@ -579,11 +595,9 @@ contains
     integer :: Iatm, Imomentum, IIsh, JJsh, i, j, nshell_mpi
 #ifdef CUEST
     double precision :: cuest_densetmp(nbasis, nbasis), cuest_densetmpb(nbasis, nbasis)
+    double precision :: cuest_cotmp(nbasis, NBSuse)
 #ifdef OSHELL
-    double precision :: cuest_cotmp(nbasis, quick_molspec%nelec)
-    double precision :: cuest_cotmpb(nbasis, quick_molspec%nelecb)
-#else
-    double precision :: cuest_cotmp(nbasis, quick_molspec%nelec/2)
+    double precision :: cuest_cotmpb(nbasis, NBSuse)
 #endif
     double precision :: cuest_gradbuf(3*natom)
     double precision :: cuest_gradbuf_ptchg(3*quick_molspec%nextatom)
@@ -978,7 +992,12 @@ contains
    use mpi
 #endif
 #ifdef CUEST
-     use quick_cuest_module, only: cuest_get_JK_grad, cuest_debuglog
+     use quick_cuest_module, only: cuest_debuglog
+#ifdef OSHELL
+     use quick_cuest_module, only: cuest_get_oshell_JK_grad
+#else
+     use quick_cuest_module, only: cuest_get_cshell_JK_grad
+#endif
 #endif
 
      implicit none
@@ -1010,23 +1029,15 @@ contains
   
 #if defined(GPU) || defined(MPIV_GPU)
      if (quick_method%bGPU) then
-  
-!        call gpu_upload_density_matrix(quick_qm_struct%dense)
-!        call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff)
-!        call gpu_upload_grad(quick_method%gradCutoff)
 
-#ifdef OSHELL
-!        call gpu_upload_calculated_beta(quick_qm_struct%ob,quick_qm_struct%denseb)
-        call gpu_get_oshell_eri_grad(quick_qm_struct%gradient)
-#else
 #ifdef CUEST
         if (quick_method%usecuest) then
 #ifdef OSHELL
-           call cuest_get_JK_grad(cuest_gradbuf, &
+           call cuest_get_oshell_JK_grad(cuest_gradbuf, &
                                   quick_qm_struct%dense + quick_qm_struct%denseb, &
-                                  quick_qm_struct%co + quick_qm_struct%cob)
+                                  quick_qm_struct%co, quick_qm_struct%cob)
 #else
-           call cuest_get_JK_grad(cuest_gradbuf, quick_qm_struct%dense, quick_qm_struct%co)
+           call cuest_get_cshell_JK_grad(cuest_gradbuf, quick_qm_struct%dense, quick_qm_struct%co)
 #endif
            quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
 
@@ -1040,12 +1051,26 @@ contains
            call cuest_debuglog("====== end cuest_get_JK_grad ======")
 #endif
         else
+#ifdef OSHELL
+           call gpu_get_oshell_eri_grad(quick_qm_struct%gradient)
+#else
            call gpu_get_cshell_eri_grad(quick_qm_struct%gradient)
+#endif
         endif
 #else ! ifdef CUEST
+
+!        call gpu_upload_density_matrix(quick_qm_struct%dense)
+!        call gpu_upload_cutoff(cutmatrix, quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff)
+!        call gpu_upload_grad(quick_method%gradCutoff)
+
+#ifdef OSHELL
+!        call gpu_upload_calculated_beta(quick_qm_struct%ob,quick_qm_struct%denseb)
+        call gpu_get_oshell_eri_grad(quick_qm_struct%gradient)
+#else
         call gpu_get_cshell_eri_grad(quick_qm_struct%gradient)
-#endif ! ifdef CUEST
 #endif
+
+#endif ! ifdef CUEST
   
      else
 #endif
@@ -1168,7 +1193,12 @@ contains
      use quick_mpi_module, only: bMPI, quick_comm_rank
 #endif
 #ifdef CUEST
-     use quick_cuest_module, only: cuest_get_xc_grad, cuest_debuglog
+     use quick_cuest_module, only: cuest_debuglog
+#ifdef OSHELL
+     use quick_cuest_module, only: cuest_get_oshell_xc_grad
+#else
+     use quick_cuest_module, only: cuest_get_cshell_xc_grad
+#endif
 #endif
      implicit none
   
@@ -1211,16 +1241,13 @@ contains
      if(quick_method%bGPU) then
   
         call gpu_reupload_dft_grid()
-  
-#ifdef OSHELL
-        call gpu_get_oshell_xcgrad(quick_qm_struct%gradient)
-#else
+
 #ifdef CUEST
         if (quick_method%usecuest) then
 #ifdef OSHELL
-           call cuest_get_xc_grad(cuest_gradbuf, quick_qm_struct%co + quick_qm_struct%cob)
+           call cuest_get_oshell_xc_grad(cuest_gradbuf, quick_qm_struct%co, quick_qm_struct%cob)
 #else
-           call cuest_get_xc_grad(cuest_gradbuf, quick_qm_struct%co)
+           call cuest_get_cshell_xc_grad(cuest_gradbuf, quick_qm_struct%co)
 #endif
            quick_qm_struct%gradient = quick_qm_struct%gradient + cuest_gradbuf
 #ifdef CUESTDEBUG
@@ -1230,12 +1257,19 @@ contains
            call cuest_debuglog("====== end cuest xc gradient ======")
 #endif
         else
+#ifdef OSHELL
+           call gpu_get_oshell_xcgrad(quick_qm_struct%gradient)
+#else
            call gpu_get_cshell_xcgrad(quick_qm_struct%gradient)
+#endif
         endif
 #else ! #ifdef CUEST
+#ifdef OSHELL
+        call gpu_get_oshell_xcgrad(quick_qm_struct%gradient)
+#else
         call gpu_get_cshell_xcgrad(quick_qm_struct%gradient)
-#endif ! #ifdef CUEST
 #endif
+#endif ! #ifdef CUEST
   
         call gpu_delete_dft_grid()
   
