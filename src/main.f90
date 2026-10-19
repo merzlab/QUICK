@@ -61,10 +61,7 @@
 #endif
 
 #if defined(CUDA) && defined(CUEST)
-    use, intrinsic::iso_c_binding, only: c_int64_t, c_int8_t, c_double, c_loc, c_bool
-    use quick_cuest_module
-    use quick_aux_basis_sph_module, only: quick_aux_basis_sph, read_aux_basis_sph
-    use quick_cuest_module, only: cuest_correct_P, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
+    use quick_cuest_module, only: cuest_correct_P, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK, cuest_print_memtrace
 #endif
 
     implicit none
@@ -76,9 +73,6 @@
     double precision :: t1_t, t2_t
 
 #if defined(CUDA) && defined(CUEST)
-    integer(c_int64_t) :: cuest_xc_nradpts
-    integer(c_int64_t) :: hostmax, hosttotal, hostallocs, devmax, devtotal, devallocs
-    logical :: hasK
     double precision, allocatable :: cuest_tmp2d(:,:)
 #endif
 
@@ -229,99 +223,8 @@
                           -(timer_end%T2elb-timer_begin%T2elb)
     
 #ifdef CUEST
-    ! init cuEST
-    if (quick_method%usecuest) then
-    call prtact(ioutfile, "Begin cuEST Initialization")
-    RECORD_TIME(timer_begin%TIniCuest)
-
-    hasK = quick_method%x_hybrid_coeff /= 0.0d0
-
-    ! read auxiliary basis
-    call read_aux_basis_sph(natom, quick_molspec%iattype, ierr)
-    if (ierr /= 0) print *, "ERROR: read_aux_basis_sph failed with ierr ", ierr
-
-#ifdef CUESTDEBUG
-    print *, "nbasis: ", nbasis
-    print *, "quick_aux_basis_sph%nbasis: ", quick_aux_basis_sph%nbasis
+    if (quick_method%usecuest) call initialize_cuest
 #endif
-
-    ! init cuest
-    if (quick_method%UNRST) then
-        call cuest_init(                                     &
-            int(natom, c_int64_t),                           &
-            int(nshell, c_int64_t),                          &
-            int(nbasis, c_int64_t),                          &
-            int(quick_molspec%nelec, c_int64_t),             &
-            int(quick_molspec%nelecb, c_int64_t),            &
-            int(quick_aux_basis_sph%nshell, c_int64_t),      &
-            int(maxcontract, c_int64_t),                     &
-            int(quick_aux_basis_sph%maxcontract, c_int64_t), &
-            int(quick_molspec%iattype, c_int8_t),            &
-            c_loc(xyz),                                      &
-            quick_molspec%chg,                               &
-            int(quick_molspec%nextatom, c_int64_t),          &
-            quick_molspec%extxyz,                            &
-            quick_molspec%extchg                             &
-        )
-    else
-        call cuest_init(                                     &
-            int(natom, c_int64_t),                           &
-            int(nshell, c_int64_t),                          &
-            int(nbasis, c_int64_t),                          &
-            int(quick_molspec%nelec / 2, c_int64_t),         &
-            int(0, c_int64_t),                               &
-            int(quick_aux_basis_sph%nshell, c_int64_t),      &
-            int(maxcontract, c_int64_t),                     &
-            int(quick_aux_basis_sph%maxcontract, c_int64_t), &
-            int(quick_molspec%iattype, c_int8_t),            &
-            c_loc(xyz),                                      &
-            quick_molspec%chg,                               &
-            int(quick_molspec%nextatom, c_int64_t),          &
-            quick_molspec%extxyz,                            &
-            quick_molspec%extchg                             &
-        )
-    endif
-    ! for testing; the following cuest functions should not be called here
-    ! init primary (cartesian) basis
-    call cuest_init_basis(                                &
-        int(quick_basis%ncenter, c_int64_t),              &
-        int(quick_basis%katom, c_int64_t),                &
-        int(quick_basis%ktype, c_int64_t),                &
-        int(quick_basis%kprim, c_int64_t),                &
-        aexp,                                             &
-        dcoeff,                                           &
-        logical(.false., c_bool)                          &
-    )
-
-    ! init auxiliary (spherical) basis
-    call cuest_init_basis(                                        &
-        int(quick_basis%ncenter, c_int64_t),                      &
-        int(quick_aux_basis_sph%katom, c_int64_t),                &
-        int(quick_aux_basis_sph%ktype, c_int64_t),                &
-        int(quick_aux_basis_sph%kprim, c_int64_t),                &
-        quick_aux_basis_sph%gcexpo,                               &
-        quick_aux_basis_sph%gccoeff,                              &
-        logical(.true., c_bool)                                   &
-    )
-
-    call cuest_init_correct
-
-    ! init pair list
-    ! TODO: is this the right cutoff?
-    call cuest_init_pair_list(quick_method%coreIntegralCutoff)
-
-    ! init 2 electron integral plan
-    call cuest_init_df(quick_method%x_hybrid_coeff)
-
-    call cuest_init_eri_J
-    if (hasK) call cuest_init_eri_K(int(2d9, c_int64_t))
-
-    RECORD_TIME(timer_end%TIniCuest)
-    timer_cumer%TIniCuest=timer_cumer%TIniCuest+timer_end%TIniCuest-timer_begin%TIniCuest &
-                          -(timer_end%T2elb-timer_begin%T2elb)
-    call prtact(ioutfile, "End cuEST Initialization")
-    endif
-#endif ! #ifdef CUEST
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         SAFE_CALL(getEnergy(.false.,ierr))
@@ -430,21 +333,7 @@
     endif
 
 #ifdef CUEST
-    if (quick_method%usecuest) then
-       ! deinit compute things
-       call cuest_deinit_oei_plan
-       call cuest_deinit_eri_J
-       if (hasK) call cuest_deinit_eri_K
-       call cuest_deinit_df
-       if (quick_method%DFT) then
-          if (quick_method%UNRST) then
-              call cuest_deinit_oshell_xc
-          else
-              call cuest_deinit_xc_dense
-              call cuest_deinit_cshell_xc
-          endif
-       endif
-    endif
+    if (quick_method%usecuest) call deinitialize_cuest_compute
 #endif
 
     ! Now at this point we have an energy and a geometry.  If this is
@@ -526,10 +415,7 @@
     call delete(quick_method, ierr)
     call gpu_deallocate_scratch(quick_method%grad .or. quick_method%opt)
 #if defined(CUDA) && defined(CUEST)
-    if (quick_method%usecuest) then
-        call cuest_deinit_correct
-        call cuest_deinit
-    endif
+    if (quick_method%usecuest) call finalize_cuest
 #endif
 #if defined(MPIV_GPU)
     SAFE_CALL(delete_mgpu_setup(ierr))

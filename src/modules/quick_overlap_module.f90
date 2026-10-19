@@ -175,7 +175,7 @@ subroutine fullx
    !
    use allmod
 #if defined(CUDA) && defined(CUEST)
-   use quick_cuest_module, only: cuest_init_oei_plan, cuest_get_oei_S
+   use quick_cuest_module, only: cuest_get_oei_S
 #ifdef CUESTDEBUG
    use quick_cuest_module, only: cuest_debuglog, cuest_correct_o, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
 #endif
@@ -190,12 +190,6 @@ subroutine fullx
    double precision a,b,Ax,Ay,Az,Bx,By,Bz
 #if defined(CUDA) && defined(CUEST)
    double precision :: tmp2d(nbasis, nbasis)
-#endif
-
-#if defined(CUDA) && defined(CUEST)
-   ! initialize oei plan (since overlap is computed before T and V)
-   ! will be deinit after computing T and V
-   if (quick_method%usecuest) call cuest_init_oei_plan()
 #endif
 
    RECORD_TIME(timer_begin%T1eS)
