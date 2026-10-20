@@ -114,7 +114,8 @@ cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t
 
     cudaMallocChecked (&quick_cuest_PC_buf.d_P[0], quick_cuest_PC_buf.P_siz);
     cudaMallocChecked (&quick_cuest_PC_buf.d_C[0], quick_cuest_PC_buf.C_siz);
-    cudaMallocChecked (&quick_cuest_PC_buf.d_Cb[0], quick_cuest_PC_buf.Cb_siz);
+    if (nocc > 0)
+        cudaMallocChecked (&quick_cuest_PC_buf.d_Cb[0], quick_cuest_PC_buf.Cb_siz);
 }
 
 void
@@ -185,6 +186,9 @@ cuest_deinit ()
     cudaFreeChecked (quick_cuest_PC_buf.d_C[0]);
     free_dev_alloc (quick_cuest_PC_buf.P_siz);
     free_dev_alloc (quick_cuest_PC_buf.C_siz);
-    cudaFreeChecked (quick_cuest_PC_buf.d_Cb[0]);
-    free_dev_alloc (quick_cuest_PC_buf.Cb_siz);
+
+    if (quick_cuest_data.noccb > 0) {
+        cudaFreeChecked (quick_cuest_PC_buf.d_Cb[0]);
+        free_dev_alloc (quick_cuest_PC_buf.Cb_siz);
+    }
 }

@@ -71,8 +71,8 @@ cuest_get_cshell_JK_grad (double *grad, double *P, double *C)
     uint64_t noccb = quick_cuest_data.noccb;
 #endif
 
-    const size_t d_P_siz  = nbasis * nbasis * sizeof (double);
     const size_t grad_siz = 3 * natom * sizeof (double);
+    const size_t d_P_siz  = nbasis * nbasis * sizeof (double);
     const size_t C_siz    = nocc * nbasis * sizeof (double);
     size_t       d_C_siz  = C_siz;
 #ifdef OSHELL
@@ -81,7 +81,6 @@ cuest_get_cshell_JK_grad (double *grad, double *P, double *C)
 #endif
 
     void *d_P = quick_cuest_PC_buf.d_P[0];
-    cudaMallocChecked (&d_P, d_P_siz);
     cudaMemcpyChecked (d_P, P, d_P_siz, cudaMemcpyHostToDevice);
 
     void *d_C;
@@ -113,7 +112,9 @@ cuest_get_cshell_JK_grad (double *grad, double *P, double *C)
     cudaMemcpyChecked (grad, quick_cuest_grad_mem.d_grad, grad_siz, cudaMemcpyDeviceToHost);
 
     cudaFreeChecked (d_C);
+    free_dev_alloc (d_C_siz);
 #ifdef OSHELL
     free (nocc_arr);
+    free_host_alloc (2 * sizeof (uint64_t));
 #endif
 }

@@ -156,6 +156,10 @@ cuest_deinit_cshell_xc ()
 
     cudaFreeChecked (quick_cuest_compute_mem.d_Vxc);
     free_dev_alloc (nbasis * nbasis * sizeof (double));
+#ifdef OSHELL
+    cudaFreeChecked (quick_cuest_compute_mem.d_Vxcb);
+    free_dev_alloc (nbasis * nbasis * sizeof (double));
+#endif
 
     free (quick_cuest_compute_mem.Vxc_vbs);
     if (quick_cuest_compute_mem.weights_saved)
@@ -301,15 +305,13 @@ cuest_get_cshell_xc_grad (double *grad, double *C)
     cuestHandle_t               handle = quick_cuest_struct.handle;
     cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
 
-    double *d_C;
-    size_t  d_C_siz = nocc * nbasis * sizeof (double);
-    cudaMallocChecked ((void **)&d_C, d_C_siz);
+    void        *d_C     = quick_cuest_PC_buf.d_C[0];
+    const size_t d_C_siz = quick_cuest_PC_buf.C_siz;
     cudaMemcpyChecked (d_C, C, d_C_siz, cudaMemcpyHostToDevice);
 
 #ifdef OSHELL
-    double *d_Cb;
-    size_t  d_Cb_siz = noccb * nbasis * sizeof (double);
-    cudaMallocChecked ((void **)&d_Cb, d_Cb_siz);
+    void        *d_Cb     = quick_cuest_PC_buf.d_Cb[0];
+    const size_t d_Cb_siz = quick_cuest_PC_buf.Cb_siz;
     cudaMemcpyChecked (d_Cb, Cb, d_Cb_siz, cudaMemcpyHostToDevice);
 #endif
 
