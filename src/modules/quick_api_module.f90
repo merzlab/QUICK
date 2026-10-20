@@ -544,6 +544,19 @@ subroutine run_quick(self,ierr)
   timer_cumer%TIniGuess = timer_cumer%TIniGuess+timer_end%TIniGuess-timer_begin%TIniGuess &
                            - (timer_end%T2elb-timer_begin%T2elb)
 
+#ifdef CUEST
+  if (quick_method%usecuest) then
+      ! read auxiliary basis
+      call read_aux_basis_sph(natom, quick_molspec%iattype, ierr)
+      if (ierr /= 0) then
+          print *, "ERROR: read_aux_basis_sph failed with ierr=", ierr
+          call exit(1)
+      endif
+
+      call initialize_cuest
+  endif
+#endif
+
   ! compute energy
   if ( .not. quick_method%opt .and. .not. quick_method%grad) then
     SAFE_CALL(getEnergy(.false.,ierr))
@@ -592,6 +605,13 @@ subroutine run_quick(self,ierr)
       if (quick_method%bGPU) then
         call gpu_cleanup()
       endif
+#endif
+
+#ifdef CUEST
+  if (quick_method%usecuest) then
+     call deinitialize_cuest_compute
+     call finalize_cuest
+  endif
 #endif
 
 #ifdef MPIV
