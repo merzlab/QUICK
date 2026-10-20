@@ -61,6 +61,7 @@
 #endif
 
 #if defined(CUDA) && defined(CUEST)
+    use quick_aux_basis_sph_module, only: read_aux_basis_sph
     use quick_cuest_module, only: cuest_correct_P, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK, cuest_print_memtrace
 #endif
 
@@ -223,7 +224,18 @@
                           -(timer_end%T2elb-timer_begin%T2elb)
     
 #ifdef CUEST
-    if (quick_method%usecuest) call initialize_cuest
+    if (quick_method%usecuest) then
+        ! read auxiliary basis
+        call read_aux_basis_sph(natom, quick_molspec%iattype, ierr)
+        if (ierr /= 0) then
+           print *, "ERROR: read_aux_basis_sph failed with ierr=", ierr
+           call exit(1)
+        endif
+
+        call prtact(ioutfile, "Begin cuEST Initialization")
+        call initialize_cuest
+        call prtact(ioutfile, "End cuEST Initialization")
+    endif
 #endif
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then

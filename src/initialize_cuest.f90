@@ -4,6 +4,13 @@
 !   initialize_cuest.f90
 !
 subroutine initialize_cuest
+   !
+   ! Initialize cuEST
+   ! The following things should be already populated
+   !   - quick_method
+   !   - quick_basis and quick_aux_basis_sph
+   !   - quick_molspec, natom, xyz
+   !
    use quick_cuest_module
    use quick_method_module, only: quick_method
    use quick_molspec_module, only: quick_molspec, natom, xyz
@@ -12,22 +19,12 @@ subroutine initialize_cuest
    use quick_basis_module, only: quick_basis, aexp, dcoeff, nshell, maxcontract
    use quick_files_module, only: ioutfile
    use quick_timer_module, only: timer_end, timer_cumer, timer_begin
+   use quick_aux_basis_sph_module, only: quick_aux_basis_sph
 
    use, intrinsic::iso_c_binding, only: c_int64_t, c_int8_t, c_double, c_loc, c_bool
-   use quick_aux_basis_sph_module, only: quick_aux_basis_sph, read_aux_basis_sph
 
    ! init cuEST
-   call prtact(ioutfile, "Begin cuEST Initialization")
    RECORD_TIME(timer_begin%TIniCuest)
-
-   ! read auxiliary basis
-   call read_aux_basis_sph(natom, quick_molspec%iattype, ierr)
-   if (ierr /= 0) print *, "ERROR: read_aux_basis_sph failed with ierr ", ierr
-
-#ifdef CUESTDEBUG
-   print *, "nbasis: ", nbasis
-   print *, "quick_aux_basis_sph%nbasis: ", quick_aux_basis_sph%nbasis
-#endif
 
    ! init cuest
    if (quick_method%UNRST) then
@@ -46,7 +43,7 @@ subroutine initialize_cuest
          int(quick_molspec%nextatom, c_int64_t), &
          quick_molspec%extxyz, &
          quick_molspec%extchg &
-         )
+      )
    else
       call cuest_init( &
          int(natom, c_int64_t), &
@@ -63,8 +60,8 @@ subroutine initialize_cuest
          int(quick_molspec%nextatom, c_int64_t), &
          quick_molspec%extxyz, &
          quick_molspec%extchg &
-         )
-   end if
+      )
+   endif
    ! for testing; the following cuest functions should not be called here
    ! init primary (cartesian) basis
    call cuest_init_basis( &
@@ -75,7 +72,7 @@ subroutine initialize_cuest
       aexp, &
       dcoeff, &
       logical(.false., c_bool) &
-      )
+   )
 
    ! init auxiliary (spherical) basis
    call cuest_init_basis( &
@@ -86,7 +83,7 @@ subroutine initialize_cuest
       quick_aux_basis_sph%gcexpo, &
       quick_aux_basis_sph%gccoeff, &
       logical(.true., c_bool) &
-      )
+   )
 
    call cuest_init_correct
 
@@ -105,7 +102,6 @@ subroutine initialize_cuest
    RECORD_TIME(timer_end%TIniCuest)
    timer_cumer%TIniCuest = timer_cumer%TIniCuest + timer_end%TIniCuest - timer_begin%TIniCuest &
                            - (timer_end%T2elb - timer_begin%T2elb)
-   call prtact(ioutfile, "End cuEST Initialization")
 end subroutine initialize_cuest
 
 subroutine deinitialize_cuest_compute
@@ -123,8 +119,8 @@ subroutine deinitialize_cuest_compute
       else
          call cuest_deinit_xc_dense
          call cuest_deinit_cshell_xc
-      end if
-   end if
+      endif
+   endif
 end subroutine deinitialize_cuest_compute
 
 subroutine finalize_cuest
