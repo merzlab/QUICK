@@ -108,7 +108,7 @@ module quick_aux_basis_sph_module
 
 contains
 
-   subroutine read_aux_basis_sph(natomxiao, iattype, ierr)
+   subroutine read_aux_basis_sph(ierr)
       !
       ! Read a Gaussian94-format auxiliary basis file and fill quick_aux_basis_sph,
       ! storing basis functions as SPHERICAL HARMONICS (pure functions), not
@@ -117,10 +117,6 @@ contains
       ! fills the arrays.
       !
       ! Arguments:
-      !   aux_basisfilename : path to the aux basis file (Gaussian94 format)
-      !   natomxiao        : total number of atoms in the system
-      !   iattype(natomxiao) : atomic number (1-92) of each atom, i.e. the
-      !                        same role as quick_molspec%iattype in readbasis()
       !   ierr             : output error code (0 = success; 37 = shell beyond
       !                       H (I or higher) encountered, unsupported)
       !
@@ -129,10 +125,9 @@ contains
       use quick_size_module, only: MAXPRIM_AUX
       use quick_files_module, only: basisSetName, basisDir
       use quick_method_module, only: quick_method
+      use quick_molspec_module, only: quick_molspec, natom
 
       implicit none
-      integer, intent(in) :: natomxiao
-      integer, intent(in) :: iattype(natomxiao)
       integer, intent(inout) :: ierr
 
       character(len=80) :: aux_basis_file
@@ -266,14 +261,14 @@ contains
       quick_aux_basis_sph%nprim = 0
 
       if (.not. allocated(quick_aux_basis_sph%first_basis_function)) &
-         allocate (quick_aux_basis_sph%first_basis_function(natomxiao))
+         allocate (quick_aux_basis_sph%first_basis_function(natom))
       if (.not. allocated(quick_aux_basis_sph%last_basis_function)) &
-         allocate (quick_aux_basis_sph%last_basis_function(natomxiao))
+         allocate (quick_aux_basis_sph%last_basis_function(natom))
 
-      do i = 1, natomxiao
-         quick_aux_basis_sph%nshell = quick_aux_basis_sph%nshell + kshell_count(iattype(i))
-         quick_aux_basis_sph%nbasis = quick_aux_basis_sph%nbasis + kbasis(iattype(i))
-         quick_aux_basis_sph%nprim = quick_aux_basis_sph%nprim + kcontract(iattype(i))
+      do i = 1, natom
+         quick_aux_basis_sph%nshell = quick_aux_basis_sph%nshell + kshell_count(quick_molspec%iattype(i))
+         quick_aux_basis_sph%nbasis = quick_aux_basis_sph%nbasis + kbasis(quick_molspec%iattype(i))
+         quick_aux_basis_sph%nprim = quick_aux_basis_sph%nprim + kcontract(quick_molspec%iattype(i))
       end do
 
       ! ------------------------------------------------------------------
@@ -307,14 +302,14 @@ contains
       jshell = 1
       Ninitial = 0
 
-      do i = 1, natomxiao
+      do i = 1, natom
          iofile = 0
          do while (iofile == 0)
             read (iauxbasisfile, '(A80)', iostat=iofile) line
             read (line, *, iostat=io) atom, ii
             if (io == 0 .and. ii == 0) then
                call upcase(atom, 2)
-               if (symbol(iattype(i)) == atom) then
+               if (symbol(quick_molspec%iattype(i)) == atom) then
                   iatom = 0
                   do while (iatom == 0)
                      read (iauxbasisfile, '(A80)', iostat=iofile) line

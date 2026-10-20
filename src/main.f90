@@ -226,7 +226,7 @@
 #ifdef CUEST
     if (quick_method%usecuest) then
         ! read auxiliary basis
-        call read_aux_basis_sph(natom, quick_molspec%iattype, ierr)
+        call read_aux_basis_sph(ierr)
         if (ierr /= 0) then
            print *, "ERROR: read_aux_basis_sph failed with ierr=", ierr
            call exit(1)
