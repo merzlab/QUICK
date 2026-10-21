@@ -1267,7 +1267,7 @@ module quick_method_module
                 self%cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
             case (106) ! GGA_X_B88,GGA_C_LYP
                 self%cuest_fnl_code = CUEST_FUNCTIONAL_BLYP
-            case (226) ! HYB_GGA_XC_B97
+            case (407) ! HYB_GGA_XC_B97
                 self%cuest_fnl_code = CUEST_FUNCTIONAL_B97
             case (406) ! HYB_GGA_XC_PBEH
                 self%cuest_fnl_code = CUEST_FUNCTIONAL_PBE0
