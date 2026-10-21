@@ -47,6 +47,10 @@ module quick_files_module
     character(len=240) :: sadGuessDir    = ''
     character(len=320) :: basisFileName = ''
     character(len=80) :: basisSetName   = ''
+#ifdef CUEST
+    character(len=80) :: fitbasisFileName = ''
+    character(len=80) :: fitbasisName = ''
+#endif
 
     ! ecp basis set and directory
     character(len=80) :: ECPDir         = ''
@@ -267,6 +271,77 @@ module quick_files_module
         endif
     end subroutine
 
+#ifdef CUEST
+    subroutine read_fitbasis_file(keywd,ierr)
+        use quick_exception_module
+        use quick_method_module, only: quick_method
+
+        implicit none
+
+        character(len=*), intent(in) :: keywd
+        integer, intent(inout) :: ierr
+
+        character(len=80) :: line
+        character(len=320) :: basis_sets  !stores full path to basis_sets file
+        character(len=50) :: search_keywd !keywd packed with '=',used for searching basis file name
+        integer :: ibasislinkfile         ! basis link file unit
+
+        ! local variables
+        integer :: i, j, iofile, lenkwd
+
+        ! TODO: make sure this doesn't clash with regular BASIS= read
+        i = index(keywd, 'FITBASIS=')
+        j = 100
+        iofile = 0
+
+        if (i /= 0) then
+            lenkwd=len_trim(keywd)
+
+            j = scan(keywd(i + 9:), ' ')
+
+            basis_sets = trim(basisdir)//"/basis_link"
+
+            fitbasisName = keywd(i + 9:i + 8 + j)
+            search_keywd = '#'//trim(fitbasisName)
+
+            ! check if basis_link exists
+            inquire(file=trim(basis_sets), exist=fexist)
+            if (.not. fexist) then
+               call PrtErr(iOutFile, 'basis_link file is not accessible.')
+               call PrtMsg(iOutFile, 'Check if QUICK_BASIS environment variable is set.')
+               call quick_exit(iOutFile, 1)
+            endif
+
+            SAFE_CALL(quick_open(ibasislinkfile, basis_sets, 'O', 'F', 'W', .true., ierr))
+
+            iofile = 0
+            do while (iofile == 0)
+               read (ibasislinkfile, '(A80)', iostat=iofile) line
+               call upcase(line, 80)
+
+               if (index(line, trim(search_keywd)) .ne. 0) then
+                  fitbasisFileName = trim(line(39:74))
+                  iofile = 1
+               endif
+            enddo
+
+            close (ibasislinkfile)
+         else
+            if (quick_method%x_hybrid_coeff == 0.0d0) then
+               basisFileName = "DEF2-UNIVERSAL-JFIT.BAS"
+            else
+               select case (trim(basisSetName))
+               case ("CC-PVTZ")
+                  basisFileName = "CC-PVTZ-JKFIT.BAS"
+               case ("DEF2-SVP")
+                  basisFileName = "DEF2-SVP-JKFIT.BAS"
+               case default
+                  basisFileName = "DEF2-UNIVERSAL-JKFIT.BAS"
+               end select
+            endif
+         endif
+    end subroutine
+#endif
 
     subroutine print_basis_file(io)
         implicit none
@@ -277,6 +352,16 @@ module quick_files_module
         write(io,'("| BASIS FILE = ",a)') trim(basisfilename)
     end subroutine
 
+#ifdef CUEST
+    subroutine print_fitbasis_file(io)
+        implicit none
+
+        integer, intent(in) :: io
+
+        write(io,'(" DENSITY FITTING BASIS SET = ",a,",",2X,"TYPE = SPHERICAL")') trim(fitbasisName)
+        write(io,'("| DENSITY FITTING BASIS FILE = ",a)') trim(fitbasisFileName)
+    end subroutine
+#endif
 
     subroutine print_ecp_file(io)
         implicit none

@@ -456,9 +456,6 @@ subroutine run_quick(self,ierr)
 #if defined(MPIV)
   use quick_mpi_module, only: master
 #endif
-#ifdef CUEST
-  use quick_fitbasis_module, only: read_fitbasis
-#endif
 
   implicit none
 
@@ -549,13 +546,6 @@ subroutine run_quick(self,ierr)
 
 #ifdef CUEST
   if (quick_method%usecuest) then
-      ! read density fitting basis
-      call read_fitbasis(ierr)
-      if (ierr /= 0) then
-          print *, "ERROR: read_fitbasis failed with ierr=", ierr
-          call exit(1)
-      endif
-
       call initialize_cuest
   endif
 #endif

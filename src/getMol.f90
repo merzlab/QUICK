@@ -21,6 +21,9 @@ subroutine getMol(ierr)
    use quick_mpi_module, only: bMPI
    use mpi
 #endif
+#ifdef CUEST
+   use quick_fitbasis_module, only: readfitbasis
+#endif
 
    implicit none
 
@@ -78,6 +81,15 @@ subroutine getMol(ierr)
    ! have the number of electrons. Now we must assign basis functions. This
    ! is done in a subroutine.
    call readbasis(natom,0,0,0,0,ierr)
+   CHECK_ERROR(ierr)
+
+#ifdef CUEST
+   if (quick_method%usecuest) then
+      call readfitbasis(ierr)
+      CHECK_ERROR(ierr)
+   endif
+#endif
+
    ! F implementation of GPU ERI code currently doesnt support open shell
    ! gradient calculations
 #if defined(GPU) || defined(MPIV_GPU)

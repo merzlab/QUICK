@@ -73,6 +73,12 @@ subroutine read_job_and_atom(ierr)
       ! read basis file
       SAFE_CALL(read_basis_file(keyWD,ierr))
       call print_basis_file(iOutFile)
+#ifdef CUEST
+      if (quick_method%usecuest) then 
+         SAFE_CALL(read_fitbasis_file(keywd, ierr))
+         call print_fitbasis_file(ioutfile)
+      endif
+#endif
       call print_data_file(iOutFile) 
      if (quick_method%ecp) call print_ecp_file(iOutFile)
       

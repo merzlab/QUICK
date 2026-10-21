@@ -1,3 +1,4 @@
+#ifdef CUEST
 #include "util.fh"
 !
 !        quick_fitbasis_module.f90
@@ -81,7 +82,7 @@ module quick_fitbasis_module
 
 contains
 
-   subroutine read_fitbasis(keywd, ierr)
+   subroutine readfitbasis(ierr)
       !
       ! Read a Gaussian94-format fitiliary basis file and fill quick_fitbasis,
       ! storing basis functions as SPHERICAL HARMONICS (pure functions), not
@@ -97,22 +98,18 @@ contains
       use quick_exception_module, only: RaiseException
       use quick_constants_module, only: symbol
       use quick_size_module, only: MAXPRIM_AUX
-      use quick_files_module, only: basisSetName, basisDir, iOutFile
+      use quick_files_module, only: iOutFile, basisSetName, basisDir, fitbasisFileName
       use quick_method_module, only: quick_method
       use quick_molspec_module, only: quick_molspec, natom
       use quick_input_parser_module, only: found_keyword
 
       implicit none
-      character(len=*), intent(in) :: keywd
-      integer, intent(inout) :: ierr
 
-      character(len=320) :: basis_sets  ! stores full path to basis_sets file
-      character(len=50) :: search_keywd ! keywd packed with '=',used for searching basis file name
-      logical :: fexist                 ! exist= value for inquire function
-      integer :: ibasislinkfile         ! basis link file unit
+      integer, intent(inout) :: ierr
 
       character(len=80) :: fitbasis_file
       integer :: ifitbasisfile
+      logical :: fexist
 
       character(len=120) :: line
       character(len=2)   :: atom, shell
@@ -137,56 +134,7 @@ contains
       ! nbasis here counts SPHERICAL (2L+1) functions, not Cartesian ones.
       ! ------------------------------------------------------------------
 
-      ! TODO: make sure this doesn't clash with regular BASIS= read
-      i = index(keywd, 'FITBASIS=')
-      if (i /= 0) then
-         print *, "Using user specified fit basis"
-         j = scan(keywd(i + 9:), ' ')
-
-         basis_sets = trim(basisdir)//"/basis_link"
-
-         fitbasis_name = keywd(i + 9:i + 8 + j)
-         search_keywd = '#'//trim(fitbasis_name)
-
-         ! check if basis_link exists
-         inquire(file=trim(basis_sets), exist=fexist)
-         if (.not. fexist) then
-            call PrtErr(iOutFile, 'basis_link file is not accessible.')
-            call PrtMsg(iOutFile, 'Check if QUICK_BASIS environment variable is set.')
-            call quick_exit(iOutFile, 1)
-         end if
-
-         SAFE_CALL(quick_open(ibasislinkfile, basis_sets, 'O', 'F', 'W', .true., ierr))
-
-         iofile = 0
-         do while (iofile == 0)
-            read (ibasislinkfile, '(A80)', iostat=iofile) line
-            call upcase(line, 80)
-
-            if (index(line, trim(search_keywd)) .ne. 0) then
-               fitbasis_file = trim(line(39:74))
-               iofile = 1
-            end if
-         end do
-
-         close (ibasislinkfile)
-      else
-         print *, "Auto-selecting basis"
-         if (quick_method%x_hybrid_coeff == 0.0d0) then
-            fitbasis_file = "DEF2-UNIVERSAL-JFIT.BAS"
-         else
-            select case (trim(basisSetName))
-            case ("CC-PVTZ")
-               fitbasis_file = "CC-PVTZ-JKFIT.BAS"
-            case ("DEF2-SVP")
-               fitbasis_file = "DEF2-SVP-JKFIT.BAS"
-            case default
-               fitbasis_file = "DEF2-UNIVERSAL-JKFIT.BAS"
-            end select
-         end if
-      end if
-
-      fitbasis_file = trim(basisDir)//"/"//trim(fitbasis_file)
+      fitbasis_file = trim(basisDir)//"/"//trim(fitbasisFileName)
       print *, "Auxiliary DF Basis File: ", trim(fitbasis_file)
 
       ! check if fit basis file exists
@@ -472,7 +420,7 @@ contains
 
       if (quick_fitbasis%maxcontract > MAXPRIM_AUX) then
          ierr = 37
-         print *, "quick_fitbasis%maxcontract > MAXPRIM_AUX. aborting read_fitbasis."
+         print *, "quick_fitbasis%maxcontract > MAXPRIM_AUX. aborting readfitbasis."
          return
       end if
 
@@ -631,7 +579,7 @@ contains
       if (allocated(gcg)) deallocate (gcg)
       if (allocated(gch)) deallocate (gch)
 
-   end subroutine read_fitbasis
+   end subroutine readfitbasis
 
    ! =====================================================================
    ! Spherical-harmonic normalization helpers.
@@ -713,3 +661,4 @@ contains
    end subroutine sph_contraction_norm
 
 end module quick_fitbasis_module
+#endif
