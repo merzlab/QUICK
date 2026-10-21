@@ -114,7 +114,7 @@ subroutine getMol(ierr)
       call print(quick_molspec,iOutFile,ierr)
       call print(quick_basis,iOutFile)
 #ifdef CUEST
-      call print(quick_fitbasis, ioutfile)
+      if (quick_method%usecuest) call print(quick_fitbasis, ioutfile)
 #endif
 
       ! the following some step are setup for basis and for ECP or DFT calculation
