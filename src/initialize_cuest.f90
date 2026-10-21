@@ -8,7 +8,7 @@ subroutine initialize_cuest
    ! Initialize cuEST
    ! The following things should be already populated
    !   - quick_method
-   !   - quick_basis and quick_aux_basis_sph
+   !   - quick_basis and quick_fitbasis
    !   - quick_molspec, natom, xyz
    !
    use quick_cuest_module
@@ -19,7 +19,7 @@ subroutine initialize_cuest
    use quick_basis_module, only: quick_basis, aexp, dcoeff, nshell, maxcontract
    use quick_files_module, only: ioutfile
    use quick_timer_module, only: timer_end, timer_cumer, timer_begin
-   use quick_aux_basis_sph_module, only: quick_aux_basis_sph
+   use quick_fitbasis_module, only: quick_fitbasis
 
    use, intrinsic::iso_c_binding, only: c_int64_t, c_int8_t, c_double, c_loc, c_bool
 
@@ -34,9 +34,9 @@ subroutine initialize_cuest
          int(nbasis, c_int64_t), &
          int(quick_molspec%nelec, c_int64_t), &
          int(quick_molspec%nelecb, c_int64_t), &
-         int(quick_aux_basis_sph%nshell, c_int64_t), &
+         int(quick_fitbasis%nshell, c_int64_t), &
          int(maxcontract, c_int64_t), &
-         int(quick_aux_basis_sph%maxcontract, c_int64_t), &
+         int(quick_fitbasis%maxcontract, c_int64_t), &
          int(quick_molspec%iattype, c_int8_t), &
          c_loc(xyz), &
          quick_molspec%chg, &
@@ -51,9 +51,9 @@ subroutine initialize_cuest
          int(nbasis, c_int64_t), &
          int(quick_molspec%nelec/2, c_int64_t), &
          int(0, c_int64_t), &
-         int(quick_aux_basis_sph%nshell, c_int64_t), &
+         int(quick_fitbasis%nshell, c_int64_t), &
          int(maxcontract, c_int64_t), &
-         int(quick_aux_basis_sph%maxcontract, c_int64_t), &
+         int(quick_fitbasis%maxcontract, c_int64_t), &
          int(quick_molspec%iattype, c_int8_t), &
          c_loc(xyz), &
          quick_molspec%chg, &
@@ -74,14 +74,14 @@ subroutine initialize_cuest
       logical(.false., c_bool) &
    )
 
-   ! init auxiliary (spherical) basis
+   ! init density fitting basis
    call cuest_init_basis( &
       int(quick_basis%ncenter, c_int64_t), &
-      int(quick_aux_basis_sph%katom, c_int64_t), &
-      int(quick_aux_basis_sph%ktype, c_int64_t), &
-      int(quick_aux_basis_sph%kprim, c_int64_t), &
-      quick_aux_basis_sph%gcexpo, &
-      quick_aux_basis_sph%gccoeff, &
+      int(quick_fitbasis%katom, c_int64_t), &
+      int(quick_fitbasis%ktype, c_int64_t), &
+      int(quick_fitbasis%kprim, c_int64_t), &
+      quick_fitbasis%gcexpo, &
+      quick_fitbasis%gccoeff, &
       logical(.true., c_bool) &
    )
 

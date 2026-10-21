@@ -61,7 +61,7 @@
 #endif
 
 #if defined(CUDA) && defined(CUEST)
-    use quick_aux_basis_sph_module, only: read_aux_basis_sph
+    use quick_fitbasis_module, only: read_fitbasis
     use quick_cuest_module, only: cuest_correct_P, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK, cuest_print_memtrace
 #endif
 
@@ -225,10 +225,10 @@
     
 #ifdef CUEST
     if (quick_method%usecuest) then
-        ! read auxiliary basis
-        call read_aux_basis_sph(ierr)
+        ! read density fitting basis
+        call read_fitbasis(ierr)
         if (ierr /= 0) then
-           print *, "ERROR: read_aux_basis_sph failed with ierr=", ierr
+           print *, "ERROR: read_fitbasis failed with ierr=", ierr
            call exit(1)
         endif
 
