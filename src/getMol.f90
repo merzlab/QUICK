@@ -22,7 +22,7 @@ subroutine getMol(ierr)
    use mpi
 #endif
 #ifdef CUEST
-   use quick_fitbasis_module, only: readfitbasis
+   use quick_fitbasis_module, only: quick_fitbasis, readfitbasis, print
 #endif
 
    implicit none
@@ -113,6 +113,9 @@ subroutine getMol(ierr)
       ! now print molecule specification to output file
       call print(quick_molspec,iOutFile,ierr)
       call print(quick_basis,iOutFile)
+#ifdef CUEST
+      call print(quick_fitbasis, ioutfile)
+#endif
 
       ! the following some step are setup for basis and for ECP or DFT calculation
       ! and see comments for details

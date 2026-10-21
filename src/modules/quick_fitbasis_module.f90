@@ -80,6 +80,10 @@ module quick_fitbasis_module
 
    character(len=80) :: fitbasis_name
 
+   interface print
+      module procedure print_quick_fitbasis
+   end interface print
+
 contains
    
    subroutine autodetect_fitbasis(name, filename)
@@ -747,6 +751,20 @@ contains
          gccoeff_col(ii) = gccoeff_col(ii)*dsqrt(Nfact/V)
       end do
    end subroutine sph_contraction_norm
+
+   subroutine print_quick_fitbasis(self, ioutfile)
+      type(quick_fitbasis_type) self
+      integer ioutfile
+
+      if (ioutfile.ne.0) then
+         write (iOutFile,*)
+         write (iOutFile,'("====== DENSITY FITTING BASIS INFOS ======")')
+         write (iOutFile,'(" BASIS FUNCTIONS = ",I4)') quick_fitbasis%nbasis
+         write (iOutFile,'(" NSHELL = ",I4, " NPRIM  = ", I4)') quick_fitbasis%nshell, quick_fitbasis%nprim
+         write (iOutFile,*)
+      endif
+      
+   end subroutine print_quick_fitbasis
 
 end module quick_fitbasis_module
 #endif
