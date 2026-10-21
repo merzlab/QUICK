@@ -1262,21 +1262,30 @@ module quick_method_module
         endif
 
 #ifdef CUEST
-        select case (quick_method%functional_id(1))
-            case (402) ! HYB_GGA_XC_B3LYP
-                self%cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
-            case (106) ! GGA_X_B88,GGA_C_LYP
-                self%cuest_fnl_code = CUEST_FUNCTIONAL_BLYP
-            case (407) ! HYB_GGA_XC_B97
-                self%cuest_fnl_code = CUEST_FUNCTIONAL_B97
-            case (406) ! HYB_GGA_XC_PBEH
-                self%cuest_fnl_code = CUEST_FUNCTIONAL_PBE0
-            case (101) ! GGA_X_PBE (accompanied with GGA_C_PBE after)
-                self%cuest_fnl_code = CUEST_FUNCTIONAL_PBE
-            case default
-                print *, "CUEST: found unsupported libxc functional: ", quick_method%functional_id(1)
-                self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
-        end select
+        if (quick_method%nof_functionals == 1) then
+           select case (quick_method%functional_id(1))
+               case (402) ! HYB_GGA_XC_B3LYP
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
+               case (407) ! HYB_GGA_XC_B97
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_B97
+               case (406) ! HYB_GGA_XC_PBEH
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_PBE0
+               case default
+                   print *, "CUEST: found unsupported libxc functional with id=", quick_method%functional_id(1)
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
+           end select
+        else ! nof_functionals == 2
+           select case (1000*quick_method%functional_id(1) + quick_method%functional_id(2))
+               case (106131, 131106) ! GGA_X_B88,GGA_C_LYP
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_BLYP
+               case (101130, 130101) ! GGA_X_PBE,GGA_C_PBE
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_PBE
+               case default
+                   print *, "CUEST: found unsupported libxc functional with id=", &
+                            quick_method%functional_id(1), quick_method%functional_id(2)
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
+           end select
+        endif
 #endif
         end subroutine set_libxc_func_info
 
