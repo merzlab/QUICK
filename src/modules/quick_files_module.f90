@@ -191,11 +191,16 @@ module quick_files_module
         tmp_basisfilename = "NULL"
 
         ! Gaussian Style Basis. Written by Alessandro GENONI 03/07/2007
-        if (index(keywd,'BASIS=') /= 0) then
+         
+        i = index(keywd,' BASIS=')
+        if (i /= 0 .or. keywd(1:6) == 'BASIS=') then
             !Get the length of keywd
             lenkwd=len_trim(keywd)
 
-            i = index(keywd,'BASIS=',.false.)
+            ! BASIS=
+            ! ^ make i point here, or
+            ! if i == 0 then we set i=1 as desired
+            i = i + 1
 
 !            j = scan(keywd(i:lenkwd),' ',.false.)
             j = scan(keywd(i+6:),' ',.false.)
