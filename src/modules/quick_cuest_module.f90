@@ -5,7 +5,7 @@ module quick_cuest_module
    !
    ! This module contains the fortran bindings for C functions that call cuEST
    !
-   use, intrinsic::iso_c_binding, only: c_int8_t
+   use, intrinsic::iso_c_binding, only: c_int8_t, c_int32_t
    implicit none
 
    integer(c_int8_t), protected :: CUEST_CORRECT_REORDER = 1
@@ -15,17 +15,21 @@ module quick_cuest_module
    integer(c_int8_t), protected :: CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK = 3
    integer(c_int8_t), protected :: CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST = 7
 
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_UNKNOWN = 127 ! cuEST unsupported functional
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_HF = 0
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_B3LYP = 1
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_B97 = 2
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_BLYP = 3
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_M06L = 4 ! QUICK unsupported
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_PBE = 5
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_PBE0 = 6
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_R2SCAN = 7 ! QUICK unsupported
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_SVWN5 = 8 ! QUICK unsupported
-   integer(c_int8_t), protected :: CUEST_FUNCTIONAL_B97MV = 9 ! QUICK unsupported
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_UNKNOWN = 999999
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_HF = 0
+
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_B3LYP  = 402
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_B3LYP5 = 475
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_B97    = 407
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_B97MV  = 254
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_PBE0   = 406
+
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_BLYP   = 106131
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_PBE    = 101130
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_M06L   = 203233
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_M06    = 449235
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_M062X  = 450126
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_SVWN5  = 001007
 
    ! unless commented otherwise, C will not modify the memory a pointer points to
 
@@ -238,18 +242,18 @@ module quick_cuest_module
 
    interface
       subroutine cuest_init_cshell_xc(fnl, devsiz) bind(c, name="cuest_init_cshell_xc")
-         use, intrinsic :: iso_c_binding, only: c_int8_t, c_int64_t
+         use, intrinsic :: iso_c_binding, only: c_int32_t, c_int64_t
          implicit none
-         integer(c_int8_t), intent(in), value :: fnl
+         integer(c_int32_t), intent(in), value :: fnl
          integer(c_int64_t), intent(in), value :: devsiz
       end subroutine cuest_init_cshell_xc
    end interface
 
    interface
       subroutine cuest_init_oshell_xc(fnl, devsiz) bind(c, name="cuest_init_oshell_xc")
-         use, intrinsic :: iso_c_binding, only: c_int8_t, c_int64_t
+         use, intrinsic :: iso_c_binding, only: c_int32_t, c_int64_t
          implicit none
-         integer(c_int8_t), intent(in), value :: fnl
+         integer(c_int32_t), intent(in), value :: fnl
          integer(c_int64_t), intent(in), value :: devsiz
       end subroutine cuest_init_oshell_xc
    end interface

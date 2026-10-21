@@ -20,9 +20,9 @@ static cuestAtomGrid_t *atom_grids;
 
 void
 #ifdef OSHELL
-cuest_init_oshell_xc (int8_t fnl, int64_t devsiz)
+cuest_init_oshell_xc (int32_t fnl, int64_t devsiz)
 #else
-cuest_init_cshell_xc (int8_t fnl, int64_t devsiz)
+cuest_init_cshell_xc (int32_t fnl, int64_t devsiz)
 #endif
 {
     uint64_t natom  = quick_cuest_data.natom;
@@ -72,8 +72,17 @@ cuest_init_cshell_xc (int8_t fnl, int64_t devsiz)
         case CUEST_FUNCTIONAL_B3LYP:
             functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_B3LYP1;
             break;
+        case CUEST_FUNCTIONAL_B3LYP5:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_B3LYP5;
+            break;
         case CUEST_FUNCTIONAL_B97:
             functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_B97;
+            break;
+        case CUEST_FUNCTIONAL_B97MV:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_B97MV;
+            break;
+        case CUEST_FUNCTIONAL_PBE0:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_PBE0;
             break;
         case CUEST_FUNCTIONAL_BLYP:
             functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_BLYP;
@@ -81,8 +90,17 @@ cuest_init_cshell_xc (int8_t fnl, int64_t devsiz)
         case CUEST_FUNCTIONAL_PBE:
             functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_PBE;
             break;
-        case CUEST_FUNCTIONAL_PBE0:
-            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_PBE0;
+        case CUEST_FUNCTIONAL_M06L:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_M06L;
+            break;
+        case CUEST_FUNCTIONAL_M06:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_M06;
+            break;
+        case CUEST_FUNCTIONAL_M062X:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_M062X;
+            break;
+        case CUEST_FUNCTIONAL_SVWN5:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_SVWN5;
             break;
         default:
             fprintf (stderr, "%s:%d Unknown functional code %hhu\n", __func__, __LINE__, fnl);

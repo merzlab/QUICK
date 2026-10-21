@@ -16,7 +16,7 @@ module quick_method_module
     use quick_input_parser_module  
 
 #ifdef CUEST
-    use, intrinsic :: iso_c_binding, only: c_int8_t
+    use, intrinsic :: iso_c_binding, only: c_int32_t
 #endif
 
     implicit none
@@ -172,7 +172,7 @@ module quick_method_module
 #endif
 
 #ifdef CUEST
-        integer(c_int8_t) :: cuest_fnl_code
+        integer(c_int32_t) :: cuest_fnl_code
 #endif
         logical :: usecuest = .false.
 
@@ -1266,8 +1266,12 @@ module quick_method_module
            select case (quick_method%functional_id(1))
                case (402) ! HYB_GGA_XC_B3LYP
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
+               case (475) ! HYB_GGA_XC_B3LYP5
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP5
                case (407) ! HYB_GGA_XC_B97
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_B97
+               case (254) ! MGGA_XC_B97M_V
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_B97MV
                case (406) ! HYB_GGA_XC_PBEH
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_PBE0
                case default
@@ -1280,6 +1284,14 @@ module quick_method_module
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_BLYP
                case (101130, 130101) ! GGA_X_PBE,GGA_C_PBE
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_PBE
+               case (203233, 233203) ! MGGA_X_M06_L,MGGA_C_M06_L
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_M06L
+               case (449235, 235449) ! HYB_MGGA_X_M06,MGGA_C_M06
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_M06
+               case (450126, 126450) ! HYB_MGGA_X_M06_2X,MGGA_C_M06_2X
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_M062X
+               case (001007, 007001) ! LDA_X,LDA_C_VWN
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_SVWN5
                case default
                    print *, "CUEST: found unsupported libxc functional with id=", &
                             quick_method%functional_id(1), quick_method%functional_id(2)

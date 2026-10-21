@@ -191,8 +191,8 @@ void cuest_create_atom_grid_setup ();
 void cuest_create_atom_grid (int64_t nrad, double *r, double *w, int64_t *nang);
 void cuest_destroy_atom_grid ();
 
-void cuest_init_cshell_xc (int8_t fnl, int64_t devsiz);
-void cuest_init_oshell_xc (int8_t fnl, int64_t devsiz);
+void cuest_init_cshell_xc (int32_t fnl, int64_t devsiz);
+void cuest_init_oshell_xc (int32_t fnl, int64_t devsiz);
 void cuest_deinit_cshell_xc ();
 void cuest_deinit_oshell_xc ();
 void cuest_get_cshell_xc (double *Vxc, double *Exc, double *C);
