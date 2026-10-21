@@ -50,6 +50,10 @@
 | #aug-cc-pVTZ                      | AUG-CC-PVTZ.BAS                     |
 | #AUG-PC-1                         | AUG-PC1.BAS                         |
 | #AUG-PC-2                         | AUG-PC2.BAS                         |
+| #CC-PVTZ-JKFIT                    | CC-PVTZ-JKFIT.BAS                   |
+| #DEF2-SVP-JKFIT                   | DEF2-SVP-JKFIT.BAS                  |
+| #DEF2-UNIVERSAL-JFIT              | DEF2-UNIVERSAL-JFIT.BAS             |
+| #DEF2-UNIVERSAL-JKFIT             | DEF2-UNIVERSAL-JKFIT.BAS            |
 | #CUSTOM                           | CUSTOM.BAS                          |
 |_________________________________________________________________________|
 
