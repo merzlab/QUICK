@@ -101,9 +101,9 @@ contains
          case ("CC-PVTZ")
             name     = "CC-PVTZ-JKFIT"
             filename = "CC-PVTZ-JKFIT.BAS"
-         case ("DEF2-SVP")
-            name     = "DEF2-SVP-JKFIT"
-            filename = "DEF2-SVP-JKFIT.BAS"
+         case ("DEF2-SV(P)")
+            name     = "DEF2-SV(P)-JKFIT"
+            filename = "DEF2-SV_P-JKFIT.BAS"
          case default
             name     = "DEF2-UNIVERSAL-JKFIT"
             filename = "DEF2-UNIVERSAL-JKFIT.BAS"
