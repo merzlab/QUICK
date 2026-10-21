@@ -81,6 +81,94 @@ module quick_fitbasis_module
    character(len=80) :: fitbasis_name
 
 contains
+   
+   subroutine autodetect_fitbasis(name, filename)
+      use quick_method_module, only: quick_method
+      use quick_files_module, only: basisSetName
+
+      implicit none
+      character(len=*), intent(out) :: name, filename
+      
+      if (quick_method%x_hybrid_coeff == 0.0d0) then
+         name     = "DEF2-UNIVERSAL-JFIT"
+         filename = "DEF2-UNIVERSAL-JFIT.BAS"
+      else
+         select case (trim(basisSetName))
+         case ("CC-PVTZ")
+            name     = "CC-PVTZ-JKFIT"
+            filename = "CC-PVTZ-JKFIT.BAS"
+         case ("DEF2-SVP")
+            name     = "DEF2-SVP-JKFIT"
+            filename = "DEF2-SVP-JKFIT.BAS"
+         case default
+            name     = "DEF2-UNIVERSAL-JKFIT"
+            filename = "DEF2-UNIVERSAL-JKFIT.BAS"
+         end select
+      endif
+   end subroutine autodetect_fitbasis
+
+   subroutine read_fitbasis_file(keywd,ierr)
+      use quick_exception_module
+      use quick_files_module, only: basisDir, fitbasisName, fitbasisFileName, iOutFile
+
+      implicit none
+
+      character(len=*), intent(in) :: keywd
+      integer, intent(inout) :: ierr
+      logical :: fexist
+
+      character(len=80) :: line
+      character(len=320) :: basis_sets  !stores full path to basis_sets file
+      character(len=50) :: search_keywd !keywd packed with '=',used for searching basis file name
+      integer :: ibasislinkfile         ! basis link file unit
+
+      ! local variables
+      integer :: i, j, iofile, lenkwd
+
+      fitbasisName = 'NULL'
+      fitbasisFileName = 'NULL'
+
+      ! TODO: make sure this doesn't clash with regular BASIS= read
+      i = index(keywd, 'FITBASIS=')
+      j = 100
+      iofile = 0
+
+      if (i /= 0) then
+         lenkwd=len_trim(keywd)
+
+         j = scan(keywd(i + 9:), ' ')
+
+         basis_sets = trim(basisdir)//"/basis_link"
+
+         fitbasisName = keywd(i + 9:i + 8 + j)
+         search_keywd = '#'//trim(fitbasisName)
+
+         ! check if basis_link exists
+         inquire(file=trim(basis_sets), exist=fexist)
+         if (.not. fexist) then
+            call PrtErr(iOutFile, 'basis_link file is not accessible.')
+            call PrtMsg(iOutFile, 'Check if QUICK_BASIS environment variable is set.')
+            call quick_exit(iOutFile, 1)
+         endif
+
+         SAFE_CALL(quick_open(ibasislinkfile, basis_sets, 'O', 'F', 'W', .true., ierr))
+
+         iofile = 0
+         do while (iofile == 0)
+            read (ibasislinkfile, '(A80)', iostat=iofile) line
+            call upcase(line, 80)
+
+            if (index(line, trim(search_keywd)) .ne. 0) then
+               fitbasisFileName = trim(line(39:74))
+               iofile = 1
+            endif
+         enddo
+
+         close (ibasislinkfile)
+      else
+         call autodetect_fitbasis(fitbasisName, fitbasisFileName)
+      endif
+   end subroutine
 
    subroutine readfitbasis(ierr)
       !
@@ -98,7 +186,7 @@ contains
       use quick_exception_module, only: RaiseException
       use quick_constants_module, only: symbol
       use quick_size_module, only: MAXPRIM_AUX
-      use quick_files_module, only: iOutFile, basisSetName, basisDir, fitbasisFileName
+      use quick_files_module, only: iOutFile, basisSetName, basisDir, fitbasisName, fitbasisFileName
       use quick_method_module, only: quick_method
       use quick_molspec_module, only: quick_molspec, natom
       use quick_input_parser_module, only: found_keyword
