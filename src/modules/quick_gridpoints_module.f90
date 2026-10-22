@@ -129,19 +129,11 @@ module quick_gridpoints_module
 
 
     interface form_dft_grid
-#ifdef CUEST
-        module procedure form_cuest_xc_quadrature
-#else
-        module procedure form_xc_quadrature
-#endif
+        module procedure form_xc_quadrature_caller
     end interface form_dft_grid
 
     interface deform_dft_grid
-#ifdef CUEST
-        module procedure dealloc_cuest_grid_variables
-#else
-        module procedure dealloc_grid_variables
-#endif
+        module procedure dealloc_grid_variables_caller
     end interface deform_dft_grid
 
     interface print_grid_info
@@ -502,6 +494,27 @@ subroutine form_cuest_xc_quadrature(self, xcg_tmp)
 end subroutine form_cuest_xc_quadrature
 #endif
 
+   subroutine form_xc_quadrature_caller(self, xcg_tmp)
+      !
+      ! calls the correct form grid function depending on cuEST or not
+      !
+      use quick_method_module, only: quick_method
+
+      type(quick_xc_grid_type), intent(inout) :: self
+      type(quick_xcg_tmp_type), intent(inout) :: xcg_tmp
+
+#ifdef CUEST
+      if (quick_method%usecuest) then
+         call form_cuest_xc_quadrature(self, xcg_tmp)
+      else
+         call form_xc_quadrature(self, xcg_tmp)
+      endif
+#else
+      call form_xc_quadrature(self, xcg_tmp)
+#endif
+      
+   end subroutine form_xc_quadrature_caller
+
 
     ! allocate memory for radius of significance, phi and dphi for host xc
     ! version
@@ -693,6 +706,25 @@ end subroutine form_cuest_xc_quadrature
       type(quick_xc_grid_type) :: self
    end subroutine dealloc_cuest_grid_variables
 #endif
+
+   subroutine dealloc_grid_variables_caller(self)
+      !
+      ! calls the correct dealloc function depending on cuEST or not
+      !
+      use quick_method_module, only: quick_method
+
+      type(quick_xc_grid_type) :: self
+
+#ifdef CUEST
+      if (quick_method%usecuest) then
+         call dealloc_cuest_grid_variables(self)
+      else
+         call dealloc_grid_variables(self)
+      endif
+#else
+      call dealloc_grid_variables(self)
+#endif
+   end subroutine dealloc_grid_variables_caller
 
    subroutine print_grid_information(self)
      use quick_files_module
