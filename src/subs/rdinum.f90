@@ -14,8 +14,12 @@
 
 subroutine rdinum(string,istart,ivalue,ierror)
 
-  implicit double precision (a-h,o-z)
-  character string*(*),char*1,efield(4)*1
+  implicit none
+  character, intent(in) :: string*(*)
+  integer, intent(in) :: istart
+  integer, intent(out) :: ivalue, ierror
+  character :: char*1, efield(4)*1
+  integer :: ibeg, istop, iend, i, ieq
 
   ierror = 0
   ibeg = istart

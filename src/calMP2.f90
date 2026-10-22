@@ -4,16 +4,34 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine calmp2
-  use allmod
-  use quick_gaussian_class_module
+  use quick_scratch_module, only: quick_scratch
+  use quick_basis_module, only: quick_basis, jshell, nbasis, III, JJJ, KKK, LLL, &
+                                dnmax, Ycutoff, orbmp2, orbmp2i331, orbmp2j331, orbmp2k331
+  use quick_calculated_module, only: quick_qm_struct
+  use quick_files_module, only: iOutFile
+  use quick_method_module, only: quick_method
+  use quick_molspec_module, only: quick_molspec
+  use quick_timer_module, only: timer_begin, timer_cumer, timer_end
   use quick_cutoff_module, only: cshell_density_cutoff
 
-  implicit double precision(a-h,o-z)
+  implicit none
 
   double precision cutoffTest,testtmp,testCutoff
   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
   integer :: nelec,nelecb
+
+   ! Undeclared variables
+   double precision :: cutoffmp2, comax, atemp, atemp2, ttt
+   double precision :: ememorysum
+   integer :: iocc, ivir, nstep, nbasistemp, nstepmp2, nstepmp2s, nstepmp2f
+   integer :: nsteplength, ntemp, i, j, i3new, icycle, i3, k3, j3, l3, l3new
+   integer :: NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
+   integer :: II111, II112, JJ111, JJ112, KK111, KK112, LL111, LL112
+   integer :: IIInew, JJJnew
+   integer :: j33, j33new, k33
+   ! Local allocatable arrays
+   integer, allocatable, dimension(:) :: mp2shell
 
   nelec = quick_molspec%nelec
   nelecb = quick_molspec%nelecb
@@ -251,21 +269,40 @@ end subroutine calmp2
 ! Xiao HE. September 14,2008
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 subroutine MPI_calmp2
-  use allmod
-  use quick_basis_module, only: mpi_jshell, mpi_jshelln
-  use quick_gaussian_class_module
+  use quick_method_module, only: quick_method
+  use quick_basis_module, only: nbasis, jshell, Ycutoff, quick_basis, &
+        orbmp2, orbmp2i331, orbmp2j331, orbmp2k331, mpi_jshell, mpi_jshelln, dnmax
+  use quick_params_module, only: Sumindex
+  use quick_molspec_module, only: quick_molspec
+  use quick_calculated_module, only: quick_qm_struct
+
+  use quick_scratch_module, only: quick_scratch 
+  use quick_files_module, only: iOutFile
+  use quick_timer_module, only: timer_begin, timer_cumer, timer_end
   use quick_cutoff_module, only: cshell_density_cutoff
   use quick_mpi_module, only: bMPI, master, quick_comm, quick_comm_rank, &
         quick_comm_size, quick_mpi_error, quick_mpi_status
   use mpi
 
-  implicit double precision(a-h,o-z)
+  implicit none
 
   double precision cutoffTest,testtmp,testCutoff
   double precision, allocatable:: temp4d(:,:,:,:)
   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,total_ntemp
   common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-    integer :: nelec,nelecb
+  integer :: nelec,nelecb
+
+  ! Undeclared variables
+  double precision :: cutoffmp2, comax, atemp, atemp2, ttt, tempE
+  double precision :: ememorysum
+  integer :: iocc, ivir, nstep, nbasistemp, nstepmp2, nstepmp2s, nstepmp2f
+  integer :: nsteplength, ntemp, i, j, i3new, icycle, i3, k3, j3, l3, l3new
+  integer :: NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
+  integer :: II111, II112, JJ111, JJ112, KK111, KK112, LL111, LL112
+  integer :: III, JJJ, KKK, LLL, IIInew, JJJnew
+  integer :: j33, j33new, k33, i1, k1, j1, IERROR
+   ! Local allocatable arrays
+   integer, allocatable, dimension(:) :: mp2shell
 
     nelec = quick_molspec%nelec
     nelecb = quick_molspec%nelecb
@@ -594,12 +631,21 @@ subroutine initialOrbmp2ij(orbmp2i331,nstep,nsteplength,nbasis,nbasistemp,nbasis
 end subroutine initialOrbmp2ij
 
 ! Vertical Recursion by Xiao HE 07/07/07 version
-subroutine shellmp2(nstepmp2s,nsteplength)
-   use allmod
+ subroutine shellmp2(nstepmp2s,nsteplength)
+    use quick_scratch_module, only: quick_scratch
+    use quick_basis_module, only: quick_basis, III, JJJ, KKK, LLL, dnmax, &
+                                  Apri, Ppri, cutprim, Yxiao, Yxiaotemp
+    use quick_calculated_module, only: quick_qm_struct
+    use quick_files_module, only: iOutFile
+    use quick_method_module, only: quick_method
+    use quick_molspec_module, only: quick_molspec, xyz
+    use quick_timer_module, only: timer_begin, timer_cumer, timer_end
+    use quick_params_module, only: Sumindex
 
-   Implicit double precision(a-h,o-z)
+    implicit none
+   integer, intent(in) :: nstepmp2s, nsteplength
+   integer, parameter :: NN = 13
    double precision P(3),Q(3),W(3),KAB,KCD,AAtemp(3)
-   Parameter(NN=13)
    double precision FM(0:13)
    double precision RA(3),RB(3),RC(3),RD(3)
 
@@ -610,6 +656,15 @@ subroutine shellmp2(nstepmp2s,nsteplength)
    COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
    COMMON /COM1/RA,RB,RC,RD
+   
+    ! Undeclared variables
+    integer :: M, NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
+    integer :: NNAB, NNCD, NABCDTYPE, NNA, NNC, NABCD, ITT
+    integer :: Nprij, Nprii, Npril, Nprik
+    integer :: I, J, K, L, I2, I1, iitemp
+    double precision :: cutoffprim1, CD, ABCD, ROU, RPQ, ABCDxiao, cutoffprim
+    double precision :: T, XXXtemp, AB
+    ! Note: ABtemp is already declared above at line 628
 
    do M=1,3
       RA(M)=xyz(M,quick_basis%katom(II))
@@ -743,16 +798,23 @@ end subroutine shellmp2
 ! Horrizontal recursion and Fock matrix builder by Xiao HE 07/07/07 version
 subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
    ! subroutine class
-   use allmod
+   use quick_basis_module, only: quick_basis, IJtype, KLtype, IJKLtype, &
+                                 III, JJJ, KKK, LLL, dnmax, cutprim, Yxiao, Y, orbmp2i331
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_method_module, only: quick_method
+   use quick_constants_module, only: X0
 
-   Implicit double precision(A-H,O-Z)
+   implicit none
+   integer, parameter :: NN = 13
+   integer, intent(in) :: I, J, K, L, NNA, NNC, NNAB, NNCD, nstepmp2s, nsteplength
    double precision store(120,120)
    INTEGER NA(3),NB(3),NC(3),ND(3)
    double precision P(3),Q(3),W(3),KAB,KCD
-   Parameter(NN=13)
    double precision FM(0:13)
    double precision RA(3),RB(3),RC(3),RD(3)
    double precision X44(129600)
+   ! Variables for COMMON blocks
+   double precision AA, BB, CC, DD, AB, CD, ROU, ABCD
 
    COMMON /COM1/RA,RB,RC,RD
    COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD
@@ -762,6 +824,15 @@ subroutine classmp2(I,J,K,L,NNA,NNC,NNAB,NNCD,nstepmp2s,nsteplength)
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /xiaostore/store
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   
+    ! Undeclared variables
+    integer :: ITT, Nprij, Nprii, Npril, Nprik
+    integer :: MM1, MM2, itemp, I2, I1
+    integer :: i3mp2, i3mp2new, NII1, NJJ1, II111, JJ111
+    integer :: III1, III2, JJJ1, JJJ2, KKK1, KKK2, LLL1, LLL2
+    integer :: IIInew, JJJnew
+    double precision :: X2, cutoffprim1, cutoffprim, atemp, btemp, Ytemp
+    ! Note: AB, CD, ROU, ABCD are in COMMON /COM2/.
 
    ITT=0
    do JJJ=1,quick_basis%kprim(JJ)

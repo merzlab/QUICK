@@ -3,12 +3,21 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
     subroutine frequency
-    use allmod
-    implicit double precision(a-h,o-z)
+    use quick_calculated_module, only: quick_qm_struct
+    use quick_files_module, only: iOutFile
+    use quick_method_module, only: quick_method
+    use quick_constants_module, only: pi, emass
+    use quick_molspec_module, only: quick_molspec, natom
+    implicit none
 
 !    double precision :: kB
 ! dimension V(3,maxatm*3),HARMONIC(maxatm*3),EV(maxatm*3,maxatm*3)
-    dimension V(3,natom*3),HARMONIC(natom*3),EV(natom*3,natom*3)
+    double precision :: V(3,natom*3), HARMONIC(natom*3), EV(natom*3,natom*3)
+    
+    ! Undeclared variables
+    integer :: I, J, K, L, ISTART, JSTART, IERROR, non, ignore
+    double precision :: denom, TempK, convfact, ANGLE
+    double precision :: Ezp, Evib, Etrans, Erot, vibtemp, ratio
 
     call prtAct(ioutfile,"Begin Frequency calculation")
 !    pi=3.1415926535897932385d0

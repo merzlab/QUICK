@@ -26,10 +26,17 @@ SUBROUTINE DEGEN(NDIM,EVAL1,TOLERA,ANORM,IDEGEN1)
 
   ! IDEGEN1 = DEGENERACIES OF EIGENVALUES.
 
-  use allmod
-  IMPLICIT doUBLE PRECISION (A-H,O-Z)
-  ! DIMENSION EVAL1(*),IDEGEN1(*)
-  DIMENSION EVAL1(nbasis),IDEGEN1(nbasis)
+  use quick_basis_module, only: nbasis
+  implicit none
+  
+  ! Dummy arguments
+  integer, intent(in) :: NDIM
+  double precision, intent(in) :: EVAL1(nbasis), TOLERA, ANORM
+  integer, intent(out) :: IDEGEN1(nbasis)
+  
+  ! Local variables
+  double precision :: DTOLER, DifF
+  integer :: NSAME, I, J
 
   ! DETERMINE DEGENERACIES OF EIGENVALUES.  ADJACENT EIGENVALUES
   ! WILL BE CONSIDERED TO BE DEGENERATE WHEN THEY DifFER BY LESS

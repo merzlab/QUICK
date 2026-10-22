@@ -33,11 +33,16 @@ contains
   !  possible basis. Note that the Fock matrix is symmetric.
   !  This code now also does all the HF energy calculation. Ed.
   !-------------------------------------------------------
-     use allmod
+     use quick_SCRATCH_module, only: quick_scratch
+     use quick_basis_module, only: jshell, nbasis, cutmatrix
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_method_module, only: quick_method
+     use quick_timer_module, only: timer_begin, timer_end, timer_cumer
      use quick_cutoff_module, only: cshell_density_cutoff
      use quick_eri_cshell_module, only: getCshellEri, getCshellEriEnergy 
      use quick_oei_module, only:get1eEnergy,get1e
 #if defined(MPIV)
+     use quick_basis_module, only: mpi_jshelln, mpi_jshell
      use quick_mpi_module, only: bMPI, master, quick_comm, quick_comm_rank, quick_mpi_error
      use mpi
 #endif
@@ -274,11 +279,16 @@ contains
   !  the gradient of the alpha density with the beta density.
   !  Grad(Phimu Phinu) is the gradient of Phimu times Phinu. 
   !----------------------------------------------------------------
-     use allmod
-     use quick_gridpoints_module
+     use quick_basis_module, only: nbasis, phixiao, dphidxxiao, dphidyxiao, dphidzxiao
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_method_module, only: quick_method
+     use quick_gridpoints_module, only: quick_dft_grid
      use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
-     use xc_f90_types_m
-     use xc_f90_lib_m
+     use xc_f90_types_m, only: xc_f90_pointer_t
+     use xc_f90_lib_m, only: XC_POLARIZED, XC_UNPOLARIZED, XC_FAMILY_LDA, XC_FAMILY_GGA, &
+                             XC_FAMILY_HYB_GGA, &
+                             xc_f90_func_init, xc_f90_info_family, &
+                             xc_f90_lda_exc_vxc, xc_f90_gga_exc_vxc, xc_f90_func_end
 #if defined(MPIV)
      use quick_mpi_module, only: bMPI, quick_comm_rank
 #endif
