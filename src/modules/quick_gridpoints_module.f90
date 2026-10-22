@@ -129,11 +129,19 @@ module quick_gridpoints_module
 
 
     interface form_dft_grid
+#ifdef CUEST
+        module procedure form_cuest_xc_quadrature
+#else
         module procedure form_xc_quadrature
+#endif
     end interface form_dft_grid
 
     interface deform_dft_grid
+#ifdef CUEST
+        module procedure dealloc_cuest_grid_variables
+#else
         module procedure dealloc_grid_variables
+#endif
     end interface deform_dft_grid
 
     interface print_grid_info
@@ -150,10 +158,6 @@ module quick_gridpoints_module
 #if defined(MPIV)
     use quick_mpi_module, only: bMPI, master, quick_comm, quick_comm_rank
 #endif
-#if defined(CUDA) && defined(CUEST)
-    use, intrinsic :: iso_c_binding, only: c_int64_t, c_double
-    use quick_cuest_module
-#endif
 
     implicit none
 
@@ -163,11 +167,6 @@ module quick_gridpoints_module
     integer :: Iang, Iatm, idx, idx_grid, iiangt, Irad, Iradtemp, ist, iend
     double precision :: t_octree, t_prscrn, rad, rad3
     double precision, external :: SSW
-
-#if defined(CUDA) && defined(CUEST)
-    real(c_double) :: cuest_r(MAXRADGRID), cuest_w(MAXRADGRID)
-    integer(c_int64_t) :: cuest_nang(MAXRADGRID)
-#endif
 
     !Form the quadrature and store coordinates and other information
     !Measure the time to form grid
@@ -195,10 +194,6 @@ module quick_gridpoints_module
     ! form SG1 grid
     !if(quick_method%iSG.eq.1) call gridformSG1()
 
-#ifdef CUEST
-    if (quick_method%usecuest) call cuest_create_atom_grid_setup
-#endif
-
     idx_grid = 0
     do Iatm = 1, natom
         if(quick_method%iSG.eq.1)then
@@ -221,14 +216,6 @@ module quick_gridpoints_module
             endif
             rad3 = rad * rad * rad
 
-#ifdef CUEST
-            if (quick_method%usecuest) then
-               cuest_r(Irad) = RGRID(Irad)*rad
-               cuest_w(Irad) = RWT(Irad)*rad3
-               cuest_nang(Irad) = iiangt
-            endif
-            continue
-#endif
             do Iang = 1, iiangt
                 idx_grid = idx_grid+1
                 xcg_tmp%init_grid_ptx(idx_grid) = xyz(1,Iatm) + rad * RGRID(Irad) * XANG(Iang)
@@ -240,10 +227,6 @@ module quick_gridpoints_module
                 xcg_tmp%arr_rad3(idx_grid) = rad3
             enddo
         enddo
-
-#ifdef CUEST
-        if (quick_method%usecuest) call cuest_create_atom_grid(int(Iradtemp, c_int64_t), cuest_r, cuest_w, cuest_nang)
-#endif
     enddo
 
     self%init_ngpts  = idx_grid
@@ -251,20 +234,6 @@ module quick_gridpoints_module
     RECORD_TIME(timer_end%TDFTGrdGen)
 
     timer_cumer%TDFTGrdGen = timer_cumer%TDFTGrdGen + timer_end%TDFTGrdGen - timer_begin%TDFTGrdGen
-
-#ifdef CUEST
-    if (quick_method%usecuest) then
-       if (quick_method%UNRST) then
-           call cuest_init_oshell_xc(quick_method%cuest_fnl_code, int(2d9, c_int64_t))
-       else
-           call cuest_init_cshell_xc(quick_method%cuest_fnl_code, int(2d9, c_int64_t))
-       endif
-       call cuest_destroy_atom_grid
-       call cuest_init_xc_dense(int(2d9, c_int64_t))
-       return
-       ! TODO: make this cleaner
-    endif
-#endif
 
     !Measure time to compute grid weights
     RECORD_TIME(timer_begin%TDFTGrdWt)
@@ -453,6 +422,86 @@ module quick_gridpoints_module
 #endif
     end subroutine
 
+#ifdef CUEST
+subroutine form_cuest_xc_quadrature(self, xcg_tmp)
+
+   use quick_method_module, only: quick_method
+   use quick_molspec_module, only: quick_molspec, natom
+   use quick_constants_module, only: RADII, RADII2
+   use quick_timer_module
+
+   use, intrinsic :: iso_c_binding, only: c_int64_t, c_double
+   use quick_cuest_module
+
+   implicit none
+
+   type(quick_xc_grid_type), intent(inout) :: self
+   type(quick_xcg_tmp_type), intent(inout) :: xcg_tmp
+
+   real(c_double) :: cuest_rgrid(MAXRADGRID), cuest_rwt(MAXRADGRID)
+   integer(c_int64_t) :: cuest_nang(maxradgrid)
+
+   integer :: iatm, irad, iradtemp, iiangt
+   double precision :: rad
+
+   if (quick_method%iSG.eq.1) call gridformSG1() 
+
+   call cuest_create_atom_grid_setup
+
+   RECORD_TIME(timer_begin%TDFTGrdGen)
+
+   self%init_ngpts = 0
+
+   do iatm = 1, natom
+      if (quick_method%iSG == 1) then
+         iradtemp=50
+         rad = RADII(quick_molspec%iattype(iatm))
+      else
+         if (quick_molspec%iattype(iatm).le.10) then
+            iradtemp=23
+         else
+            iradtemp=26
+         endif
+         rad = RADII2(quick_molspec%iattype(iatm))
+      endif
+
+      do irad = 1, iradtemp
+         if(quick_method%iSG == 1) then
+            call gridformnew(iatm,RGRID(irad),iiangt)
+         else
+            call gridformSG0(iatm,iradtemp+1-irad,iiangt,RGRID,RWT)
+         endif
+
+         cuest_rgrid(irad) = RGRID(irad)*rad
+         cuest_rwt(irad) = RWT(irad)*rad*rad*rad
+         cuest_nang(irad) = iiangt
+
+         self%init_ngpts = self%init_ngpts + iiangt
+      enddo
+
+      call cuest_create_atom_grid( &
+         int(iradtemp, c_int64_t), &
+         cuest_rgrid, &
+         cuest_rwt, &
+         cuest_nang &
+      )
+   enddo
+
+   if (quick_method%unrst) then
+      call cuest_init_oshell_xc(quick_method%cuest_fnl_code, int(2d9, c_int64_t))
+   else
+      call cuest_init_cshell_xc(quick_method%cuest_fnl_code, int(2d9, c_int64_t))
+   endif
+
+   call cuest_destroy_atom_grid
+   call cuest_init_xc_dense(int(2d9, c_int64_t))
+
+   RECORD_TIME(timer_end%TDFTGrdGen)
+   timer_cumer%TDFTGrdGen = timer_cumer%TDFTGrdGen + timer_end%TDFTGrdGen - timer_begin%TDFTGrdGen
+   
+end subroutine form_cuest_xc_quadrature
+#endif
+
 
     ! allocate memory for radius of significance, phi and dphi for host xc
     ! version
@@ -636,6 +685,14 @@ module quick_gridpoints_module
    end subroutine
 #endif
 
+#ifdef CUEST
+   subroutine dealloc_cuest_grid_variables(self)
+      !
+      ! do nothing because xc deinit is called in deinitialize_cuest_compute
+      !
+      type(quick_xc_grid_type) :: self
+   end subroutine dealloc_cuest_grid_variables
+#endif
 
    subroutine print_grid_information(self)
      use quick_files_module
