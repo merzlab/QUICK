@@ -199,7 +199,7 @@ end subroutine write_basis_info
 
 subroutine write_mo(self, ierr)
 
-    use quick_basis_module, only: quick_basis, nbasis
+    use quick_basis_module, only: quick_basis, nbasis, NBSuse
     use quick_calculated_module, only: quick_qm_struct
     use quick_molspec_module, only: quick_molspec
     use quick_method_module, only: quick_method
@@ -223,7 +223,9 @@ subroutine write_mo(self, ierr)
         occval = 1.0d0
     endif
 
-    do i=1, nbasis
+    ! co/cob have NBSuse columns (NBSuse < nbasis if near-linear dependencies
+    ! were removed from the basis), so only NBSuse MOs exist.
+    do i=1, NBSuse
         if(neleca .gt. 0 ) then
             occnum=occval
             neleca=neleca-1
@@ -249,7 +251,7 @@ subroutine write_mo(self, ierr)
     enddo
 
     if(quick_method%unrst) then
-        do i=1, nbasis
+        do i=1, NBSuse
             if(nelecb .gt. 0 ) then
                 occnum=occval
                 nelecb=nelecb-1
