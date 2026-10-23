@@ -20,8 +20,6 @@ cuest_init_df (double hyb_coeff, int32_t fnl)
     cuestWorkspaceDescriptor_t *tmpWD     = quick_cuest_struct.tmpWD;
     cuestWorkspaceDescriptor_t *persistWD = quick_cuest_struct.persistWD;
 
-    quick_cuest_data.pure_fnl = hyb_coeff == 0;
-
     double lrc_x_frac = 0, lrc_x_w = 0;
 
     // SOURCE: ORCA docs: https://www.faccts.de/docs/orca/6.0/manual/contents/detailed/model.html
@@ -50,7 +48,11 @@ cuest_init_df (double hyb_coeff, int32_t fnl)
             // hyb_coeff = 0.25
             lrc_x_frac = -0.25;
             lrc_x_w    = 0.11;
+            break;
     }
+
+    hyb_coeff -= lrc_x_frac;
+    quick_cuest_data.pure_fnl = hyb_coeff <= 1e-15; // for floating point error
 
 #ifdef CUESTDEBUG
     DEBUGLOG ("-------- Functional Info --------\n");
@@ -65,7 +67,7 @@ cuest_init_df (double hyb_coeff, int32_t fnl)
     checkCuestErrors (cuestParametersCreate (CUEST_DFINTPLAN_PARAMETERS, &dfint_plan_parameters));
 
     // NOTE: calling K with pure functional is hardcoded to return 0
-    if (hyb_coeff > 0) {
+    if (!quick_cuest_data.pure_fnl) {
         checkCuestErrors (cuestParametersConfigure (
             CUEST_DFINTPLAN_PARAMETERS, dfint_plan_parameters,
             CUEST_DFINTPLAN_PARAMETERS_EXCHANGE_FRACTION, &hyb_coeff, sizeof (double)));
