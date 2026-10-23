@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include "/Users/msun/rehs2026/cuest/fake_cuda_headers/cuda_runtime.h"
-#include "/Users/msun/rehs2026/cuest/libcuest-linux-sbsa-0.1.1.1_cuda13-archive/include/cuest.h"
+#include "/Users/msun/rehs2026/cuest/libcuest-headers/include/cuest.h"
 
 #include "cuest_funcs.h"
 #include "helper_status.h"

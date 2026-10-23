@@ -18,11 +18,16 @@ module quick_cuest_module
    integer(c_int32_t), protected :: CUEST_FUNCTIONAL_UNKNOWN = 999999
    integer(c_int32_t), protected :: CUEST_FUNCTIONAL_HF = 0
 
-   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_B3LYP  = 402
-   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_B3LYP5 = 475
-   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_B97    = 407
-   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_B97MV  = 254
-   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_PBE0   = 406
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_B3LYP     = 402
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_B3LYP5    = 475
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_B97       = 407
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_B97MV     = 254
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_PBE0      = 406
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_LCWPBE    = 478
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_WB97X     = 464
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_WB97XV    = 466
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_CAMB3LYP  = 433
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_HSE06     = 428
 
    integer(c_int32_t), protected :: CUEST_FUNCTIONAL_BLYP   = 106131
    integer(c_int32_t), protected :: CUEST_FUNCTIONAL_PBE    = 101130
@@ -131,10 +136,11 @@ module quick_cuest_module
    end interface
 
    interface
-      subroutine cuest_init_df(hyb_coeff) bind(c, name="cuest_init_df")
-         use, intrinsic :: iso_c_binding, only: c_double
+      subroutine cuest_init_df(hyb_coeff, fnl) bind(c, name="cuest_init_df")
+         use, intrinsic :: iso_c_binding, only: c_double, c_int32_t
          implicit none
          real(c_double), intent(in), value :: hyb_coeff
+         integer(c_int32_t), intent(in), value :: fnl
       end subroutine cuest_init_df
    end interface
 

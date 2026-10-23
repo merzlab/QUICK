@@ -1274,6 +1274,16 @@ module quick_method_module
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_B97MV
                case (406) ! HYB_GGA_XC_PBEH
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_PBE0
+               case (478) ! HYB_GGA_XC_LC_WPBE
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_LCWPBE
+               case (464) ! HYB_GGA_XC_WB97X
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_WB97X
+               case (466) ! HYB_GGA_XC_WB97X_V
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_WB97XV
+               case (433) ! HYB_GGA_XC_CAM_B3LYP
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_CAMB3LYP
+               case (428) ! HYB_GGA_XC_HSE06
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_HSE06
                case default
                    print *, "CUEST: found unsupported libxc functional with id=", quick_method%functional_id(1)
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN

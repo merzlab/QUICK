@@ -94,7 +94,7 @@ subroutine initialize_cuest
    call cuest_init_oei_plan
 
    ! init 2 electron integral plan
-   call cuest_init_df(quick_method%x_hybrid_coeff)
+   call cuest_init_df(quick_method%x_hybrid_coeff, quick_method%cuest_fnl_code)
 
    call cuest_init_eri_J
    if (quick_method%x_hybrid_coeff /= 0.0d0) call cuest_init_eri_K(int(2d9, c_int64_t))

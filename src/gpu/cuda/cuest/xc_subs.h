@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include "/Users/msun/rehs2026/cuest/fake_cuda_headers/cuda_runtime.h"
-#include "/Users/msun/rehs2026/cuest/libcuest-linux-sbsa-0.1.1.1_cuda13-archive/include/cuest.h"
+#include "/Users/msun/rehs2026/cuest/libcuest-headers/include/cuest.h"
 
 #include "cuest_funcs.h"
 #include "helper_status.h"
@@ -83,6 +83,21 @@ cuest_init_cshell_xc (int32_t fnl, int64_t devsiz)
             break;
         case CUEST_FUNCTIONAL_PBE0:
             functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_PBE0;
+            break;
+        case CUEST_FUNCTIONAL_LCWPBE:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_LCWPBE;
+            break;
+        case CUEST_FUNCTIONAL_WB97X:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_WB97X;
+            break;
+        case CUEST_FUNCTIONAL_WB97XV:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_WB97XV;
+            break;
+        case CUEST_FUNCTIONAL_CAMB3LYP:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_CAMB3LYP;
+            break;
+        case CUEST_FUNCTIONAL_HSE06:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_HSE06;
             break;
         case CUEST_FUNCTIONAL_BLYP:
             functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_BLYP;

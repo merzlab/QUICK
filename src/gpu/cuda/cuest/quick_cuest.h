@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 #ifdef LOCAL
-#include "/Users/msun/rehs2026/cuest/libcuest-linux-sbsa-0.1.1.1_cuda13-archive/include/cuest.h"
+#include "/Users/msun/rehs2026/cuest/libcuest-headers/include/cuest.h"
 #else
 #include <cuda_runtime.h>
 #include <cuest.h>
@@ -43,7 +43,7 @@ typedef struct {
     cuestMolecularGrid_t        molgrid;
     cuestWorkspace_t           *persistXCIntPlanWorkspace;
     cuestXCIntPlan_t            XCIntPlan;
-    uint16_t                    fnl;
+    uint32_t                    fnl;
 } quick_cuest_struct_t;
 
 typedef struct {
@@ -169,7 +169,7 @@ void cuest_init_pair_list (double cutoff);
 void cuest_init_oei_plan ();
 void cuest_deinit_oei_plan ();
 
-void cuest_init_df (double hyb_coeff);
+void cuest_init_df (double hyb_coeff, int32_t fnl);
 void cuest_deinit_df ();
 
 // operator matrix
