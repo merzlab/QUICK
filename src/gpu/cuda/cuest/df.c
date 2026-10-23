@@ -52,6 +52,15 @@ cuest_init_df (double hyb_coeff, int32_t fnl)
             lrc_x_w    = 0.11;
     }
 
+#ifdef CUESTDEBUG
+    DEBUGLOG ("-------- Functional Info --------\n");
+    DEBUGLOG ("hyb_coeff  = %f\n", hyb_coeff);
+    DEBUGLOG ("pure_fnl   = %c\n", quick_cuest_data.pure_fnl ? 'T' : 'F');
+    DEBUGLOG ("lrc_x_frac = %f\n", lrc_x_frac);
+    DEBUGLOG ("lrc_x_w    = %f\n", lrc_x_w);
+    DEBUGLOG ("---------------------------------\n");
+#endif
+
     cuestDFIntPlanParameters_t dfint_plan_parameters;
     checkCuestErrors (cuestParametersCreate (CUEST_DFINTPLAN_PARAMETERS, &dfint_plan_parameters));
 

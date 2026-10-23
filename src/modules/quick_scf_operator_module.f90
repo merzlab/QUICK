@@ -166,13 +166,13 @@ contains
 
               if (hasK) quick_qm_struct%cuest_prev_K = cuest_K
               
-#ifdef CUESTDEBUG
-              tmp2d = cuest_J
-              call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
-              call cuest_debuglog("======== quick J+K ========")
-              call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
-              call cuest_debuglog("====== end quick J+K ======")
-#endif
+! #ifdef CUESTDEBUG
+!               tmp2d = cuest_J
+!               call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+!               call cuest_debuglog("======== quick J+K ========")
+!               call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+!               call cuest_debuglog("====== end quick J+K ======")
+! #endif
            else
               call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)  
            endif

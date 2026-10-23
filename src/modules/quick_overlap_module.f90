@@ -176,9 +176,9 @@ subroutine fullx
    use allmod
 #if defined(CUDA) && defined(CUEST)
    use quick_cuest_module, only: cuest_get_oei_S
-#ifdef CUESTDEBUG
-   use quick_cuest_module, only: cuest_debuglog, cuest_correct_o, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
-#endif
+! #ifdef CUESTDEBUG
+!    use quick_cuest_module, only: cuest_debuglog, cuest_correct_o, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
+! #endif
 #endif
 
    implicit none
@@ -199,13 +199,13 @@ subroutine fullx
 #ifdef CUEST
    if (quick_method%usecuest) then
       call cuest_get_oei_S (quick_qm_struct%s)
-#ifdef CUESTDEBUG
-      tmp2d = quick_qm_struct%s
-      call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
-      call cuest_debuglog("======== S ========")
-      call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
-      call cuest_debuglog("====== end S ======")
-#endif
+! #ifdef CUESTDEBUG
+!       tmp2d = quick_qm_struct%s
+!       call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+!       call cuest_debuglog("======== S ========")
+!       call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+!       call cuest_debuglog("====== end S ======")
+! #endif
    else
 #endif ! #ifdef CUEST
    do Ibas=1,nbasis

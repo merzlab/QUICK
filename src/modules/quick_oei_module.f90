@@ -79,9 +79,9 @@ subroutine get1e(deltaO)
 
 #if defined(CUDA) && defined(CUEST)
    use quick_cuest_module, only: cuest_get_oei_T, cuest_get_oei_V, cuest_debuglog
-#ifdef CUESTDEBUG
-   use quick_cuest_module, only: cuest_correct_o, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
-#endif
+! #ifdef CUESTDEBUG
+!    use quick_cuest_module, only: cuest_correct_o, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
+! #endif
 #endif
    
    implicit double precision(a-h,o-z)
@@ -118,13 +118,13 @@ subroutine get1e(deltaO)
 #ifdef CUEST
          if (quick_method%usecuest) then
             call cuest_get_oei_T (cuest_T);
-#ifdef CUESTDEBUG
-            tmp2d = cuest_T
-            call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
-            call cuest_debuglog("======== quick T ========")
-            call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
-            call cuest_debuglog("====== end quick T ======")
-#endif
+! #ifdef CUESTDEBUG
+!             tmp2d = cuest_T
+!             call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+!             call cuest_debuglog("======== quick T ========")
+!             call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+!             call cuest_debuglog("====== end quick T ======")
+! #endif
          else
 #endif ! ifdef CUEST
          do Ibas=1,nbasis
@@ -150,13 +150,13 @@ subroutine get1e(deltaO)
             ! TODO: figure out what this is doing to prevent gradient from crashing
             if(quick_method%grad) call gpu_get_oei(cuest_T)
 
-#ifdef CUESTDEBUG
-            tmp2d = cuest_T - cuest_V
-            call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
-            call cuest_debuglog("======== T+V ========")
-            call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
-            call cuest_debuglog("====== end T+V ======")
-#endif
+! #ifdef CUESTDEBUG
+!             tmp2d = cuest_T - cuest_V
+!             call cuest_correct_o(tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+!             call cuest_debuglog("======== T+V ========")
+!             call cuest_debuglog_PriSym(nbasis, tmp2d, "F12.7")
+!             call cuest_debuglog("====== end T+V ======")
+! #endif
          else
 #endif ! ifdef CUEST
 #if defined(GPU)
