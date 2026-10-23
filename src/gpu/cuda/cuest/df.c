@@ -20,6 +20,8 @@ cuest_init_df (double hyb_coeff, int32_t fnl)
     cuestWorkspaceDescriptor_t *tmpWD     = quick_cuest_struct.tmpWD;
     cuestWorkspaceDescriptor_t *persistWD = quick_cuest_struct.persistWD;
 
+    quick_cuest_data.pure_fnl = hyb_coeff == 0;
+
     double lrc_x_frac = 0, lrc_x_w = 0;
 
     // SOURCE: ORCA docs: https://www.faccts.de/docs/orca/6.0/manual/contents/detailed/model.html
@@ -53,10 +55,13 @@ cuest_init_df (double hyb_coeff, int32_t fnl)
     cuestDFIntPlanParameters_t dfint_plan_parameters;
     checkCuestErrors (cuestParametersCreate (CUEST_DFINTPLAN_PARAMETERS, &dfint_plan_parameters));
 
-    // set hybrid exchange fraction
-    checkCuestErrors (cuestParametersConfigure (CUEST_DFINTPLAN_PARAMETERS, dfint_plan_parameters,
-                                                CUEST_DFINTPLAN_PARAMETERS_EXCHANGE_FRACTION,
-                                                &hyb_coeff, sizeof (double)));
+    // NOTE: calling K with pure functional is hardcoded to return 0
+    if (hyb_coeff > 0) {
+        checkCuestErrors (cuestParametersConfigure (
+            CUEST_DFINTPLAN_PARAMETERS, dfint_plan_parameters,
+            CUEST_DFINTPLAN_PARAMETERS_EXCHANGE_FRACTION, &hyb_coeff, sizeof (double)));
+    }
+
     if (lrc_x_frac != 0) {
         checkCuestErrors (cuestParametersConfigure (
             CUEST_DFINTPLAN_PARAMETERS, dfint_plan_parameters,
