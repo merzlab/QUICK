@@ -173,6 +173,7 @@ module quick_method_module
 
 #ifdef CUEST
         integer(c_int32_t) :: cuest_fnl_code
+        logical :: addK = .false.  ! if cuEST should incorporate K for range-separated functional. overrides x_hybrid_coeff check.
 #endif
         logical :: usecuest = .false.
 
@@ -609,6 +610,7 @@ module quick_method_module
 #ifdef CUEST
             ! set default value
             self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
+            self%addK = .false.
 #endif
 
             !Read dft functional keywords and set variable values
@@ -1062,6 +1064,7 @@ module quick_method_module
 
 #ifdef CUEST
             self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
+            self%addK = .false.
 #endif
             self%usecuest = .false.
         end subroutine init_quick_method
@@ -1284,6 +1287,7 @@ module quick_method_module
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_CAMB3LYP
                case (428) ! HYB_GGA_XC_HSE06
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_HSE06
+                   self%addK = .true.  ! because exchange fraction + lr exchange fraction = 0
                case default
                    print *, "CUEST: found unsupported libxc functional with id=", quick_method%functional_id(1)
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN

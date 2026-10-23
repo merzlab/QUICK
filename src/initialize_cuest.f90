@@ -97,7 +97,9 @@ subroutine initialize_cuest
    call cuest_init_df(quick_method%x_hybrid_coeff, quick_method%cuest_fnl_code)
 
    call cuest_init_eri_J
-   if (quick_method%x_hybrid_coeff /= 0.0d0) call cuest_init_eri_K(int(2d9, c_int64_t))
+   if (quick_method%x_hybrid_coeff /= 0.0d0 .or. quick_method%addK) then
+      call cuest_init_eri_K(int(2d9, c_int64_t))
+   endif
 
    RECORD_TIME(timer_end%TIniCuest)
    timer_cumer%TIniCuest = timer_cumer%TIniCuest + timer_end%TIniCuest - timer_begin%TIniCuest &
@@ -110,7 +112,9 @@ subroutine deinitialize_cuest_compute
 
    call cuest_deinit_oei_plan
    call cuest_deinit_eri_J
-   if (quick_method%x_hybrid_coeff /= 0.0d0) call cuest_deinit_eri_K
+   if (quick_method%x_hybrid_coeff /= 0.0d0 .or. quick_method%addK) then
+      call cuest_deinit_eri_K
+   endif
    call cuest_deinit_df
 
    if (quick_method%DFT) then

@@ -93,7 +93,7 @@ contains
       implicit none
       character(len=*), intent(out) :: name, filename
       
-      if (quick_method%x_hybrid_coeff == 0.0d0) then
+      if (quick_method%x_hybrid_coeff == 0.0d0 .and. .not. quick_method%addK) then
          name     = "DEF2-UNIVERSAL-JFIT"
          filename = "DEF2-UNIVERSAL-JFIT.BAS"
       else

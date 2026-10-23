@@ -79,7 +79,7 @@ contains
 
 #if defined(CUDA) && defined(CUEST)
      if (quick_method%usecuest) then
-        hasK = quick_method%x_hybrid_coeff /= 0.0d0
+        hasK = quick_method%x_hybrid_coeff /= 0.0d0 .or. quick_method%addK
      endif
 #endif
   
