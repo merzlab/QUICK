@@ -121,7 +121,6 @@ typedef struct {
     size_t  *ifshell;
     int8_t  *iattype;
     uint64_t npoint;
-    bool     pure_fnl;
 } quick_cuest_data_t;
 
 typedef struct {

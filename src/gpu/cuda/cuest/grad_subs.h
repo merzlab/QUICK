@@ -90,10 +90,7 @@ cuest_get_cshell_JK_grad (double *grad, double *P, double *C)
     cudaMemcpyChecked ((uint8_t *)d_C + C_siz, Cb, Cb_siz, cudaMemcpyHostToDevice);
 #endif
 
-    double coeff_scale;
-
 #ifdef OSHELL
-    coeff_scale        = quick_cuest_data.pure_fnl ? 0 : -0.5;
     uint64_t *nocc_arr = malloc (2 * sizeof (uint64_t));
     nocc_arr[0]        = nocc;
     nocc_arr[1]        = noccb;
@@ -102,16 +99,14 @@ cuest_get_cshell_JK_grad (double *grad, double *P, double *C)
     // -0.5 coefficientScale because alpha + beta
     checkCuestErrors (cuestDFSymmetricDerivativeCompute (
         handle, quick_cuest_struct.DFIntPlan, quick_cuest_grad_mem.JK_par,
-        quick_cuest_grad_mem.JK_vbs, quick_cuest_grad_mem.JK_wksp, 0.5, d_P, coeff_scale, 2,
-        nocc_arr, d_C, quick_cuest_grad_mem.d_grad));
+        quick_cuest_grad_mem.JK_vbs, quick_cuest_grad_mem.JK_wksp, 0.5, d_P, -0.5, 2, nocc_arr, d_C,
+        quick_cuest_grad_mem.d_grad));
 #else
-    coeff_scale = quick_cuest_data.pure_fnl ? 0 : -1.0;
-
     // 0.5 densityScale because QUICK already includes factor of 2 in P
     checkCuestErrors (cuestDFSymmetricDerivativeCompute (
         handle, quick_cuest_struct.DFIntPlan, quick_cuest_grad_mem.JK_par,
-        quick_cuest_grad_mem.JK_vbs, quick_cuest_grad_mem.JK_wksp, 0.5, d_P, coeff_scale, 1, &nocc,
-        d_C, quick_cuest_grad_mem.d_grad));
+        quick_cuest_grad_mem.JK_vbs, quick_cuest_grad_mem.JK_wksp, 0.5, d_P, -1.0, 1, &nocc, d_C,
+        quick_cuest_grad_mem.d_grad));
 #endif
 
     cudaMemcpyChecked (grad, quick_cuest_grad_mem.d_grad, grad_siz, cudaMemcpyDeviceToHost);

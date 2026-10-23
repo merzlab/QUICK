@@ -23,11 +23,6 @@ cuest_get_cshell_eri_K (double *o, double *C)
 {
     uint64_t nbasis = quick_cuest_data.nbasis;
 
-    if (quick_cuest_data.pure_fnl) {
-        memset (o, 0, nbasis * nbasis * sizeof (double));
-        return;
-    }
-
     cuestHandle_t               handle = quick_cuest_struct.handle;
     cuestWorkspaceDescriptor_t *tmpWD  = quick_cuest_struct.tmpWD;
     cuestAOBasis_t              basis  = quick_cuest_struct.basis;

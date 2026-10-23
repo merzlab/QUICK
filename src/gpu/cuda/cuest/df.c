@@ -52,12 +52,10 @@ cuest_init_df (double hyb_coeff, int32_t fnl)
     }
 
     hyb_coeff -= lrc_x_frac;
-    quick_cuest_data.pure_fnl = hyb_coeff <= 1e-15; // for floating point error
 
 #ifdef CUESTDEBUG
     DEBUGLOG ("-------- Functional Info --------\n");
     DEBUGLOG ("hyb_coeff  = %f\n", hyb_coeff);
-    DEBUGLOG ("pure_fnl   = %c\n", quick_cuest_data.pure_fnl ? 'T' : 'F');
     DEBUGLOG ("lrc_x_frac = %f\n", lrc_x_frac);
     DEBUGLOG ("lrc_x_w    = %f\n", lrc_x_w);
     DEBUGLOG ("---------------------------------\n");
@@ -66,21 +64,15 @@ cuest_init_df (double hyb_coeff, int32_t fnl)
     cuestDFIntPlanParameters_t dfint_plan_parameters;
     checkCuestErrors (cuestParametersCreate (CUEST_DFINTPLAN_PARAMETERS, &dfint_plan_parameters));
 
-    // NOTE: calling K with pure functional is hardcoded to return 0
-    if (!quick_cuest_data.pure_fnl) {
-        checkCuestErrors (cuestParametersConfigure (
-            CUEST_DFINTPLAN_PARAMETERS, dfint_plan_parameters,
-            CUEST_DFINTPLAN_PARAMETERS_EXCHANGE_FRACTION, &hyb_coeff, sizeof (double)));
-    }
-
-    if (lrc_x_frac != 0) {
-        checkCuestErrors (cuestParametersConfigure (
-            CUEST_DFINTPLAN_PARAMETERS, dfint_plan_parameters,
-            CUEST_DFINTPLAN_PARAMETERS_LRC_EXCHANGE_FRACTION, &lrc_x_frac, sizeof (double)));
-        checkCuestErrors (cuestParametersConfigure (
-            CUEST_DFINTPLAN_PARAMETERS, dfint_plan_parameters,
-            CUEST_DFINTPLAN_PARAMETERS_LRC_EXCHANGE_OMEGA, &lrc_x_w, sizeof (double)));
-    }
+    checkCuestErrors (cuestParametersConfigure (CUEST_DFINTPLAN_PARAMETERS, dfint_plan_parameters,
+                                                CUEST_DFINTPLAN_PARAMETERS_EXCHANGE_FRACTION,
+                                                &hyb_coeff, sizeof (double)));
+    checkCuestErrors (cuestParametersConfigure (CUEST_DFINTPLAN_PARAMETERS, dfint_plan_parameters,
+                                                CUEST_DFINTPLAN_PARAMETERS_LRC_EXCHANGE_FRACTION,
+                                                &lrc_x_frac, sizeof (double)));
+    checkCuestErrors (cuestParametersConfigure (CUEST_DFINTPLAN_PARAMETERS, dfint_plan_parameters,
+                                                CUEST_DFINTPLAN_PARAMETERS_LRC_EXCHANGE_OMEGA,
+                                                &lrc_x_w, sizeof (double)));
 
     checkCuestErrors (cuestDFIntPlanCreateWorkspaceQuery (
         handle, quick_cuest_struct.basis, quick_cuest_struct.auxBasis,
