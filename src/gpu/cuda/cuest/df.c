@@ -29,6 +29,11 @@ cuest_init_df (double hyb_coeff, int32_t fnl)
             lrc_x_frac = 1.0;
             lrc_x_w    = 0.4;
             break;
+        case CUEST_FUNCTIONAL_LCWPBEH:
+            // hyb_coeff = 0.25;
+            lrc_x_frac = 0.75;
+            lrc_x_w    = 0.4;
+            break;
         case CUEST_FUNCTIONAL_WB97X:
             // hyb_coeff = 0.157706;
             lrc_x_frac = 0.842294;
@@ -37,6 +42,11 @@ cuest_init_df (double hyb_coeff, int32_t fnl)
         case CUEST_FUNCTIONAL_WB97XV:
             // hyb_coeff = 0.167;
             lrc_x_frac = 0.833;
+            lrc_x_w    = 0.3;
+            break;
+        case CUEST_FUNCTIONAL_WB97MV:
+            // hyb_coeff = 0.15;
+            lrc_x_frac = 0.85;
             lrc_x_w    = 0.3;
             break;
         case CUEST_FUNCTIONAL_CAMB3LYP:

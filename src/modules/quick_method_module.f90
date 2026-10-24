@@ -1279,10 +1279,14 @@ module quick_method_module
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_PBE0
                case (478) ! HYB_GGA_XC_LC_WPBE
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_LCWPBE
+               case (465) ! HYB_GGA_XC_LRC_WPBEH <-- TODO: is this correct?
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_LCWPBEH
                case (464) ! HYB_GGA_XC_WB97X
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_WB97X
                case (466) ! HYB_GGA_XC_WB97X_V
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_WB97XV
+               case (531) ! HYB_MGGA_XC_WB97M_V
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_WB97MV
                case (433) ! HYB_GGA_XC_CAM_B3LYP
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_CAMB3LYP
                case (428) ! HYB_GGA_XC_HSE06

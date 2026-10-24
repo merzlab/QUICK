@@ -93,11 +93,20 @@ cuest_init_cshell_xc (int32_t fnl, int64_t devsiz)
         case CUEST_FUNCTIONAL_LCWPBE:
             functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_LCWPBE;
             break;
+        case CUEST_FUNCTIONAL_LCWPBEH:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_LCWPBEH;
+            break;
         case CUEST_FUNCTIONAL_WB97X:
             functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_WB97X;
             break;
         case CUEST_FUNCTIONAL_WB97XV:
             functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_WB97XV;
+            nl         = true;
+            nl_C       = 0.01;
+            nl_b       = 6.0;
+            break;
+        case CUEST_FUNCTIONAL_WB97MV:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_WB97MV;
             nl         = true;
             nl_C       = 0.01;
             nl_b       = 6.0;

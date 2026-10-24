@@ -24,8 +24,10 @@ module quick_cuest_module
    integer(c_int32_t), protected :: CUEST_FUNCTIONAL_B97MV     = 254
    integer(c_int32_t), protected :: CUEST_FUNCTIONAL_PBE0      = 406
    integer(c_int32_t), protected :: CUEST_FUNCTIONAL_LCWPBE    = 478
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_LCWPBEH   = 465
    integer(c_int32_t), protected :: CUEST_FUNCTIONAL_WB97X     = 464
    integer(c_int32_t), protected :: CUEST_FUNCTIONAL_WB97XV    = 466
+   integer(c_int32_t), protected :: CUEST_FUNCTIONAL_WB97MV    = 531
    integer(c_int32_t), protected :: CUEST_FUNCTIONAL_CAMB3LYP  = 433
    integer(c_int32_t), protected :: CUEST_FUNCTIONAL_HSE06     = 428
 
