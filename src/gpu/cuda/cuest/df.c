@@ -25,43 +25,43 @@ cuest_init_df (double hyb_coeff, int32_t fnl)
     // SOURCE: ORCA docs: https://www.faccts.de/docs/orca/6.0/manual/contents/detailed/model.html
     switch (fnl) {
         case CUEST_FUNCTIONAL_LCWPBE:
-            // hyb_coeff = 0.0;
+            hyb_coeff  = 0.0;
             lrc_x_frac = 1.0;
             lrc_x_w    = 0.4;
             break;
         case CUEST_FUNCTIONAL_LCWPBEH:
-            // hyb_coeff = 0.25;
+            hyb_coeff  = 0.25;
             lrc_x_frac = 0.75;
             lrc_x_w    = 0.4;
             break;
         case CUEST_FUNCTIONAL_WB97X:
-            // hyb_coeff = 0.157706;
+            hyb_coeff  = 0.157706;
             lrc_x_frac = 0.842294;
             lrc_x_w    = 0.3;
             break;
         case CUEST_FUNCTIONAL_WB97XV:
-            // hyb_coeff = 0.167;
+            hyb_coeff  = 0.167;
             lrc_x_frac = 0.833;
             lrc_x_w    = 0.3;
             break;
         case CUEST_FUNCTIONAL_WB97MV:
-            // hyb_coeff = 0.15;
+            hyb_coeff  = 0.15;
             lrc_x_frac = 0.85;
             lrc_x_w    = 0.3;
             break;
         case CUEST_FUNCTIONAL_CAMB3LYP:
-            // hyb_coeff = 0.19
+            hyb_coeff  = 0.19;
             lrc_x_frac = 0.46;
             lrc_x_w    = 0.33;
             break;
         case CUEST_FUNCTIONAL_HSE06:
-            // hyb_coeff = 0.25
+            hyb_coeff  = 0.25;
             lrc_x_frac = -0.25;
             lrc_x_w    = 0.11;
             break;
     }
 
-    hyb_coeff -= lrc_x_frac;
+        // hyb_coeff -= lrc_x_frac;
 
 #ifdef CUESTDEBUG
     DEBUGLOG ("-------- Functional Info --------\n");
