@@ -602,7 +602,6 @@ subroutine run_quick(self,ierr)
 
 #ifdef CUEST
   if (quick_method%usecuest) then
-     call deinitialize_cuest_compute
      call finalize_cuest
   endif
 #endif

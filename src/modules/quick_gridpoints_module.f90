@@ -701,7 +701,7 @@ end subroutine form_cuest_xc_quadrature
 #ifdef CUEST
    subroutine dealloc_cuest_grid_variables(self)
       !
-      ! do nothing because xc deinit is called in deinitialize_cuest_compute
+      ! do nothing because xc deinit is called in finalize_cuest
       !
       type(quick_xc_grid_type) :: self
    end subroutine dealloc_cuest_grid_variables

@@ -260,6 +260,12 @@ subroutine getEnergy(isGuess, ierr)
   call MPI_BCAST(quick_qm_struct%Etot, 1, mpi_double_precision,0,quick_comm,quick_mpi_error) 
 #endif
 
+#ifdef CUEST
+   if (quick_method%usecuest) then
+      call deinitialize_cuest_ene
+   endif
+#endif
+
    ! -----------------------------------  !
    ! print eigenvalues of S^{1/2}PS^{1/2} !
    ! -----------------------------------  !

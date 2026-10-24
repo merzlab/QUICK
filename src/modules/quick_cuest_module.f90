@@ -247,6 +247,11 @@ module quick_cuest_module
    end interface
 
    interface
+      subroutine cuest_deinit_xc_grid() bind(c, name="cuest_deinit_xc_grid")
+      end subroutine cuest_deinit_xc_grid
+   end interface
+
+   interface
       subroutine cuest_init_cshell_xc(fnl, devsiz) bind(c, name="cuest_init_cshell_xc")
          use, intrinsic :: iso_c_binding, only: c_int32_t, c_int64_t
          implicit none

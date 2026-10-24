@@ -126,22 +126,7 @@ contains
 
 #ifdef CUEST
      if (quick_method%usecuest) then
-        if(quick_method%DFT) then
-#ifdef OSHELL
-           call cuest_init_oshell_xc_grad(int(2000000000, c_int64_t))
-#else
-           call cuest_init_cshell_xc_grad(int(2000000000, c_int64_t))
-#endif
-        endif
-#ifdef OSHELL
-        call cuest_init_oshell_JK_grad(int(2000000000, c_int64_t))
-#else
-        call cuest_init_cshell_JK_grad(int(2000000000, c_int64_t))
-#endif
-        call cuest_init_V_grad
-        call cuest_init_T_grad
-        call cuest_init_S_grad
-        call cuest_init_grad
+        call initialize_cuest_grad(2000000000)
      endif
 #endif
 
@@ -162,18 +147,7 @@ contains
 
 #ifdef CUEST
      if (quick_method%usecuest) then
-        call cuest_deinit_grad
-        call cuest_deinit_S_grad
-        call cuest_deinit_T_grad
-        call cuest_deinit_V_grad
-        call cuest_deinit_JK_grad
-        if(quick_method%DFT) then
-#ifdef OSHELL
-           call cuest_deinit_oshell_xc_grad
-#else
-           call cuest_deinit_cshell_xc_grad
-#endif
-        endif
+        call deinitialize_cuest_grad
      endif
 #endif
   

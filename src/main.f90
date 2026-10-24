@@ -336,10 +336,6 @@
 
     endif
 
-#ifdef CUEST
-    if (quick_method%usecuest) call deinitialize_cuest_compute
-#endif
-
     ! Now at this point we have an energy and a geometry.  If this is
     ! an optimization job, we now have the optimized geometry.
 

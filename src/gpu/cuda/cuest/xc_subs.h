@@ -264,7 +264,7 @@ cuest_deinit_cshell_xc ()
 
     // free Vxc/semilocal Vxc
 
-    free (quick_cuest_compute_mem.Vxc_vbs);
+    free (quick_cuest_compute_mem.Vxc_vbs); // also frees nonlocal Vxc vbs
     if (quick_cuest_compute_mem.weights_saved)
         free (quick_cuest_compute_mem.weights_save);
     free_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
@@ -281,8 +281,6 @@ cuest_deinit_cshell_xc ()
     if (quick_cuest_data.nl_C != 0 && quick_cuest_data.nl_b != 0) {
         free (quick_cuest_compute_mem.Vxc_nl);
         free_host_alloc (nbasis * nbasis * sizeof (double));
-        free (quick_cuest_compute_mem.Vxc_nl_vbs);
-        free_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
         freeWorkspace (quick_cuest_compute_mem.Vxc_nl_wksp);
 #ifdef OSHELL
         checkCuestErrors (cuestParametersDestroy (CUEST_NONLOCALXCPOTENTIALUKSCOMPUTE_PARAMETERS,
@@ -292,10 +290,6 @@ cuest_deinit_cshell_xc ()
                                                   quick_cuest_compute_mem.Vxc_nl_par));
 #endif
     }
-    checkCuestErrors (cuestMolecularGridDestroy (quick_cuest_struct.molgrid));
-    freeWorkspace (quick_cuest_struct.persistXCGridWorkspace);
-    checkCuestErrors (cuestXCIntPlanDestroy (quick_cuest_struct.XCIntPlan));
-    freeWorkspace (quick_cuest_struct.persistXCIntPlanWorkspace);
 }
 
 void

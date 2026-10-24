@@ -79,6 +79,15 @@ cuest_destroy_atom_grid ()
 #include "xc_subs.h"
 
 void
+cuest_deinit_xc_grid ()
+{
+    checkCuestErrors (cuestMolecularGridDestroy (quick_cuest_struct.molgrid));
+    freeWorkspace (quick_cuest_struct.persistXCGridWorkspace);
+    checkCuestErrors (cuestXCIntPlanDestroy (quick_cuest_struct.XCIntPlan));
+    freeWorkspace (quick_cuest_struct.persistXCIntPlanWorkspace);
+}
+
+void
 cuest_get_xc_grid_npoint (int64_t *npoint)
 {
     if (quick_cuest_data.npoint != 0) {

@@ -106,29 +106,82 @@ subroutine initialize_cuest
                            - (timer_end%T2elb - timer_begin%T2elb)
 end subroutine initialize_cuest
 
-subroutine deinitialize_cuest_compute
+subroutine initialize_cuest_grad(devsiz)
+   use quick_cuest_module
+   use quick_method_module, only: quick_method
+   use, intrinsic :: iso_c_binding, only: c_int64_t
+
+   integer, intent(in) :: devsiz
+
+   call cuest_init_grad
+   call cuest_init_S_grad
+   call cuest_init_T_grad
+   call cuest_init_V_grad
+
+   if (quick_method%unrst) then
+      call cuest_init_oshell_JK_grad(int(devsiz, c_int64_t))
+   else
+      call cuest_init_cshell_JK_grad(int(devsiz, c_int64_t))
+   endif
+
+   if (quick_method%DFT) then
+      if (quick_method%unrst) then
+         call cuest_init_oshell_xc_grad(int(devsiz, c_int64_t))
+      else
+         call cuest_init_cshell_xc_grad(int(devsiz, c_int64_t))
+      endif
+   endif
+
+end subroutine initialize_cuest_grad
+
+subroutine deinitialize_cuest_ene
    use quick_cuest_module
    use quick_method_module, only: quick_method
 
-   call cuest_deinit_oei_plan
    call cuest_deinit_eri_J
    if (quick_method%x_hybrid_coeff /= 0.0d0 .or. quick_method%addK) then
       call cuest_deinit_eri_K
    endif
-   call cuest_deinit_df
 
    if (quick_method%DFT) then
       if (quick_method%UNRST) then
          call cuest_deinit_oshell_xc
       else
-         call cuest_deinit_xc_dense
          call cuest_deinit_cshell_xc
       endif
    endif
-end subroutine deinitialize_cuest_compute
+end subroutine deinitialize_cuest_ene
+
+subroutine deinitialize_cuest_grad
+   use quick_cuest_module
+   use quick_method_module, only: quick_method
+
+   call cuest_deinit_S_grad
+   call cuest_deinit_T_grad
+   call cuest_deinit_V_grad
+   call cuest_deinit_JK_grad
+
+   if (quick_method%DFT) then
+      if (quick_method%unrst) then
+         call cuest_deinit_oshell_xc_grad
+      else
+         call cuest_deinit_cshell_xc_grad
+      endif
+   endif
+
+   call cuest_deinit_grad
+end subroutine deinitialize_cuest_grad
 
 subroutine finalize_cuest
    use quick_cuest_module
+   use quick_method_module, only: quick_method
+
+   call cuest_deinit_oei_plan
+   call cuest_deinit_df
+   if (quick_method%DFT) then
+      if (.not. quick_method%UNRST) call cuest_deinit_xc_dense
+      call cuest_deinit_xc_grid
+   endif
    call cuest_deinit_correct
    call cuest_deinit
 end subroutine finalize_cuest
