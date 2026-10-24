@@ -47,6 +47,10 @@ module quick_files_module
     character(len=240) :: sadGuessDir    = ''
     character(len=320) :: basisFileName = ''
     character(len=80) :: basisSetName   = ''
+#ifdef CUEST
+    character(len=80) :: fitbasisFileName = ''
+    character(len=80) :: fitbasisName = ''
+#endif
 
     ! ecp basis set and directory
     character(len=80) :: ECPDir         = ''
@@ -187,11 +191,16 @@ module quick_files_module
         tmp_basisfilename = "NULL"
 
         ! Gaussian Style Basis. Written by Alessandro GENONI 03/07/2007
-        if (index(keywd,'BASIS=') /= 0) then
+         
+        i = index(keywd,' BASIS=')
+        if (i /= 0 .or. keywd(1:6) == 'BASIS=') then
             !Get the length of keywd
             lenkwd=len_trim(keywd)
 
-            i = index(keywd,'BASIS=',.false.)
+            ! BASIS=
+            ! ^ make i point here, or
+            ! if i == 0 then we set i=1 as desired
+            i = i + 1
 
 !            j = scan(keywd(i:lenkwd),' ',.false.)
             j = scan(keywd(i+6:),' ',.false.)
@@ -267,16 +276,20 @@ module quick_files_module
         endif
     end subroutine
 
-
     subroutine print_basis_file(io)
         implicit none
 
         integer, intent(in) :: io
 
         write(io,'(" BASIS SET = ",a,",",2X,"TYPE = CARTESIAN")') trim(basisSetName)
+#ifdef CUEST
+        write(io,'(" DENSITY FITTING BASIS SET = ",a,",",2X,"TYPE = SPHERICAL")') trim(fitbasisName)
+#endif
         write(io,'("| BASIS FILE = ",a)') trim(basisfilename)
+#ifdef CUEST
+        write(io,'("| DENSITY FITTING BASIS FILE = ",a)') trim(fitbasisFileName)
+#endif
     end subroutine
-
 
     subroutine print_ecp_file(io)
         implicit none

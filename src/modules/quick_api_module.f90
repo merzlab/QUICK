@@ -544,6 +544,12 @@ subroutine run_quick(self,ierr)
   timer_cumer%TIniGuess = timer_cumer%TIniGuess+timer_end%TIniGuess-timer_begin%TIniGuess &
                            - (timer_end%T2elb-timer_begin%T2elb)
 
+#ifdef CUEST
+  if (quick_method%usecuest) then
+      call initialize_cuest
+  endif
+#endif
+
   ! compute energy
   if ( .not. quick_method%opt .and. .not. quick_method%grad) then
     SAFE_CALL(getEnergy(.false.,ierr))
@@ -592,6 +598,12 @@ subroutine run_quick(self,ierr)
       if (quick_method%bGPU) then
         call gpu_cleanup()
       endif
+#endif
+
+#ifdef CUEST
+  if (quick_method%usecuest) then
+     call finalize_cuest
+  endif
 #endif
 
 #ifdef MPIV
