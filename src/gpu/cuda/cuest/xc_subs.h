@@ -65,6 +65,9 @@ cuest_init_cshell_xc (int32_t fnl, int64_t devsiz)
     cuestXCIntPlanParameters_t xcIntPlan_param;
     checkCuestErrors (cuestParametersCreate (CUEST_XCINTPLAN_PARAMETERS, &xcIntPlan_param));
 
+    bool   nl   = false;
+    double nl_C = 0, nl_b = 0;
+
     // TODO: add support for other functionals supported by cuEST
     quick_cuest_struct.fnl = fnl;
     cuestXCIntPlanParametersFunctional_t functional;
@@ -80,6 +83,9 @@ cuest_init_cshell_xc (int32_t fnl, int64_t devsiz)
             break;
         case CUEST_FUNCTIONAL_B97MV:
             functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_B97MV;
+            nl         = true;
+            nl_C       = 0.01;
+            nl_b       = 6.0;
             break;
         case CUEST_FUNCTIONAL_PBE0:
             functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_PBE0;
@@ -92,6 +98,9 @@ cuest_init_cshell_xc (int32_t fnl, int64_t devsiz)
             break;
         case CUEST_FUNCTIONAL_WB97XV:
             functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_WB97XV;
+            nl         = true;
+            nl_C       = 0.01;
+            nl_b       = 6.0;
             break;
         case CUEST_FUNCTIONAL_CAMB3LYP:
             functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_CAMB3LYP;
@@ -121,6 +130,17 @@ cuest_init_cshell_xc (int32_t fnl, int64_t devsiz)
             fprintf (stderr, "%s:%d Unknown functional code %hhu\n", __func__, __LINE__, fnl);
             return;
     }
+
+#ifdef DEBUGLOG
+    if (nl) {
+        DEBUGLOG ("-------- USING NONLOCAL CORRELATION --------\n");
+        DEBUGLOG ("C=%f\nb=%f\n", nl_C, nl_b);
+        DEBUGLOG ("--------------------------------------------\n");
+    }
+#endif
+
+    quick_cuest_data.nl_C = nl_C;
+    quick_cuest_data.nl_b = nl_b;
 
     checkCuestErrors (cuestXCIntPlanCreateWorkspaceQuery (
         handle, quick_cuest_struct.basis, quick_cuest_struct.molgrid, functional, xcIntPlan_param,
@@ -173,9 +193,57 @@ cuest_init_cshell_xc (int32_t fnl, int64_t devsiz)
     MEMLOG_TMPWD ("V_xc Compute");
 #endif
 
-    quick_cuest_compute_mem.Vxc_wksp = allocateWorkspace (tmpWD);
-
+    quick_cuest_compute_mem.Vxc_wksp      = allocateWorkspace (tmpWD);
     quick_cuest_compute_mem.weights_saved = false;
+
+    if (nl) {
+        double scale = 1.0;
+#ifdef OSHELL
+        checkCuestErrors (cuestParametersCreate (CUEST_NONLOCALXCPOTENTIALUKSCOMPUTE_PARAMETERS,
+                                                 &quick_cuest_compute_mem.Vxc_nl_par));
+        checkCuestErrors (cuestParametersConfigure (
+            CUEST_NONLOCALXCPOTENTIALUKSCOMPUTE_PARAMETERS, quick_cuest_compute_mem.Vxc_nl_par,
+            CUEST_NONLOCALXCPOTENTIALUKSCOMPUTE_PARAMETERS_VV10_SCALE, &scale, sizeof (double)));
+        checkCuestErrors (cuestParametersConfigure (
+            CUEST_NONLOCALXCPOTENTIALUKSCOMPUTE_PARAMETERS, quick_cuest_compute_mem.Vxc_nl_par,
+            CUEST_NONLOCALXCPOTENTIALUKSCOMPUTE_PARAMETERS_VV10_C, &nl_C, sizeof (double)));
+        checkCuestErrors (cuestParametersConfigure (
+            CUEST_NONLOCALXCPOTENTIALUKSCOMPUTE_PARAMETERS, quick_cuest_compute_mem.Vxc_nl_par,
+            CUEST_NONLOCALXCPOTENTIALUKSCOMPUTE_PARAMETERS_VV10_B, &nl_b, sizeof (double)));
+#else
+        checkCuestErrors (cuestParametersCreate (CUEST_NONLOCALXCPOTENTIALRKSCOMPUTE_PARAMETERS,
+                                                 &quick_cuest_compute_mem.Vxc_nl_par));
+        checkCuestErrors (cuestParametersConfigure (
+            CUEST_NONLOCALXCPOTENTIALRKSCOMPUTE_PARAMETERS, quick_cuest_compute_mem.Vxc_nl_par,
+            CUEST_NONLOCALXCPOTENTIALRKSCOMPUTE_PARAMETERS_VV10_SCALE, &scale, sizeof (double)));
+        checkCuestErrors (cuestParametersConfigure (
+            CUEST_NONLOCALXCPOTENTIALRKSCOMPUTE_PARAMETERS, quick_cuest_compute_mem.Vxc_nl_par,
+            CUEST_NONLOCALXCPOTENTIALRKSCOMPUTE_PARAMETERS_VV10_C, &nl_C, sizeof (double)));
+        checkCuestErrors (cuestParametersConfigure (
+            CUEST_NONLOCALXCPOTENTIALRKSCOMPUTE_PARAMETERS, quick_cuest_compute_mem.Vxc_nl_par,
+            CUEST_NONLOCALXCPOTENTIALRKSCOMPUTE_PARAMETERS_VV10_B, &nl_b, sizeof (double)));
+#endif
+
+        quick_cuest_compute_mem.Vxc_nl_vbs = vbs;
+
+#ifdef OSHELL
+        checkCuestErrors (cuestNonlocalXCPotentialUKSComputeWorkspaceQuery (
+            handle, quick_cuest_struct.XCIntPlan, quick_cuest_compute_mem.Vxc_nl_par, vbs, tmpWD,
+            quick_cuest_data.nocc, quick_cuest_data.noccb, NULL, NULL, NULL,
+            quick_cuest_compute_mem.d_Vxc));
+        MEMLOG_TMPWD ("Nonlocal V_xc alpha beta compute");
+#else
+        checkCuestErrors (cuestNonlocalXCPotentialRKSComputeWorkspaceQuery (
+            handle, quick_cuest_struct.XCIntPlan, quick_cuest_compute_mem.Vxc_nl_par, vbs, tmpWD,
+            quick_cuest_data.nocc, NULL, NULL, quick_cuest_compute_mem.d_Vxc));
+        MEMLOG_TMPWD ("Nonlocal V_xc Compute");
+#endif
+
+        quick_cuest_compute_mem.Vxc_nl_wksp = allocateWorkspace (tmpWD);
+
+        quick_cuest_compute_mem.Vxc_nl = malloc (nbasis * nbasis * sizeof (double));
+        add_host_alloc (nbasis * nbasis * sizeof (double));
+    }
 }
 
 void
@@ -194,6 +262,8 @@ cuest_deinit_cshell_xc ()
     free_dev_alloc (nbasis * nbasis * sizeof (double));
 #endif
 
+    // free Vxc/semilocal Vxc
+
     free (quick_cuest_compute_mem.Vxc_vbs);
     if (quick_cuest_compute_mem.weights_saved)
         free (quick_cuest_compute_mem.weights_save);
@@ -207,6 +277,21 @@ cuest_deinit_cshell_xc ()
                                               quick_cuest_compute_mem.Vxc_par));
 #endif
 
+    // free nonlocal Vxc
+    if (quick_cuest_data.nl_C != 0 && quick_cuest_data.nl_b != 0) {
+        free (quick_cuest_compute_mem.Vxc_nl);
+        free_host_alloc (nbasis * nbasis * sizeof (double));
+        free (quick_cuest_compute_mem.Vxc_nl_vbs);
+        free_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
+        freeWorkspace (quick_cuest_compute_mem.Vxc_nl_wksp);
+#ifdef OSHELL
+        checkCuestErrors (cuestParametersDestroy (CUEST_NONLOCALXCPOTENTIALUKSCOMPUTE_PARAMETERS,
+                                                  quick_cuest_compute_mem.Vxc_nl_par));
+#else
+        checkCuestErrors (cuestParametersDestroy (CUEST_NONLOCALXCPOTENTIALRKSCOMPUTE_PARAMETERS,
+                                                  quick_cuest_compute_mem.Vxc_nl_par));
+#endif
+    }
     checkCuestErrors (cuestMolecularGridDestroy (quick_cuest_struct.molgrid));
     freeWorkspace (quick_cuest_struct.persistXCGridWorkspace);
     checkCuestErrors (cuestXCIntPlanDestroy (quick_cuest_struct.XCIntPlan));
@@ -252,13 +337,43 @@ cuest_get_cshell_xc (double *Vxc, double *Exc, double *C)
 
 #endif
 
-    // copy to host
     cudaMemcpyChecked (Vxc, quick_cuest_compute_mem.d_Vxc, nbasis * nbasis * sizeof (double),
                        cudaMemcpyDeviceToHost);
 #ifdef OSHELL
     cudaMemcpyChecked (Vxcb, quick_cuest_compute_mem.d_Vxcb, nbasis * nbasis * sizeof (double),
                        cudaMemcpyDeviceToHost);
 #endif
+
+    if (quick_cuest_data.nl_C != 0 || quick_cuest_data.nl_b != 0) {
+        double  Exc_nl;
+        double *Vxc_nl = quick_cuest_compute_mem.Vxc_nl;
+
+#ifdef OSHELL
+        checkCuestErrors (cuestNonlocalXCPotentialUKSCompute (
+            handle, quick_cuest_struct.XCIntPlan, quick_cuest_compute_mem.Vxc_nl_par,
+            quick_cuest_compute_mem.Vxc_nl_vbs, quick_cuest_compute_mem.Vxc_nl_wksp, nocc, noccb,
+            d_C, d_Cb, &Exc_nl, quick_cuest_compute_mem.d_Vxc));
+#else
+        checkCuestErrors (cuestNonlocalXCPotentialRKSCompute (
+            handle, quick_cuest_struct.XCIntPlan, quick_cuest_compute_mem.Vxc_nl_par,
+            quick_cuest_compute_mem.Vxc_nl_vbs, quick_cuest_compute_mem.Vxc_nl_wksp, nocc, d_C,
+            &Exc_nl, quick_cuest_compute_mem.d_Vxc));
+
+#endif
+
+        cudaMemcpyChecked (Vxc_nl, quick_cuest_compute_mem.d_Vxc, nbasis * nbasis * sizeof (double),
+                           cudaMemcpyDeviceToHost);
+
+        // accumulate in Vxc/Vxcb/Exc/Excb
+        *Exc += Exc_nl;
+
+        for (size_t i = 0, end = nbasis * nbasis; i < end; ++i) {
+            Vxc[i] += Vxc_nl[i];
+#ifdef OSHELL
+            Vxcb[i] += Vxc_nl[i];
+#endif
+        }
+    }
 }
 
 void
@@ -298,6 +413,35 @@ cuest_init_cshell_xc_grad (int64_t devsiz)
 
     MEMLOG_TMPWD ("xc Gradient Compute");
     quick_cuest_grad_mem.xc_wksp = allocateWorkspace (tmpWD);
+
+    if (quick_cuest_data.nl_C != 0 || quick_cuest_data.nl_b != 0) {
+#ifdef OSHELL
+        checkCuestErrors (cuestParametersCreate (CUEST_NONLOCALXCDERIVATIVEUKSCOMPUTE_PARAMETERS,
+                                                 &quick_cuest_grad_mem.xc_nl_par));
+#else
+        checkCuestErrors (cuestParametersCreate (CUEST_NONLOCALXCDERIVATIVERKSCOMPUTE_PARAMETERS,
+                                                 &quick_cuest_grad_mem.xc_nl_par));
+#endif
+
+        quick_cuest_grad_mem.xc_nl_vbs = vbs;
+
+#ifdef OSHELL
+        checkCuestErrors (cuestNonlocalXCDerivativeUKSComputeWorkspaceQuery (
+            quick_cuest_struct.handle, quick_cuest_struct.XCIntPlan, quick_cuest_grad_mem.xc_nl_par,
+            vbs, tmpWD, quick_cuest_data.nocc, quick_cuest_data.noccb, NULL, NULL,
+            quick_cuest_grad_mem.d_grad));
+#else
+        checkCuestErrors (cuestNonlocalXCDerivativeRKSComputeWorkspaceQuery (
+            quick_cuest_struct.handle, quick_cuest_struct.XCIntPlan, quick_cuest_grad_mem.xc_nl_par,
+            vbs, tmpWD, quick_cuest_data.nocc, NULL, quick_cuest_grad_mem.d_grad));
+#endif
+
+        MEMLOG_TMPWD ("Nonlocal Correlation Gradient Compute");
+        quick_cuest_grad_mem.xc_nl_wksp = allocateWorkspace (tmpWD);
+
+        quick_cuest_grad_mem.grad = malloc (3 * natom * sizeof (double));
+        add_host_alloc (3 * natom * sizeof (double));
+    }
 }
 
 void
@@ -319,6 +463,18 @@ cuest_deinit_cshell_xc_grad ()
     checkCuestErrors (cuestParametersDestroy (CUEST_XCDERIVATIVERKSCOMPUTE_PARAMETERS,
                                               quick_cuest_grad_mem.xc_par));
 #endif
+    if (quick_cuest_data.nl_C != 0 || quick_cuest_data.nl_b != 0) {
+        free (quick_cuest_grad_mem.grad);
+        free_host_alloc (3 * natom * sizeof (double));
+        freeWorkspace (quick_cuest_grad_mem.xc_nl_wksp);
+#ifdef OSHELL
+        checkCuestErrors (cuestParametersDestroy (CUEST_NONLOCALXCDERIVATIVEUKSCOMPUTE_PARAMETERS,
+                                                  quick_cuest_grad_mem.xc_nl_par));
+#else
+        checkCuestErrors (cuestParametersDestroy (CUEST_NONLOCALXCDERIVATIVERKSCOMPUTE_PARAMETERS,
+                                                  quick_cuest_grad_mem.xc_nl_par));
+#endif
+    }
 }
 
 void
@@ -360,7 +516,26 @@ cuest_get_cshell_xc_grad (double *grad, double *C)
         quick_cuest_grad_mem.d_grad));
 #endif
 
-    // copy to host
-    cudaMemcpyChecked (grad, quick_cuest_grad_mem.d_grad, 3 * natom * sizeof (double),
-                       cudaMemcpyDeviceToHost);
+    const size_t grad_siz = 3 * natom * sizeof (double);
+    cudaMemcpyChecked (grad, quick_cuest_grad_mem.d_grad, grad_siz, cudaMemcpyDeviceToHost);
+
+    if (quick_cuest_data.nl_C != 0 || quick_cuest_data.nl_b != 0) {
+#ifdef OSHELL
+        checkCuestErrors (cuestNonlocalXCDerivativeUKSCompute (
+            handle, quick_cuest_struct.XCIntPlan, quick_cuest_grad_mem.xc_nl_par,
+            quick_cuest_grad_mem.xc_nl_vbs, quick_cuest_grad_mem.xc_nl_wksp, nocc, noccb, d_C, d_Cb,
+            quick_cuest_grad_mem.d_grad));
+#else
+        checkCuestErrors (cuestNonlocalXCDerivativeRKSCompute (
+            handle, quick_cuest_struct.XCIntPlan, quick_cuest_grad_mem.xc_nl_par,
+            quick_cuest_grad_mem.xc_nl_vbs, quick_cuest_grad_mem.xc_nl_wksp, nocc, d_C,
+            quick_cuest_grad_mem.d_grad));
+#endif
+
+        double *grad_nl = quick_cuest_grad_mem.grad;
+        cudaMemcpyChecked (grad_nl, quick_cuest_grad_mem.d_grad, grad_siz, cudaMemcpyDeviceToHost);
+
+        for (size_t i = 0, end = 3 * natom; i < end; ++i)
+            grad[i] += grad_nl[i];
+    }
 }

@@ -69,6 +69,7 @@ cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t
     quick_cuest_PC_buf.P_siz         = nbasis * nbasis * sizeof (double);
     quick_cuest_PC_buf.C_siz         = nocc * nbasis * sizeof (double);
     quick_cuest_PC_buf.Cb_siz        = noccb * nbasis * sizeof (double);
+    quick_cuest_data.nl_C = quick_cuest_data.nl_b = 0;
 
     // ensure iattype persists
     const size_t iattype_siz = natom * sizeof (int8_t);

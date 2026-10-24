@@ -62,6 +62,11 @@ typedef struct {
     void                                  *d_Vxc;
     void                                  *d_Vxcb;
 
+    cuestWorkspace_t                              *Vxc_nl_wksp;
+    cuestWorkspaceDescriptor_t                    *Vxc_nl_vbs;
+    cuestNonlocalXCPotentialRKSComputeParameters_t Vxc_nl_par;
+    double                                        *Vxc_nl; // stores CPU contribution of nonlocal xc
+
     cuestWorkspace_t                               *rho_wksp;
     cuestWorkspaceDescriptor_t                     *rho_vbs;
     cuestXCDensityComputeParameters_t               rho_par;
@@ -93,6 +98,11 @@ typedef struct {
     cuestWorkspace_t                      *xc_wksp;
     cuestWorkspaceDescriptor_t            *xc_vbs;
     cuestXCPotentialRKSComputeParameters_t xc_par;
+
+    cuestWorkspace_t                              *xc_nl_wksp;
+    cuestWorkspaceDescriptor_t                    *xc_nl_vbs;
+    cuestNonlocalXCPotentialRKSComputeParameters_t xc_nl_par;
+    double                                        *grad;
 } quick_cuest_grad_mem_t;
 
 typedef struct {
@@ -121,6 +131,9 @@ typedef struct {
     size_t  *ifshell;
     int8_t  *iattype;
     uint64_t npoint;
+
+    double nl_C;
+    double nl_b;
 } quick_cuest_data_t;
 
 typedef struct {
