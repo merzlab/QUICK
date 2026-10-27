@@ -134,7 +134,7 @@ contains
   ! 11/02/2010 Yipu Miao: Add paralle option for HF calculation
   subroutine uelectdiis(jscf,ierr)
   
-     use quick_SCRATCH_module, only: quick_scratch
+     use quick_scratch_module, only: quick_scratch
      use quick_basis_module, only: nbasis, NBSuse
      use quick_calculated_module, only: quick_qm_struct
      use quick_files_module, only: iOutFile, write_molden

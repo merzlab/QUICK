@@ -33,7 +33,7 @@ contains
   !  possible basis. Note that the Fock matrix is symmetric.
   !  This code now also does all the HF energy calculation. Ed.
   !-------------------------------------------------------
-     use quick_SCRATCH_module, only: quick_scratch
+     use quick_scratch_module, only: quick_scratch
      use quick_basis_module, only: jshell, nbasis, cutmatrix
      use quick_calculated_module, only: quick_qm_struct
      use quick_method_module, only: quick_method
