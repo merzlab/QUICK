@@ -293,7 +293,7 @@ contains
      !-------------------------------------------------------
      ! this subroutine is to do scf job for restricted system
      !-------------------------------------------------------
-     use quick_SCRATCH_module, only: alloc, dealloc, quick_scratch
+     use quick_scratch_module, only: alloc, dealloc, quick_scratch
      use quick_basis_module, only: alloc, atombasis, atomdens, dealloc, jshell, nbasis, normalize_basis
      use quick_calculated_module, only: alloc, dealloc, init, quick_qm_struct, read
      use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
@@ -349,7 +349,7 @@ contains
 
   subroutine sad_uelectdiis(jscf,verbose,ierr)
 
-     use quick_SCRATCH_module, only: alloc, dealloc, quick_scratch
+     use quick_scratch_module, only: alloc, dealloc, quick_scratch
      use quick_basis_module, only: alloc, atombasis, atomdens, dealloc, jshell, nbasis, normalize_basis
      use quick_calculated_module, only: alloc, dealloc, init, quick_qm_struct, read
      use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
@@ -891,7 +891,7 @@ contains
   !  possible basis. Note that the Fock matrix is symmetric.
   !  This code now also does all the HF energy calculation. Ed.
   !-------------------------------------------------------
-     use quick_SCRATCH_module, only: alloc, dealloc, quick_scratch
+     use quick_scratch_module, only: alloc, dealloc, quick_scratch
      use quick_basis_module, only: alloc, atombasis, atomdens, dealloc, jshell, nbasis, normalize_basis
      use quick_calculated_module, only: alloc, dealloc, init, quick_qm_struct, read
      use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
