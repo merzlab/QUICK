@@ -289,7 +289,7 @@ contains
      use quick_gridpoints_module, only: quick_dft_grid
 
      use xc_f90_types_m, only: xc_f90_pointer_t
-      use xc_f90_lib_m, only: XC_FAMILY_GGA, XC_FAMILY_HYB_GGA, XC_FAMILY_LDA, XC_POLARIZED, xc_f90_func_end, &
+     use xc_f90_lib_m, only: XC_FAMILY_GGA, XC_FAMILY_HYB_GGA, XC_FAMILY_LDA, XC_POLARIZED, xc_f90_func_end, &
           xc_f90_func_init, xc_f90_gga_exc_vxc, xc_f90_info_family, xc_f90_lda_exc_vxc, xc_f90_pointer_t
 #if defined(MPIV)
      use quick_mpi_module, only: bMPI, quick_comm, quick_comm_rank
