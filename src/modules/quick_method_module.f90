@@ -1143,7 +1143,7 @@ module quick_method_module
         subroutine set_libxc_func_info(f_keywd, self,ierr)
 
            use xc_f90_types_m, only: xc_f90_pointer_t
-            use xc_f90_lib_m, only: XC_CORRELATION, XC_EXCHANGE, XC_EXCHANGE_CORRELATION, XC_FAMILY_GGA, &
+           use xc_f90_lib_m, only: XC_CORRELATION, XC_EXCHANGE, XC_EXCHANGE_CORRELATION, XC_FAMILY_GGA, &
                 XC_FAMILY_HYB_GGA, XC_FAMILY_HYB_MGGA, XC_FAMILY_LDA, XC_FAMILY_MGGA, XC_KINETIC, XC_POLARIZED, &
                 XC_UNPOLARIZED, xc_f90_func_end, xc_f90_func_init, xc_f90_functional_get_name, &
                 xc_f90_functional_get_number, xc_f90_hyb_exx_coef, xc_f90_info_family, xc_f90_info_kind, &
