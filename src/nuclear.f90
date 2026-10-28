@@ -1035,7 +1035,7 @@ subroutine nuclearattraenergy(Ips,Jps,IIsh,JJsh,NIJ1, &
    double precision Ax,Ay,Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g
    double precision AA(3),BB(3),CC(3),PP(3)
    integer :: Ips, Jps, IIsh, JJsh, NIJ1, iatom, Iang, Jang, NBI1, NBI2, NBJ1, NBJ2
-   integer :: III1, III2, JJJ1, JJJ2, III_temp, JJJ_local, itemp1, itemp2, itempt, itemp
+   integer :: III1, III2, JJJ1, JJJ2, III, JJJ, itemp1, itemp2, itempt, itemp
    double precision :: DenseJI, x1temp, xconstant
    common /xiaoattra/attra,aux,AA,BB,CC,PP,g
 
@@ -1260,19 +1260,19 @@ subroutine nuclearattraenergy(Ips,Jps,IIsh,JJsh,NIJ1, &
 
          Xconstant=X1temp*quick_basis%gccoeff(jps,quick_basis%ksumtype(JJsh)+Jang)
 
-         do III_temp=III1,III2
-            itemp1=trans(quick_basis%KLMN(1,III_temp),quick_basis%KLMN(2,III_temp),quick_basis%KLMN(3,III_temp))
-            do JJJ_local=max(III_temp,JJJ1),JJJ2
+         do III=III1,III2
+            itemp1=trans(quick_basis%KLMN(1,III),quick_basis%KLMN(2,III),quick_basis%KLMN(3,III))
+            do JJJ=max(III,JJJ1),JJJ2
 
                if (quick_method%UNRST) then
-                  DENSEJI=quick_qm_struct%dense(JJJ_local,III_temp)+quick_qm_struct%denseb(JJJ_local,III_temp)
+                  DENSEJI=quick_qm_struct%dense(JJJ,III)+quick_qm_struct%denseb(JJJ,III)
                else
-                  DENSEJI=quick_qm_struct%dense(JJJ_local,III_temp)
+                  DENSEJI=quick_qm_struct%dense(JJJ,III)
                endif
 
-               if(JJJ_local.ne.III_temp)DENSEJI=DENSEJI*2.0d0
-               itemp2=trans(quick_basis%KLMN(1,JJJ_local),quick_basis%KLMN(2,JJJ_local),quick_basis%KLMN(3,JJJ_local))
-               quick_qm_struct%Eel=quick_qm_struct%Eel+DENSEJI*Xconstant*quick_basis%cons(III_temp)*quick_basis%cons(JJJ_local)* &
+               if(JJJ.ne.III)DENSEJI=DENSEJI*2.0d0
+               itemp2=trans(quick_basis%KLMN(1,JJJ),quick_basis%KLMN(2,JJJ),quick_basis%KLMN(3,JJJ))
+               quick_qm_struct%Eel=quick_qm_struct%Eel+DENSEJI*Xconstant*quick_basis%cons(III)*quick_basis%cons(JJJ)* &
                      attraxiao(itemp1,itemp2,0)
             enddo
          enddo
