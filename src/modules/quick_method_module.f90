@@ -15,6 +15,10 @@ module quick_method_module
     use quick_constants_module
     use quick_input_parser_module  
 
+#ifdef CUEST
+    use, intrinsic :: iso_c_binding, only: c_int32_t
+#endif
+
     implicit none
 
     type quick_method_type
@@ -44,6 +48,7 @@ module quick_method_module
 
         ! the second section includes some advanced option
         logical :: debug =  .false.    ! debug mode
+        logical :: graddebug = .false. ! debug gradient TODO: remove
         logical :: nodirect = .false.  ! conventional scf
         logical :: readden = .false.  ! flag to read density matrix
         integer :: readxyz = -1       ! flag to read coordinates
@@ -165,6 +170,12 @@ module quick_method_module
 #if defined(GPU) || defined(MPIV_GPU)
         logical :: bGPU                 ! if GPU is used here
 #endif
+
+#ifdef CUEST
+        integer(c_int32_t) :: cuest_fnl_code
+        logical :: addK = .false.  ! if cuEST should incorporate K for range-separated functional. overrides x_hybrid_coeff check.
+#endif
+        logical :: usecuest = .false.
 
     end type quick_method_type
 
@@ -556,7 +567,9 @@ module quick_method_module
             use quick_mpi_module, only: master
             use quick_files_module, only : write_molden
             use quick_input_parser_module, only: found_keyword
-
+#ifdef CUEST
+            use quick_cuest_module
+#endif
             implicit none
 
             character(len=300) :: keyWD
@@ -594,6 +607,12 @@ module quick_method_module
             endif
             if (found_keyword(keyWD,'GRADIENT')) self%grad=.true.
 
+#ifdef CUEST
+            ! set default value
+            self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
+            self%addK = .false.
+#endif
+
             !Read dft functional keywords and set variable values
             if (found_keyword(keyWD,'LIBXC')) then
                 self%uselibxc=.true.
@@ -608,6 +627,9 @@ module quick_method_module
                   self%B3LYP=.true.
                   self%x_hybrid_coeff =0.2d0
                 endif
+#ifdef CUEST
+                self%cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
+#endif
             elseif(found_keyword(keyWD,'BLYP')) then
                 self%uselibxc=.true.
                 tempstring='LIBXC=GGA_X_B88,GGA_C_LYP'
@@ -651,6 +673,16 @@ module quick_method_module
             endif
             CHECK_ERROR(ierr)
 
+#ifdef CUEST
+            if (index(keyWD, 'CUEST').ne.0) then
+               if (.not. self%DFT .or. self%cuest_fnl_code /= CUEST_FUNCTIONAL_UNKNOWN) then
+                  self%usecuest = .true.
+                  self%sadmo = .true.
+               endif
+            endif
+            print *, "usecuest=", self%usecuest
+#endif
+
             if(self%B3LYP .or. self%BLYP .or. self%BPW91 .or. self%MPW91PW91 .or. &
                 self%MPW91LYP .or. self%uselibxc) self%DFT=.true.
 
@@ -678,6 +710,7 @@ module quick_method_module
             if (found_keyword(keyWD,'HESSIAN'))       self%analHess=.true.
             if (found_keyword(keyWD,'FREQ'))          self%freq=.true.
             if (found_keyword(keywd,'DEBUG'))         self%debug=.true.
+            if (found_keyword(keywd,'GRDBG'))         self%graddebug=.true.
             if (found_keyword(keyWD,'RDSAD'))         self%readSAD=.true.  ! READSAD would clash with READ
             if (found_keyword(keyWD,'WRSAD')) then
                self%writeSAD = .true.
@@ -909,6 +942,9 @@ module quick_method_module
         subroutine init_quick_method(self,ierr)
 
             use quick_exception_module
+#ifdef CUEST
+            use quick_cuest_module, only: CUEST_FUNCTIONAL_UNKNOWN
+#endif
             implicit none
             type(quick_method_type) self
             integer, intent(inout) :: ierr
@@ -1025,6 +1061,12 @@ module quick_method_module
 #if defined(GPU) || defined(MPIV_GPU)
             self%bGPU   = .true.
 #endif
+
+#ifdef CUEST
+            self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
+            self%addK = .false.
+#endif
+            self%usecuest = .false.
         end subroutine init_quick_method
 
 
@@ -1145,6 +1187,9 @@ module quick_method_module
            use xc_f90_types_m
            use xc_f90_lib_m
            use quick_exception_module
+#ifdef CUEST
+           use quick_cuest_module
+#endif
 
            implicit none
            character(len=300), intent(in) :: f_keywd
@@ -1213,8 +1258,65 @@ module quick_method_module
           self%nof_functionals=nof_f
         else
           ierr=32
+#ifdef CUEST
+          self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
+#endif
           return
         endif
+
+#ifdef CUEST
+        if (quick_method%nof_functionals == 1) then
+           select case (quick_method%functional_id(1))
+               case (402) ! HYB_GGA_XC_B3LYP
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP
+               case (475) ! HYB_GGA_XC_B3LYP5
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_B3LYP5
+               case (407) ! HYB_GGA_XC_B97
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_B97
+               case (254) ! MGGA_XC_B97M_V
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_B97MV
+               case (406) ! HYB_GGA_XC_PBEH
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_PBE0
+               case (478) ! HYB_GGA_XC_LC_WPBE
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_LCWPBE
+               case (487) ! HYB_GGA_XC_LC_WPBEH_WHS <-- NOTE: this is not in libxc/xc_funcs.h
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_LCWPBEH
+               case (464) ! HYB_GGA_XC_WB97X
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_WB97X
+               case (466) ! HYB_GGA_XC_WB97X_V
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_WB97XV
+               case (531) ! HYB_MGGA_XC_WB97M_V
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_WB97MV
+               case (433) ! HYB_GGA_XC_CAM_B3LYP
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_CAMB3LYP
+               case (428) ! HYB_GGA_XC_HSE06
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_HSE06
+                   self%addK = .true.  ! because exchange fraction + lr exchange fraction = 0
+               case default
+                   print *, "CUEST: found unsupported libxc functional with id=", quick_method%functional_id(1)
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
+           end select
+        else ! nof_functionals == 2
+           select case (1000*quick_method%functional_id(1) + quick_method%functional_id(2))
+               case (106131, 131106) ! GGA_X_B88,GGA_C_LYP
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_BLYP
+               case (101130, 130101) ! GGA_X_PBE,GGA_C_PBE
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_PBE
+               case (203233, 233203) ! MGGA_X_M06_L,MGGA_C_M06_L
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_M06L
+               case (449235, 235449) ! HYB_MGGA_X_M06,MGGA_C_M06
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_M06
+               case (450126, 126450) ! HYB_MGGA_X_M06_2X,MGGA_C_M06_2X
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_M062X
+               case (001007, 007001) ! LDA_X,LDA_C_VWN
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_SVWN5
+               case default
+                   print *, "CUEST: found unsupported libxc functional with id=", &
+                            quick_method%functional_id(1), quick_method%functional_id(2)
+                   self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
+           end select
+        endif
+#endif
         end subroutine set_libxc_func_info
 
 

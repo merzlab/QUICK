@@ -88,7 +88,7 @@
     ! fill up memory with test values, coordinates and external charges will be loded inside 
     ! the loop below.
     fname = 'api_water_rhf_631g'
-    keywd = 'HF BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 GRADIENT EXTCHARGES'
+    keywd = 'HF BASIS=6-31G CUTOFF=1.0D-10 DENSERMS=1.0D-6 GRADIENT EXTCHARGES CUEST'
     !keywd =''
 
     atomic_numbers(1) = 8

@@ -60,6 +60,10 @@
 #  endif
 #endif
 
+#ifdef CUEST
+    use quick_cuest_module, only: cuest_correct_P, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK, cuest_print_memtrace
+#endif
+
     implicit none
 
     integer :: fail
@@ -67,6 +71,11 @@
     integer :: ierr                     ! return error info
     integer :: i,j,k
     double precision :: t1_t, t2_t
+
+#ifdef CUEST
+    double precision, allocatable :: cuest_tmp2d(:,:)
+#endif
+
     common /timer/ t1_t, t2_t
 
     !------------------------------------------------------------------
@@ -212,6 +221,14 @@
     RECORD_TIME(timer_end%TIniGuess)
     timer_cumer%TIniGuess=timer_cumer%TIniGuess+timer_end%TIniGuess-timer_begin%TIniGuess &
                           -(timer_end%T2elb-timer_begin%T2elb)
+    
+#ifdef CUEST
+    if (quick_method%usecuest) then
+        call prtact(ioutfile, "Begin cuEST Initialization")
+        call initialize_cuest
+        call prtact(ioutfile, "End cuEST Initialization")
+    endif
+#endif
 
     if (.not.quick_method%opt .and. .not.quick_method%grad) then
         SAFE_CALL(getEnergy(.false.,ierr))
@@ -223,12 +240,29 @@
             call chk_write('xyz', 3, natom, quick_molspec%xyz)
             call chk_write('iattype', natom, quick_molspec%iattype)
 #if !defined(RESTART_HDF5)
+#ifdef CUEST
+            if (quick_method%usecuest) then
+               if (.not. allocated(cuest_tmp2d)) allocate(cuest_tmp2d(nbasis, nbasis))
+               cuest_tmp2d = quick_qm_struct%dense
+               call cuest_correct_P(cuest_tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+               call chk_write('dense', nbasis, nbasis, cuest_tmp2d)
+
+               if (quick_method%UNRST) then
+                  cuest_tmp2d = quick_qm_struct%denseb
+                  call cuest_correct_P(cuest_tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+                  call chk_write('dense', nbasis, nbasis, cuest_tmp2d)
+               endif
+            else
+#endif
             call chk_write('dense', nbasis, nbasis, quick_qm_struct%dense)
             if (quick_method%UNRST) then
                 call chk_write('denseb', nbasis, nbasis, quick_qm_struct%denseb)
             end if
-            call chk_close()
+#ifdef CUEST
+            endif
 #endif
+            call chk_close()
+#endif ! !defined(RESTART_DF5)
         endif
     endif
 
@@ -275,10 +309,27 @@
             call chk_write('xyz', 3, natom, quick_molspec%xyz)
             call chk_write('iattype', natom, quick_molspec%iattype)
 #if !defined(RESTART_HDF5)
+#ifdef CUEST
+            if (quick_method%usecuest) then
+               if (.not. allocated(cuest_tmp2d)) allocate(cuest_tmp2d(nbasis, nbasis))
+               cuest_tmp2d = quick_qm_struct%dense
+               call cuest_correct_P(cuest_tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+               call chk_write('dense', nbasis, nbasis, cuest_tmp2d)
+
+               if (quick_method%UNRST) then
+                  cuest_tmp2d = quick_qm_struct%denseb
+                  call cuest_correct_P(cuest_tmp2d, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+                  call chk_write('dense', nbasis, nbasis, cuest_tmp2d)
+               endif
+            else
+#endif
             call chk_write('dense', nbasis, nbasis, quick_qm_struct%dense)
             if (quick_method%UNRST) then
               call chk_write('denseb', nbasis, nbasis, quick_qm_struct%denseb)
             end if
+#ifdef CUEST
+            endif
+#endif
             call chk_close()
 #endif
         endif
@@ -356,9 +407,16 @@
     !-----------------------------------------------------------------
     ! 7.The final job is to output energy and many other infos
     !-----------------------------------------------------------------
+#ifdef CUEST
+    if (quick_method%usecuest) call cuest_print_memtrace(iOutFile)
+#endif
+
 #if defined(GPU) || defined(MPIV_GPU)
     call delete(quick_method, ierr)
     call gpu_deallocate_scratch(quick_method%grad .or. quick_method%opt)
+#ifdef CUEST
+    if (quick_method%usecuest) call finalize_cuest
+#endif
 #if defined(MPIV_GPU)
     SAFE_CALL(delete_mgpu_setup(ierr))
 #endif

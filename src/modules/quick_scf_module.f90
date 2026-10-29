@@ -178,6 +178,9 @@ contains
      use mpi
 #endif
      use quick_io_module, only: chk_update
+#ifdef CUEST
+     use quick_cuest_module, only: cuest_correct_P, CUEST_CORRECT_NORM_CUEST_TO_QUICK
+#endif
 
      implicit none
  
@@ -210,6 +213,9 @@ contains
       double precision, pointer :: operator_ptr(:,:)
       double precision, pointer :: scratch_sq(:,:)
       double precision, pointer :: scratch_rect(:,:)
+#ifdef CUEST
+      double precision :: cuest_densetmp(nbasis, nbasis)
+#endif
 
      !---------------------------------------------------------------------------
      ! The purpose of this subroutine is to utilize Pulay's accelerated
@@ -693,7 +699,17 @@ contains
         if (master) then
 
           if (quick_method%writechk) then
+#ifdef CUEST
+            if (quick_method%usecuest) then
+               cuest_densetmp = quick_qm_struct%dense
+               call cuest_correct_P(cuest_densetmp, CUEST_CORRECT_NORM_CUEST_TO_QUICK)
+               call chk_update('dense', nbasis, nbasis, cuest_densetmp)
+            else
+               call chk_update('dense', nbasis, nbasis, quick_qm_struct%dense)
+            endif
+#else
             call chk_update('dense', nbasis, nbasis, quick_qm_struct%dense)
+#endif
           end if
 
            current_diis=mod(idiis-1,quick_method%maxdiisscf)
