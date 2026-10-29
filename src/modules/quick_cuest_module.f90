@@ -1,6 +1,6 @@
 module quick_cuest_module
 
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
 
    !
    ! This module contains the fortran bindings for C functions that call cuEST

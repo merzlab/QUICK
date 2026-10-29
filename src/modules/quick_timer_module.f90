@@ -63,7 +63,7 @@ module quick_timer_module
         double precision:: TEFIELDGrid=0.0d0 ! Time for computing EFIELD on grid
         double precision:: TESPSurface=0.0d0    ! Time for creating vanderwaals surface for ESP charge calculation
         double precision:: TESPCharge=0.0d0    ! Time for computing ESP charge using points on the surface
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
         double precision:: TIniCuest=0.0d0
 #endif
     end type quick_timer
@@ -115,7 +115,7 @@ module quick_timer_module
         double precision:: TEFIELDGrid=0.0d0      ! Time for computing EFEILD on grid
         double precision:: TESPSurface=0.0d0    ! Time for creating vanderwaals surface for ESP charge calculation
         double precision:: TESPCharge=0.0d0    ! Time for computing ESP charge using points on the surface
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
         double precision:: TIniCuest=0.0d0
 #endif
 

@@ -1279,7 +1279,7 @@ module quick_method_module
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_PBE0
                case (478) ! HYB_GGA_XC_LC_WPBE
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_LCWPBE
-               case (465) ! HYB_GGA_XC_LRC_WPBEH <-- TODO: is this correct?
+               case (487) ! HYB_GGA_XC_LC_WPBEH_WHS <-- NOTE: this is not in libxc/xc_funcs.h
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_LCWPBEH
                case (464) ! HYB_GGA_XC_WB97X
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_WB97X

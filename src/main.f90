@@ -60,7 +60,7 @@
 #  endif
 #endif
 
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
     use quick_cuest_module, only: cuest_correct_P, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK, cuest_print_memtrace
 #endif
 
@@ -72,7 +72,7 @@
     integer :: i,j,k
     double precision :: t1_t, t2_t
 
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
     double precision, allocatable :: cuest_tmp2d(:,:)
 #endif
 
@@ -407,14 +407,14 @@
     !-----------------------------------------------------------------
     ! 7.The final job is to output energy and many other infos
     !-----------------------------------------------------------------
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
     if (quick_method%usecuest) call cuest_print_memtrace(iOutFile)
 #endif
 
 #if defined(GPU) || defined(MPIV_GPU)
     call delete(quick_method, ierr)
     call gpu_deallocate_scratch(quick_method%grad .or. quick_method%opt)
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
     if (quick_method%usecuest) call finalize_cuest
 #endif
 #if defined(MPIV_GPU)

@@ -77,7 +77,7 @@ subroutine get1e(deltaO)
    use mpi
 #endif
 
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
    use quick_cuest_module, only: cuest_get_oei_T, cuest_get_oei_V, cuest_debuglog
 ! #ifdef CUESTDEBUG
 !    use quick_cuest_module, only: cuest_correct_o, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
@@ -88,7 +88,7 @@ subroutine get1e(deltaO)
    double precision :: temp2d(nbasis,nbasis)
    logical, intent(in) :: deltaO
 
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
    double precision :: cuest_T(nbasis, nbasis), cuest_V(nbasis, nbasis)
    double precision :: tmp2d(nbasis, nbasis)
 #endif

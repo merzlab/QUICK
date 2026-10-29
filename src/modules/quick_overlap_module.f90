@@ -174,7 +174,7 @@ subroutine fullx
    !   matrix X.  The first step is forming the overlap matrix (Smatrix).
    !
    use allmod
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
    use quick_cuest_module, only: cuest_get_oei_S
 ! #ifdef CUESTDEBUG
 !    use quick_cuest_module, only: cuest_debuglog, cuest_correct_o, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
@@ -188,7 +188,7 @@ subroutine fullx
    double precision g_table(200),Px,Py,Pz
    integer g_count,ii,jj,kk
    double precision a,b,Ax,Ay,Az,Bx,By,Bz
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
    double precision :: tmp2d(nbasis, nbasis)
 #endif
 

@@ -57,7 +57,7 @@ subroutine PriSym(io,n,mat,fm) ! format: f(x.y) x>7 sugg 12.5,12.7,14.9
 
 end subroutine PriSym
 
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
 subroutine cuest_debuglog_PriSym(n,mat,fm)
   use quick_cuest_module, only: cuest_debuglog
   implicit none

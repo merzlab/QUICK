@@ -77,7 +77,7 @@ contains
      quick_qm_struct%ob = 0.0d0
      quick_qm_struct%Eel=0.0d0
 
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
      if (quick_method%usecuest) then
         hasK = quick_method%x_hybrid_coeff /= 0.0d0 .or. quick_method%addK
      endif

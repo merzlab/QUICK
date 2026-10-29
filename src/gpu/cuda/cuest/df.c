@@ -24,12 +24,12 @@ cuest_init_df (double hyb_coeff, int32_t fnl)
 
     // SOURCE: ORCA docs: https://www.faccts.de/docs/orca/6.0/manual/contents/detailed/model.html
     switch (fnl) {
-        case CUEST_FUNCTIONAL_LCWPBE:
+        case CUEST_FUNCTIONAL_LCWPBE: // TODO: figure out correct libxc functional for this
             hyb_coeff  = 0.0;
             lrc_x_frac = 1.0;
             lrc_x_w    = 0.4;
             break;
-        case CUEST_FUNCTIONAL_LCWPBEH:
+        case CUEST_FUNCTIONAL_LCWPBEH: // TODO: figure out correct libxc functional for this
             hyb_coeff  = 0.25;
             lrc_x_frac = 0.75;
             lrc_x_w    = 0.4;

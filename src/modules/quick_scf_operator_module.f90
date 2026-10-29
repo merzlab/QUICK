@@ -40,7 +40,7 @@ contains
      use quick_mpi_module, only: bMPI, master, quick_comm, quick_comm_rank, quick_mpi_error
      use mpi
 #endif
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
     use, intrinsic :: iso_c_binding, only: c_int64_t
     use quick_method_module, only: quick_method
     use quick_molspec_module, only: quick_molspec
@@ -54,7 +54,7 @@ contains
      integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
      common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
      double precision tst, te, tred
-#if defined(CUDA) && defined(CUEST)
+#ifdef CUEST
      double precision :: cuest_J(nbasis, nbasis)
      double precision :: cuest_K(nbasis, nbasis)
      double precision :: cuest_Vxc(nbasis, nbasis)
