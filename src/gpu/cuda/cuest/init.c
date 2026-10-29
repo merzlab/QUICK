@@ -171,6 +171,7 @@ cuest_deinit ()
     freeWorkspace (quick_cuest_struct.persistAOPairListWorkspace);
     checkCuestErrors (cuestAOBasisDestroy (quick_cuest_struct.basis));
     freeWorkspace (quick_cuest_struct.persistAOBasisWorkspace);
+    freeWorkspace (quick_cuest_struct.persistAuxBasisWorkspace);
     free (quick_cuest_struct.persistWD);
     free (quick_cuest_struct.tmpWD);
     checkCuestErrors (cuestDestroy (quick_cuest_struct.handle));

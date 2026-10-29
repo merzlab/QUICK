@@ -207,6 +207,10 @@ void
 cuest_deinit_JK_grad ()
 {
     freeWorkspace (quick_cuest_grad_mem.JK_wksp);
+
+    free (quick_cuest_grad_mem.JK_vbs);
+    free_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
+
     checkCuestErrors (cuestParametersDestroy (CUEST_DFSYMMETRICDERIVATIVECOMPUTE_PARAMETERS,
                                               quick_cuest_grad_mem.JK_par));
 }
