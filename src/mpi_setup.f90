@@ -97,6 +97,7 @@
     call MPI_BCAST(fragPreFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
     call MPI_BCAST(fragPostFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
     call MPI_BCAST(mfccXyzFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(mfccRptXyzFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
     if (quick_method%ecp) then
         call MPI_BCAST(tolecp,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
         call MPI_BCAST(thrshecp,1,mpi_double_precision,0,quick_comm,quick_mpi_error)

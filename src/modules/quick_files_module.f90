@@ -45,6 +45,9 @@ module quick_files_module
     character(len=80) :: fragPreFileName  = ''
     character(len=80) :: fragPostFileName = ''
     character(len=80) :: mfccXyzFileName  = ''
+    ! Written in addition to the above when RPT is on: the same dump with every
+    ! repeated species collapsed to the one copy that is actually solved.
+    character(len=80) :: mfccRptXyzFileName = ''
 
 
     ! Basis set and directory
@@ -80,6 +83,7 @@ module quick_files_module
     integer :: iFragPreFile   = FRAGPREFILEHANDLE    ! DnC subsystems before fragment elimination
     integer :: iFragPostFile  = FRAGPOSTFILEHANDLE   ! DnC subsystems after fragment elimination
     integer :: iMfccXyzFile   = MFCCXYZFILEHANDLE    ! MFCC fragments and caps
+    integer :: iMfccRptXyzFile = MFCCRPTXYZFILEHANDLE ! the same, repeats collapsed (RPT)
 
 
     logical :: fexist = .false.         ! Check if file exists
@@ -149,6 +153,7 @@ module quick_files_module
         fragPreFileName = trim(adjustl(baseinFileName)) // '_frag_pre_elim.xyz'
         fragPostFileName = trim(adjustl(baseinFileName)) // '_frag_post_elim.xyz'
         mfccXyzFileName = trim(adjustl(baseinFileName)) // '_mfcc.xyz'
+        mfccRptXyzFileName = trim(adjustl(baseinFileName)) // '_mfcc_RPT.xyz'
     end subroutine
 
 

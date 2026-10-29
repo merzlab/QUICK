@@ -4,6 +4,9 @@ subroutine mfcc(natomsaved)
    use allmod
    use quick_mfcc_species_module, only: mfcc_is_amino_acid, mfcc_species_charge, mfcc_species_kind
    use quick_mfcc_module
+   use quick_mfcc_repeat_module, only: mfcc_rpt_assign, mfcc_rpt_dealloc, mfcc_rpt_done, &
+                                       mfcc_rpt_nrep, mfcc_rpt_repof
+   use quick_mpi_module, only: master
 !   use quick_method_module
 
    implicit none
@@ -283,6 +286,13 @@ subroutine mfcc(natomsaved)
   enddo
 
   mfccierr = 0
+  ! Any RPT grouping from a previous fragmentation describes the arrays that are
+  ! about to be replaced, so throw it away here. It matters when QUICK is driven
+  ! through the API and runs several molecules in one process: the module state
+  ! is saved, and a stale mfcc_rpt_done would make the next run reuse the
+  ! previous molecule's representatives and index them against a different
+  ! nmfccextra.
+  call mfcc_rpt_dealloc()
   call mfcc_alloc_frag(npmfcc+nxtra, mfccnatmax, mfccierr)
   if (mfccierr /= 0) then
     call PrtErr(iOutFile,'Could not allocate the MFCC fragment arrays.')
@@ -1208,39 +1218,161 @@ subroutine mfcc(natomsaved)
 ! Dump fragments and caps as one multi-frame xyz file. Fragment and cap frames
 ! are tagged in the comment line so they stay distinguishable in a single
 ! trajectory. Coordinates are already in Angstrom.
-  if (quick_method%fragxyz) then
+!
+! With RPT a second file is written beside it, holding only the sub-molecules
+! that are actually solved: every peptide fragment and cap, but one frame per
+! repeated species instead of one per copy. On a solvated protein that is the
+! difference between 3314 frames and a few hundred, and it is the honest picture
+! of what the guess computes -- the other 2985 waters are not solved at all,
+! their densities are the first one's, rotated. It also makes the ligand and the
+! ions findable, which they are not in a file that buries them in solvent.
+!
+! The grouping has to be decided here rather than in mfcc_fragment_scf, because
+! MFCCFRAG exits before that routine ever runs, and the fragment-only runtype is
+! exactly where someone wants to look at this. It is geometry only and costs
+! milliseconds. mfcc_fragment_scf then reuses the same assignment, so the file
+! and the calculation cannot disagree.
+!
+! Only the master writes. mfcc() runs on every rank, every rank reaches the same
+! fragmentation, and they all used to open the same path and write it at once --
+! harmless in that the content matched, but still several processes writing one
+! file. main.f90 points non-masters' iOutFile at /dev/null for the MFCC phase
+! for the same reason; the xyz units were simply missed. Guarding it here also
+! keeps the second file from doubling the problem.
+!
+! The grouping itself is done on every rank, not just the writer: it is a pure
+! function of the fragment geometries, so all ranks reach the same answer, and
+! doing it here means mfcc_fragment_scf's call is a no-op everywhere rather than
+! on the master alone.
+  if (quick_method%mfccrpt .and. nmfccextra .gt. 0 .and. quick_method%fragxyz) then
+     ierrxyz = 0
+     call mfcc_rpt_assign(ierrxyz)
+     if (ierrxyz /= 0) then
+        call PrtWrn(iOutFile,'Could not group the repeated MFCC fragments; &
+              &writing the full xyz only.')
+        ierrxyz = 0
+     endif
+  endif
+
+  if (quick_method%fragxyz .and. master) then
      ierrxyz = 0
      call quick_open(iMfccXyzFile,mfccXyzFileName,'R','F','R',.true.,ierrxyz)
      if (ierrxyz /= 0) then
         call PrtWrn(iOutFile,'Could not open MFCC xyz file, skipping the dump.')
      else
-        do k=1,npmfcc+nmfccextra
-           write(iMfccXyzFile,'(i8)') mfccatom(k)
-           if (k .le. npmfcc) then
-              write(iMfccXyzFile,'("mfcc fragment ",i0,"/",i0," | atoms ",i0)') k,npmfcc,mfccatom(k)
-           else
-              write(iMfccXyzFile,'("mfcc standalone ",i0,"/",i0," | ",a3," | atoms ",i0, &
-                    &" | charge ",i0)') k-npmfcc,nmfccextra,xname(k-npmfcc),mfccatom(k),mfcccharge(k)
-           endif
-           do i=1,mfccatom(k)
-              write(iMfccXyzFile,'(a2,3(2x,f14.8))') mfccatomxiao(i,k), &
-                    mfcccord(1,i,k),mfcccord(2,i,k),mfcccord(3,i,k)
-           enddo
-        enddo
-        do k=1,npmfcc-1
-           write(iMfccXyzFile,'(i8)') mfccatomcap(k)
-           write(iMfccXyzFile,'("mfcc cap ",i0,"/",i0," | atoms ",i0)') k,npmfcc-1,mfccatomcap(k)
-           do i=1,mfccatomcap(k)
-              write(iMfccXyzFile,'(a2,3(2x,f14.8))') mfccatomxiaocap(i,k), &
-                    mfcccordcap(1,i,k),mfcccordcap(2,i,k),mfcccordcap(3,i,k)
-           enddo
-        enddo
+        call mfcc_write_frag_xyz(iMfccXyzFile,.false.,xname)
         close(iMfccXyzFile)
         write(ioutfile,*) "MFCC wrote fragment and cap geometries to ", trim(mfccXyzFileName)
      endif
+
+     if (quick_method%mfccrpt .and. nmfccextra .gt. 0 .and. mfcc_rpt_done) then
+        ierrxyz = 0
+        call quick_open(iMfccRptXyzFile,mfccRptXyzFileName,'R','F','R',.true.,ierrxyz)
+        if (ierrxyz /= 0) then
+           call PrtWrn(iOutFile,'Could not open the RPT MFCC xyz file, skipping it.')
+        else
+           call mfcc_write_frag_xyz(iMfccRptXyzFile,.true.,xname)
+           close(iMfccRptXyzFile)
+           write(ioutfile,'(" MFCC RPT: ",i6," standalone fragments collapse to ",i0, &
+                 &" solved sub-molecule(s)")') nmfccextra,mfcc_rpt_nrep+count(mfcc_rpt_repof .eq. 0)
+           write(ioutfile,*) "MFCC wrote the collapsed geometries to ", trim(mfccRptXyzFileName)
+        endif
+     endif
   endif
 
-end
+end subroutine mfcc
+
+
+!-----------------------------------------------------------------------!
+! mfcc_write_frag_xyz                                                   !
+!                                                                       !
+! Write the fragment, standalone and cap geometries to an already open  !
+! unit as a multi-frame xyz.                                            !
+!                                                                       !
+! collapse = .false. writes every fragment, which is the original dump. !
+! collapse = .true. writes only the sub-molecules that get their own    !
+! SCF: all the peptide fragments and caps, one frame per repeated        !
+! species, and any standalone fragment that matched no representative    !
+! and is therefore solved individually. A representative's frame says    !
+! how many copies it stands for, so the file explains itself.            !
+!_______________________________________________________________________!
+subroutine mfcc_write_frag_xyz(iunit,collapse,xname)
+   use allmod
+   use quick_mfcc_module
+   use quick_mfcc_repeat_module, only: mfcc_rpt_repof, mfcc_rpt_ncopies, &
+                                       mfcc_rpt_nrep, mfcc_rpt_rmsdrep, mfcc_rpt_done
+   implicit none
+
+   integer, intent(in) :: iunit
+   logical, intent(in) :: collapse
+   ! The residue name of each standalone fragment. A local of mfcc(), which is
+   ! the only caller, so it is passed rather than promoted to module state.
+   character(len=3), intent(in) :: xname(*)
+
+   integer :: k, i, kx, ir, nkept
+
+   ! Peptide fragments: every one is distinct, so both forms carry all of them.
+   do k = 1, npmfcc
+      write(iunit,'(i8)') mfccatom(k)
+      write(iunit,'("mfcc fragment ",i0,"/",i0," | atoms ",i0)') k,npmfcc,mfccatom(k)
+      do i = 1, mfccatom(k)
+         write(iunit,'(a2,3(2x,f14.8))') mfccatomxiao(i,k), &
+               mfcccord(1,i,k),mfcccord(2,i,k),mfcccord(3,i,k)
+      enddo
+   enddo
+
+   ! Standalone fragments: solvent, ions and ligands.
+   nkept = 0
+   do kx = 1, nmfccextra
+      k = npmfcc + kx
+      if (collapse) then
+         ! Keep the representatives (repof < 0) and the ones nothing represents
+         ! (repof == 0); drop the copies (repof > 0).
+         if (.not.mfcc_rpt_done) cycle
+         if (mfcc_rpt_repof(kx) .gt. 0) cycle
+      endif
+      nkept = nkept + 1
+
+      write(iunit,'(i8)') mfccatom(k)
+      if (.not.collapse) then
+         write(iunit,'("mfcc standalone ",i0,"/",i0," | ",a3," | atoms ",i0, &
+               &" | charge ",i0)') kx,nmfccextra,xname(kx),mfccatom(k),mfcccharge(k)
+      else if (mfcc_rpt_repof(kx) .lt. 0) then
+         ir = -mfcc_rpt_repof(kx)
+         ! ncopies counts the representative itself, so 1 means nothing was
+         ! folded into it and there is no superposition rmsd to report.
+         if (mfcc_rpt_ncopies(ir) .gt. 1) then
+            write(iunit,'("mfcc standalone rep ",i0,"/",i0," | ",a3," | atoms ",i0, &
+                  &" | charge ",i0," | solved once for ",i0," copies | worst rmsd ",es9.2," A")') &
+                  ir,mfcc_rpt_nrep,xname(kx),mfccatom(k),mfcccharge(k), &
+                  mfcc_rpt_ncopies(ir),mfcc_rpt_rmsdrep(ir)
+         else
+            write(iunit,'("mfcc standalone rep ",i0,"/",i0," | ",a3," | atoms ",i0, &
+                  &" | charge ",i0," | only copy, nothing reused from it")') &
+                  ir,mfcc_rpt_nrep,xname(kx),mfccatom(k),mfcccharge(k)
+         endif
+      else
+         write(iunit,'("mfcc standalone ",i0,"/",i0," | ",a3," | atoms ",i0, &
+               &" | charge ",i0," | matched no representative, solved on its own")') &
+               kx,nmfccextra,xname(kx),mfccatom(k),mfcccharge(k)
+      endif
+      do i = 1, mfccatom(k)
+         write(iunit,'(a2,3(2x,f14.8))') mfccatomxiao(i,k), &
+               mfcccord(1,i,k),mfcccord(2,i,k),mfcccord(3,i,k)
+      enddo
+   enddo
+
+   ! Caps: one per peptide junction, all distinct.
+   do k = 1, npmfcc-1
+      write(iunit,'(i8)') mfccatomcap(k)
+      write(iunit,'("mfcc cap ",i0,"/",i0," | atoms ",i0)') k,npmfcc-1,mfccatomcap(k)
+      do i = 1, mfccatomcap(k)
+         write(iunit,'(a2,3(2x,f14.8))') mfccatomxiaocap(i,k), &
+               mfcccordcap(1,i,k),mfcccordcap(2,i,k),mfcccordcap(3,i,k)
+      enddo
+   enddo
+
+end subroutine mfcc_write_frag_xyz
 
 subroutine xyzchange(xold,yold,zold,xzero,yzero,zzero, &
   xnew,ynew,znew)
