@@ -35,7 +35,7 @@ contains
 
 
 subroutine allocate_quick_cutoff
-  use quick_basis_module
+  use quick_basis_module, only: maxcontract
 
   implicit none
   
@@ -98,12 +98,17 @@ end subroutine schwarzoff
 
 
 subroutine shellcutoff(II,JJ,Ymax)
-  use allmod
+   use quick_basis_module, only: quick_basis, Yxiao, Yxiaotemp, Yxiaoprim, cutprim, Apri, Ppri
+   use quick_molspec_module, only: xyz
+   use quick_params_module, only: Sumindex
 
-  implicit integer(I-N), double precision(a-h,o-z)
+   implicit none
 
-  integer :: ii, jj
-  double precision :: Ymax
+   integer :: ii, jj, KK, LL, M, NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
+   integer :: NNAB, NNCD, NABCDTYPE, NNA, NNC, NABCD, ITT
+   integer :: JJJ, III, LLL, KKK, Nprij, Nprii, Nprik, Npril
+   integer :: iitemp, I2, I1, IIxiao, JJxiao, I, J, K, L
+   double precision :: Ymax, AB, CD, ROU, ABCD, ABCDxiao, RPQ, XXXtemp, T, Ymaxprim
 
   double precision P(3),Q(3),W(3),KAB,KCD
   integer, parameter :: NN = 13
@@ -267,12 +272,16 @@ end subroutine shellcutoff
 
 
 subroutine classcutoff(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax)
-  use allmod
+  use quick_basis_module, only: quick_basis, Yxiao
+  use quick_params_module, only: trans
+  use quick_constants_module, only: X0
 
-  implicit integer(I-N), double precision(A-H,O-Z)
+  implicit none
 
-  integer :: i, j, k, l, ii, jj, kk, ll, nna, nnc, nnab, nncd
-  double precision :: Ymax
+  integer :: i, j, k, l, ii, jj, kk, ll, III, JJJ, KKK, LLL, nna, nnc, nnab, nncd
+  integer :: M, M1, M3, MA, MAB, MCD, MCX, MM1, MM2, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2
+  integer :: Nprii, Nprij, Nprik, Npril
+  double precision :: X2, Y, Y1, Y2, Ytemp, Ymax
 
   double precision store(120,120)
   INTEGER NA(3),NB(3),NC(3),ND(3)
@@ -284,6 +293,11 @@ subroutine classcutoff(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax)
 
   double precision coefangxiaoL(20),coefangxiaoR(20)
   integer angxiaoL(20),angxiaoR(20),numangularL,numangularR
+
+  double precision AA,BB,CC,DD,AB,CD,ROU,ABCD
+
+  integer IJtype, itemp, ITT, ixiao, jtemp, jxiao, KLtype
+  double precision ctemp
 
   COMMON /COM1/RA,RB,RC,RD
   COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD
@@ -443,12 +457,16 @@ End subroutine classcutoff
 
 
 subroutine classprim(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax1,IIIxiao,JJJxiao)
-  use allmod
+  use quick_basis_module, only: quick_basis, Yxiaoprim
+  use quick_params_module, only: trans
+  use quick_constants_module, only: X0
 
-  implicit integer(I-N), double precision(A-H,O-Z)
+  implicit none
 
-  integer :: i, j, k, l, ii, jj, kk, ll, nna, nnc, nnab, nncd, iiixiao, jjjxiao
-  double precision :: Ymax1
+  integer :: i, j, k, l, ii, jj, kk, ll, III, JJJ, KKK, LLL, nna, nnc, nnab, nncd, iiixiao, jjjxiao
+  integer :: M, M1, M3, MA, MAB, MCD, MCX, MM1, MM2, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2
+  integer :: Nprii, Nprij, Nprik, Npril
+  double precision :: X2, Y, Y1, Y2, Ytemp, Ymax1
 
   double precision store(120,120)
   INTEGER NA(3),NB(3),NC(3),ND(3)
@@ -461,6 +479,11 @@ subroutine classprim(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax1,IIIxiao,JJJxiao
 
   double precision coefangxiaoL(20),coefangxiaoR(20)
   integer angxiaoL(20),angxiaoR(20),numangularL,numangularR
+
+  double precision AA,BB,CC,DD,AB,CD,ROU,ABCD
+
+  integer IJtype, itemp, ITT, ixiao, jtemp, jxiao, KLtype
+  double precision ctemp
 
   COMMON /COM1/RA,RB,RC,RD
   COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD

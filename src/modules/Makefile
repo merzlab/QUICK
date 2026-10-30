@@ -31,7 +31,7 @@ modobj = $(objfolder)/quick_exception_module.o $(objfolder)/quick_input_parser_m
 	$(objfolder)/quick_size_module.o $(objfolder)/quick_basis_module.o $(objfolder)/quick_calculated_module.o \
 	$(objfolder)/quick_divcon_module.o $(objfolder)/quick_ecp_module.o $(objfolder)/quick_electrondensity_module.o \
 	$(objfolder)/quick_timer_module.o $(objfolder)/quick_mfcc_module.o $(objfolder)/quick_params_module.o \
-	$(objfolder)/quick_pb_module.o $(objfolder)/quick_scratch_module.o $(objfolder)/quick_all_module.o \
+	$(objfolder)/quick_pb_module.o $(objfolder)/quick_scratch_module.o \
 	$(objfolder)/quick_magma_module.o $(objfolder)/quick_overlap_module.o $(objfolder)/quick_gridpoints_module.o \
 	$(objfolder)/quick_cutoff_module.o $(objfolder)/quick_molsurface_module.o $(objfolder)/quick_molden_module.o \
 	$(objfolder)/quick_eri_cshell_module.o $(objfolder)/quick_eri_oshell_module.o $(objfolder)/quick_lri_module.o \

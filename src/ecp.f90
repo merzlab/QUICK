@@ -10,12 +10,19 @@ Subroutine ecpoperator
    ! Suibroutine that adds the ECP integrals to the Fock operator
    ! for ECP calculations
    !
-   use quick_basis_module
-   use quick_ecp_module
-   use quick_calculated_module
-   use quick_files_module
+   use quick_basis_module, only: nbasis
+   use quick_ecp_module, only: ecp_int
+   use quick_calculated_module, only: quick_qm_struct
    !
-   implicit double precision (a-h,o-z)
+   implicit none
+   
+   interface
+      integer function kp2(ii,jj) result(ind)
+         integer, intent(in) :: ii, jj
+      end function kp2
+   end interface
+   
+   integer :: i, j, ind
    !
    ! Add the proper ECP integral to the corresponding Fock matrix element
    !
@@ -32,7 +39,7 @@ end
 
 
 integer function kp2(ii,jj) result(ind)
-   use quick_ecp_module
+   use quick_ecp_module, only: kvett
    implicit none
    integer, intent(in)  :: ii,jj
    !
@@ -50,14 +57,19 @@ Subroutine readecp
    ! Subroutine to  read the Effective Core Potentials
    ! The total number of electrons and the nuclear charges are modified too
    !
-   use allmod
+    use quick_files_module, only: iOutFile, iECPFile, ecpfilename
+    use quick_molspec_module, only: quick_molspec, natom
+    use quick_ecp_module, only: nelecp, lmaxecp, necprim, clp, zlp, nlp, kfirst, klast, mxproj
+    use quick_constants_module, only: SYMBOL
 
-   implicit double precision(a-h,o-z)
+   implicit none
    character(len=80) :: line
    character(len=2)  :: atom
    character(len=3)  :: pot
    integer, dimension(0:92) :: klmaxecp,kelecp,kprimecp
    logical, dimension(0:92) :: warn
+   integer :: io, iofile, i, j, n, iat, ii, iatom, iprim, klmax, nelecore, jjcont, jecprim, nelec
+   double precision :: c1, c2
 
    open(iecpfile,file=ecpfilename,status='old')
 
@@ -79,8 +91,8 @@ Subroutine readecp
       read(iecpfile,'(A80)',iostat=iofile) line
       read(line,*,iostat=io) atom,ii
       if (io == 0 .and. ii == 0) then
-         do i=1,92
-            if (symbol(i) == atom) then
+          do i=1,92
+             if (SYMBOL(i) == atom) then
                iat=i
                warn(i)=.false.
             end if
@@ -137,8 +149,8 @@ Subroutine readecp
       do while (iofile == 0)
          read(iecpfile,'(A80)',iostat=iofile) line
          read(line,*,iostat=io) atom,ii
-         if (io == 0 .and. ii == 0) then
-            if (symbol(quick_molspec%iattype(i)) == atom) then
+          if (io == 0 .and. ii == 0) then
+             if (SYMBOL(quick_molspec%iattype(i)) == atom) then
                iatom=0
                do while (iatom==0)
                   read(iecpfile,'(A80)',iostat=iofile) line
@@ -168,10 +180,10 @@ Subroutine readecp
       !
       ! Check if the selected ECP exists for each atom in the molecule
       !
-      if (warn(quick_molspec%iattype(i))) then
-         write(ioutfile,'("  ")')
-         write(ioutfile,'("WARNING: NO ECP FOR ATOM ",A2,I4)') symbol(quick_molspec%iattype(i)),i
-      end if
+       if (warn(quick_molspec%iattype(i))) then
+          write(ioutfile,'("  ")')
+          write(ioutfile,'("WARNING: NO ECP FOR ATOM ",A2,I4)') SYMBOL(quick_molspec%iattype(i)),i
+       end if
       !
    end do
 

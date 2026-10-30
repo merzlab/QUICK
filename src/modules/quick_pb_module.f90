@@ -518,7 +518,7 @@ CONTAINS
   !
   !comment_end
 
-    use divpb_interface
+    use divpb_interface, only: grpSchrg, grpSchrgPos
 
     IMPLICIT NONE
 

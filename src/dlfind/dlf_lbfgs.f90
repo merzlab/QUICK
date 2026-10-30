@@ -127,7 +127,7 @@ SUBROUTINE dlf_lbfgs_step(x,g,step_)
 !! SOURCE
   USE dlf_parameter_module, only: rk
   use dlf_global, only: stdout,printl
-  USE lbfgs_module
+  use lbfgs_module, only: dbg, lbfgs, tinit
   IMPLICIT NONE
   !
   ! Dummy arguments
@@ -291,7 +291,7 @@ subroutine dlf_lbfgs_restart
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: stdout, printl
-  USE lbfgs_module
+  use lbfgs_module, only: lbfgs, tinit
   implicit none
   ! **********************************************************************
   if(.not.tinit) call dlf_fail("LBFGS not initialised!")
@@ -325,7 +325,7 @@ end subroutine dlf_lbfgs_restart
 !! SYNOPSIS
 subroutine dlf_lbfgs_select(tag,newinstance)
 !! SOURCE
-  USE lbfgs_module
+  use lbfgs_module, only: dbg, lbfgs, lbfgs_first, newtag, tinit
   implicit none
   character(*), intent(in)  :: tag
   logical     , intent(in)  :: newinstance
@@ -380,7 +380,7 @@ end subroutine dlf_lbfgs_select
 !! SYNOPSIS
 subroutine dlf_lbfgs_deselect
 !! SOURCE
-  USE lbfgs_module
+  use lbfgs_module, only: newtag, tinit
   implicit none
   ! **********************************************************************
   ! do nothing in case lbfgs does not exist
@@ -400,7 +400,7 @@ end subroutine dlf_lbfgs_deselect
 !! SYNOPSIS
 subroutine dlf_lbfgs_exists(tag,exists)
 !! SOURCE
-  USE lbfgs_module
+  use lbfgs_module, only: lbfgs_first, lbfgs_type, tinit
   implicit none
   character(*),   intent(in)  :: tag
   logical     ,   intent(out) :: exists
@@ -437,7 +437,7 @@ subroutine dlf_lbfgs_init(nvar,nmem)
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: stderr
-  USE lbfgs_module
+  use lbfgs_module, only: dbg, lbfgs, lbfgs_first, newtag, tinit
   use dlf_allocate, only: allocate, deallocate
   implicit none
   integer,  intent(in)    :: Nvar ! number of variables
@@ -538,7 +538,7 @@ subroutine dlf_lbfgs_destroy
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: stderr
-  USE lbfgs_module
+  use lbfgs_module, only: lbfgs, lbfgs_first, tinit
   use dlf_allocate, only: deallocate
   implicit none
   logical         :: allgone
@@ -617,7 +617,7 @@ subroutine dlf_lbfgs_precon(precon)
 !! SOURCE
   use dlf_parameter_module, only: rk
   !use dlf_global, only: glob,stderr
-  USE lbfgs_module
+  use lbfgs_module, only: lbfgs, tinit
   use dlf_allocate, only: allocate
   implicit none
   real(rk)  ,intent(in):: precon(lbfgs%N,lbfgs%N)
@@ -708,7 +708,7 @@ END FUNCTION DDOT_INTERNAL
 subroutine dlf_checkpoint_lbfgs_write
   use dlf_parameter_module, only: rk
   use dlf_global, only: stderr
-  USE lbfgs_module
+  use lbfgs_module, only: lbfgs, lbfgs_first, lbfgs_type, tinit
   use dlf_checkpoint, only: tchkform,write_separator
   implicit none
   type(lbfgs_type),pointer :: lbfgs_current
@@ -755,7 +755,7 @@ end subroutine dlf_checkpoint_lbfgs_write
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 subroutine dlf_checkpoint_lbfgs_read(tok)
   use dlf_global, only: stdout,printl
-  USE lbfgs_module
+  use lbfgs_module, only: lbfgs, lbfgs_first, tinit
   use dlf_checkpoint, only: tchkform, read_separator
   implicit none
   logical,intent(out) :: tok

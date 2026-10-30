@@ -60,7 +60,7 @@ contains
         use iso_c_binding
         use rocblas
         use rocblas_enums
-        use rocblas_extra
+        use rocblas_extra, only: HIP_CHECK, hipMalloc
 
         implicit none
 
@@ -97,7 +97,7 @@ contains
         use iso_c_binding
         use rocblas
         use rocblas_enums
-        use rocblas_extra
+        use rocblas_extra, only: HIP_CHECK, hipFree
 
         implicit none
 
@@ -121,7 +121,7 @@ contains
         use iso_c_binding
         use rocblas
         use rocblas_enums
-        use rocblas_extra
+        use rocblas_extra, only: HIP_CHECK, ROCBLAS_CHECK, hipDeviceSynchronize, hipFree, hipMalloc, hipMemcpy
 
         implicit none
 

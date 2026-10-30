@@ -134,9 +134,10 @@ subroutine dlf_formstep
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr,stdout,printl,pi
-  use dlf_formstep_module
-  use dlf_hessian
-  use dlf_allocate
+  use dlf_formstep_module, only: cgstep, fricm, g1, maxcgstep, oldcoords, oldg1, tsm_ok
+  use dlf_hessian, only: eigval, eigvec, fd_hess_running, follow, fracrec, iivar, iupd, minstep, nihvar, numfd, oldc, &
+      & oldgrad, soft, storeenergy, storegrad, tsmode, tsvector, tsvectorset, twopoint
+  use dlf_allocate, only: allocate, deallocate
   use dlf_constants, only : dlf_constants_get
   implicit none
   !
@@ -482,10 +483,10 @@ end subroutine dlf_formstep_restart
 !! SYNOPSIS
 subroutine dlf_formstep_init(needhessian_)
 !! SOURCE
-  use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr
-  use dlf_formstep_module
-  use dlf_hessian
+  use dlf_formstep_module, only: g1, needhessian, oldcoords, oldg1, tenergy
+  use dlf_hessian, only: carthessian, eigval, eigvec, fd_hess_running, follow, fracrec, iivar, iupd, minstep, nihvar, &
+      & numfd, oldc, oldgrad, soft, storeenergy, storegrad, tsmode, tsvector, tsvectorset, twopoint
   use dlf_allocate, only: allocate
   implicit none
   logical,intent(out)     :: needhessian_
@@ -584,10 +585,10 @@ end subroutine dlf_formstep_init
 !! SYNOPSIS
 subroutine dlf_formstep_destroy
 !! SOURCE
-  use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr
-  use dlf_formstep_module
-  use dlf_hessian
+  use dlf_formstep_module, only: g1, oldcoords, oldg1
+  use dlf_hessian, only: eigval, eigvec, fd_hess_running, follow, fracrec, iivar, iupd, minstep, nihvar, numfd, oldc, &
+      & oldgrad, soft, storegrad, tsmode, tsvector, tsvectorset, twopoint
   use dlf_allocate, only: deallocate
   implicit none
 ! **********************************************************************
@@ -629,10 +630,10 @@ end subroutine dlf_formstep_destroy
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 subroutine dlf_checkpoint_formstep_write
-  use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr
-  use dlf_formstep_module
-  use dlf_hessian
+  use dlf_formstep_module, only: cgstep, energy, fricm, g1, oldcoords, oldg1, tenergy, tscoords, tsm_ok, tsmode_r
+  use dlf_hessian, only: direction, eigval, eigvec, fd_hess_running, follow, fracrec, iivar, iupd, minstep, nihvar, &
+      & numfd, oldc, oldgrad, soft, storeenergy, storegrad, tsmode, tsvector, tsvectorset, twopoint
   use dlf_checkpoint, only: tchkform,write_separator
   implicit none
 ! **********************************************************************
@@ -770,10 +771,10 @@ end subroutine dlf_checkpoint_formstep_write
 
 ! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 subroutine dlf_checkpoint_formstep_read(tok)
-  use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stdout,stderr
-  use dlf_formstep_module
-  use dlf_hessian
+  use dlf_formstep_module, only: cgstep, energy, fricm, g1, oldcoords, oldg1, tenergy, tscoords, tsmode_r
+  use dlf_hessian, only: direction, eigval, eigvec, fd_hess_running, follow, fracrec, iivar, iupd, minstep, nihvar, &
+      & numfd, oldc, oldgrad, soft, storeenergy, storegrad, tsmode, tsvector, tsvectorset, twopoint
   use dlf_allocate, only: allocate, deallocate
   use dlf_checkpoint, only: tchkform, read_separator
   implicit none
@@ -1046,8 +1047,9 @@ subroutine dlf_makehessian(trerun_energy,tconv)
   use dlf_global, only: glob,stdout,printl
   use dlf_stat, only: stat
   use dlf_constants, only: dlf_constants_get
-  use dlf_allocate
-  use dlf_hessian
+  use dlf_allocate, only: allocate, deallocate
+  use dlf_hessian, only: eigval, eigvec, fd_hess_running, follow, fracrec, iivar, iupd, minstep, nihvar, numfd, oldc, &
+      & oldgrad, soft, storeenergy, storegrad, tsmode, tsvector, tsvectorset, twopoint
   implicit none
   logical, intent(inout) :: trerun_energy
   logical, intent(inout) :: tconv
@@ -1211,7 +1213,8 @@ subroutine dlf_diaghessian(nvar_,energy,coords,gradient,hess,havehessian)
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stdout,printl
-  use dlf_hessian
+  use dlf_hessian, only: eigval, eigvec, fd_hess_running, follow, fracrec, iivar, iupd, minstep, nihvar, numfd, oldc, &
+      & oldgrad, soft, storeenergy, storegrad, tsmode, tsvector, tsvectorset, twopoint
   implicit none
   !
   integer,intent(in)     :: nvar_ ! Number of variables 
@@ -1304,7 +1307,8 @@ subroutine dlf_fdhessian(nvar_,fracrecalc,energy,coords,gradient,hess,havehessia
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stdout,printl
   use dlf_allocate, only: allocate, deallocate
-  use dlf_hessian
+  use dlf_hessian, only: direction, eigval, eigvec, fd_hess_running, follow, fracrec, iivar, iupd, minstep, nihvar, &
+      & numfd, oldc, oldgrad, soft, storeenergy, storegrad, tsmode, tsvector, tsvectorset, twopoint
   implicit none
   !
   integer,intent(in)     :: nvar_ ! Number of variables 
@@ -1573,7 +1577,8 @@ subroutine dlf_test_delta(trerun_energy)
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stdout,printl
-  use dlf_hessian
+  use dlf_hessian, only: direction, eigval, eigvec, fd_hess_running, follow, fracrec, iivar, iupd, minstep, nihvar, &
+      & numfd, oldc, oldgrad, soft, storeenergy, storegrad, tsmode, tsvector, tsvectorset, twopoint
   implicit none
   logical,intent(out):: trerun_energy
   integer,parameter :: numdelta=9 ! hardcoded for the time being
@@ -1739,7 +1744,8 @@ subroutine dlf_hessian_update(nvar, coords, oldcoords, gradient, &
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stdout, stderr, printl
-  use dlf_hessian
+  use dlf_hessian, only: eigval, eigvec, fd_hess_running, follow, fracrec, iivar, iupd, minstep, nihvar, numfd, oldc, &
+      & oldgrad, soft, storeenergy, storegrad, tsmode, tsvector, tsvectorset, twopoint
   implicit none
   integer,intent(in)    :: nvar ! used for temporary storage arrays
   real(rk),intent(in) :: coords(nvar)   
@@ -1903,7 +1909,8 @@ subroutine dlf_prfo_step(nvar,coords,gradient,hessian,step)
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: stdout,printl,stderr,glob,pi
-  use dlf_hessian
+  use dlf_hessian, only: eigval, eigvec, fd_hess_running, follow, fracrec, iivar, iupd, minstep, nihvar, numfd, oldc, &
+      & oldgrad, soft, storeenergy, storegrad, tsmode, tsvector, tsvectorset, twopoint
   implicit none
   integer ,intent(in)   :: nvar 
   real(rk),intent(in)   :: coords(nvar)
@@ -2401,7 +2408,8 @@ subroutine dlf_thermal()
   use dlf_global, only: glob,stdout,printl,pi,printf
   use dlf_stat, only: stat
   use dlf_constants, only : dlf_constants_get
-  use dlf_hessian
+  use dlf_hessian, only: eigval, eigvec, fd_hess_running, follow, fracrec, iivar, iupd, minstep, nihvar, numfd, oldc, &
+      & oldgrad, soft, storeenergy, storegrad, tsmode, tsvector, tsvectorset, twopoint
   implicit none
   real(rk)        :: frequency_factor,svar
   real(rk)        :: temperature,planck,boltz,wavenumber
@@ -2603,7 +2611,8 @@ subroutine dlf_thermal_project(npmodes,peigval,tok)
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stdout,printl
-  use dlf_hessian
+  use dlf_hessian, only: direction, eigval, eigvec, fd_hess_running, follow, fracrec, iivar, iupd, minstep, nihvar, &
+      & numfd, oldc, oldgrad, soft, storeenergy, storegrad, tsmode, tsvector, tsvectorset, twopoint
   implicit none
   real(rk), external :: ddot
   integer, intent(out)  :: npmodes ! number of vibrational modes

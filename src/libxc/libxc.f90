@@ -63,8 +63,7 @@ end module xc_f90_types_m
 !-------------------------------------------------------------------
 module xc_f90_lib_m
 
-  use xc_f90_types_m
-  use libxc_funcs_m
+  use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
 
   implicit none
 
@@ -147,33 +146,33 @@ module xc_f90_lib_m
   !----------------------------------------------------------------
   interface
     integer function xc_f90_info_number(info)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: info
     end function xc_f90_info_number
 
     integer function xc_f90_info_kind(info)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: info
     end function xc_f90_info_kind
 
     subroutine xc_f90_info_name(info, s)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: info
       character(len=*), intent(out) :: s
     end subroutine xc_f90_info_name
 
     integer function xc_f90_info_family(info)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: info
     end function xc_f90_info_family
 
     integer function xc_f90_info_flags(info)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: info
     end function xc_f90_info_flags
 
     subroutine xc_f90_info_refs(info, number, s)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: info
       integer, intent(inout) :: number ! number of the reference. Must be 0 in the first call
       character(len=*), intent(out) :: s ! the string that is output
@@ -189,20 +188,20 @@ module xc_f90_lib_m
     end function xc_f90_functional_get_number
 
     integer function xc_f90_family_from_id(id)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       integer, intent(in) :: id
     end function xc_f90_family_from_id
 
     integer function xc_f90_number_of_functionals()
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
     end function xc_f90_number_of_functionals
 
     integer function xc_f90_maximum_name_length()
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
     end function xc_f90_maximum_name_length
 
     subroutine xc_f90_available_functional_numbers(list)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       integer, intent(out) :: list
     end subroutine xc_f90_available_functional_numbers
 
@@ -212,7 +211,7 @@ module xc_f90_lib_m
   !----------------------------------------------------------------
   interface
     subroutine xc_f90_func_init(p, info, functional, nspin)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(out) :: p
       type(xc_f90_pointer_t), intent(out) :: info
       integer, intent(in) :: functional
@@ -220,18 +219,18 @@ module xc_f90_lib_m
     end subroutine xc_f90_func_init
 
     subroutine xc_f90_func_end(p)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
     end subroutine xc_f90_func_end
 
     subroutine xc_f90_func_set_dens_threshold(p, dens_threshold)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: dens_threshold
     end subroutine xc_f90_func_set_dens_threshold
 
     subroutine xc_f90_func_set_ext_params(p, ext_params)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: ext_params
     end subroutine xc_f90_func_set_ext_params
@@ -242,7 +241,7 @@ module xc_f90_lib_m
   !----------------------------------------------------------------
   interface
     subroutine xc_f90_lda(p, np, rho, zk, vrho, fxc, kxc)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho ! rho(nspin) the density
@@ -253,7 +252,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_lda
 
     subroutine xc_f90_lda_exc(p, np, rho, zk)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho ! rho(nspin) the density
@@ -261,7 +260,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_lda_exc
 
     subroutine xc_f90_lda_exc_vxc(p, np, rho, e, v)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho ! rho(nspin) the density
@@ -270,7 +269,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_lda_exc_vxc
 
     subroutine xc_f90_lda_vxc(p, np, rho, v)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho ! rho(nspin) the density
@@ -278,7 +277,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_lda_vxc
 
     subroutine xc_f90_lda_vxc_fxc(p, np, rho, v, fxc)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho ! rho(nspin) the density
@@ -287,7 +286,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_lda_vxc_fxc
 
     subroutine xc_f90_lda_fxc(p, np, rho, fxc)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho ! rho(nspin) the density
@@ -295,7 +294,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_lda_fxc
 
     subroutine xc_f90_lda_kxc(p, np, rho, kxc)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho ! rho(nspin) the density
@@ -308,7 +307,7 @@ module xc_f90_lib_m
   interface
     subroutine xc_f90_gga(p, np, rho, sigma, zk, vrho, vsigma, &
         v2rho2, v2rhosigma, v2sigma2, v3rho3, v3rho2sigma, v3rhosigma2, v3sigma3)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho
@@ -326,7 +325,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_gga
 
     subroutine xc_f90_gga_exc(p, np, rho, sigma, zk)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho
@@ -335,7 +334,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_gga_exc
 
     subroutine xc_f90_gga_exc_vxc(p, np, rho, sigma, zk, vrho, vsigma)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho
@@ -346,7 +345,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_gga_exc_vxc
 
     subroutine xc_f90_gga_vxc(p, np, rho, sigma, vrho, vsigma)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho
@@ -356,7 +355,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_gga_vxc
 
     subroutine xc_f90_gga_vxc_fxc(p, np, rho, sigma, vrho, vsigma, v2rho2, v2rhosigma, v2sigma2)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho
@@ -369,7 +368,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_gga_vxc_fxc
 
     subroutine xc_f90_gga_fxc(p, np, rho, sigma, v2rho2, v2rhosigma, v2sigma2)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho
@@ -380,7 +379,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_gga_fxc
 
     subroutine xc_f90_gga_kxc(p, np, rho, sigma, v3rho3, v3rho2sigma, v3rhosigma2, v3sigma3)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho
@@ -396,7 +395,7 @@ module xc_f90_lib_m
   !----------------------------------------------------------------
   interface
     subroutine xc_f90_gga_lb_modified(p, np, rho, grho, r, dedd)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho ! rho(nspin) the density
@@ -409,7 +408,7 @@ module xc_f90_lib_m
   !----------------------------------------------------------------
   interface
     subroutine xc_f90_gga_x_b86_set_par(p, beta, gamma, omega)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: beta
       real(xc_f90_kind), intent(in) :: gamma
@@ -417,21 +416,21 @@ module xc_f90_lib_m
     end subroutine xc_f90_gga_x_b86_set_par
 
     subroutine xc_f90_gga_x_b88_set_par(p, beta, gamma)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: beta
       real(xc_f90_kind), intent(in) :: gamma
     end subroutine xc_f90_gga_x_b88_set_par
 
     subroutine xc_f90_gga_x_pbe_set_par(p, kappa, mu)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: kappa
       real(xc_f90_kind), intent(in) :: mu
     end subroutine xc_f90_gga_x_pbe_set_par
 
     subroutine xc_f90_gga_x_pbeint_set_par(p, kappa, alpha, mupbe, muge)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: kappa
       real(xc_f90_kind), intent(in) :: alpha
@@ -440,13 +439,13 @@ module xc_f90_lib_m
     end subroutine xc_f90_gga_x_pbeint_set_par
 
     subroutine xc_f90_gga_c_pbe_set_par(p, beta)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: beta
     end subroutine xc_f90_gga_c_pbe_set_par
 
     subroutine xc_f90_gga_x_pw91_set_par(p, a, b, c, d, f, alpha, expo)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: a
       real(xc_f90_kind), intent(in) :: b
@@ -458,7 +457,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_gga_x_pw91_set_par
 
     subroutine xc_f90_gga_x_pw91_set_par2(p, bt, alpha, expo)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: bt
       real(xc_f90_kind), intent(in) :: alpha
@@ -466,14 +465,14 @@ module xc_f90_lib_m
     end subroutine xc_f90_gga_x_pw91_set_par2
 
     subroutine xc_f90_gga_x_rpbe_set_par(p, kappa, mu)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: kappa
       real(xc_f90_kind), intent(in) :: mu
     end subroutine xc_f90_gga_x_rpbe_set_par
 
     subroutine xc_f90_gga_x_optx_set_par(p, a, b, gamma)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: a
       real(xc_f90_kind), intent(in) :: b
@@ -481,7 +480,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_gga_x_optx_set_par
 
     subroutine xc_f90_gga_c_lyp_set_par(p, A, B, c, d)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: A
       real(xc_f90_kind), intent(in) :: B
@@ -490,39 +489,39 @@ module xc_f90_lib_m
     end subroutine xc_f90_gga_c_lyp_set_par
 
     subroutine xc_f90_gga_x_wpbeh_set_par(p, omega)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: omega
     end subroutine xc_f90_gga_x_wpbeh_set_par
 
     subroutine xc_f90_gga_x_hjs_set_par(p, omega)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: omega
     end subroutine xc_f90_gga_x_hjs_set_par
 
     subroutine xc_f90_gga_x_hjs_b88_v2_set_par(p, omega)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: omega
     end subroutine xc_f90_gga_x_hjs_b88_v2_set_par
 
     subroutine xc_f90_gga_x_ityh_set_par(p, func_id, omega)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       integer, intent(in) :: func_id
       real(xc_f90_kind), intent(in) :: omega
     end subroutine xc_f90_gga_x_ityh_set_par
 
     subroutine xc_f90_gga_x_sfat_set_par(p, func_id, omega)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       integer, intent(in) :: func_id
       real(xc_f90_kind), intent(in) :: omega
     end subroutine xc_f90_gga_x_sfat_set_par
 
     subroutine xc_f90_gga_x_ssb_sw_set_par(p, A, B, C, D, E)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: A
       real(xc_f90_kind), intent(in) :: B
@@ -532,7 +531,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_gga_x_ssb_sw_set_par
 
     subroutine xc_f90_gga_x_kt_set_par(p, gamma, delta)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: gamma
       real(xc_f90_kind), intent(in) :: delta
@@ -542,7 +541,7 @@ module xc_f90_lib_m
   !----------------------------------------------------------------
   interface
     subroutine xc_f90_gga_ak13_get_asymptotic(homo, asymp)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       real(xc_f90_kind), intent(in) :: homo
       real(xc_f90_kind), intent(out) :: asymp
     end subroutine xc_f90_gga_ak13_get_asymptotic
@@ -551,19 +550,19 @@ module xc_f90_lib_m
   !----------------------------------------------------------------
   interface
     subroutine xc_f90_hyb_exx_coef(p, coef)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       real(xc_f90_kind), intent(out) :: coef
     end subroutine xc_f90_hyb_exx_coef
 
     subroutine xc_f90_hyb_cam_coef(p, omega, alpha, beta)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       real(xc_f90_kind), intent(out) :: omega, alpha, beta
     end subroutine xc_f90_hyb_cam_coef
 
     subroutine xc_f90_nlc_coef(p, nlc_b, nlc_c)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       real(xc_f90_kind), intent(out) :: nlc_b, nlc_c
     end subroutine xc_f90_nlc_coef
@@ -577,7 +576,7 @@ module xc_f90_lib_m
       v2rho2, v2sigma2, v2lapl2, v2tau2, v2rhosigma, v2rholapl, v2rhotau, &
       v2sigmalapl, v2sigmatau, v2lapltau)
 
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho
@@ -602,7 +601,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_mgga
 
     subroutine xc_f90_mgga_exc(p, np, rho, sigma, lapl, tau, zk)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho
@@ -613,7 +612,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_mgga_exc
 
     subroutine xc_f90_mgga_exc_vxc(p, np, rho, sigma, lapl, tau, zk, vrho, vsigma, vlapl, vtau)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho
@@ -628,7 +627,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_mgga_exc_vxc
 
     subroutine xc_f90_mgga_vxc(p, np, rho, sigma, lapl, tau, vrho, vsigma, vlapl, vtau)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho
@@ -646,7 +645,7 @@ module xc_f90_lib_m
       v2rho2, v2sigma2, v2lapl2, v2tau2, v2rhosigma, v2rholapl, v2rhotau, &
       v2sigmalapl, v2sigmatau, v2lapltau)
 
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho
@@ -673,7 +672,7 @@ module xc_f90_lib_m
       v2rho2, v2sigma2, v2lapl2, v2tau2, v2rhosigma, v2rholapl, v2rhotau, &
       v2sigmalapl, v2sigmatau, v2lapltau)
 
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(in) :: p
       integer, intent(in) :: np
       real(xc_f90_kind), intent(in) :: rho
@@ -695,7 +694,7 @@ module xc_f90_lib_m
 
   interface
     subroutine xc_f90_mgga_x_tpss_set_par(p, b, c, e, kappa, mu, BLOC_a, BLOC_b)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: b
       real(xc_f90_kind), intent(in) :: c
@@ -707,7 +706,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_mgga_x_tpss_set_par
 
     subroutine xc_f90_mgga_c_tpss_set_par(p, beta, d, C0_0, C0_1, C0_2, C0_3)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: beta
       real(xc_f90_kind), intent(in) :: d
@@ -718,7 +717,7 @@ module xc_f90_lib_m
     end subroutine xc_f90_mgga_c_tpss_set_par
 
     subroutine xc_f90_mgga_c_bc95_set_par(p, css, copp)
-      use xc_f90_types_m
+      use xc_f90_types_m, only: xc_f90_kind, xc_f90_pointer_t
       type(xc_f90_pointer_t), intent(inout) :: p
       real(xc_f90_kind), intent(in) :: css
       real(xc_f90_kind), intent(in) :: copp
