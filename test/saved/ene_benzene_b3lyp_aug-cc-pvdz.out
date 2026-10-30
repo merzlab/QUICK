@@ -22,7 +22,7 @@
 | **               8888888Z     888      .8888I  88888    88888         8888888       8888:     888888   **
 | **                                                                                                     **
 | **                                                                                                     **
-| **                                         Copyright (c) 2025                                          **
+| **                                         Copyright (c) 2026                                          **
 | **                          Regents of the University of California San Diego                          **
 | **                                    & Michigan State University                                      **
 | **                                        All Rights Reserved.                                         **
@@ -33,21 +33,31 @@
 |                                                                                                          
 | Cite this work as:                                                                                       
 | Manathunga, M.; O'Hearn, K. A.; Shajan, A.; Smith, J.; Miao, Y.; He, X.; Ayers, K.;                      
-| Brothers, E.; Palos, E.; Tripathy, V.; Goetz, A.W.; Merz, K.M. QUICK-25.03.                              
+| Brothers, E.; Palos, E.; Tripathy, V.; Goetz, A.W.; Merz, K.M. QUICK-26.03.                              
 | University of California,San Diego, CA and                                                               
-| Michigan State University, East Lansing, MI, 2025                                                        
+| Michigan State University, East Lansing, MI, 2026                                                        
 |                                                                                                          
 | If you have any comments or queries, please reach out to us on GitHub issues or discussion sections:     
 | https://github.com/merzlab/QUICK.                                                                        
 |                                                                                                          
-| TASK STARTS ON: Sat Mar  7 00:42:15 2026
-| INPUT FILE :    benzene_augccpvdz.in
-| OUTPUT FILE:    benzene_augccpvdz.out
+| TASK STARTS ON: Sat Aug  1 22:06:38 2026
+| INPUT FILE :    ene_benzene_b3lyp_aug-cc-pvdz.in
+| OUTPUT FILE:    ene_benzene_b3lyp_aug-cc-pvdz.out
 | BASIS SET PATH: /scratch/vtripathy/QUICK/install_ffun/basis
+
+|------------ GPU INFORMATION ---------------
+| CUDA ENABLED DEVICE         :        1
+| CUDA DEVICE IN USE          :        0
+| CUDA DEVICE NAME            : NVIDIA GeForce RTX 2080
+| CUDA DEVICE PM              :       46
+| CUDA DEVICE CORE FREQ(GHZ)  :     1.71
+| CUDA DEVICE MEMORY SIZE (MB):     7776
+| SUPPORTING CUDA VERSION     :      7.5
+|--------------------------------------------
 
  @ Read Job And Atom
 
-  KEYWORD=B3LYP BASIS=AUG-CC-PVDZ CUTOFF=1.0E-10 DENSERMS=1.0E-6
+  KEYWORD=B3LYP BASIS=AUG-CC-PVDZ CUTOFF=1.0E-10 DENSERMS=1.0E-6 DIPOLE
  ============== JOB CARD =============
  METHOD = DENSITY FUNCTIONAL THEORY
  DENSITY FUNCTIONAL = B3LYP
@@ -56,7 +66,11 @@
  USE DIIS SCF
  PRINT ENERGY EVERY CYCLE
  READ SAD GUESS FROM FILE
+ DIPOLE
  STANDARD GRID = SG1
+ Level shifting allowed after cycle    3
+ DIIS error must exceed 0.100 for level shifting
+ Max HOMO-LUMO gap to allow level shifting = 0.200
  MAX SCF CYCLES =    200
  MAX DIIS CYCLES =   10
  DELTA DENSITY START CYCLE =    3
@@ -69,7 +83,7 @@
  DENSITY MATRIX MAXIMUM RMS FOR CONVERGENCE  =  0.100E-05
  BASIS SET = AUG-CC-PVDZ,  TYPE = CARTESIAN
 | BASIS FILE = /scratch/vtripathy/QUICK/install_ffun/basis/AUG-CC-PVDZ.BAS
-| DATA FILE  =    benzene_augccpvdz.dat
+| DATA FILE  =    ene_benzene_b3lyp_aug-cc-pvdz.dat
 
  @ Finish reading job
 
@@ -147,11 +161,11 @@
  @ Begin XC Quadrature Formation
 
  OCTAGO: OCTree Algorithm for Grid Operations 
-   PRUNING CUTOFF       = 0.100E-06
+   PRUNING CUTOFF       = 0.100E-07
    INITIAL GRID POINTS  =       45408
-|   FINAL GRID POINTS    =       30871
-|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =       83630
-|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =       88256
+|   FINAL GRID POINTS    =       30875
+|   SIGNIFICANT NUMBER OF BASIS FUNCTIONS     =       83722
+|   SIGNIFICANT NUMBER OF PRIMITIVE FUNCTIONS =       88786
 
  @ End XC Quadrature Formation
 
@@ -167,46 +181,71 @@
 | ------------------------------------------------------------------------------------------------------------------------
 | NCYC       ENERGY         DELTA_E      SCF_TIME  DII_CYC   DII_TIME   O_TIME  DIAG_TIME    MAX_ERR    RMS_CHG    MAX_CHG
 | ------------------------------------------------------------------------------------------------------------------------
-|  1   -234.044259936      ------         4.218     1        0.02      4.20      0.01    0.2144E+01  0.5072E-01  0.1100E+01
-|  2   -232.165106314  -.187915E+01      10.272     2        0.02     10.25      0.01    0.1420E+00  0.1668E-01  0.4544E+00
-|  3   -232.136591004  -.285153E-01      10.152     3        0.03     10.12      0.01    0.1531E+00  0.6726E-02  0.1401E+00
-|   ***  Level shifting is being applied  ***
-|  4   -232.273412543  0.136822E+00      10.098     4        0.02     10.08      0.01    0.2052E-01  0.1910E-02  0.7188E-01
-|  5   -232.277467832  0.405529E-02       9.883     5        0.02      9.86      0.01    0.1931E-02  0.2579E-03  0.5316E-02
-|  6   -232.277501872  0.340398E-04       9.609     6        0.02      9.59      0.01    0.4984E-03  0.3732E-04  0.6622E-03
-|  7   -232.277503124  0.125213E-05       9.309     7        0.02      9.29      0.01    0.3324E-03  0.1446E-04  0.3845E-03
-|  8   -232.277503719  0.595152E-06       9.078     8        0.02      9.06      0.01    0.2694E-04  0.3338E-05  0.9992E-04
-|  9   -232.277503725  0.584845E-08       8.581     9        0.02      8.56      0.01    0.4416E-05  0.3829E-06  0.9433E-05
+|  1   -234.044261102      ------         5.182     1        0.01      5.17      0.01    0.2144E+01  0.5087E-01  0.1095E+01
+|  2   -232.165107917  -.187915E+01       6.147     2        0.01      6.13      0.01    0.1420E+00  0.1665E-01  0.4479E+00
+|  3   -232.136592336  -.285156E-01       5.990     3        0.01      5.98      0.01    0.1531E+00  0.5744E-02  0.1186E+00
+|   ***  Level shifting applied  ( HOMO-LUMO gap =  0.164 au ) ***
+|  4   -232.276721800  0.140129E+00       5.778     4        0.01      5.77      0.01    0.8017E-02  0.1204E-02  0.3703E-01
+|  5   -232.277475887  0.754087E-03       5.688     5        0.01      5.68      0.01    0.1276E-02  0.2441E-03  0.5351E-02
+|  6   -232.277504683  0.287965E-04       5.641     6        0.01      5.63      0.01    0.3434E-03  0.3027E-04  0.7511E-03
+|  7   -232.277505222  0.539334E-06       5.531     7        0.01      5.52      0.01    0.2638E-03  0.1053E-04  0.2162E-03
+|  8   -232.277505591  0.368696E-06       5.470     8        0.01      5.46      0.01    0.2934E-04  0.2379E-05  0.5980E-04
+|  9   -232.277505598  0.716545E-08       5.462     9        0.01      5.45      0.01    0.4080E-05  0.3002E-06  0.6757E-05
 | ------------------------------------------------------------------------------------------------------------------------
 | REACH CONVERGENCE AFTER   9 CYCLES
-| MAX ERROR = 0.441644E-05   RMS CHANGE = 0.382913E-06   MAX CHANGE = 0.943252E-05
+| MAX ERROR = 0.407970E-05   RMS CHANGE = 0.300198E-06   MAX CHANGE = 0.675727E-05
 | -----------------------------------------------
- ALPHA ELECTRON DENSITY    =    21.0001270923
- BETA ELECTRON DENSITY     =    21.0001270923
- ELECTRONIC ENERGY    =   -436.021827760
+ ALPHA ELECTRON DENSITY    =    21.0001324956
+ BETA ELECTRON DENSITY     =    21.0001324956
+ ELECTRONIC ENERGY    =   -436.021829634
  CORE_CORE REPULSION  =    203.744324035
- TOTAL ENERGY         =   -232.277503725
+ TOTAL ENERGY         =   -232.277505598
 
  @ End Energy calculation
 
   Skipping one-electron property calculation.
 
+ @ Begin Charge and Dipole Calculation
+
+    ATOMIC CHARGES
+   ATOM          MULLIKEN            LOWDIN
+   C              0.8242            -0.0849
+   C              0.8357            -0.0538
+   C              0.8238            -0.0849
+   C              0.8239            -0.0849
+   C              0.8388            -0.0538
+   C              0.8257            -0.0848
+   H             -0.8282             0.0775
+   H             -0.8293             0.0684
+   H             -0.8283             0.0775
+   H             -0.8283             0.0775
+   H             -0.8295             0.0684
+   H             -0.8284             0.0775
+   TOTAL         0.0000             0.0000
+
+    DIPOLE (DEBYE)
+      X         Y         Z        TOTAL
+   -0.0000    0.0000    0.0000    0.0000
+
+ @ End Charge and Dipole Calculation
+
+
  @ Output Timing Information
 
 ------------- TIMING ---------------
-| INITIAL GUESS TIME  =     0.111083000(  0.14%)
-| DFT GRID OPERATIONS =     0.090916000(  0.11%)
-| TOTAL SCF TIME      =    81.214848000( 99.72%)
-|       TOTAL OP TIME      =    81.003782000( 99.46%)
-|             TOTAL 1e TIME      =     0.014817000(  0.02%)
-|             TOTAL 2e TIME      =    73.095424000( 89.75%)
-|             TOTAL EXC TIME     =     7.877263000(  9.67%)
-|       TOTAL DII TIME      =     0.210558000(  0.26%)
-|             TOTAL DIAG TIME    =     0.045665000(  0.06%)
-| TOTAL TIME          =    81.442534000
+| INITIAL GUESS TIME  =     0.362553000(  0.70%)
+| DFT GRID OPERATIONS =     0.072122000(  0.14%)
+| TOTAL SCF TIME      =    50.899556000( 98.56%)
+|       TOTAL OP TIME      =    50.787462000( 98.35%)
+|             TOTAL 1e TIME      =     0.010485000(  0.02%)
+|             TOTAL 2e TIME      =    19.576210000( 37.91%)
+|             TOTAL EXC TIME     =    31.186841000( 60.39%)
+|       TOTAL DII TIME      =     0.111505000(  0.22%)
+|             TOTAL DIAG TIME    =     0.068960000(  0.13%)
+| TOTAL TIME          =    51.641083000
 ------------------------------------
-| Job cpu time:  0 days  0 hours  1 minutes 21.4 seconds.
+| Job cpu time:  0 days  0 hours  0 minutes 51.6 seconds.
 
  @ Finish Output Timing Information
 
-| Normal Termination. Task Finished on: Sat Mar  7 00:43:37 2026
+| Normal Termination. Task Finished on: Sat Aug  1 22:07:30 2026

@@ -1,4 +1,4 @@
-B3LYP BASIS=AUG-CC-PVDZ cutoff=1.0e-10 denserms=1.0e-6
+B3LYP BASIS=AUG-CC-PVDZ cutoff=1.0e-10 denserms=1.0e-6 DIPOLE
 
 C 0.695 -1.204 0.000
 C 1.391 0.000 0.000
