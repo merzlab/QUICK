@@ -3,6 +3,7 @@
 #include "gpu_type.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 #if defined(MPIV_GPU)
   #include <mpi.h>
