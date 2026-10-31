@@ -39,7 +39,7 @@ contains
      use quick_method_module, only: quick_method, quick_method_type
      use quick_calculated_module, only: quick_qm_struct, alloc, init, dealloc
      use quick_constants_module, only : symbol, spinmult
-     use quick_gridpoints_module, only: gridformSG1
+     use quick_gridpoints_module, only: gridformEML, gridformDoubleExp
      use quick_size_module, only: MIN_SCF
      use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
      use quick_exception_module, only: RaiseException
@@ -367,7 +367,6 @@ contains
      use quick_constants_module, only: SPINMULT, SYMBOL
      use quick_molspec_module, only: alloc, dealloc, init, natom, quick_molspec, quick_molspec_type, read, set, xyz
      use quick_size_module, only: MIN_SCF
-     use quick_gridpoints_module, only: gridformSG1
      use quick_scf_module, only: B, BCOPY, BSAVE, COEFF, RHS, W, allerror, alloperator, scf
      use quick_oei_module, only: bCalc1e
      use quick_uscf_module, only: allocate_quick_uscf,deallocate_quick_uscf,alloperatorB

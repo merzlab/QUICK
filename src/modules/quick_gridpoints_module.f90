@@ -268,7 +268,7 @@ contains
     type(quick_xc_grid_type), intent(inout) :: self
     type(quick_xcg_tmp_type), intent(inout) :: xcg_tmp
 
-    integer :: Iang, Iatm, idx, idx_grid, iiangt, Irad, Iradtemp, ist, iend
+    integer :: Iang, Iatm, idx, idx_grid, iiang, Irad, Iradtemp, ist, iend
     double precision :: t_octree, t_prscrn, rad, rad3
     double precision, external :: SSW
 
@@ -400,18 +400,14 @@ contains
     if(bMPI) then
        call setup_ssw_mpi
 
-   if(bMPI) then
+       ist=self%igridptll(quick_comm_rank+1)
+       iend=self%igridptul(quick_comm_rank+1)
+    else
+       ist=1
+       iend = idx_grid
+    endif
 
-      call setup_ssw_mpi
-      
-      ist=self%igridptll(mpirank+1)
-      iend=self%igridptul(mpirank+1)
-   else
-      ist=1
-      iend = idx_grid
-   endif
-   
-   do idx=ist, iend
+    do idx = ist, iend
 #else
     do idx = 1, idx_grid
 #endif

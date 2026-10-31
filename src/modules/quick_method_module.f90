@@ -282,6 +282,9 @@ module quick_method_module
             call MPI_BCAST(self%MFCC,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%ifragbasis,1,mpi_integer,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%iSG,1,mpi_integer,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%useEML,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%eml_radial,1,mpi_integer,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%eml_angular,1,mpi_integer,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%iscf,1,mpi_integer,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%iscf_sad,1,mpi_integer,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%iopt,1,mpi_integer,0,quick_comm,quick_mpi_error)
@@ -746,11 +749,11 @@ module quick_method_module
             if (self%DFT) then
                 if (found_keyword(keyWD,'SG0')) then
                     self%iSG=0
-                else if (index(keyWD,'SG1').ne.0) then
+                else if (found_keyword(keyWD,'SG1')) then
                     self%iSG=1
-                else if (index(keyWD,'SG2').ne.0) then
+                else if (found_keyword(keyWD,'SG2')) then
                     self%iSG=2
-                else if (index(keyWD,'SG3').ne.0) then
+                else if (found_keyword(keyWD,'SG3')) then
                     self%iSG=3
                 else
                     self%iSG=1  ! default SG-1
@@ -758,21 +761,19 @@ module quick_method_module
             endif
 
             ! Custom EML grid
-            if (index(keywd,'EML_RAD') /= 0) then
+            if (found_keyword(keywd,'EML_RAD')) then
                 call read(keywd, 'EML_RAD', self%eml_radial)
                 self%useEML = .true.
             endif
 
-            if (index(keywd,'EML_ANG') /= 0) then
+            if (found_keyword(keywd,'EML_ANG')) then
                 call read(keywd, 'EML_ANG', self%eml_angular)
                 self%useEML = .true.
             endif
 
-            ! Detect iSG conflict (store flag for Phase 5 validation)
-            if (self%useEML .and. (index(keywd,'SG0') /= 0 .or. index(keywd,'SG1') /= 0 .or. &
-                                index(keywd,'SG2') /= 0 .or. index(keywd,'SG3') /= 0)) then
-                ! Error will be handled in Phase 5 validation
-                ! For now, just flag it
+            ! Detect iSG conflict
+            if (self%useEML .and. (found_keyword(keywd,'SG0') .or. found_keyword(keywd,'SG1') .or. &
+                                found_keyword(keywd,'SG2') .or. found_keyword(keywd,'SG3'))) then
             endif
 
             self%printEnergy=.true.
@@ -948,8 +949,8 @@ module quick_method_module
                 endif
                 
                 ! Check for iSG conflict
-                if (index(keywd,'SG0') /= 0 .or. index(keywd,'SG1') /= 0 .or. &
-                    index(keywd,'SG2') /= 0 .or. index(keywd,'SG3') /= 0) then
+                if (found_keyword(keywd,'SG0') .or. found_keyword(keywd,'SG1') .or. &
+                    found_keyword(keywd,'SG2') .or. found_keyword(keywd,'SG3')) then
                     call PrtErr(OUTFILEHANDLE, 'ERROR: EML grid conflicts with standard grid selection.')
                     call quick_exit(OUTFILEHANDLE, 44)
                 endif
@@ -961,7 +962,6 @@ module quick_method_module
                 endif
             endif
             
-           if (index(keyWD,'LSHIFT_CYCLE').ne.0) then
            if (found_keyword(keyWD,'LSHIFT_CYCLE')) then
                call read(keywd,'LSHIFT_CYCLE', self%LShift_cycle)
            endif
