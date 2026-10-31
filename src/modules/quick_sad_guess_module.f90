@@ -39,7 +39,7 @@ contains
      use quick_method_module, only: quick_method, quick_method_type
      use quick_calculated_module, only: quick_qm_struct, alloc, init, dealloc
      use quick_constants_module, only : symbol, spinmult
-     use quick_gridpoints_module, only: gridformSG1
+     use quick_gridpoints_module, only: gridformEML, gridformDoubleExp
      use quick_size_module, only: MIN_SCF
      use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
      use quick_exception_module, only: RaiseException
@@ -120,11 +120,21 @@ contains
            enddo
            if (quick_molspec%imult /= 1) quick_method%UNRST= .TRUE.
            quick_molspec%nelec = quick_molspec%iattype(1)
-           if ((quick_method%DFT .OR. quick_method%SEDFT).and.quick_method%isg.eq.1) &
-                 call gridformSG1()
-           call check_quick_method_and_molspec(ioutfile,quick_molspec,quick_method,ierr)
-           CHECK_ERROR(ierr)
-  
+
+           if ((quick_method%DFT .OR. quick_method%SEDFT)) then
+               if(quick_method%isg.eq.1) then
+                  call gridformEML(50) !changed from gridformsg1() to gridformEML()
+               else if(quick_method%isg.eq.2) then
+                  call gridformDoubleExp(75, quick_molspec%iattype(1))
+               else if(quick_method%isg.eq.3) then
+                  call gridformDoubleExp(99, quick_molspec%iattype(1))
+               else
+                  call gridformEML(50)
+               endif
+            endif
+
+            call check_quick_method_and_molspec(ioutfile,quick_molspec,quick_method,ierr)
+            CHECK_ERROR(ierr)  
            !-------------------------------------------
            ! At this point we have the positions and identities of the atoms. We also
            ! have the number of electrons. Now we must assign basis functions. This
@@ -357,7 +367,6 @@ contains
      use quick_constants_module, only: SPINMULT, SYMBOL
      use quick_molspec_module, only: alloc, dealloc, init, natom, quick_molspec, quick_molspec_type, read, set, xyz
      use quick_size_module, only: MIN_SCF
-     use quick_gridpoints_module, only: gridformSG1
      use quick_scf_module, only: B, BCOPY, BSAVE, COEFF, RHS, W, allerror, alloperator, scf
      use quick_oei_module, only: bCalc1e
      use quick_uscf_module, only: allocate_quick_uscf,deallocate_quick_uscf,alloperatorB
