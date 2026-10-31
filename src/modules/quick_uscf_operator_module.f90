@@ -14,10 +14,9 @@
 !_____________________________________________________________________!
 
 module quick_uscf_operator_module
-
   implicit none
-  private 
 
+  private 
   public :: uscf_operator
   
 
@@ -33,11 +32,17 @@ contains
   !  possible basis. Note that the Fock matrix is symmetric.
   !  This code now also does all the HF energy calculation. Ed.
   !-------------------------------------------------------
-     use allmod
+     use quick_scratch_module, only: quick_scratch
+     use quick_basis_module, only: cutmatrix, jshell, nbasis
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_method_module, only: quick_method
+     use quick_timer_module, only: timer_begin, timer_cumer, timer_end
      use quick_cutoff_module, only: oshell_density_cutoff
      use quick_eri_oshell_module, only: getOshellEri, getOshellEriEnergy 
      use quick_oei_module, only: get1eEnergy, get1e
-#ifdef MPIV
+#if defined(MPIV)
+     use quick_basis_module, only: mpi_jshell, mpi_jshelln
+     use quick_mpi_module, only: bMPI, master, quick_comm, quick_comm_rank, quick_mpi_error
      use mpi
 #endif
   
@@ -89,7 +94,7 @@ contains
      call oshell_density_cutoff
    
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
   
 #if defined(GPU) || defined(MPIV_GPU)
@@ -136,8 +141,8 @@ contains
   !  Every nodes will take about jshell/nodes shells integrals such as 1 water, which has 
   !  4 jshell, and 2 nodes will take 2 jshell respectively.
      if(bMPI) then
-        do i=1,mpi_jshelln(mpirank)
-           ii=mpi_jshell(mpirank,i)
+        do i=1,mpi_jshelln(quick_comm_rank)
+           ii=mpi_jshell(quick_comm_rank,i)
            call getOshellEri(II)
         enddo
      else
@@ -170,7 +175,7 @@ contains
      if(quick_method%printEnergy) call getOshellEriEnergy
 
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
   
   !  Terminate the timer for 2e-integrals
@@ -185,7 +190,7 @@ contains
   !-----------------------------------------------------------------
   
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
   
      if (quick_method%DFT) then
@@ -201,7 +206,7 @@ contains
         call copySym(quick_qm_struct%ob,nbasis)
   
 #ifdef MPIV
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
 #endif
   
   !  Stop the exchange correlation timer
@@ -217,14 +222,14 @@ contains
 #ifdef MPIV
   !  MPI reduction operations
   
-     call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+     call MPI_BARRIER(quick_comm,quick_mpi_error)
   
      RECORD_TIME(timer_begin%TEred)
   
      if (quick_method%DFT) then
-     call MPI_REDUCE(quick_qm_struct%Exc, Excsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-     call MPI_REDUCE(quick_qm_struct%aelec, aelec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
-     call MPI_REDUCE(quick_qm_struct%belec, belec, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+     call MPI_REDUCE(quick_qm_struct%Exc, Excsum, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
+     call MPI_REDUCE(quick_qm_struct%aelec, aelec, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
+     call MPI_REDUCE(quick_qm_struct%belec, belec, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
   
      if(master) then
        quick_qm_struct%Exc = Excsum
@@ -234,11 +239,11 @@ contains
      endif
   
      call MPI_REDUCE(quick_qm_struct%o, quick_scratch%osum, nbasis*nbasis, mpi_double_precision, MPI_SUM, 0, &
-     MPI_COMM_WORLD, IERROR)
+     quick_comm, IERROR)
      call MPI_REDUCE(quick_qm_struct%ob, quick_scratch%obsum, nbasis*nbasis, mpi_double_precision, MPI_SUM, 0, &
-     MPI_COMM_WORLD, IERROR)
+     quick_comm, IERROR)
 
-     call MPI_REDUCE(quick_qm_struct%Eel, Eelsum, 1, mpi_double_precision, MPI_SUM, 0, MPI_COMM_WORLD, IERROR)
+     call MPI_REDUCE(quick_qm_struct%Eel, Eelsum, 1, mpi_double_precision, MPI_SUM, 0, quick_comm, IERROR)
   
      if(master) then
        quick_qm_struct%o(:,:)  = quick_scratch%osum(:,:)
@@ -278,14 +283,18 @@ contains
   !  the gradient of the alpha density with the beta density.
   !  Grad(Phimu Phinu) is the gradient of Phimu times Phinu. 
   !----------------------------------------------------------------
-     use allmod
-     use quick_gridpoints_module
-     use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
-     use xc_f90_types_m
-     use xc_f90_lib_m
-#ifdef MPIV
-     use mpi
+     use quick_basis_module, only: dphidxxiao, dphidyxiao, dphidzxiao, phixiao
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_method_module, only: quick_method
+     use quick_gridpoints_module, only: quick_dft_grid
+
+     use xc_f90_types_m, only: xc_f90_pointer_t
+     use xc_f90_lib_m, only: XC_FAMILY_GGA, XC_FAMILY_HYB_GGA, XC_FAMILY_LDA, XC_POLARIZED, xc_f90_func_end, &
+          xc_f90_func_init, xc_f90_gga_exc_vxc, xc_f90_info_family, xc_f90_lda_exc_vxc, xc_f90_pointer_t
+#if defined(MPIV)
+     use quick_mpi_module, only: bMPI, quick_comm, quick_comm_rank
 #endif
+
      implicit none
   
      !integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
@@ -322,7 +331,6 @@ contains
      quick_qm_struct%aelec=0.d0
      quick_qm_struct%belec=0.d0
   
-  
 #if defined(GPU) || defined(MPIV_GPU)
   
      if(quick_method%bGPU) then
@@ -357,8 +365,8 @@ contains
   
 #if defined(MPIV) && !defined(MPIV_GPU)
         if(bMPI) then
-           irad_init = quick_dft_grid%igridptll(mpirank+1)
-           irad_end = quick_dft_grid%igridptul(mpirank+1)
+           irad_init = quick_dft_grid%igridptll(quick_comm_rank+1)
+           irad_end = quick_dft_grid%igridptul(quick_comm_rank+1)
         else
            irad_init = 1
            irad_end = quick_dft_grid%nbins
@@ -565,9 +573,6 @@ contains
 
   !  Add the exchange correlation energy to total electronic energy
      quick_qm_struct%Eel    = quick_qm_struct%Eel+quick_qm_struct%Exc
-  
-     return
-  
   end subroutine get_oshell_xc
 
 end module quick_uscf_operator_module

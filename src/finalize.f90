@@ -11,15 +11,21 @@
 !       deallocateall
 !       finalize
 
-Subroutine deallocate_calculated
+
 !   Xiao HE deallocate 07/17/2007
 !   Ken Ayers 05/26/04
 !   Subroutines for allocation of the various matricies in quick
 !   These routines are not the ideal way to deal with allocation of
 !   variables.  Large sized arrays should only be allocated when
 !   they are needed.  Eventually someone will deal with this.
-  use allmod
-  use quick_gridpoints_module
+Subroutine deallocate_calculated
+  use quick_basis_module, only: Yxiao, Yxiaotemp, Yxiaoprim, attraxiao
+  use quick_basis_module, only: attraxiaoopt, Ycutoff, cutmatrix, itype
+  use quick_basis_module, only: ncontract, aexp, dcoeff
+  use quick_basis_module, only: deallocate_quick_basis, quick_basis
+  use quick_gridpoints_module, only: sigrad2
+  use quick_scratch_module, only: deallocate_quick_scratch, quick_scratch
+
   if (allocated(Yxiao)) deallocate(Yxiao)
   if (allocated(Yxiaotemp)) deallocate(Yxiaotemp)
   if (allocated(Yxiaoprim)) deallocate(Yxiaoprim)
@@ -29,31 +35,32 @@ Subroutine deallocate_calculated
   if (allocated(cutmatrix)) deallocate(cutmatrix)
   if (allocated(sigrad2)) deallocate(sigrad2)
 
-  call dealloc(quick_scratch)
-  call dealloc(quick_basis)
+  call deallocate_quick_scratch(quick_scratch)
+  call deallocate_quick_basis(quick_basis)
 
   if (allocated(itype)) deallocate(itype)
   if (allocated(ncontract)) deallocate(ncontract)
   if (allocated(aexp)) deallocate(aexp)
   if (allocated(dcoeff)) deallocate(dcoeff)
-  if (allocated(gauss)) deallocate(gauss)
-
 end subroutine deallocate_calculated
 
+
 subroutine deallocateall(ierr)
-
-  use allmod
-  use quick_gridpoints_module
-
+  use quick_method_module, only: quick_method
+  use quick_molspec_module, only: deallocate_quick_molspec, quick_molspec
+  use quick_calculated_module, only: deallocate_quick_qm_struct, quick_qm_struct
+  use quick_gridpoints_module, only: quick_dft_grid, deform_dft_grid
 #ifdef CEW
-  use quick_cew_module, only : quick_cew
+  use quick_cew_module, only: quick_cew
+  use quick_mpi_module, only: mpi_delete_atoms
 #endif
 
   implicit none
+
   integer, intent(inout) :: ierr
 
-    call  dealloc(quick_molspec,ierr)
-    call  dealloc(quick_qm_struct)
+    call  deallocate_quick_molspec(quick_molspec,ierr)
+    call  deallocate_quick_qm_struct(quick_qm_struct)
     call  deallocate_calculated
 
     if (quick_method%DFT &
@@ -64,10 +71,9 @@ subroutine deallocateall(ierr)
       call  deform_dft_grid(quick_dft_grid)
     endif
 
-#ifdef MPIV
+#if defined(MPIV) && defined(CEW)
     call mpi_delete_atoms
 #endif
-
 end subroutine deallocateall
 
 
@@ -75,12 +81,15 @@ end subroutine deallocateall
 ! Finialize programs
 !----------------------
 subroutine finalize(io,ierr,option)
-    use allmod
-    use quick_exception_module
+    use quick_files_module, only: write_molden
+    use quick_timer_module, only: timer_end, timer_output
     use quick_molden_module, only: finalizeExport, quick_molden
+    use quick_mpi_module, only: bMPI, master, quick_mpi_error
+
     implicit none
-    integer io      !output final info and close this unit
-    integer option  ! 0 if called from Quick and 1 if called from the API
+
+    integer :: io      !output final info and close this unit
+    integer :: option  ! 0 if called from Quick and 1 if called from the API
     integer, intent(inout) :: ierr
 
     ! Deallocate all variables
@@ -112,12 +121,11 @@ subroutine finalize(io,ierr,option)
 
 #ifdef MPIV
     !-------------------- MPI/ALL NODES ----------------------------------
-    if (bMPI .and. option==0) call MPI_FINALIZE(mpierror)
+    if (bMPI .and. option==0) call MPI_FINALIZE(quick_mpi_error)
     !-------------------- End MPI/ALL NODES-------------------------------
 #endif
 
     close(io)
-
 end subroutine finalize
 
 
@@ -125,15 +133,15 @@ end subroutine finalize
 ! Fatal exit subroutine
 !-----------------------
 subroutine quick_exit(io, ierr)
-
-   use allmod
-#ifdef MPIV
+#if defined(MPIV)
+   use quick_mpi_module, only: quick_comm, quick_mpi_error
    use mpi
 #endif
-   implicit none
-   integer io           ! close this unit if greater than zero
-   integer, intent(inout) :: ierr
 
+   implicit none
+
+   integer :: io           ! close this unit if greater than zero
+   integer, intent(inout) :: ierr
 
    if (ierr /= 0) then
       call flush(io)
@@ -143,10 +151,9 @@ subroutine quick_exit(io, ierr)
 
 #ifdef MPIV
    if (ierr /= 0) then
-     call mpi_abort(MPI_COMM_WORLD, ierr, mpierror)
+     call mpi_abort(quick_comm, ierr, quick_mpi_error)
    endif
 #endif
 
    call exit(ierr)
-
 end subroutine quick_exit

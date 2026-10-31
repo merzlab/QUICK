@@ -19,8 +19,8 @@
 
 subroutine hrr_lri
 
-  use quick_basis_module
-  use quick_params_module
+  use quick_basis_module, only: IJKLtype, III, JJJ, IJtype, Y, quick_basis
+  use quick_params_module, only: trans
 
   implicit none
 

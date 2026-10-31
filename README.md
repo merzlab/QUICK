@@ -1,6 +1,7 @@
 <p align="right">
  <img src="https://github.com/merzlab/QUICK/actions/workflows/build_test_serial.yml/badge.svg?branch=master">
  <img src="https://github.com/merzlab/QUICK/actions/workflows/build_test_mpi.yml/badge.svg?branch=master">
+ <img src="https://github.com/merzlab/QUICK/actions/workflows/build_test_cuda.yml/badge.svg?branch=master">
  <img src='https://readthedocs.org/projects/quick-docs/badge/?version=latest' alt='Documentation Status' />
 </p>
 <p align="left">
@@ -60,12 +61,12 @@ A list of installation and runtime issues can be found [here](https://quick-docs
 
 Citation
 --------
-Please cite QUICK-25.03 as follows.
+Please cite QUICK-26.03 as follows.
 
 Manathunga, M.; O'Hearn, K. A.; Shajan, A.; Smith, J.; Miao, Y.; He, X.; Ayers, K;
-Brothers, E.; Palos, E.; Tripathy, V.; Götz, A. W.; Merz, K. M. QUICK-25.03.
+Brothers, E.; Palos, E.; Tripathy, V.; Götz, A. W.; Merz, K. M. QUICK-26.03.
 University of California, San Diego, CA and
-Michigan State University, East Lansing, MI, 2025.
+Michigan State University, East Lansing, MI, 2026.
 
 If you perform ESP, RESP or rwRESP charge computation please also cite:
 

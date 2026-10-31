@@ -5,10 +5,11 @@
 
 subroutine whatis1(this, float)
 
-  implicit double precision(a-h,o-z)
+  implicit none
 
-  character this
-  logical :: float
+  character, intent(in) :: this
+  logical, intent(out) :: float
+  integer :: ithis, i0, i9
 
   float = .false.
 
@@ -43,10 +44,11 @@ end subroutine whatis1
 
 subroutine whatis1i(this, int)
 
-  implicit double precision(a-h,o-z)
+  implicit none
 
-  character this
-  logical :: int
+  character, intent(in) :: this
+  logical, intent(out) :: int
+  integer :: ithis, i0, i9
 
   int = .false.
 
@@ -69,10 +71,11 @@ end subroutine whatis1i
 
 subroutine whatis2(this, int, min)
 
-  implicit double precision(a-h,o-z)
+  implicit none
 
-  character this
-  logical :: int, min
+  character, intent(in) :: this
+  logical, intent(out) :: int, min
+  integer :: ithis, i0, i9
 
   int = .false.
   min = .false.
@@ -94,10 +97,11 @@ end subroutine whatis2
 !C------------------------------------------------------------CC
 
 subroutine whatis7(this,char,num,parl,parr,comma,eq,white)
-  implicit double precision(a-h,o-z)
+  implicit none
 
-  character this
-  logical :: char,num,parl,parr,comma,eq,white
+  character, intent(in) :: this
+  logical, intent(out) :: char, num, parl, parr, comma, eq, white
+  integer :: ithis, ia, iz, iaa, izz, i0, i9
 
   !C--------------------------------------------CC
 

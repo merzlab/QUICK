@@ -7,19 +7,20 @@
 
 #include "util.fh"
 
-subroutine read_job_and_atom(ierr)
-   
-   ! this subroutine is to read job and atoms
-   
-   use quick_molspec_module
-   use quick_method_module
-   use quick_mpi_module
-   use quick_files_module
-   use quick_calculated_module
-   use quick_ecp_module
-   use quick_api_module
-   use quick_exception_module
 
+! this subroutine is to read job and atoms
+subroutine read_job_and_atom(ierr)
+   use quick_molspec_module, only: quick_molspec, read
+   use quick_method_module, only: quick_method, read, check, print
+   use quick_mpi_module, only: bMPI, master
+   use quick_files_module, only: inFileName, inFile, iOutFile, isTemplate, &
+                                 read_data_file, read_basis_file, print_data_file, &
+                                 print_basis_file, print_ecp_file
+   use quick_calculated_module, only: quick_qm_struct, read
+   use quick_ecp_module, only: tolecp, thrshecp, itolecp
+   use quick_api_module, only: quick_api
+   use quick_exception_module, only: RaiseException
+   use quick_input_parser_module, only: index_keyword, found_keyword
 #ifdef CEW
    use quick_cew_module, only: quick_cew, print
 #endif
@@ -34,7 +35,6 @@ subroutine read_job_and_atom(ierr)
    integer, intent(inout) :: ierr
 
    if (master) then
-
       ! AG 03/05/2007
       itolecp=0
 
@@ -92,8 +92,8 @@ subroutine read_job_and_atom(ierr)
       if( .not. (quick_api%apiMode .and. quick_api%hasKeywd )) close(inFile)
 
       ! ECP integrals prescreening  -Alessandro GENONI 03/05/2007
-      if ((index(keywd,'TOL_ECPINT=') /= 0).and.quick_method%ecp) then
-         istrt = index(keywd,'TOL_ECPINT=')+10
+      if (found_keyword(keywd,'TOL_ECPINT=').and.quick_method%ecp) then
+         istrt = index_keyword(keywd,'TOL_ECPINT=')+10
          call rdinum(keywd,istrt,itolecp,ierr)
          tolecp=2.30258d+00*itolecp
          thrshecp=10.0d0**(-1.0d0*itolecp)

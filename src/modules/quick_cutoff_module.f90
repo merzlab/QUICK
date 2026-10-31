@@ -19,7 +19,8 @@
 ! Reference: Strout DL and Scuseria JCP 102(1995),8448.
 
 module quick_cutoff_module
-  implicit double precision(a-h,o-z)
+  implicit none
+
   private
   public :: cshell_density_cutoff,oshell_density_cutoff
   public :: cshell_dnscreen,oshell_dnscreen
@@ -29,10 +30,13 @@ module quick_cutoff_module
   double precision, dimension(:), allocatable :: X44
   double precision, dimension(:,:), allocatable :: X4444
 
+
 contains
 
+
 subroutine allocate_quick_cutoff
-  use quick_basis_module
+  use quick_basis_module, only: maxcontract
+
   implicit none
   
   if(.not. allocated(X44)) allocate(X44(maxcontract**4))
@@ -43,6 +47,7 @@ subroutine allocate_quick_cutoff
 
 end subroutine allocate_quick_cutoff
 
+
 subroutine deallocate_quick_cutoff
   implicit none
 
@@ -51,16 +56,19 @@ subroutine deallocate_quick_cutoff
 
 end subroutine deallocate_quick_cutoff
 
+
 subroutine schwarzoff
-  use allmod
-#ifdef MPIV
+  use quick_basis_module, only: nshell, jbasis, YCutoff, cutprim
+  use quick_mpi_module, only: master
+#if defined(MPIV)
+  use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
   use mpi
 #endif
 
-  Implicit none
+  implicit none
 
-  integer ii,jj
-  double precision Ymaxtemp
+  integer :: ii,jj
+  double precision :: Ymaxtemp
 
   if (master) then
 
@@ -80,20 +88,30 @@ subroutine schwarzoff
 
 #ifdef MPIV
       if (bMPI) then
-         call MPI_BCAST(YCutoff,nshell*nshell,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(cutprim,jbasis*jbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(YCutoff,nshell*nshell,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(cutprim,jbasis*jbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BARRIER(quick_comm,quick_mpi_error)
       endif
 #endif
 
 end subroutine schwarzoff
 
-subroutine shellcutoff(II,JJ,Ymax)
-  use allmod
 
-  Implicit double precision(a-h,o-z)
+subroutine shellcutoff(II,JJ,Ymax)
+   use quick_basis_module, only: quick_basis, Yxiao, Yxiaotemp, Yxiaoprim, cutprim, Apri, Ppri
+   use quick_molspec_module, only: xyz
+   use quick_params_module, only: Sumindex
+
+   implicit none
+
+   integer :: ii, jj, KK, LL, M, NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
+   integer :: NNAB, NNCD, NABCDTYPE, NNA, NNC, NABCD, ITT
+   integer :: JJJ, III, LLL, KKK, Nprij, Nprii, Nprik, Npril
+   integer :: iitemp, I2, I1, IIxiao, JJxiao, I, J, K, L
+   double precision :: Ymax, AB, CD, ROU, ABCD, ABCDxiao, RPQ, XXXtemp, T, Ymaxprim
+
   double precision P(3),Q(3),W(3),KAB,KCD
-  Parameter(NN=13)
+  integer, parameter :: NN = 13
   double precision FM(0:13)
   double precision RA(3),RB(3),RC(3),RD(3)
 
@@ -252,20 +270,34 @@ subroutine shellcutoff(II,JJ,Ymax)
 
 end subroutine shellcutoff
 
-subroutine classcutoff(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax)
-  use allmod
 
-  Implicit double precision(A-H,O-Z)
+subroutine classcutoff(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax)
+  use quick_basis_module, only: quick_basis, Yxiao
+  use quick_params_module, only: trans
+  use quick_constants_module, only: X0
+
+  implicit none
+
+  integer :: i, j, k, l, ii, jj, kk, ll, III, JJJ, KKK, LLL, nna, nnc, nnab, nncd
+  integer :: M, M1, M3, MA, MAB, MCD, MCX, MM1, MM2, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2
+  integer :: Nprii, Nprij, Nprik, Npril
+  double precision :: X2, Y, Y1, Y2, Ytemp, Ymax
+
   double precision store(120,120)
   INTEGER NA(3),NB(3),NC(3),ND(3)
   double precision P(3),Q(3),W(3),KAB,KCD
-  Parameter(NN=13)
+  integer, parameter :: NN = 13
   double precision FM(0:13)
   double precision RA(3),RB(3),RC(3),RD(3)
 !  double precision X44(100000)
 
   double precision coefangxiaoL(20),coefangxiaoR(20)
   integer angxiaoL(20),angxiaoR(20),numangularL,numangularR
+
+  double precision AA,BB,CC,DD,AB,CD,ROU,ABCD
+
+  integer IJtype, itemp, ITT, ixiao, jtemp, jxiao, KLtype
+  double precision ctemp
 
   COMMON /COM1/RA,RB,RC,RD
   COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD
@@ -423,14 +455,23 @@ subroutine classcutoff(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax)
 
 End subroutine classcutoff
 
-subroutine classprim(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax1,IIIxiao,JJJxiao)
-  use allmod
 
-  Implicit double precision(A-H,O-Z)
+subroutine classprim(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax1,IIIxiao,JJJxiao)
+  use quick_basis_module, only: quick_basis, Yxiaoprim
+  use quick_params_module, only: trans
+  use quick_constants_module, only: X0
+
+  implicit none
+
+  integer :: i, j, k, l, ii, jj, kk, ll, III, JJJ, KKK, LLL, nna, nnc, nnab, nncd, iiixiao, jjjxiao
+  integer :: M, M1, M3, MA, MAB, MCD, MCX, MM1, MM2, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2
+  integer :: Nprii, Nprij, Nprik, Npril
+  double precision :: X2, Y, Y1, Y2, Ytemp, Ymax1
+
   double precision store(120,120)
   INTEGER NA(3),NB(3),NC(3),ND(3)
   double precision P(3),Q(3),W(3),KAB,KCD
-  Parameter(NN=13)
+  integer, parameter :: NN = 13
   double precision FM(0:13)
   double precision RA(3),RB(3),RC(3),RD(3)
 !  double precision X44(12960)
@@ -438,6 +479,11 @@ subroutine classprim(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax1,IIIxiao,JJJxiao
 
   double precision coefangxiaoL(20),coefangxiaoR(20)
   integer angxiaoL(20),angxiaoR(20),numangularL,numangularR
+
+  double precision AA,BB,CC,DD,AB,CD,ROU,ABCD
+
+  integer IJtype, itemp, ITT, ixiao, jtemp, jxiao, KLtype
+  double precision ctemp
 
   COMMON /COM1/RA,RB,RC,RD
   COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD
@@ -587,9 +633,11 @@ subroutine classprim(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax1,IIIxiao,JJJxiao
 
 end subroutine classprim
 
+
 #define OSHELL
 #include "./include/cutoff.fh"
 #undef OSHELL
 #include "./include/cutoff.fh"
+
 
 end module quick_cutoff_module

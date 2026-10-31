@@ -12,16 +12,18 @@
 subroutine getMol(ierr)
    ! This subroutine is to get molecule information
    ! and assign basis function.
-   use allmod
-   use quick_gridpoints_module
-   use quick_exception_module
-#if defined(RESTART_HDF5)
-   use quick_io_module, only: read_hdf5_real8_rank2
-#else
-   use quick_io_module, only: read_real8_rank3
-#endif
-#ifdef MPIV
-   use mpi
+   use quick_method_module, only: quick_method
+    use quick_molspec_module, only: quick_molspec, natom, xyz, read_quick_molspec_2
+    use quick_molspec_module, only: set_quick_molspec, print_quick_molspec
+    use quick_calculated_module, only: quick_qm_struct, allocate_quick_qm_struct, init_quick_qm_struct
+    use quick_basis_module, only: quick_basis, nbasis, cutprim, normalize_basis, allocate_basis, print_quick_basis
+    use quick_files_module, only: iOutfile, iDataFile, inFile, inFileName, dataFileName, isTemplate
+    use quick_exception_module, only: RaiseException
+
+   use quick_io_module, only: chk_read, chk_read_opt_traj
+    use quick_mpi_module, only: master
+#if defined(MPIV)
+    use quick_mpi_module, only: bMPI
 #endif
 
    implicit none
@@ -40,26 +42,26 @@ subroutine getMol(ierr)
 
       ! read xyz coordinates from the .in file 
       if (.not. isTemplate) then
-        if (quick_method%read_coord) then
-#if defined(RESTART_HDF5)
-          call read_hdf5_real8_rank2('xyz', (/1,1/), (/3,natom/), xyz)
-#else
-          open(unit=iDataFile, file=dataFileName, status='OLD', form='UNFORMATTED')
-          call read_real8_rank3(iDataFile, "xyz", 3, natom, 1, xyz, fail)
-          close(iDataFile)
-#endif
+        if (quick_method%readxyz .ge. 0) then
+          ! readxyz == 0: CHK_READ_XYZ with no value -> read flat 'xyz' dataset
+          ! readxyz  > 0: CHK_READ_XYZ=N -> read step N from 'opt_traj'
+          if (quick_method%readxyz == 0) then
+            call chk_read('xyz', 3, natom, xyz)
+          else
+            call chk_read_opt_traj(quick_method%readxyz, natom, xyz)
+          endif
           quick_molspec%xyz => xyz
         else
           call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
           CHECK_ERROR(ierr)
           ! read molecule coordinates
-          call read2(quick_molspec,inFile,ierr)
+          call read_quick_molspec_2(quick_molspec,inFile,ierr)
           close(inFile)
         endif
       endif
 
       quick_qm_struct%nbasis => nbasis
-      call set(quick_molspec,ierr)
+      call set_quick_molspec(quick_molspec,ierr)
 
       ! quick forward coordinates stored in namelist to instant variables
       xyz(1:3,1:natom)=quick_molspec%xyz(1:3,1:natom)
@@ -92,17 +94,17 @@ subroutine getMol(ierr)
 
    quick_qm_struct%nbasis => nbasis
 
-   call alloc(quick_basis)
-   call alloc(quick_qm_struct)
+   call allocate_basis(quick_basis)
+   call allocate_quick_qm_struct(quick_qm_struct)
    cutprim = 0.0d0
    quick_basis%Xcoeff = 0.0d0
-   call init(quick_qm_struct)
+   call init_quick_qm_struct(quick_qm_struct)
 
    !-----------MPI/MASTER------------------------
    if (master) then
       ! now print molecule specification to output file
-      call print(quick_molspec,iOutFile,ierr)
-      call print(quick_basis,iOutFile)
+      call print_quick_molspec(quick_molspec,iOutFile,ierr)
+      call print_quick_basis(quick_basis,iOutFile)
 
       ! the following some step are setup for basis and for ECP or DFT calculation
       ! and see comments for details
@@ -139,9 +141,8 @@ end subroutine getmol
 ! check mol spec and method
 !--------------------
 subroutine check_quick_method_and_molspec(io,quick_molspec_arg,quick_method_arg,ierr)
-   use quick_method_module
-   use quick_molspec_module
-   use quick_exception_module
+   use quick_method_module, only: quick_method_type
+   use quick_molspec_module, only: quick_molspec_type, natom
 
    implicit none
 
@@ -236,19 +237,24 @@ end subroutine check_quick_method_and_molspec
 ! Initial Densitry Matrix
 !--------------------------------------
 subroutine initialGuess(ierr)
-   use allmod
-   use quick_sad_guess_module, only: getSadDense 
-   use quick_exception_module
+   use quick_method_module, only: quick_method
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_basis_module, only: nbasis
+   use quick_files_module, only: iDataFile, dataFileName, iOutFile
+   use quick_sad_guess_module, only: getSadDense
+   use quick_io_module, only: chk_read, read_real8_rank3
+   use quick_mpi_module, only: master
+
    implicit none
+
+   integer, intent(inout) :: ierr
+
    logical :: present
-   integer :: failed
+   integer :: failed, fail
    character(len=80) :: keyWD
    integer n,sadAtom
    integer Iatm,i,j
    double precision temp
-   integer, intent(inout) :: ierr
-
-
 
    ! Initialize Density arrays. Create initial density matrix guess.
    call zeroMatrix(quick_qm_struct%dense,nbasis)
@@ -256,10 +262,6 @@ subroutine initialGuess(ierr)
 
    present = .false.
 
-#ifdef USEDAT
-   ! if read matrix is requested, begin to read dmx file
-   if (quick_method%readdmx) inquire (file=dataFileName,exist=present)
-#endif
    if (present) then
       call quick_open(iDataFile, dataFileName, 'O', 'U', 'W',.true.,ierr)
       CHECK_ERROR(ierr)
@@ -291,12 +293,19 @@ subroutine initialGuess(ierr)
       !   call MFCC_initial_guess
       !endif
 
-      !  SAD inital guess
-      if (quick_method%SAD) then
+      !  SAD initial guess or density read from checkpoint
+      if (quick_method%readden) then
+         if (master) then
+            call chk_read('dense', nbasis, nbasis, quick_qm_struct%dense)
+            if (quick_method%unrst) then
+               call chk_read('denseb', nbasis, nbasis, quick_qm_struct%denseb)
+            endif
+         endif
+      else if (quick_method%SAD) then
          call getSadDense
       endif
 
-      if(quick_method%unrst) then
+      if(quick_method%unrst .and. .not. quick_method%readden) then
         do I=1,nbasis
           do J =1,nbasis
             quick_qm_struct%dense(J,I) = quick_qm_struct%dense(J,I)/2.d0

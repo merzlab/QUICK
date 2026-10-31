@@ -20,7 +20,7 @@
 
 module quick_oei_module
 
-  implicit double precision(a-h,o-z)
+  implicit none
   private
 
   public :: get1eEnergy, get1e, attrashellopt, ekinetic, kineticO, attrashell
@@ -37,18 +37,19 @@ contains
   !------------------------------------------------
   ! get1eEnergy
   !------------------------------------------------
-  subroutine get1eEnergy(deltaO)
-     !------------------------------------------------
-     ! This subroutine is to get 1e integral
-     !------------------------------------------------
-     use quick_calculated_module, only: quick_qm_struct
-     use quick_method_module,only: quick_method
-     use quick_timer_module, only:timer_begin, timer_end, timer_cumer
-     use quick_basis_module
+   subroutine get1eEnergy(deltaO)
+      !------------------------------------------------
+      ! This subroutine is to get 1e integral
+      !------------------------------------------------
+      use quick_calculated_module, only: quick_qm_struct
+      use quick_method_module,only: quick_method
+      use quick_timer_module, only:timer_begin, timer_end, timer_cumer
+      use quick_basis_module, only: nbasis
 
-     implicit double precision(a-h,o-z)
+      implicit none
 
-     logical, intent(in) :: deltaO
+      logical, intent(in) :: deltaO
+      double precision :: sum2mat
 
      RECORD_TIME(timer_begin%tE)
   
@@ -67,17 +68,25 @@ contains
   end subroutine get1eEnergy
 
 subroutine get1e(deltaO)
-   use allmod
-
+   use quick_basis_module, only: nbasis, jshell
+   use quick_timer_module, only: timer_begin, timer_end, timer_cumer
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_method_module, only: quick_method
+   use quick_files_module, only: iOutFile
 #ifdef CEW
    use quick_cew_module, only : quick_cew, quick_cew_prescf
 #endif
-
-#ifdef MPIV
+   use quick_mpi_module, only: master
+#if defined(MPIV)
+   use quick_basis_module, only: mpi_nbasis, mpi_nbasisn, mpi_jshell, mpi_jshelln
+   use quick_mpi_module, only: bMPI, quick_comm_rank, MIN_1E_MPI_BASIS
    use mpi
 #endif
    
-   implicit double precision(a-h,o-z)
+   implicit none
+
+   integer :: Ibas, IIsh, JJsh, i
+
    double precision :: temp2d(nbasis,nbasis)
    logical, intent(in) :: deltaO
 
@@ -189,8 +198,8 @@ subroutine get1e(deltaO)
       !-----------------------------------------------------------------
       RECORD_TIME(timer_begin%T1eT)
 
-      do i=1,mpi_nbasisn(mpirank)
-         Ibas=mpi_nbasis(mpirank,i)
+      do i=1,mpi_nbasisn(quick_comm_rank)
+         Ibas=mpi_nbasis(quick_comm_rank,i)
          call kineticO(Ibas)
       enddo
       RECORD_TIME(timer_end%T1eT)
@@ -204,16 +213,16 @@ subroutine get1e(deltaO)
       if(.not. quick_method%hasF) then
         call gpu_get_oei(quick_qm_struct%o)
       else
-        do i=1,mpi_jshelln(mpirank)
-           IIsh=mpi_jshell(mpirank,i)
+        do i=1,mpi_jshelln(quick_comm_rank)
+           IIsh=mpi_jshell(quick_comm_rank,i)
            do JJsh=IIsh,jshell
               call attrashell(IIsh,JJsh)
            enddo
         enddo
       endif
 #else
-      do i=1,mpi_jshelln(mpirank)
-         IIsh=mpi_jshell(mpirank,i)
+      do i=1,mpi_jshelln(quick_comm_rank)
+         IIsh=mpi_jshell(quick_comm_rank,i)
          do JJsh=IIsh,jshell
             call attrashell(IIsh,JJsh)
          enddo
@@ -262,9 +271,18 @@ subroutine kineticO(IBAS)
    !------------------------------------------------
    ! This subroutine is to get 1e integral Operator
    !------------------------------------------------
-   use allmod
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_basis_module, only: quick_basis, itype, dcoeff, aexp, ncontract, nbasis
+   use quick_method_module, only: quick_method
    use quick_overlap_module, only: gpt, opf
-   implicit double precision(a-h,o-z)
+   use quick_molspec_module, only: xyz
+
+   implicit none
+   
+   double precision :: ai, aj, F, OJI, xyzxi, xyzxj, xyzyi, xyzyj, xyzzi, xyzzj
+   double precision :: Px, Py, Pz
+   integer :: Icon, ix, iy, iz, Jbas, Jcon, jx, jy, jz
+
    integer Ibas 
    integer g_count
    double precision g_table(200)

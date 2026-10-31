@@ -9,7 +9,6 @@
 
 ! a univeral open subroutine and backup file automatically if it exists
 subroutine quick_open(funit,filename,filestat,fileform,fileacc,log_ow,ierr)
-   
     implicit none
    
     integer funit   !    logical unit number
@@ -17,19 +16,18 @@ subroutine quick_open(funit,filename,filestat,fileform,fileacc,log_ow,ierr)
     character(len=1) filestat   ! file status: 'N' new, 'O' old, 'R' replace, 'U' unknow.
     character(len=1) fileform   ! file form: 'F' formatted, 'U' unformatted
     character(len=1) fileacc    ! file access: 'R' write, 'W' write/read, 'A',append
-    character(len=60) errInfo    ! error information
+    logical log_ow              ! if overwrite ?
+    integer, intent(inout) :: ierr
 
+    character(len=60) errInfo    ! error information
     character(len=7) fstat       !status keyword
     character(len=11) fform      !form keyword
     character(len=11) pos       !position keyword
     integer ios                 !i/o status variable
     integer i,flen,k1,k2
-   
     character(len=1) ch
     character(len=132) run
     logical log_exist
-    logical log_ow              ! if overwrite ?
-    integer, intent(inout) :: ierr
 
     ch='~'
     i=0

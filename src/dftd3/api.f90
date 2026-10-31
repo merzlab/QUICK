@@ -18,9 +18,10 @@
 !> This module contains the API to access DFT-D3 functionality.
 !!
 module dftd3_api
-  use dftd3_sizes
-  use dftd3_common
-  use dftd3_core
+  use dftd3_sizes, only: max_elem, maxc
+  use dftd3_common, only: wp, autoang
+  use dftd3_core, only: r2r4, rcov, copyc6, setr0ab, edisp, gdisp, set_criteria, &
+                        pbcedisp, pbcgdisp, determinant, setfuncpar, ELEM
   implicit none
   private
 

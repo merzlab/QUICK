@@ -49,9 +49,8 @@ contains
 
 ! This subroutine allocates memory for quick_scf type and initializes them to zero. 
   subroutine allocate_quick_scf(ierr)
-    use quick_method_module
-    use quick_basis_module
-    use quick_molspec_module
+    use quick_method_module, only: quick_method
+    use quick_basis_module, only: nbasis, NBSuse
     use quick_scratch_module, only: quick_scratch
 
     implicit none 
@@ -113,12 +112,7 @@ contains
   ! Ed Brothers. November 27, 2001
   ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
   subroutine scf(ierr)
-     use allmod
-#if defined(RESTART_HDF5)
-     use quick_io_module, only: read_hdf5_int_rank0, read_hdf5_real8_rank2
-#else
-     use quick_io_module, only: read_int_rank0, read_real8_rank3
-#endif
+     use quick_method_module, only: quick_method
 
      implicit none
 
@@ -130,20 +124,6 @@ contains
 
      done = .false.
 
-      if (quick_method%readden) then
-        if (master) then
-#if defined(RESTART_HDF5)
-         call read_hdf5_int_rank0('molinfo', 2, nbasis)
-         call read_hdf5_real8_rank2('dense', (/1,1/), (/nbasis,nbasis/), quick_qm_struct%dense)
-#else
-         open(unit=iDataFile, file=dataFileName, status='OLD', form='UNFORMATTED')
-         call read_int_rank0(iDataFile, "nbasis", nbasis, fail)
-         call read_real8_rank3(iDataFile, "dense", nbasis, nbasis, 1, quick_qm_struct%dense, fail)
-         close(iDataFile)
-#endif
-       endif
-     endif
-  
      !-----------------------------------------------------------------
      ! The purpose of this subroutine is to perform scf cycles.  At this
      ! point, X has been formed. The remaining steps are:
@@ -182,18 +162,29 @@ contains
   !-------------------------------------------------------
   ! 11/02/2010 Yipu Miao: Add parallel option for HF calculation
   subroutine electdiis(jscf,ierr)
-     use allmod
-     use quick_gridpoints_module
+     use quick_scratch_module, only: quick_scratch
+     use quick_basis_module, only: nbasis, NBSuse
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_files_module, only: iOutFile, write_molden
+     use quick_method_module, only: quick_method, adjust_Cutoff
+     use quick_molspec_module, only: quick_molspec
+     use quick_size_module, only: MIN_SCF
+     use quick_constants_module, only: AU_TO_EV
+     use quick_timer_module, only: timer_begin, timer_end, timer_cumer
+     use quick_gridpoints_module, only: quick_dft_grid, sigrad2
      use quick_scf_operator_module, only: scf_operator
      use quick_oei_module, only: bCalc1e 
-     use quick_lri_module, only: computeLRI
+
      use quick_molden_module, only: quick_molden
 #ifdef CEW 
      use quick_cew_module, only : quick_cew
 #endif
+     use quick_mpi_module, only: master
 #if defined(MPIV)
+     use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
      use mpi
 #endif
+     use quick_io_module, only: chk_update
 
      implicit none
  
@@ -211,7 +202,7 @@ contains
      integer :: IDIIS_Error_Start, IDIIS_Error_End
      double precision :: BIJ,DENSEJI,errormax,OJK,temp
      double precision :: Sum2Mat,rms, shift, bandgap
-     integer :: I,J,K,L,IERROR, homo
+     integer :: I,J,K,L,IERROR, homo, fail
   
       double precision :: oldEnergy=0.0d0,E1e ! energy for last iteration, and 1e-energy
       double precision :: PRMS,PCHANGE, tmp
@@ -310,13 +301,13 @@ contains
 
 #ifdef MPIV
      if (bMPI) then
-  !      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_qm_struct%co,nbasis*NBSuse,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_qm_struct%E,NBSuse,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-        call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+  !      call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_qm_struct%co,nbasis*NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_qm_struct%E,NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        call MPI_BARRIER(quick_comm,quick_mpi_error)
      endif
 #endif
   
@@ -707,13 +698,11 @@ contains
         !--------------- END MPI/ALL NODES -------------------------------------
   
         if (master) then
-#ifdef USEDAT
-           ! open data file then write calculated info to dat file
-           SAFE_CALL(quick_open(iDataFile, dataFileName, 'R', 'U', 'R',.true.,ierr)
-           rewind(iDataFile)
-           call dat(quick_qm_struct, iDataFile)
-           close(iDataFile)
-#endif
+
+          if (quick_method%writechk) then
+            call chk_update('dense', nbasis, nbasis, quick_qm_struct%dense)
+          end if
+
            current_diis=mod(idiis-1,quick_method%maxdiisscf)
            current_diis=current_diis+1
            
@@ -779,14 +768,14 @@ contains
   
 #ifdef MPIV
         if (bMPI) then
-           call MPI_BCAST(diisdone,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_method%scf_conv,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_qm_struct%co,nbasis*NBSuse,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_qm_struct%E,NBSuse,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-           call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+           call MPI_BCAST(diisdone,1,mpi_logical,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_method%scf_conv,1,mpi_logical,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_qm_struct%co,nbasis*NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_qm_struct%E,NBSuse,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_method%integralCutoff,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BCAST(quick_method%primLimit,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+           call MPI_BARRIER(quick_comm,quick_mpi_error)
         endif
 #endif
         if (quick_method%debug)  call debug_SCF(jscf)
@@ -796,12 +785,6 @@ contains
          quick_molden%nscf_snapshots(quick_molden%iexport_snapshot)=jscf 
      endif
 
-#if (defined CUDA || defined CUDA_MPIV) && !defined(HIP)
-     ! sign of the coefficient matrix resulting from cusolver is not consistent
-     ! with rest of the code (e.g. gradients). We have to correct this.
-     call scalarMatMul(quick_qm_struct%co,NBSuse,nbasis,-1.0d0)
-#endif
-  
 #if defined(GPU) || defined(MPIV_GPU)
     if (quick_method%DFT &
 #ifdef CEW

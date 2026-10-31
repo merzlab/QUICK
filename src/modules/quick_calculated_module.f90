@@ -223,10 +223,6 @@ module quick_calculated_module
       module procedure init_quick_qm_struct
    end interface init
 
-   interface dat
-      module procedure dat_quick_qm_struct
-   end interface dat
-
    !----------------------
    ! Inner subroutines
    !----------------------
@@ -286,6 +282,7 @@ contains
    subroutine allocate_quick_qm_struct(self)
       use quick_method_module, only: quick_method
       use quick_molspec_module, only: quick_molspec
+
       implicit none
 
       integer nbasis
@@ -368,7 +365,6 @@ contains
 
    subroutine reallocate_quick_qm_struct(self,ierr)
 
-     use quick_exception_module
      use quick_molspec_module, only: quick_molspec
 
      implicit none
@@ -395,67 +391,13 @@ contains
    end subroutine reallocate_quick_qm_struct
 
    !--------------
-   ! subroutine to write data to dat file
-   !--------------
-
-   subroutine dat_quick_qm_struct(self, idatafile)
-
-      use quick_method_module, only: quick_method
-      use quick_molspec_module, only: quick_molspec
-      use quick_io_module, only: write_int_rank0, write_int_rank3, write_real8_rank3
-      integer fail
-
-      integer nbasis
-      integer NBSuse
-      integer natom
-      integer nelec
-      integer idimA
-      integer nelecb
-
-      
-      integer idatafile
-      type (quick_qm_struct_type) self
-
-      nbasis=self%nbasis
-      NBSuse=self%NBSuse
-      natom=quick_molspec%natom
-      nelec=quick_molspec%nelec
-      nelecb=quick_molspec%nelecb
-
-      call write_int_rank0(idatafile, "nbasis", nbasis, fail)
-      call write_int_rank0(idatafile, "natom",  natom, fail)
-      call write_int_rank0(idatafile, "nelec",  nelec, fail)
-      call write_int_rank0(idatafile, "nelecb", nelecb, fail)
-      call write_real8_rank3(idatafile, "s", nbasis, nbasis, 1, self%s, fail)
-      call write_real8_rank3(idatafile, "x", nbasis, NBSuse, 1, self%x, fail)
-      call write_real8_rank3(idatafile, "o", nbasis, nbasis, 1, self%o, fail)
-      call write_real8_rank3(idatafile, "co", nbasis, NBSuse, 1, self%co, fail)
-      call write_real8_rank3(idatafile, "vec", NBSuse, NBSuse, 1, self%vec, fail)
-      call write_real8_rank3(idatafile, "dense", nbasis, nbasis, 1, self%dense, fail)
-      call write_real8_rank3(idatafile, "E", NBSuse, 1, 1, self%E, fail)
-      call write_int_rank3(idatafile, "iDegen", nbasis, 1, 1, self%iDegen, fail)
-      call write_real8_rank3(idatafile, "Mulliken", nbasis, 1, 1, self%Mulliken, fail)
-      call write_real8_rank3(idatafile, "Lowdin", nbasis, 1, 1, self%Lowdin, fail)
-
-      ! if unrestricted, some more variables need to be allocated
-      if (quick_method%unrst) then
-         call write_real8_rank3(idatafile, "cob", nbasis, NBSuse, 1, self%cob, fail)
-         call write_real8_rank3(idatafile, "Eb", NBSuse, 1, 1, self%Eb, fail)
-      endif
-
-      if (quick_method%unrst .or. quick_method%DFT) then
-         call write_real8_rank3(idatafile, "denseb", nbasis, 1, 1, self%denseb, fail)
-      endif
-
-
-   end subroutine dat_quick_qm_struct
-
-   !--------------
    ! subroutine to deallocate variables
    !--------------
    subroutine deallocate_quick_qm_struct(self)
       use quick_method_module,only: quick_method
+
       implicit none
+
       integer io
 
       integer nbasis, NBSuse
@@ -535,11 +477,13 @@ contains
    ! broadcast variable list
    !-------------------
    subroutine broadcast_quick_qm_struct(self)
-      use quick_mpi_module
       use quick_method_module, only: quick_method
       use quick_molspec_module, only: quick_molspec
+      use quick_mpi_module, only: quick_comm, quick_mpi_error
       use mpi
+
       implicit none
+
       type (quick_qm_struct_type) self
       integer natom
       integer nbasis,nbasis2
@@ -552,57 +496,57 @@ contains
       nelec=quick_molspec%nelec
       nelecb=quick_molspec%nelecb
 
-      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%nbasis,1,mpi_integer,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%s,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%oneElecO,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%o,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%oSave,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%dense,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%denseSave,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%denseOld,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%iDegen,nbasis,mpi_integer,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BARRIER(quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%nbasis,1,mpi_integer,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%s,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%oneElecO,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%o,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%oSave,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%dense,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%denseSave,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%denseOld,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%iDegen,nbasis,mpi_integer,0,quick_comm,quick_mpi_error)
 
-      call MPI_BCAST(self%Mulliken,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%Lowdin,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%Mulliken,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%Lowdin,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
 
-      call MPI_BCAST(self%EEl,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%Exc,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%ECore,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%ECharge,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-      call MPI_BCAST(self%ETot,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      call MPI_BCAST(self%EEl,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%Exc,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%ECore,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%ECharge,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+      call MPI_BCAST(self%ETot,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
 
       if (quick_method%PBSOL) then
-         call MPI_BCAST(self%EElVac,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%EElSol,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%EElPb,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%gsolexp,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%EElVac,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%EElSol,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%EElPb,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%gsolexp,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
       endif
 
       if (quick_method%unrst) then
-         call MPI_BCAST(self%denseab,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%denseb,nbasis2,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%aElec,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%bElec,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%denseab,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%denseb,nbasis2,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%aElec,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%bElec,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
       endif
 
       if (quick_method%grad) then
-         call MPI_BCAST(self%gradient,3*natom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%gradient,3*natom,mpi_double_precision,0,quick_comm,quick_mpi_error)
       endif
 
       if (quick_method%MP2) then
-         call MPI_BCAST(self%gradient,1,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%gradient,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
       endif
 
       if (quick_method%analHess) then
-         call MPI_BCAST(self%hessian,3*natom*3*natom,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%hessian,3*natom*3*natom,mpi_double_precision,0,quick_comm,quick_mpi_error)
          if (quick_method%unrst) then
             idimA = (nbasis-nelec)*nelec + (nbasis-nelecB)*nelecB
          else
             idimA = 2*(nbasis-(nelec/2))*(nelec/2)
          endif
-         call MPI_BCAST(self%cphfa,idimA*idimA,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(self%cphfb,idimA*natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(self%cphfa,idimA*idimA,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(self%cphfb,idimA*natom*3,mpi_double_precision,0,quick_comm,quick_mpi_error)
       endif
 
    end subroutine broadcast_quick_qm_struct
@@ -611,6 +555,7 @@ contains
    subroutine init_quick_qm_struct(self)
       use quick_method_module, only: quick_method
       use quick_molspec_module, only: quick_molspec
+
       implicit none
 
       integer nbasis
@@ -668,15 +613,16 @@ contains
 
 
    subroutine read_quick_qm_struct(self,keywd)
+      use quick_input_parser_module, only: read, found_keyword
+
       implicit none
       character(len=200) :: keyWD
-      double precision :: rdnml
       type (quick_qm_struct_type) self
 
       call upcase(keyWD,200)
 
       ! Experimental Solvantion energy
-      if (index(keywd,'GSOL=') /= 0) self%Gsolexp = rdnml(keywd,'GSOL')
+      if(found_keyword(keywd,'GSOL')) call read(keywd,'GSOL',self%Gsolexp)
 
    end subroutine read_quick_qm_struct
 

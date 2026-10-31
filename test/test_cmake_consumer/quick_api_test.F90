@@ -11,10 +11,9 @@
 
 ! Program for testing QUICK library API
   program test_quick_api
-
     use test_quick_api_module, only : loadTestData, printQuickOutput
     use quick_api_module, only : setQuickJob, getQuickEnergy, getQuickEnergyGradients, deleteQuickJob 
-#ifdef MPIV
+#if defined(MPIV) || defined(MPIV_GPU)
     use test_quick_api_module, only : mpi_initialize, printQuickMPIOutput
     use quick_api_module, only : setQuickMPI
     use mpi
@@ -56,12 +55,12 @@
 
     ierr = 0
 
-#ifdef MPIV
+#if defined(MPIV) || defined(MPIV_GPU)
     ! initialize mpi library and get mpirank, mpisize
-    call mpi_initialize(mpisize, mpirank, master, mpierror)
+    call mpi_initialize(MPI_COMM_WORLD, mpisize, mpirank, master, mpierror)
 
     ! setup quick mpi using api, called only once
-    call setQuickMPI(mpirank,mpisize)
+    call setQuickMPI(MPI_COMM_WORLD, ierr)
 #endif
 
     ! set molecule size. We consider a water molecule surounded by 3 point
@@ -100,7 +99,6 @@
     call setQuickJob(fname, keywd, natoms, atomic_numbers, nxt_charges)
 
     do i=1, frames
-
       ! load coordinates and external point charges for ith step
       call loadTestData(i, natoms, nxt_charges, coord, xc_coord)
 
@@ -112,20 +110,19 @@
       call getQuickEnergyGradients(coord, xc_coord, totEne, gradients, ptchgGrad)    
 
       ! print values obtained from quick library
-#ifdef MPIV
+#if defined(MPIV) || defined(MPIV_GPU)
       ! dumb way to sequantially print from all cores..
-      call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+      call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
 
       do j=0, mpisize-1
         if(j .eq. mpirank) then
           call printQuickMPIOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchgGrad, mpirank)
         endif
-        call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+        call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
       enddo 
 #else
       call printQuickOutput(natoms, nxt_charges, atomic_numbers, totEne, gradients, ptchgGrad)
 #endif
-
     enddo
 
     ! finalize QUICK, required only once
@@ -137,7 +134,4 @@
     if ( allocated(xc_coord))       deallocate(xc_coord, stat=ierr)
     if ( allocated(gradients))         deallocate(gradients, stat=ierr)
     if ( allocated(ptchgGrad))      deallocate(ptchgGrad, stat=ierr)
-
   end program test_quick_api
-
-

@@ -18,10 +18,9 @@
 !---------------------------------------------------------------------!
 
 module quick_sad_guess_module
+  implicit none
 
-  implicit double precision(a-h,o-z)
   private
-
   public :: getSadGuess, getSadDense
 
 interface getSadGuess
@@ -35,28 +34,38 @@ end interface getSadDense
 contains
 
   subroutine getmolsad(ierr)
-     use allmod
-     use quick_gridpoints_module
-     use quick_files_module
-     use quick_exception_module
-
-#ifdef CEW 
+     use quick_molspec_module, only: natom, quick_molspec, xyz, quick_molspec_type
+     use quick_basis_module, only: nbasis, atombasis, atomdens, normalize_basis
+     use quick_method_module, only: quick_method, quick_method_type
+     use quick_calculated_module, only: quick_qm_struct, alloc, init, dealloc
+     use quick_constants_module, only : symbol, spinmult
+     use quick_gridpoints_module, only: gridformSG1
+     use quick_size_module, only: MIN_SCF
+     use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
+     use quick_exception_module, only: RaiseException
+#ifdef CEW
      use quick_cew_module, only : quick_cew
 #endif
+     use quick_mpi_module, only: bMPI, master
   
-     implicit double precision(a-h,o-z)
-  
+     implicit none
+
      logical :: present, MPIsaved, readSAD
-     double precision:: xyzsaved(3,natom)
+     double precision :: xyzsaved(3,natom)
      character(len=80) :: keywd
      character(len=20) :: tempstring
      character(len=340) :: sadfile
-     integer natomsaved
+     integer :: natomsaved
      type(quick_method_type) quick_method_save
      type(quick_molspec_type) quick_molspec_save
      integer, intent(inout) :: ierr
      logical :: use_cew_save
+     integer :: iitemp, i, j, ii, jj, nsenhai
+     double precision :: diagelement, diagelementb, temp
   
+     ! If density will be read from checkpoint, the SAD guess is not needed.
+     if (quick_method%readden) return
+
      ! first save some important value
      quick_method_save=quick_method
      quick_molspec_save=quick_molspec
@@ -68,11 +77,6 @@ contains
      natomsaved=natom
      xyzsaved=xyz
      MPIsaved=bMPI
-  
-     istart = 1
-     ifinal = 80
-     ibasisstart = 1
-     ibasisend = 80
   
      ! Then give them new value
      bMPI=.false.
@@ -164,19 +168,13 @@ contains
            !if (quick_method%DFT .OR. quick_method%SEDFT) call get_sigrad
   
            ! Initialize Density arrays. Create initial density matrix guess.
-           present = .false.
-           if (quick_method%readdmx) inquire (file=dmxfilename,exist=present)
-           if (present) then
-              return
-           else
-              ! Initial Guess
-              diagelement=dble(quick_molspec%nelec)/dble(nbasis)
-              diagelementb=dble(quick_molspec%nelecb)/dble(nbasis)+1.d-8
-              do I=1,nbasis
-                 quick_qm_struct%dense(I,I)=diagelement
-                 quick_qm_struct%denseb(I,I)=diagelementb
-              enddo
-           endif
+           ! Initial Guess
+           diagelement=dble(quick_molspec%nelec)/dble(nbasis)
+           diagelementb=dble(quick_molspec%nelecb)/dble(nbasis)+1.d-8
+           do I=1,nbasis
+              quick_qm_struct%dense(I,I)=diagelement
+              quick_qm_struct%denseb(I,I)=diagelementb
+           enddo
   
            ! AWG Check if SAD file is present when requesting readSAD
            ! AWG If not present fall back to computing SAD guess
@@ -248,13 +246,10 @@ contains
   !   quick_molspec%nelec = quick_molspec_save%nelec
   
      bMPI=MPIsaved
-  
-     return
-  
   end subroutine getmolsad
 
-  subroutine get_sad_density_matrix
 
+  subroutine get_sad_density_matrix
     use quick_constants_module, only: symbol
     use quick_basis_module, only: atombasis, atomdens 
     use quick_molspec_module, only: natom
@@ -262,6 +257,7 @@ contains
     use quick_calculated_module, only: quick_qm_struct
 
     implicit none 
+
     integer :: n, Iatm, sadAtom, i, j
 
     n=0
@@ -286,7 +282,7 @@ contains
   end subroutine get_sad_density_matrix
   
   subroutine allocate_mol_sad(n)
-     use quick_basis_module
+     use quick_basis_module, only: atombasis, atomdens
      integer n
   
      if(.not. allocated(atomDens))  allocate(atomDens(n,100,100))
@@ -295,7 +291,7 @@ contains
   end subroutine allocate_mol_sad
   
   subroutine deallocate_mol_sad()
-     use quick_basis_module
+     use quick_basis_module, only: atombasis, atomdens
   
      if (allocated(atomDens)) deallocate(atomDens)
      if (allocated(atomBasis)) deallocate(atomBasis)
@@ -307,8 +303,17 @@ contains
      !-------------------------------------------------------
      ! this subroutine is to do scf job for restricted system
      !-------------------------------------------------------
-     use allmod
+     use quick_scratch_module, only: alloc, dealloc, quick_scratch
+     use quick_basis_module, only: alloc, atombasis, atomdens, dealloc, jshell, nbasis, normalize_basis
+     use quick_calculated_module, only: alloc, dealloc, init, quick_qm_struct, read
+     use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
+     use quick_method_module, only: adjust_Cutoff, init, quick_method, quick_method_type, read
+     use quick_constants_module, only: SPINMULT, SYMBOL
+     use quick_molspec_module, only: alloc, dealloc, init, natom, quick_molspec, quick_molspec_type, read, set, xyz
+     use quick_size_module, only: MIN_SCF
+     use quick_mpi_module, only: master
      use quick_overlap_module, only: fullx
+
      implicit none
 
      logical :: done
@@ -349,17 +354,21 @@ contains
      endif
 
      jscf=jscf+1
-
-     return
-
   end subroutine sad_uscf
 
 
   subroutine sad_uelectdiis(jscf,verbose,ierr)
 
-     use allmod
-     use quick_gridpoints_module
-     use quick_scf_module
+     use quick_scratch_module, only: alloc, dealloc, quick_scratch
+     use quick_basis_module, only: alloc, atombasis, atomdens, dealloc, jshell, nbasis, normalize_basis
+     use quick_calculated_module, only: alloc, dealloc, init, quick_qm_struct, read
+     use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
+     use quick_method_module, only: adjust_Cutoff, init, quick_method, quick_method_type, read
+     use quick_constants_module, only: SPINMULT, SYMBOL
+     use quick_molspec_module, only: alloc, dealloc, init, natom, quick_molspec, quick_molspec_type, read, set, xyz
+     use quick_size_module, only: MIN_SCF
+     use quick_gridpoints_module, only: gridformSG1
+     use quick_scf_module, only: B, BCOPY, BSAVE, COEFF, RHS, W, allerror, alloperator, scf
      use quick_oei_module, only: bCalc1e
      use quick_uscf_module, only: allocate_quick_uscf,deallocate_quick_uscf,alloperatorB
 
@@ -879,8 +888,6 @@ contains
   
   
      call deallocate_quick_uscf(ierr)
-  
-     return
   end subroutine sad_uelectdiis
 
 
@@ -894,7 +901,14 @@ contains
   !  possible basis. Note that the Fock matrix is symmetric.
   !  This code now also does all the HF energy calculation. Ed.
   !-------------------------------------------------------
-     use allmod
+     use quick_scratch_module, only: alloc, dealloc, quick_scratch
+     use quick_basis_module, only: alloc, atombasis, atomdens, dealloc, jshell, nbasis, normalize_basis
+     use quick_calculated_module, only: alloc, dealloc, init, quick_qm_struct, read
+     use quick_files_module, only: iOutFile, sadGuessDir, wrtStep
+     use quick_method_module, only: adjust_Cutoff, init, quick_method, quick_method_type, read
+     use quick_constants_module, only: SPINMULT, SYMBOL
+     use quick_molspec_module, only: alloc, dealloc, init, natom, quick_molspec, quick_molspec_type, read, set, xyz
+     use quick_size_module, only: MIN_SCF
      use quick_cutoff_module, only: oshell_density_cutoff
      use quick_eri_oshell_module, only: getOshellEri, getOshellEriEnergy 
      use quick_oei_module, only:get1eEnergy, kineticO, attrashell
@@ -955,9 +969,6 @@ contains
   
   !  Give the energy, E=1/2*sigma[i,j](Pij*(Fji+Hcoreji))
      if(quick_method%printEnergy) call getOshellEriEnergy
-  
-  return
-  
   end subroutine sad_uscf_operator
 
 end module quick_sad_guess_module

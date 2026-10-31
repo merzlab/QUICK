@@ -455,7 +455,11 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
     }
 
     // ptchg_grad is no longer needed. reclaim the memory.
-    if (gpu->nextatom > 0 && !gpu->gpu_sim.use_cew) {
+    if (gpu->nextatom > 0
+#if defined(CEW)
+            && !gpu->gpu_sim.use_cew
+#endif
+    ) {
         SAFE_DELETE(gpu->ptchg_grad);
 #if defined(USE_LEGACY_ATOMICS)
         SAFE_DELETE(gpu->ptchg_gradULL);

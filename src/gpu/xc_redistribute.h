@@ -1,4 +1,3 @@
-
 #ifndef XC_REDISTRIBUTE
 #define XC_REDISTRIBUTE
 #if defined(MPIV_GPU)
@@ -6,11 +5,11 @@
 extern "C" {
 #endif
 
-int getAdjustment(int mpisize, int mpirank, int count);
+int getAdjustment(MPI_Comm, int, int, int);
 
-void sswderRedistribute(int mpisize, int mpirank, int count, int ncount,
-  double *gridx, double *gridy, double *gridz, double *exc, double *quadwt, int *gatm,
-  double *ngridx, double *ngridy, double *ngridz, double *nexc, double *nquadwt, int *ngatm);
+void sswderRedistribute(MPI_Comm, int, int, int, int,
+  double *, double *, double *, double *, double *, int *,
+  double *, double *, double *, double *, double *, int *);
 
 #ifdef __cplusplus
 }

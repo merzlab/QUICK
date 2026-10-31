@@ -7,7 +7,7 @@ defaults:
 on: workflow_dispatch
 
 jobs:
-  build-and-test-cuda:
+  build-and-test-cuda-enablef-cmake:
     timeout-minutes: 2880 # set timeout to 48 hours
     # The specific label for the self-hosted GPU runner
     runs-on: [self-hosted, linux-gpu-cuda]
@@ -24,7 +24,7 @@ jobs:
             cxx-compiler: 'g++'
             fortran-compiler: 'gfortran'
 
-    name: ${{ matrix.os }} - CUDA ${{ matrix.cuda-version }} - ${{ matrix.compiler-type }}
+    name: ${{ matrix.os }} - CUDA ${{ matrix.cuda-version }} - CMake - ${{ matrix.compiler-type }} - ${{ matrix.compiler-version }}
 
     steps:
       - name: 'Checkout Repository'
@@ -70,12 +70,44 @@ jobs:
           rm -rf build/
           rm -rf install/
 
+      - name: 'Detect GPU Architecture'
+        run: |
+
+          # Get the first GPU name from nvidia-smi
+          GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader | head -n 1)
+          echo "Detected GPU: $GPU_NAME"
+
+          case "$GPU_NAME" in
+            # Ampere Architecture
+            *"A2"*|*"A10"*|*"A40"*|*"A100"*|*"3090"*|*"A4000"*|*"A5000"*|*"A6000"*)
+              GPU_ARCH="ampere"
+            ;;
+            # Turing Architecture
+            *"T4"*|*"2080"*|*"8000"*|*"TITAN-RTX"*|*"6000"*)
+              GPU_ARCH="turing"
+            ;;
+            # Ada lovelace Architecture
+            *L4*|*L40*|*4090*|*Ada*)
+              GPU_ARCH="adalovelace"
+            ;;
+            *V100*)
+              GPU_ARCH="volta"
+            ;;
+            *)
+              echo "Unknown GPU: ${GPU_NAME}. Defaulting to 'ampere'."
+              GPU_ARCH="ampere"
+            ;;
+          esac
+
+          echo "Setting QUICK_USER_ARCH to: $GPU_ARCH"
+          echo "QUICK_USER_ARCH=$GPU_ARCH" >> "$GITHUB_ENV"
+
       - name: 'Configure CUDA Version'
         run: |
           mkdir build
           cd build
           cmake .. -DCOMPILER=${{ matrix.compiler-type }} \
-            -DCUDA=TRUE -DQUICK_USER_ARCH=ampere -DCMAKE_INSTALL_PREFIX=$PWD/../install -DENABLEF=TRUE
+            -DCUDA=TRUE -DQUICK_USER_ARCH=${{ env.QUICK_USER_ARCH }} -DCMAKE_INSTALL_PREFIX=$PWD/../install -DENABLEF=TRUE
 
       - name: 'Build and Install'
         run: |
@@ -92,7 +124,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cuda-tests-${{ matrix.os }}-${{ matrix.compiler-type}}-${{ matrix.compiler-version }}-${{ matrix.cuda-version }}
+          name: cuda-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type}}-${{ matrix.compiler-version }}-${{ matrix.cuda-version }}
           path: |
             ${{ github.workspace }}/install/runtest.log
             ${{ github.workspace }}/install/runtest-verbose.log
@@ -103,7 +135,7 @@ jobs:
       - name: 'Download Test Artifacts for CUDA Version'
         uses: actions/download-artifact@v4
         with:
-          name: cuda-tests-${{ matrix.os }}-${{ matrix.compiler-type}}-${{ matrix.compiler-version }}-${{ matrix.cuda-version }}
+          name: cuda-cmake-tests-${{ matrix.os }}-${{ matrix.compiler-type}}-${{ matrix.compiler-version }}-${{ matrix.cuda-version }}
 
       - name: 'Display Artifacts'
         run: |

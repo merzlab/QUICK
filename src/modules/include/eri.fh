@@ -18,8 +18,8 @@ module quick_eri_oshell_module
 #else
 module quick_eri_cshell_module
 #endif
+   implicit none
 
-   implicit double precision(a-h,o-z)
    private
 #ifdef OSHELL
    public :: getOshellEri, getOshellEriEnergy
@@ -31,7 +31,6 @@ module quick_eri_cshell_module
 #endif 
 
 #ifdef OSHELL
-
 interface getOshellEri
   module procedure get_oshell_eri
 end interface getOshellEri
@@ -41,7 +40,6 @@ interface getOshellEriEnergy
 end interface getOshellEriEnergy
 
 #else
-
 interface getEriPrecomputables
   module procedure get_eri_precomputables
 end interface getEriPrecomputables
@@ -53,31 +51,34 @@ end interface getCshellEri
 interface getCshellEriEnergy
   module procedure get_cshell_eri_energy
 end interface getCshellEriEnergy
-
 #endif
+
 
 contains
 
+
 #ifndef OSHELL
+ !-----------------------------------------------------------------
+ ! This subroutine computes precomputable quantities given by
+ ! HGP equations 8, 9 and 15. The resulting quantities are
+ ! stored in Apri, Ppri and Kpri. Additionally we compute Xcoeff 
+ ! which is a combined coefficient for two indices (a product of 
+ ! Kpri and normalized coefficients).
+ ! See HGP paper for equations and APPENDIX: COMPUTER IMPLEMENTATION
+ ! section: 
+ ! Head‐Gordon, M.; Pople, J. A. A Method for Two‐electron 
+ ! Gaussian Integral and Integral Derivative Evaluation Using
+ ! Recurrence Relations. J. Chem. Phys. 1988, 89, 5777–5786.
+ !__________________________________________________________________
 subroutine get_eri_precomputables
-
-   !-----------------------------------------------------------------
-   ! This subroutine computes precomputable quantities given by
-   ! HGP equations 8, 9 and 15. The resulting quantities are
-   ! stored in Apri, Ppri and Kpri. Additionally we compute Xcoeff 
-   ! which is a combined coefficient for two indices (a product of 
-   ! Kpri and normalized coefficients).
-   ! See HGP paper for equations and APPENDIX: COMPUTER IMPLEMENTATION
-   ! section: 
-   ! Head‐Gordon, M.; Pople, J. A. A Method for Two‐electron 
-   ! Gaussian Integral and Integral Derivative Evaluation Using
-   ! Recurrence Relations. J. Chem. Phys. 1988, 89, 5777–5786.
-   !__________________________________________________________________
-
-   use allmod
-#ifdef MPIV
+   use quick_basis_module, only: jshell, jbasis, Apri, Kpri, Ppri, quick_basis
+   use quick_molspec_module, only: xyz
+   use quick_mpi_module, only: master
+#if defined(MPIV)
+   use quick_mpi_module, only: bMPI, quick_mpi_error, quick_comm
    use mpi
 #endif
+
    implicit none
 
    integer ics,ips,jcs,jps,itemp,itemp2,i
@@ -143,32 +144,36 @@ subroutine get_eri_precomputables
 
 #ifdef MPIV
       if (bMPI) then
-         call MPI_BCAST(Ppri,3*jbasis*jbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(Kpri,jbasis*jbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(Apri,jbasis*jbasis,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BCAST(quick_basis%Xcoeff,jbasis*jbasis*4*4,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
-         call MPI_BARRIER(MPI_COMM_WORLD,mpierror)
+         call MPI_BCAST(Ppri,3*jbasis*jbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(Kpri,jbasis*jbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(Apri,jbasis*jbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BCAST(quick_basis%Xcoeff,jbasis*jbasis*4*4,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         call MPI_BARRIER(quick_comm,quick_mpi_error)
       endif
 #endif
-
 end subroutine get_eri_precomputables
 #endif
 
 
+!------------------------------------------------
+! This subroutine is to get 2e integral
+!------------------------------------------------
 #ifdef OSHELL
 subroutine get_oshell_eri(II_arg)
 #else
 subroutine get_cshell_eri(II_arg)
 #endif
+    use quick_basis_module, only: jshell, Ycutoff, cutmatrix, dnmax
+   use quick_method_module, only: quick_method
 
-   !------------------------------------------------
-   ! This subroutine is to get 2e integral
-   !------------------------------------------------
-   use allmod
-   implicit double precision(a-h,o-z)
+   implicit none
+
    double precision testtmp,cutoffTest
    integer II_arg
+   integer :: II, JJ, KK, LL, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2
+   
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+
    II = II_arg
    do JJ = II,jshell
       testtmp = Ycutoff(II,JJ)
@@ -202,23 +207,36 @@ end subroutine get_oshell_eri
 end subroutine get_cshell_eri
 #endif
 
+
 ! Vertical Recursion by Xiao HE 07/07/07 version
 #ifdef OSHELL
 subroutine oshell
 #else
 subroutine cshell
 #endif
+    use quick_basis_module, only: III, JJJ, KKK, LLL, dnmax, Apri, Ppri, cutprim, Yxiao, &
+                                  Yxiaotemp, quick_basis
+   use quick_method_module, only: quick_method
+   use quick_params_module, only: Sumindex
+   use quick_molspec_module, only: xyz
 
-   use allmod
+   implicit none
 
-   Implicit double precision(a-h,o-z)
-   double precision P(3),Q(3),W(3),KAB,KCD,AAtemp(3)
-   Parameter(NN=13)
-   double precision FM(0:13)
-   double precision RA(3),RB(3),RC(3),RD(3)
+   ! Local variables - excluding III, JJJ, KKK, LLL, II, JJ, KK, LL which are use-associated
+   integer :: NN, M, ITT, I, J, K, L
+   integer :: NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
+   integer :: NNA, NNC, NNAB, NNCD, NABCDTYPE, NABCD, IITEMP, I1, I2
+   integer :: Nprii, Nprij, Nprik, Npril
+   integer :: NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   double precision :: AB, CD, ROU, RPQ, ABCDxiao, CUTOFFPRIM, CUTOFFPRIM1, ABCD
+   double precision :: ABtemp, CDtemp, ABcom, CDcom, ABCDtemp
+   double precision :: XXXtemp, T
+   double precision :: P(3),Q(3),W(3),KAB,KCD,AAtemp(3)
+   double precision :: FM(0:13)
+   double precision :: RA(3),RB(3),RC(3),RD(3)
 
-   double precision Qtemp(3),WQtemp(3),CDtemp,ABcom,Ptemp(3),WPtemp(3),ABtemp,CDcom,ABCDtemp
-   integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   double precision :: Qtemp(3),WQtemp(3),Ptemp(3),WPtemp(3)
+   integer :: II,JJ,KK,LL
 
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
@@ -441,20 +459,42 @@ end subroutine oshell
 end subroutine cshell
 #endif
 
+
 ! Horrizontal recursion and Fock matrix builder by Xiao HE 07/07/07 version
 #ifdef OSHELL
 subroutine iclass_oshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
 #else
 subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
 #endif
-   use allmod
+   use quick_basis_module, only: nbasis, IJKLtype, III, JJJ, KKK, LLL, IJtype, KLtype, Y, &
+                                 dnmax, cutprim, Yxiao, quick_basis
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_method_module, only: quick_method
+   use quick_molspec_module, only: xyz
+   use quick_constants_module, only: X0
    use ISO_FORTRAN_ENV, only: int32
 
-   Implicit double precision(A-H,O-Z)
+   implicit none
+
+   ! Dummy arguments
+   integer, intent(in) :: I, J, K, L, NNA, NNC, NNAB, NNCD
+   
+   ! Local variables
+   integer :: NN, M, MM1, MM2, ITT, ITEMP
+   integer :: NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
+   integer :: III1, III2, JJJ1, JJJ2, KKK1, KKK2, LLL1, LLL2
+   integer :: NABCDTYPE, NABCD, Nprii, Nprij, Nprik, Npril
+   double precision :: AA, BB, CC, DD, AB, CD, ROU, ABCD
+   double precision :: X2, CUTOFFPRIM, CUTOFFPRIM1, YTEMP
+   double precision :: DENSEKI, DENSEKJ, DENSELJ, DENSELI, DENSELK, DENSEJI
+   double precision :: DENSEII, DENSEJJ, DENSEKK
+   double precision :: DENSEKIA, DENSEKJA, DENSELJA, DENSELIA
+   double precision :: DENSEKIB, DENSEKJB, DENSELJB, DENSELIB
+   double precision :: DENSEJIA, DENSEJIB, DENSEJJA, DENSEJJB, DENSEIIA, DENSEIIB
+   
    double precision store(120,120)
    INTEGER NA(3),NB(3),NC(3),ND(3)
    double precision P(3),Q(3),W(3),KAB,KCD
-   Parameter(NN=13)
    double precision FM(0:13)
    double precision RA(3),RB(3),RC(3),RD(3)
    double precision AAtemp(3)
@@ -540,7 +580,6 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
             Ytemp=Ytemp+X44(itemp)*Yxiao(itemp,MM1,MM2)
          enddo
          store(MM1,MM2)=Ytemp
-!write(*,*) mpirank, Ytemp
       enddo
    enddo
 
@@ -1063,8 +1102,13 @@ subroutine get_oshell_eri_energy
 #else
 subroutine get_cshell_eri_energy
 #endif
-   use allmod
-   implicit double precision(a-h,o-z)
+   use quick_basis_module, only: nbasis
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_timer_module, only: timer_begin, timer_end, timer_cumer
+
+   implicit none
+
+   double precision :: Sum2Mat
 
    RECORD_TIME(timer_begin%TE)
 #ifdef OSHELL
@@ -1086,7 +1130,8 @@ end subroutine get_cshell_eri_energy
 #ifdef COMPILE_AOINT
 ! Drivers to dump integrals into files. Currently not working.
 subroutine writeInt(iIntFile, intDim, a, b, int)
-   Implicit none
+   implicit none
+
    integer i,intDim, iIntFile
    integer a(intDim), b(intDim)
    double precision int(intDim)
@@ -1098,8 +1143,10 @@ subroutine writeInt(iIntFile, intDim, a, b, int)
 !enddo
 end subroutine writeInt
 
+
 subroutine readInt(iIntFile, intDim, a, b, int)
-   Implicit none
+   implicit none
+
    integer, parameter :: llInt = selected_int_kind (16)
    integer iIntFile, i
    integer(kind=llInt) intDim
@@ -1108,20 +1155,26 @@ subroutine readInt(iIntFile, intDim, a, b, int)
    read(iIntFile) a, b, int
 end subroutine readInt
 
+
 subroutine aoint(ierr)
    !------------------------------
    !  This subroutine is used to store 2e-integral into files
    !------------------------------
-   use allmod
-   Implicit none
+   use quick_basis_module, only: jshell, dnmax, Ycutoff, intIndex, bufferSize, bufferInt, &
+                                  intBuffer, aBuffer, bBuffer, incoreInt, incoreIndex, &
+                                  intIncore, aIncore, bIncore
+   use quick_method_module, only: quick_method, obtain_leastIntCutoff
+   use quick_files_module, only: intFileName, iOutFile, iIntFile
+   use quick_timer_module, only: timer_begin, timer_end, timer_cumer
+
+   implicit none
+
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,INTNUM, INTBEG, INTTOT, I, J
    double precision leastIntegralCutoff, t1, t2
    integer, intent(inout) :: ierr
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
 
    call PrtAct(ioutfile,"Begin Calculation 2E TO DISK")
-
-
 
    write(ioutfile, '("  2-ELECTRON INTEGRAL")')
    write(ioutfile, '("-----------------------------")')
@@ -1145,7 +1198,6 @@ subroutine aoint(ierr)
       !open(unit=iIntFile, file=intFileName, form="unformatted", access="stream",convert='big_endian')
       open(unit=iIntFile, file=intFileName,  form="unformatted", access="stream")
    endif
-
 
    intbeg = 0
    intindex = 0
@@ -1189,10 +1241,8 @@ subroutine aoint(ierr)
    endif
 #endif
 
-
    RECORD_TIME(timer_end%T2eAll)  ! Terminate the timer for 2e-integrals
    timer_cumer%T2eAll=timer_cumer%T2eAll+timer_end%T2eAll-timer_begin%T2eAll ! add the time to cumer
-
 
    write(ioutfile, '("-----------------------------")')
    write(ioutfile, '("      TOTAL INTEGRAL     = ", i12)') inttot
@@ -1206,9 +1256,16 @@ end subroutine aoint
 
 
 subroutine addInt
-   use allmod
+   use quick_basis_module, only: jshell, nbasis, IJKLtype, III, JJJ, KKK, LLL, Y, dnmax, &
+                                  Ycutoff, cutmatrix, longLongInt, intIndex, bufferSize, &
+                                  intBuffer, aBuffer, bBuffer, incoreInt, incoreIndex, &
+                                  intIncore, aIncore, bIncore
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_method_module, only: quick_method
+   use quick_files_module, only: intFileName, iIntFile
    use ISO_FORTRAN_ENV, only: int32
-   Implicit none
+
+   implicit none
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2,INTNUM, INTBEG, INTTOT
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
@@ -1251,7 +1308,6 @@ subroutine addInt
          endif
          call readInt(iIntFile, thisBuffer, aBuffer, bBuffer, intBuffer)
       endif
-
 
       do i = 1, thisBuffer
 
@@ -1426,7 +1482,6 @@ subroutine addInt
    ! this part is designed for integral that has accuracy that beyond 2e integral file
    quick_method%nodirect = .false.
 
-
    do II = 1,jshell
       do JJ = II,jshell
          do KK = II,jshell
@@ -1454,6 +1509,7 @@ subroutine addInt
 
 end subroutine addInt
 #endif
+
 
 #ifdef OSHELL
 end module quick_eri_oshell_module

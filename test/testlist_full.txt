@@ -188,5 +188,7 @@ esp_charge_acetate_radical              #ESP test: Tests ESP evaluation and char
 esp_charge_acetate_anion                #ESP test: Tests ESP evaluation and charge calculation for charged molecule
 ene_multiple_keyword_lines              #Acetate: DFT energy test: Tests if reading of keywords from multiple lines works
 chk_acetate_xyz                         #CHK test: writing/reading coordinates
+chk_acetate_intermediate_step5_xyz      #CHK test: reading intermediate step 5 geometry from opt trajectory
 chk_acetate_xyz_density                 #CHK test: writing/reading densities and coordinates
 chk_acetate_density                     #CHK test: writing/reading densities
+chk_acetate_unrestricted_density        #CHK test: unrestricted writing/reading densities

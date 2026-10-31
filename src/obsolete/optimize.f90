@@ -10,9 +10,13 @@ subroutine optimize(ierr)
    use quick_cutoff_module, only: schwarzoff
    use quick_eri_cshell_module, only: getEriPrecomputables
    use quick_grad_cshell_module, only: scf_gradient
-#ifdef MPIV
+#if defined(MPIV)
+   use quick_mpi_module, only: bMPI, master, quick_comm
    use mpi
+#else
+   use quick_mpi_module, only: master
 #endif
+
    implicit double precision(a-h,o-z)
 
    logical :: done,diagco
@@ -294,11 +298,11 @@ subroutine optimize(ierr)
       !-------------- END MPI/MASTER --------------------
 #ifdef MPIV
       ! we now have new geometry, and let other nodes know the new geometry
-      if (bMPI)call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,MPI_COMM_WORLD,mpierror)
+      if (bMPI)call MPI_BCAST(xyz,natom*3,mpi_double_precision,0,quick_comm,quick_mpi_error)
 
 
       ! Notify every nodes if opt is done
-      if (bMPI)call MPI_BCAST(done,1,mpi_logical,0,MPI_COMM_WORLD,mpierror)
+      if (bMPI)call MPI_BCAST(done,1,mpi_logical,0,quick_comm,quick_mpi_error)
 #endif
 
       !For DFT geometry optimization, we should delete the grid variables here

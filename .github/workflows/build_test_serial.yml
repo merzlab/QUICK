@@ -5,18 +5,18 @@ defaults:
     shell: bash
 
 on:
-  push:
-    paths-ignore:
-      - '**.md'
-      - '.github/workflows/build_test_mpi.yml'
-      - '.github/workflows/build_test_cuda.yml'
-      - '.github/workflows/build_test_cuda_enablef.yml'
+  workflow_dispatch:
   pull_request:
+    types: [opened, synchronize, reopened]
     paths-ignore:
       - '**.md'
       - '.github/workflows/build_test_mpi.yml'
       - '.github/workflows/build_test_cuda.yml'
       - '.github/workflows/build_test_cuda_enablef.yml'
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}-serial
+  cancel-in-progress: true
 
 jobs:
   build-and-test-serial-legacy-configure-make:

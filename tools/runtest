@@ -20,7 +20,7 @@
 #  !---------------------------------------------------------------------!
 #  ! QUICK version                                                       !
 #  !---------------------------------------------------------------------!
-QUICK_VERSION='QUICK-25.03'
+QUICK_VERSION='QUICK-26.03'
 
 #  !---------------------------------------------------------------------!
 #  ! Variable definitions                                                !
@@ -496,7 +496,10 @@ run_test()
     exit 1
   fi
 
-  if [ "$qexe2_ret" -ne 0 ] && [ "$check_f_error_ret" -eq 0 ] && [ "$check_mpi_gpu_mismatch_ret" -eq 0 ]; then
+  check_hdf5_error "$1"
+  check_hdf5_error_ret="$?"
+
+  if [ "$qexe2_ret" -ne 0 ] && [ "$check_f_error_ret" -eq 0 ] && [ "$check_mpi_gpu_mismatch_ret" -eq 0 ] && [ "$check_hdf5_error_ret" -eq 0 ]; then
     echo "Error: $qexe execution failed."
     echo ""
   
@@ -745,12 +748,14 @@ run_chk_test()
   check_f_error_ret="$?"
   check_mpi_gpu_mismatch "$1"
   check_mpi_gpu_mismatch_ret="$?"
+  check_hdf5_error "$1"
+  check_hdf5_error_ret="$?"
 
   lock_file "$6"
   echo "Running test $3 of $4" | tee -a "$6"
   echo "$2" | tee -a "$6"
 
-  if [ "$check_f_error_ret" -eq 0 ] && [ "$check_mpi_gpu_mismatch_ret" -eq 0 ]; then
+  if [ "$check_f_error_ret" -eq 0 ] && [ "$check_mpi_gpu_mismatch_ret" -eq 0 ] && [ "$check_hdf5_error_ret" -eq 0 ]; then
     check_chk "$1" "$5" "$6"
     echo "" | tee -a "$6"
   elif [ "$check_f_error_ret" -eq 1 ]; then
@@ -759,6 +764,10 @@ run_chk_test()
     echo "" | tee -a "$6"
   elif [ "$check_mpi_gpu_mismatch_ret" -eq 1 ]; then
     echo "SKIPPED (DO_PARALLEL: # MPI procs > # GPUs)." | tee -a "$6"
+    echo "==============================================================" | tee -a "$6"
+    echo "" | tee -a "$6"
+  elif [ "$check_hdf5_error_ret" -eq 1 ]; then
+    echo "SKIPPED (code not compiled with HDF5 support)." | tee -a "$6"
     echo "==============================================================" | tee -a "$6"
     echo "" | tee -a "$6"
   fi
@@ -830,7 +839,12 @@ check_chk()
     "$2/dacdif" -k -a '1.0e-8' "$1_2.ene" "$1.ene" | tee -a "$3"
   fi
 
-  if [ `echo "$1" | grep '_xyz' | wc -l` -eq 1 ]; then
+  if [ `echo "$1" | grep '_intermediate_step5_xyz' | wc -l` -eq 1 ]; then
+    awk '/GEOMETRY FOR OPTIMIZATION STEP   5/,/@ Begin XC/' "$1.out" | sed -n '5,$p' | sed -e '$ d' > "$1.xyz"
+    awk '/INPUT GEOMETRY/,/DISTANCE MATRIX/ {print}' "$1_2.out" | sed -n '2,$p' | sed -e '$ d' > "$1_2.xyz"
+
+    "$2/dacdif" -k -a '2.0e-4' "$1_2.xyz" "$1.xyz" | tee -a "$3"
+  elif [ `echo "$1" | grep '_xyz$' | wc -l` -eq 1 ]; then
     awk '/OPTIMIZED GEOMETRY IN CARTESIAN/,/FORCE/ {print}' "$1.out" | sed -n '3,$p' | sed -e '$ d' | sed -e '$ d' > "$1.xyz"
     awk '/INPUT GEOMETRY/,/DISTANCE MATRIX/ {print}' "$1_2.out" | sed -n '2,$p' | sed -e '$ d' > "$1_2.xyz"
 
@@ -1013,7 +1027,7 @@ print_summary()
         elif [ `sed -n '/execution failed/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_api=$(($failed_api+1))
         fi
-      elif [ `sed -n '/RW test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
+      elif [ `sed -n '/CHK test/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
         if [ `sed -n '/possible FAILURE/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
           failed_chk=$(($failed_chk+1))
         elif [ `sed -n '/execution failed/p' .quick.runtest.${buildtype}.summary.tmp2 | wc -l` -gt 0 ]; then
@@ -1040,7 +1054,7 @@ print_summary()
     echo "    Gradient tests: $failed_grad/$tot_grad_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Optimization tests: $failed_opt/$tot_opt_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    API tests: $failed_api/$tot_api_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
-    echo "    RW tests: $failed_chk/$tot_chk_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
+    echo "    CHK tests: $failed_chk/$tot_chk_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    ESP tests: $failed_esp/$tot_esp_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "    Total tests: $failed_total/$total_tests (failed/total)" >> .quick.runtest.${buildtype}.summary.tmp0
     echo "" >> .quick.runtest.${buildtype}.summary.tmp0
@@ -1086,6 +1100,20 @@ check_mpi_gpu_mismatch()
     mpi_gpu_error_string=`grep 'Error: Number of launched processes is greater than the available number of GPUs.' "$1.out"`
 
     if [ -z "$mpi_gpu_error_string" ]; then ret=0 ; else ret=1 ; fi
+
+    return "$ret"
+}
+
+
+# Function to skip tests if the code wasnt compiled with HDF5 support
+#
+# arguments:
+#   $1: test name
+check_hdf5_error()
+{
+    hdf5_error_string=`grep 'Error: CHK_READ_XYZ=.*restart requires HDF5 support' "$1_2.out" 2>/dev/null`
+
+    if [ -z "$hdf5_error_string" ]; then ret=0 ; else ret=1 ; fi
 
     return "$ret"
 }
@@ -1340,7 +1368,7 @@ if [ -n "$PARALLEL_TEST_COUNT" ]; then
   export -f set_job_gpus set_test run_test run_test_api run_energy_test run_grad_test run_opt_test run_api_test \
 	  run_chk_test run_esp_test check_chk check_energy check_gradient check_opt \
           check_esp_charge check_esp_grid check_vdw_surface check_dipole \
-          clean_up check_f_error check_mpi_gpu_mismatch lock_file unlock_file
+          clean_up check_f_error check_hdf5_error check_mpi_gpu_mismatch lock_file unlock_file
 fi
 
 #  !---------------------------------------------------------------------!

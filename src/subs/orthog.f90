@@ -22,11 +22,14 @@
 ! PROGRAMMED BY S. L. DIXON.
 
 
-    use allmod
-    IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+    use quick_basis_module, only: nbasis
+    implicit none
 ! DIMENSION VECT(NDIM,*)
-    DIMENSION VECT(nbasis,nbasis)
-    LOGICAL :: ORTH
+    integer, intent(in) :: ndim, nvect, jstart
+    double precision, intent(inout) :: vect(nbasis,nbasis)
+    logical, intent(out) :: orth
+    double precision :: ortest, dot, vjnorm
+    integer :: j, jprev, i, jstop
 
     ORTH = .TRUE.
     ORTEST = 1.0D-8

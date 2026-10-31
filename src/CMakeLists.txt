@@ -19,13 +19,13 @@ endif()
 # --------------------------------------------------------------------
 
 set(QUICK_MODULES_SOURCES
-	quick_mpi_module.f90 quick_constants_module.f90 quick_method_module.f90
+	quick_mpi_module.f90 quick_constants_module.f90 quick_method_module.f90 quick_io_module.f90
 	quick_molspec_module.f90 quick_gaussian_class_module.f90 quick_size_module.f90
 	quick_basis_module.f90 quick_calculated_module.f90 quick_magma_module.f90 quick_overlap_module.f90
 	quick_divcon_module.f90 quick_ecp_module.f90 quick_electrondensity_module.f90
 	quick_files_module.f90 quick_timer_module.f90 quick_gridpoints_module.f90
 	quick_mfcc_module.f90 quick_params_module.f90 quick_pb_module.f90
-	quick_scratch_module.f90 quick_all_module.f90 quick_scf_module.f90
+	quick_scratch_module.f90 quick_scf_module.f90
 	quick_grad_cshell_module.f90 quick_api_module.f90 quick_api_test_module.f90
 	quick_cutoff_module.f90 quick_exception_module.f90 quick_input_parser_module.f90
 	quick_eri_cshell_module.f90 quick_eri_grad_cshell_module.f90 quick_oei_module.f90
@@ -33,8 +33,8 @@ set(QUICK_MODULES_SOURCES
 	quick_uscf_module.f90 quick_sad_guess_module.f90 quick_optimizer_module.f90
         quick_cew_module.f90 quick_lri_module.f90 quick_lri_grad_module.f90
 	quick_eri_oshell_module.f90 quick_eri_grad_oshell_module.f90 quick_molsurface_module.f90
-	quick_grad_oshell_module.f90 quick_dftd3_module.f90 quick_molden_module.f90 quick_oeproperties_module.f90
-	quick_io_module.f90)
+	quick_grad_oshell_module.f90 quick_dftd3_module.f90 quick_molden_module.f90
+	quick_oeproperties_module.f90)
 
 set(QUICK_SUBS_FORTRAN_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	degen.f90 denspt.f90 dipole.f90 EffChar.f90
@@ -45,14 +45,14 @@ set(QUICK_SUBS_FORTRAN_SOURCES Angles.f90 copyDMat.f90 copySym.f90
 	order.f90 orthog.f90 PriCol.f90 PriSym.f90
 	PrtAct.f90 PrtDat.f90 PrtErr.f90 PrtLab.f90
 	PrtMsg.f90 PrtTim.f90 PrtWrn.f90 pteval.f90 QuickErr.f90
-	quick_open.f90 random.f90 rdinum.f90 rdnml.f90
+	quick_open.f90 random.f90 rdinum.f90
 	rdnum.f90 rdword.f90 readPDB.f90 spdfgh.f90
 	ssw.f90 sum2Mat.f90 symmetrize.f90 transpose.f90
         upcase.f90 vett.f90 whatis.f90 whole.f90
 	wrtRestart.f90 xnorm.f90 zeroMatrix.f90 zmake.f90
 	pt2der.f90 sswder.f90 denspt_new_imp.f90
-	pteval_new_imp.f90 scaMatMul.f90 diag.f90
-	oshell_denspt.f90 naive_distribute.f90 mat_diag.f90 mat_dgemm.f90)
+	pteval_new_imp.f90 diag.f90
+	oshell_denspt.f90 naive_distribute.f90 mat_diag.f90 mat_dgemm.f90 lowdin_orth.f90)
 
 set(QUICK_SUBS_CXX_SOURCES
 	time.cpp)
@@ -168,12 +168,12 @@ if(MPI)
 	# change link libraries and mod dirs for MPI
 	remove_link_libraries(libquick_mpi octree)
 	target_link_libraries(libquick_mpi PRIVATE octree_mpi)
+
 	if(INSIDE_AMBER)
 		remove_link_libraries(libquick_mpi libcew)
 		target_link_libraries(libquick_mpi PRIVATE libcew_mpi)
 	endif()
 	config_module_dirs(libquick_mpi quick/mpi libxc/serial)
-
 
 	install_libraries(libquick_mpi EXPORT QUICK)
 endif()
