@@ -41,6 +41,14 @@ module quick_cew_module
   double precision,parameter :: AU_PER_AMBER_FORCE = &
        & AU_PER_AMBER_KCAL_PER_MOL / AU_PER_AMBER_ANGSTROM
 
+#ifdef CUEST
+  double precision, allocatable :: cuest_gridxyz(:,:)
+  double precision, allocatable :: cuest_gridwt(:)
+  ! holds (w_P*Vrecip_P)_P for input to cuEST
+  ! allocated in prescf, deallocated after gradient
+  double precision, allocatable :: wVrecip(:)
+#endif
+
   
   interface
      subroutine cew_getrecip( pt, pot ) bind(c,name="cew_getpotatpt_")
@@ -307,14 +315,22 @@ contains
 
     call gpu_upload_lri(quick_cew%zeta, chgs, ierr)
 
-    call gpu_upload_cew_vrecip(ierr)
+#ifdef CUEST
+    if (quick_method%usecuest) then
+       call quick_cuest_cew_prescf_quad
+    else
+#endif
+       call gpu_upload_cew_vrecip(ierr)
 
-    call gpu_get_lri(quick_qm_struct%o)
+       call gpu_get_lri(quick_qm_struct%o)
 
-    if ( .not. (quick_method%grad .or. quick_method%opt) ) then 
-      call gpu_delete_lri(ierr)
-      call delete_cew_vrecip(quick_cew, ierr)
-    endif
+       if ( .not. (quick_method%grad .or. quick_method%opt) ) then 
+         call gpu_delete_lri(ierr)
+         call delete_cew_vrecip(quick_cew, ierr)
+       endif
+#ifdef CUEST
+    endif ! quick_method%usecuest
+#endif
 
     if(allocated(chgs)) deallocate(chgs)
 
@@ -559,8 +575,56 @@ contains
   end subroutine quick_cew_prescf_quad
   
 
+#ifdef CUEST
+   subroutine quick_cuest_cew_prescf_quad()
+      use quick_basis_module, only: nbasis
+      use quick_calculated_module, only: quick_qm_struct
+      use quick_method_module, only: quick_method
+      use quick_cuest_module
+      use, intrinsic :: iso_c_binding, only: c_int64_t
 
+      integer(c_int64_t) :: npoint
 
+      double precision :: Vrecip
+      double precision :: Vrecip_mat(nbasis, nbasis)
+      integer :: i
+
+      !
+      ! cew_getrecip gives us Vrecip(r) for some position r in R^3
+      ! The contribution we want is
+      !     H(i,j) += \int (-Vrecip(r)) * phi_i(r) * phi_j(r) d3r
+      ! and we use the xc grid to compute
+      !     H(i,j) += \sum_P (-Vrecip(r_P)) * phi_i(r) * phi_j(r) * w_P
+      ! We will use cuEST to compute potential integral over the grid
+      ! by passing the array (Vrecip(r_P))_P as the potential
+      !
+      
+      call cuest_get_xc_grid_npoint(npoint)
+
+      allocate(cuest_gridxyz(3, npoint))
+      allocate(cuest_gridwt(npoint))
+      if (.not. allocated(wVrecip)) allocate(wVrecip(npoint))
+
+      call cuest_get_grid_xyz(cuest_gridxyz)
+      call cuest_get_xc_grid_weight(CUEST_WEIGHTSPEC_TOTAL, cuest_gridwt)
+
+      do i = 1, npoint
+         call cew_getrecip(cuest_gridxyz(1,i), Vrecip)
+         wVrecip(i) = cuest_gridwt(i)*(-Vrecip)
+      enddo
+
+      call cuest_get_xc_potential(wVrecip, int(2e9, c_int64_t), CUEST_APPROXSPEC_LDA, Vrecip_mat)
+
+      quick_qm_struct%o = quick_qm_struct%o + Vrecip_mat
+
+      if (.not. quick_method%grad) then
+         deallocate(cuest_gridxyz)
+         deallocate(cuest_gridwt)
+         deallocate(wVrecip)
+      endif
+      
+   end subroutine quick_cuest_cew_prescf_quad
+#endif
 
 
 
@@ -1166,6 +1230,65 @@ end do
 
 
   end subroutine quick_cew_grad_quad
+
+#ifdef CUEST
+   subroutine quick_cuest_cew_grad_quad()
+      use quick_calculated_module, only: quick_qm_struct
+      use quick_molspec_module, only: natom, quick_molspec
+      use quick_cuest_module
+      use, intrinsic :: iso_c_binding, only: c_int64_t
+
+      integer :: i, ii
+      integer(c_int64_t) :: npoint
+
+      ! rho(P) is electron density at grid point P
+      ! enedens(P) is the energy density (rho_P)(V_P) at grid point P
+      double precision, allocatable :: rho(:), enedens(:), gradhold_grid(:)
+      double precision :: gradhold_atom(3*natom)
+      double precision :: dVdR(3)
+      double precision :: chgdens
+
+      call cuest_get_xc_grid_npoint(npoint)
+
+      allocate(rho(npoint))
+      allocate(enedens(npoint))
+      allocate(gradhold_grid(3*npoint))
+
+      call cuest_get_xc_dense(quick_qm_struct%co, rho)
+
+      enedens = dot_product(rho, wVrecip)
+
+      ! gradhold_atom_A  = \sum_P (w_P)(V_P)(del rho/del R_A)
+      ! gradhold_grid_Q = (w_Q)(nabla rho_Q)(V_Q)
+      call cuest_get_grid_der(quick_qm_struct%co, wVrecip, gradhold_atom, gradhold_grid)
+
+      ! accumulate into gradient so we can use gradhold_atom again
+      quick_qm_struct%gradient = quick_qm_struct%gradient + 0.5d0*gradhold_atom
+
+      ! gradhold_grid_Q = w_Q[(nabla rho_Q)(V_Q) + (rho_Q)(nabla V_Q)]
+      dVdR = 0.0d0
+      do i = 1, npoint
+         call cew_getgrdatpt(cuest_gridxyz(1,i), dVdR(1))
+
+         chgdens = rho(i)*cuest_gridwt(i)
+         ii = 3*(i-1)
+         gradhold_grid(ii+1) = gradhold_grid(ii+1) + chgdens*dVdR(1)
+         gradhold_grid(ii+2) = gradhold_grid(ii+2) + chgdens*dVdR(2)
+         gradhold_grid(ii+3) = gradhold_grid(ii+3) + chgdens*dVdR(3)
+      enddo
+
+      call cuest_get_grid_point_der(enedens, gradhold_grid, gradhold_atom)
+      quick_qm_struct%gradient = quick_qm_struct%gradient + 0.5d0*gradhold_atom
+
+      deallocate(rho)
+      deallocate(enedens)
+      deallocate(gradhold_grid)
+      deallocate(cuest_gridxyz)
+      deallocate(cuest_gridwt)
+      deallocate(wVrecip)
+      
+   end subroutine quick_cuest_cew_grad_quad
+#endif
 
 
 #if defined(GPU) || defined(MPIV_GPU)

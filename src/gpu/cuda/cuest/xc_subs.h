@@ -1,20 +1,23 @@
-#ifdef LOCAL
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef LOCAL
 #include "/Users/msun/rehs2026/cuest/fake_cuda_headers/cuda_runtime.h"
 #include "/Users/msun/rehs2026/cuest/libcuest-headers/include/cuest.h"
+
+static cuestAtomGrid_t *atom_grids;
+#else
+#include <cuda_runtime.h>
+#include <cuest.h>
+#endif
 
 #include "cuest_funcs.h"
 #include "helper_status.h"
 #include "helper_workspace.h"
 #include "quick_cuest.h"
 #include "util.h"
-
-static cuestAtomGrid_t *atom_grids;
-#endif
 
 // atom_grids is defined in xc.c
 
@@ -65,6 +68,7 @@ cuest_init_cshell_xc (int32_t fnl, int64_t devsiz)
     cuestXCIntPlanParameters_t xcIntPlan_param;
     checkCuestErrors (cuestParametersCreate (CUEST_XCINTPLAN_PARAMETERS, &xcIntPlan_param));
 
+    bool   dft  = true;
     bool   nl   = false;
     double nl_C = 0, nl_b = 0;
 
@@ -72,6 +76,10 @@ cuest_init_cshell_xc (int32_t fnl, int64_t devsiz)
     quick_cuest_struct.fnl = fnl;
     cuestXCIntPlanParametersFunctional_t functional;
     switch (fnl) {
+        case CUEST_FUNCTIONAL_HF:
+            functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_HF;
+            dft        = false;
+            break;
         case CUEST_FUNCTIONAL_B3LYP:
             functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_B3LYP1;
             break;
@@ -148,6 +156,7 @@ cuest_init_cshell_xc (int32_t fnl, int64_t devsiz)
     }
 #endif
 
+    quick_cuest_data.dft  = dft;
     quick_cuest_data.nl_C = nl_C;
     quick_cuest_data.nl_b = nl_b;
 
@@ -170,6 +179,10 @@ cuest_init_cshell_xc (int32_t fnl, int64_t devsiz)
     // ====================== //
     // set up compute buffers //
     // ====================== //
+
+    // don't set up if not dft
+    if (!dft)
+        return;
 
     const size_t Vxc_siz = nbasis * nbasis * sizeof (double);
     cudaMallocChecked (&quick_cuest_compute_mem.d_Vxc, Vxc_siz);
@@ -262,6 +275,9 @@ cuest_deinit_oshell_xc ()
 cuest_deinit_cshell_xc ()
 #endif
 {
+    if (!quick_cuest_data.dft)
+        return;
+
     const uint64_t nbasis = quick_cuest_data.nbasis;
 
     cudaFreeChecked (quick_cuest_compute_mem.d_Vxc);

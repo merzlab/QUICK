@@ -486,7 +486,8 @@ subroutine form_cuest_xc_quadrature(self, xcg_tmp)
    endif
 
    call cuest_destroy_atom_grid
-   call cuest_init_xc_dense(int(2d9, c_int64_t))
+   call cuest_init_xc_dense(CUEST_APPROXSPEC_LDA, int(2d9, c_int64_t))
+   call cuest_init_grid_der(CUEST_APPROXSPEC_LDA, int(2d9, c_int64_t))
 
    RECORD_TIME(timer_end%TDFTGrdGen)
    timer_cumer%TDFTGrdGen = timer_cumer%TDFTGrdGen + timer_end%TDFTGrdGen - timer_begin%TDFTGrdGen

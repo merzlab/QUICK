@@ -180,6 +180,7 @@ subroutine finalize_cuest
    call cuest_deinit_df
    if (quick_method%DFT) then
       if (.not. quick_method%UNRST) call cuest_deinit_xc_dense
+      call cuest_deinit_grid_der
       call cuest_deinit_xc_grid
    endif
    call cuest_deinit_correct

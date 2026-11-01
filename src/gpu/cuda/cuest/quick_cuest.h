@@ -25,6 +25,10 @@
 #define WEIGHTSPEC_BECKE      1
 #define WEIGHTSPEC_QUADRATURE 2
 
+#define APPROXSPEC_LDA     0
+#define APPROXSPEC_GGA     1
+#define APPROXSPEC_METAGGA 2
+
 typedef struct {
     cuestHandle_t               handle;
     cuestWorkspaceDescriptor_t *persistWD;
@@ -72,7 +76,15 @@ typedef struct {
     cuestXCDensityComputeParameters_t               rho_par;
     cuestXCAdvancedComputeParametersApproximation_t rho_approx;
     void                                           *d_rho;
-    uint64_t                                        rho_ndim;
+    size_t                                          rho_ndim;
+
+    cuestWorkspace_t                               *der_wksp, *gridder_wksp;
+    cuestWorkspaceDescriptor_t                     *der_vbs;
+    cuestXCDerivativeComputeParameters_t            der_par;
+    cuestXCGridDerivativeComputeParameters_t        gridder_par;
+    cuestXCAdvancedComputeParametersApproximation_t der_approx;
+    void                                           *d_basisgrad, *d_gridgrad, *d_der_v;
+    size_t                                          der_ndim;
 
     double *weights_save;
     bool    weights_saved;
@@ -134,6 +146,8 @@ typedef struct {
 
     double nl_C;
     double nl_b;
+
+    bool dft; // if use DFT or not
 } quick_cuest_data_t;
 
 typedef struct {
@@ -212,12 +226,24 @@ void cuest_deinit_oshell_xc ();
 void cuest_get_cshell_xc (double *Vxc, double *Exc, double *C);
 void cuest_get_oshell_xc (double *Vxc, double *Vxcb, double *Exc, double *C, double *Cb);
 
+// --------------- //
+// grid operations //
+// --------------- //
 void cuest_get_xc_grid_npoint (int64_t *npoint);
 void cuest_get_xc_grid_weight (int8_t weightspec, double *w);
-void cuest_init_xc_dense (int64_t devsiz);
+
+void cuest_init_xc_dense (int8_t approx_spec, int64_t devsiz);
 void cuest_deinit_xc_dense ();
 void cuest_get_xc_dense (double *C, double *rho);
+
 void cuest_get_xc_nelec (double *C, double *nelec);
+void cuest_get_grid_xyz (double *xyz);
+void cuest_get_xc_potential (double *Vgrid, int64_t devsiz, int8_t approx_spec, double *V);
+
+void cuest_init_grid_der (int8_t approxspec, int64_t devsiz);
+void cuest_deinit_grid_der ();
+void cuest_get_grid_der (double *C, double *v, double *basisgrad, double *gridgrad);
+void cuest_get_grid_point_der (double *enedens, double *gridgrad, double *outgrad);
 
 // ======== //
 // Gradient //
