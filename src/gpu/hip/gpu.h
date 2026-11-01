@@ -20,7 +20,7 @@ extern "C" void gpu_new(
 extern "C" void gpu_init_device_(int *);
 extern "C" void gpu_delete_(int *);
 extern "C" void gpu_get_device_info_(int *, int *, int *,
-        int *, double *, char *, int *, int *, int *, int *);
+        int *, double *, char *, int *, char *, int *, int *, int *, int *);
 
 // molecule, basis sets, and some other information
 extern "C" void gpu_upload_method_(int *, bool *, double *);
