@@ -413,7 +413,7 @@ extern "C" void gpu_init_device_(int* ierr)
 
 extern "C" void gpu_get_device_info_(int *gpu_dev_count, int *gpu_dev_id, int *gpu_dev_mem,
         int *gpu_num_proc, double *gpu_core_freq, char *gpu_dev_name, int *name_len,
-        int *majorv, int *minorv, int *ierr)
+        char *gpu_arch_name, int *arch_len, int *majorv, int *minorv, int *ierr)
 {
     hipError_t error;
     hipDeviceProp_t prop;
@@ -433,8 +433,11 @@ extern "C" void gpu_get_device_info_(int *gpu_dev_count, int *gpu_dev_id, int *g
     *gpu_num_proc = (int) (prop.multiProcessorCount);
     hipDeviceGetAttribute(&gpu_clockrate_khz, hipDeviceAttributeClockRate, *gpu_dev_id);
     *gpu_core_freq = (double) (gpu_clockrate_khz * 1e-6f);
-    strcpy(gpu_dev_name, prop.name);
-    *name_len = strlen(gpu_dev_name);
+    // Fortran-side buffers are character(len=256) and are not NUL-terminated
+    strncpy(gpu_dev_name, prop.name, 256);
+    *name_len = strnlen(prop.name, 256);
+    strncpy(gpu_arch_name, prop.gcnArchName, 256);
+    *arch_len = strnlen(prop.gcnArchName, 256);
     *majorv = prop.major;
     *minorv = prop.minor;
 }
