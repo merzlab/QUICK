@@ -609,7 +609,7 @@ module quick_method_module
 
 #ifdef CUEST
             ! set default value
-            self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
+            self%cuest_fnl_code = CUEST_FUNCTIONAL_HF
             self%addK = .false.
 #endif
 
@@ -943,7 +943,7 @@ module quick_method_module
 
             use quick_exception_module
 #ifdef CUEST
-            use quick_cuest_module, only: CUEST_FUNCTIONAL_UNKNOWN
+            use quick_cuest_module, only: CUEST_FUNCTIONAL_HF
 #endif
             implicit none
             type(quick_method_type) self
@@ -1063,7 +1063,7 @@ module quick_method_module
 #endif
 
 #ifdef CUEST
-            self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
+            self%cuest_fnl_code = CUEST_FUNCTIONAL_HF
             self%addK = .false.
 #endif
             self%usecuest = .false.

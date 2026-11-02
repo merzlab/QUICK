@@ -144,7 +144,7 @@ cuest_init_cshell_xc (int32_t fnl, int64_t devsiz)
             functional = CUEST_XCINTPLAN_PARAMETERS_FUNCTIONAL_SVWN5;
             break;
         default:
-            fprintf (stderr, "%s:%d Unknown functional code %hhu\n", __func__, __LINE__, fnl);
+            fprintf (stderr, "%s:%d Unknown functional code %d\n", __func__, __LINE__, fnl);
             return;
     }
 
