@@ -392,6 +392,33 @@ extern "C" void gpu_get_oei_(QUICKDouble* o)
 }
 
 
+extern "C" void gpu_upload_ptchg_grad_()
+{
+    if (gpu->nextatom <= 0)
+        return;
+
+    gpu->ptchg_grad = new gpu_buffer_type<QUICKDouble>(3 * gpu->nextatom);
+
+#if defined(USE_LEGACY_ATOMICS)
+    gpu->ptchg_gradULL = new gpu_buffer_type<QUICKULL>(3 * gpu->nextatom);
+    gpu->ptchg_gradULL->Upload();
+    gpu->gpu_sim.ptchg_gradULL = gpu->ptchg_gradULL->_devData;
+    gpu->ptchg_grad->DeleteGPU();
+#else
+    gpu->ptchg_grad->Upload();
+    gpu->gpu_sim.ptchg_grad =  gpu->ptchg_grad->_devData;
+#endif
+    upload_sim_to_constant_oei(gpu);
+}
+
+extern "C" void gpu_delete_ptchg_grad_()
+{
+    SAFE_DELETE(gpu->ptchg_grad);
+#if defined(USE_LEGACY_ATOMICS)
+    SAFE_DELETE(gpu->ptchg_gradULL);
+#endif
+}
+
 extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
 {
     // upload point charge grad vector

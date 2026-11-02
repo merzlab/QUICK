@@ -780,9 +780,15 @@ contains
     !        gc(3) = gc(3) + D(i,j) * qc * d/dZc (ij|c0)
 
 #if defined(GPU) || defined(MPIV_GPU)
+#ifdef CUEST
+    call gpu_upload_ptchg_grad
+#endif
     call gpu_get_lri_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
 
     call gpu_delete_lri(ierr)
+#ifdef CUEST
+    call gpu_delete_ptchg_grad
+#endif
 
 #ifdef CUEST
     ! this is safe for HF and DFT because DFT accumulates this
