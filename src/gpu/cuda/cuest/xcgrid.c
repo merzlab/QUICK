@@ -324,12 +324,15 @@ cuest_init_grid_der (int8_t approxspec, int64_t devsiz)
     vbs->deviceBufferSizeInBytes    = devsiz;
     quick_cuest_compute_mem.der_vbs = vbs;
 
-    void *d_basisgrad = quick_cuest_compute_mem.d_basisgrad;
-    void *d_gridgrad  = quick_cuest_compute_mem.d_gridgrad;
-    void *d_v         = quick_cuest_compute_mem.d_der_v;
+    void *d_basisgrad;
+    void *d_gridgrad;
+    void *d_v;
     cudaMallocChecked (&d_basisgrad, 3 * natom * sizeof (double));
     cudaMallocChecked (&d_gridgrad, 3 * npoint * sizeof (double));
     cudaMallocChecked (&d_v, 3 * ndim * npoint * sizeof (double));
+    quick_cuest_compute_mem.d_basisgrad = d_basisgrad;
+    quick_cuest_compute_mem.d_gridgrad  = d_gridgrad;
+    quick_cuest_compute_mem.d_der_v     = d_v;
 
     checkCuestErrors (cuestXCDerivativeComputeWorkspaceQuery (
         handle, quick_cuest_struct.XCIntPlan, approx, quick_cuest_compute_mem.der_par, vbs, tmpWD,
