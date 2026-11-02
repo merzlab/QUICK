@@ -781,25 +781,29 @@ contains
 
 #if defined(GPU) || defined(MPIV_GPU)
 #ifdef CUEST
-    call gpu_upload_ptchg_grad
+    if (quick_method%usecuest) call gpu_upload_ptchg_grad
 #endif
     call gpu_get_lri_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
 
     call gpu_delete_lri(ierr)
 #ifdef CUEST
-    call gpu_delete_ptchg_grad
+    if (quick_method%usecuest) call gpu_delete_ptchg_grad
 #endif
 
 #ifdef CUEST
     ! this is safe for HF and DFT because DFT accumulates this
     ! in gpu_get_cshell_xcgrad when gpu_set_cew is called.
     ! if cuEST is used for that, it will not be accumulated, so we do it here
-    call quick_cuest_cew_grad_quad
-#else
-    if(quick_method%HF) then
-      call gpu_reupload_dft_grid()
-      call gpu_getcew_grad_quad(quick_qm_struct%gradient)
-      call delete_cew_vrecip(quick_cew, ierr)
+    if (quick_method%usecuest) then
+       call quick_cuest_cew_grad_quad
+    else
+#endif
+       if(quick_method%HF) then
+         call gpu_reupload_dft_grid()
+         call gpu_getcew_grad_quad(quick_qm_struct%gradient)
+         call delete_cew_vrecip(quick_cew, ierr)
+       endif
+#ifdef CUEST
     endif
 #endif
 #else ! defined(GPU) || defined(MPIV_GPU)
