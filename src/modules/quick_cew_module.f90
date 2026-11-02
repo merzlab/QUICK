@@ -784,13 +784,19 @@ contains
 
     call gpu_delete_lri(ierr)
 
+#ifdef CUEST
+    ! this is safe for HF and DFT because DFT accumulates this
+    ! in gpu_get_cshell_xcgrad when gpu_set_cew is called.
+    ! if cuEST is used for that, it will not be accumulated, so we do it here
+    call quick_cuest_cew_grad_quad
+#else
     if(quick_method%HF) then
       call gpu_reupload_dft_grid()
       call gpu_getcew_grad_quad(quick_qm_struct%gradient)
       call delete_cew_vrecip(quick_cew, ierr)
     endif
-
-#else
+#endif
+#else ! defined(GPU) || defined(MPIV_GPU)
     do c=1, (quick_molspec%natom + quick_molspec%nextatom)
        if ( c <= quick_molspec%natom ) then
           c_coord=quick_molspec%xyz(1:3,c)
@@ -801,7 +807,7 @@ contains
        end if
        call computeLRIGrad(c_coord,quick_cew%zeta,qc,c)
     enddo
-#endif
+#endif ! defined(GPU) || defined(MPIV_GPU)
 
 #if !defined(GPU) && !defined(MPIV_GPU)
     call quick_cew_grad_quad()

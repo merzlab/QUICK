@@ -275,7 +275,7 @@ cuest_get_xc_potential (double *Vgrid, int64_t devsiz, int8_t approxspec, double
     const size_t Vgrid_siz = npoint * ndim * sizeof (double);
     const size_t V_siz     = nbasis * nbasis * sizeof (double);
     cudaMallocChecked (&d_Vgrid, Vgrid_siz);
-    cudaMallocChecked (&d_Vgrid, V_siz);
+    cudaMallocChecked (&d_V, V_siz);
 
     checkCuestErrors (cuestXCPotentialComputeWorkspaceQuery (
         handle, quick_cuest_struct.XCIntPlan, approx, par, vbs, tmpWD, d_Vgrid, d_V));
@@ -288,12 +288,12 @@ cuest_get_xc_potential (double *Vgrid, int64_t devsiz, int8_t approxspec, double
 
     cudaMemcpyChecked (V, d_V, V_siz, cudaMemcpyDeviceToHost);
 
-    cudaFree (d_V);
-    cudaFree (d_Vgrid);
+    cudaFreeChecked (d_V);
+    cudaFreeChecked (d_Vgrid);
     free_dev_alloc (V_siz);
     free_dev_alloc (Vgrid_siz);
     freeWorkspace (wksp);
-    cuestParametersDestroy (CUEST_XCINTEGRATIONGRIDCOMPUTE_PARAMETERS, &par);
+    cuestParametersDestroy (CUEST_XCPOTENTIALCOMPUTE_PARAMETERS, &par);
 }
 
 void
