@@ -546,6 +546,7 @@ subroutine run_quick(self,ierr)
 
 #ifdef CUEST
   if (quick_method%usecuest) then
+      call PrtAct(iOutFile, "Initializing cuEST")
       call initialize_cuest
   endif
 #endif
@@ -602,6 +603,7 @@ subroutine run_quick(self,ierr)
 
 #ifdef CUEST
   if (quick_method%usecuest) then
+     call PrtAct(iOutFile, "Finalizing cuEST")
      call finalize_cuest
   endif
 #endif

@@ -193,4 +193,13 @@ cuest_deinit ()
         cudaFreeChecked (quick_cuest_PC_buf.d_Cb[0]);
         free_dev_alloc (quick_cuest_PC_buf.Cb_siz);
     }
+
+    // reset all values
+    quick_cuest_struct      = (quick_cuest_struct_t){ 0 };
+    quick_cuest_compute_mem = (quick_cuest_compute_mem_t){ 0 };
+    quick_cuest_PC_buf      = (quick_cuest_PC_buf_t){ 0 };
+    quick_cuest_grad_mem    = (quick_cuest_grad_mem_t){ 0 };
+    quick_cuest_data        = (quick_cuest_data_t){ 0 };
+    quick_cuest_memchk      = (quick_cuest_memchk_t){ 0 };
+    quick_cuest_memtrace    = (quick_cuest_memtrace_t){ 0 };
 }
