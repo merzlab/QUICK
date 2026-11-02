@@ -175,10 +175,17 @@ end subroutine deinitialize_cuest_grad
 subroutine finalize_cuest
    use quick_cuest_module
    use quick_method_module, only: quick_method
+#ifdef CEW
+   use quick_cew_module, only: quick_cew
+#endif
 
    call cuest_deinit_oei_plan
    call cuest_deinit_df
+#ifdef CEW
+   if (quick_method%DFT .or. quick_cew%use_cew) then
+#else
    if (quick_method%DFT) then
+#endif
       if (.not. quick_method%UNRST) call cuest_deinit_xc_dense
       call cuest_deinit_grid_der
       call cuest_deinit_xc_grid
