@@ -329,7 +329,7 @@ cuest_init_grid_der (int8_t approxspec, int64_t devsiz)
     void *d_v;
     cudaMallocChecked (&d_basisgrad, 3 * natom * sizeof (double));
     cudaMallocChecked (&d_gridgrad, 3 * npoint * sizeof (double));
-    cudaMallocChecked (&d_v, 3 * ndim * npoint * sizeof (double));
+    cudaMallocChecked (&d_v, ndim * npoint * sizeof (double));
     quick_cuest_compute_mem.d_basisgrad = d_basisgrad;
     quick_cuest_compute_mem.d_gridgrad  = d_gridgrad;
     quick_cuest_compute_mem.d_der_v     = d_v;
@@ -376,7 +376,7 @@ cuest_get_grid_der (double *C, double *v, double *basisgrad, double *gridgrad)
         d_gridgrad));
 
     cudaMemcpyChecked (basisgrad, d_basisgrad, 3 * natom * sizeof (double), cudaMemcpyDeviceToHost);
-    cudaMemcpyChecked (gridgrad, d_gridgrad, 3 * natom * sizeof (double), cudaMemcpyDeviceToHost);
+    cudaMemcpyChecked (gridgrad, d_gridgrad, 3 * npoint * sizeof (double), cudaMemcpyDeviceToHost);
 }
 
 void

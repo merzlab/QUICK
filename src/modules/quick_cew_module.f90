@@ -601,8 +601,8 @@ contains
       
       call cuest_get_xc_grid_npoint(npoint)
 
-      allocate(cuest_gridxyz(3, npoint))
-      allocate(cuest_gridwt(npoint))
+      if (.not. allocated(cuest_gridxyz)) allocate(cuest_gridxyz(3, npoint))
+      if (.not. allocated(cuest_gridwt)) allocate(cuest_gridwt(npoint))
       if (.not. allocated(wVrecip)) allocate(wVrecip(npoint))
 
       call cuest_get_grid_xyz(cuest_gridxyz)
@@ -618,9 +618,9 @@ contains
       quick_qm_struct%o = quick_qm_struct%o + Vrecip_mat
 
       if (.not. quick_method%grad) then
-         deallocate(cuest_gridxyz)
-         deallocate(cuest_gridwt)
-         deallocate(wVrecip)
+         if (allocated(cuest_gridxyz)) deallocate(cuest_gridxyz)
+         if (allocated(cuest_gridwt)) deallocate(cuest_gridwt)
+         if (allocated(wVrecip)) deallocate(wVrecip)
       endif
       
    end subroutine quick_cuest_cew_prescf_quad
@@ -1272,7 +1272,7 @@ end do
 
       call cuest_get_xc_dense(quick_qm_struct%co, rho)
 
-      enedens = dot_product(rho, wVrecip)
+      enedens = rho*wVrecip
 
       ! gradhold_atom_A  = \sum_P (w_P)(V_P)(del rho/del R_A)
       ! gradhold_grid_Q = (w_Q)(nabla rho_Q)(V_Q)
@@ -1299,9 +1299,9 @@ end do
       deallocate(rho)
       deallocate(enedens)
       deallocate(gradhold_grid)
-      deallocate(cuest_gridxyz)
-      deallocate(cuest_gridwt)
-      deallocate(wVrecip)
+      if (allocated(cuest_gridxyz)) deallocate(cuest_gridxyz)
+      if (allocated(cuest_gridwt)) deallocate(cuest_gridwt)
+      if (allocated(wVrecip)) deallocate(wVrecip)
       
    end subroutine quick_cuest_cew_grad_quad
 #endif
