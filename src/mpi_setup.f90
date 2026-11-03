@@ -54,6 +54,11 @@
      use quick_molspec_module, only: quick_molspec, natom
      use quick_ecp_module, only: tolecp, thrshecp
      use quick_mpi_module, only: quick_comm, quick_mpi_error
+     use quick_files_module, only: PDBFileName, baseinFileName, basisDir, sadGuessDir, &
+           basisFileName, basisSetName, basisCustName, ECPDir, ECPFileName, inFileName, &
+           outFileName, dmxFileName, rstFileName, CPHFFileName, dataFileName, intFileName, &
+           moldenFileName, espFileName, efieldFileName, VdwSurfFileName, fragPreFileName, &
+           fragPostFileName, mfccXyzFileName
      use mpi
 
      implicit none
