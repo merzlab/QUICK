@@ -623,6 +623,13 @@ contains
 
       quick_qm_struct%o = quick_qm_struct%o + Vrecip_mat
 
+#ifdef CUESTDEBUG
+      call cuest_debuglog("======== Vrecip_mat ========")
+      call cuest_correct_o(Vrecip_mat, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+      call cuest_debuglog_PriSym(nbasis, Vrecip_mat, "F12.7")
+      call cuest_debuglog("====== end Vrecip_mat =======")
+#endif
+
       if (.not. quick_method%grad) then
          if (allocated(cuest_gridxyz)) deallocate(cuest_gridxyz)
          if (allocated(cuest_gridwt)) deallocate(cuest_gridwt)
