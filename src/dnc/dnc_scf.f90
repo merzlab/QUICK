@@ -8,7 +8,15 @@
 ! 10/20/2010 YIPU MIAO Add MPI option to DIIS div&con
 ! this is dii for div & con
 subroutine electdiisdc(jscf,ierr)
-   use allmod
+     use quick_divcon_module, only: np, nbasisdc, ODCSub, XDCSub, coDCSub, coDCSubtran, eValDCSub, &
+                                    ODCSubtemp, VECtemp, Vtemp, EVAL1temp, IDEGEN1temp, nElecMP2Sub
+     use quick_basis_module, only: nbasis
+     use quick_method_module, only: quick_method, adjust_Cutoff
+     use quick_molspec_module, only: quick_molspec
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_scratch_module, only: quick_scratch
+     use quick_files_module, only: iOutFile, write_molden
+     use quick_timer_module, only: timer_begin, timer_end, timer_cumer
      use quick_gridpoints_module
      use quick_scf_operator_module, only: scf_operator
      use quick_oei_module, only: bCalc1e
@@ -931,7 +939,13 @@ end subroutine electdiisdc
 !
 !
 subroutine fermiSCF(efermi,jscf,fermi_ok)
-   use allmod
+   use quick_divcon_module, only: np, dcsubn, dcsub, nbasisdc, eValDCSub, PDCSub, PDCSubtran, coDCSubtran, &
+                                   coDCSub, DCLogic, invDCOverlap
+   use quick_basis_module, only: quick_basis, nbasis
+   use quick_method_module, only: quick_method
+   use quick_molspec_module, only: quick_molspec
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_files_module, only: iOutFile
    implicit double precision(a-h,o-z)
    logical fermidone
    integer jscf

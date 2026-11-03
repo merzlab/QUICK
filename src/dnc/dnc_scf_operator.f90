@@ -10,7 +10,14 @@
   !  possible basis. Note that the Fock matrix is symmetric.
   !  This code now also does all the HF energy calculation. Ed.
   !-------------------------------------------------------
-     use allmod
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_method_module, only: quick_method
+     use quick_scratch_module, only: quick_scratch
+     use quick_basis_module, only: nbasis, jshell, cutmatrix
+#if defined(MPIV)
+     use quick_basis_module, only: mpi_jshelln, mpi_jshell
+#endif
+     use quick_timer_module, only: timer_begin, timer_end, timer_cumer
      use quick_cutoff_module, only: cshell_density_cutoff
      use quick_eri_cshell_module, only: getCshellEriDC, getCshellEriEnergy
      use quick_oei_module, only:get1eEnergy,get1e

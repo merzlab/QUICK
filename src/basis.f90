@@ -28,7 +28,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                                   matombasescon, matombasescon2, matombasesconi, matombasesconj, &
                                   matomfinal, matomfinalcap, matomfinalcon, matomfinalcon2, &
                                   matomstart, matomstartcap, matomstartcon, matomstartcon2, &
-                                  mfccatom, mfcccharge, npmfcc, IMFCC, kxiaoconnect, mfcccord, &
+                                  mfccatom, mfcccharge, npmfcc, nmfccextra, IMFCC, kxiaoconnect, mfcccord, &
                                   Ftmp, linetmp, mfccatomxiao, mfccstart, mfccfinal, &
                                   mfccbases, mfccbasef, &
                                   mfccatomcap, mfccchargecap, mfcccordcap, mfccatomxiaocap, &

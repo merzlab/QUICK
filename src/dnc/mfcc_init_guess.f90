@@ -23,7 +23,8 @@
 ! why MFCC_initial_guess indexes them with an offset of the I block size,
 ! so they get 2*maxbas.
 subroutine allocate_MFCC(nfrag,ncon,maxbas)
-   use allmod
+   use quick_mfcc_module, only: MFCCDens, MFCCDensCap, MFCCDensCon, MFCCDensCon2, &
+                                 MFCCDensConI, MFCCDensConJ
    implicit none
    integer, intent(in) :: nfrag,ncon,maxbas
 
@@ -45,7 +46,16 @@ subroutine allocate_MFCC(nfrag,ncon,maxbas)
 end subroutine
 
 subroutine MFCC_initial_guess
-   use allmod
+   use quick_files_module, only: iOutFile
+   use quick_method_module, only: quick_method
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_basis_module, only: nbasis
+   use quick_mfcc_module, only: npmfcc, nmfccextra, kxiaoconnect, &
+                                 matombases, matombasef, mfccbases, mfccbasef, &
+                                 matombasescap, matombasefcap, mfccbasescap, mfccbasefcap, &
+                                 mfccbasesconi, mfccbasefconi, mfccbasesconj, mfccbasefconj, &
+                                 matombasesconi, matombasesconj, &
+                                 mfccdens, mfccdenscap, mfccdensconi, mfccdensconj, mfccdenscon
    call PrtAct(ioutfile,"Begin MFCC initial guess")
 
    ! The fragment blocks minus the cap blocks must cover every global basis
@@ -216,7 +226,11 @@ end subroutine
 !-------------------------------------------------------
 
 subroutine mfcc_purify_density()
-   use allmod
+   use quick_method_module, only: quick_method
+   use quick_basis_module, only: nbasis
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_files_module, only: ioutfile
+   use quick_molspec_module, only: quick_molspec
    use quick_mpi_module, only: master
    implicit none
 
@@ -332,7 +346,7 @@ end subroutine mfcc_purify_density
 !-------------------------------------------------------
 
 subroutine mfcc_idem(p,n,t1,t2,err)
-   use allmod
+   use quick_calculated_module, only: quick_qm_struct
    implicit none
 
    integer, intent(in) :: n

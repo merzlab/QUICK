@@ -1,7 +1,9 @@
 ! Subroutine initiating the MFCC
 
 subroutine mfcc(natomsaved)
-   use allmod
+   use quick_divcon_module, only: np
+   use quick_files_module, only: iOutFile, iPDBFile, PDBFileName, iMfccXyzFile, mfccXyzFileName
+   use quick_method_module, only: quick_method
    use quick_mfcc_species_module, only: mfcc_is_amino_acid, mfcc_species_charge, mfcc_species_kind
    use quick_mfcc_module
 !   use quick_method_module

@@ -18,11 +18,26 @@
 !
 
 subroutine mfcc_fragment_scf(ierr)
-   use allmod
    use quick_exception_module
    use quick_mfcc_repeat_module, only: MFCC_RPT_MAXREP
    use quick_sad_guess_module, only: getSadGuess
-   use quick_basis_module, only: atomBasis, atomDens
+   use quick_basis_module, only: atomBasis, atomDens, quick_basis, nbasis, cutprim
+   use quick_constants_module, only: bohr, symbol, symbol_max
+   use quick_files_module, only: iOutFile
+   use quick_method_module, only: quick_method, quick_method_type
+   use quick_molspec_module, only: quick_molspec, quick_molspec_type, natom, xyz
+   use quick_calculated_module, only: quick_qm_struct, dealloc
+   use quick_mfcc_module, only: npmfcc, nmfccextra, kxiaoconnect, mfcccord, mfccatom, &
+                                 mfccatomcap, mfccatomcon, mfccatomcon2, mfccatomconi, mfccatomconj, &
+                                 mfccatomxiaocon, mfccatomxiaocon2, mfccbases, mfccbasef, &
+                                 mfccbasescap, mfccbasefcap, mfccbasesconi, mfccbasefconi, &
+                                 mfccbasesconj, mfccbasefconj, mfccstartcon, mfccdens, &
+                                 mfcccordcon, mfcccordcon2, mfcccharge, mfccchargecap, &
+                                 mfccatomxiao, mfccatomxiaocap, mfccatomxiaoconi, mfccatomxiaoconj, &
+                                 mfccstart, mfccfinal, mfccstartcap, mfccfinalcap, &
+                                 mfccstartconi, mfccfinalconi, mfccstartconj, mfccfinalconj, &
+                                 mfccfinalcon, mfcccordcap, mfcccordconi, mfcccordconj, &
+                                 mfccdenscap, mfccdensconi, mfccdensconj, mfccdenscon
    use quick_mpi_module, only: bMPI, master
 #ifdef MPIV
    use quick_mpi_module, only: quick_comm, quick_comm_rank, quick_comm_size, quick_mpi_error
@@ -510,7 +525,6 @@ end subroutine mfcc_fragment_scf
 !-------------------------------------------------------
 
 subroutine mfcc_rpt_assign(repof,repslot,rotof,nrep,rmsdmax,ierr)
-   use allmod
    use quick_mfcc_module
    use quick_mfcc_repeat_module
    implicit none
@@ -585,9 +599,10 @@ end subroutine mfcc_rpt_assign
 
 subroutine mfcc_rpt_standalone(repof,repslot,rotof,nrep,rmsdmax,maxbas, &
                                myrank,nranks,real_master,ierr)
-   use allmod
    use quick_mfcc_module
    use quick_mfcc_repeat_module
+   use quick_files_module, only: iOutFile
+   use quick_calculated_module, only: quick_qm_struct
    implicit none
 
    integer, intent(in) :: repof(nmfccextra), repslot(MFCC_RPT_MAXREP)
@@ -747,7 +762,9 @@ end subroutine mfcc_rpt_zlist
 !-------------------------------------------------------
 
 subroutine mfcc_set_submol(nat,cord,sym,icharge,ierr)
-   use allmod
+   use quick_files_module, only: iOutFile
+   use quick_molspec_module, only: quick_molspec, natom, xyz
+   use quick_constants_module, only: BOHR
    implicit none
 
    integer, intent(in) :: nat
@@ -805,10 +822,19 @@ end subroutine mfcc_set_submol
 !-------------------------------------------------------
 
 subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibasfinal,nb,ierr)
-   use allmod
    use quick_exception_module
    use quick_cutoff_module, only: schwarzoff
    use quick_eri_cshell_module, only: getEriPrecomputables
+   use quick_files_module, only: iOutFile
+   use quick_method_module, only: quick_method
+#if defined(GPU) || defined(MPIV_GPU)
+   use quick_method_module, only: upload
+#endif
+   use quick_molspec_module, only: quick_molspec, natom, xyz
+   use quick_calculated_module, only: quick_qm_struct, alloc, init, dealloc
+   use quick_basis_module, only: quick_basis, nbasis, cutprim, Ycutoff, normalize_basis, &
+                                  nshell, nprim, jshell, jbasis, maxcontract, ncontract, &
+                                  itype, aexp, dcoeff, alloc, dealloc
    implicit none
 
    integer, intent(in) :: nat, iatstart, iatfinal, icharge
@@ -992,9 +1018,10 @@ end subroutine mfcc_run_submol
 !-------------------------------------------------------
 
 subroutine mfcc_sad_fragment_density()
-   use allmod
-   use quick_basis_module, only: atomBasis, atomDens
+   use quick_basis_module, only: atomBasis, atomDens, nbasis
    use quick_constants_module, only: symbol
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_molspec_module, only: quick_molspec, natom
    implicit none
 
    integer :: iatm, sadatom, i, j, n, nb
@@ -1048,7 +1075,8 @@ end subroutine mfcc_sad_fragment_density
 !-------------------------------------------------------
 
 subroutine mfcc_symbol_to_z(sym,iz,ierr)
-   use allmod
+   use quick_constants_module, only: symbol, symbol_max
+   use quick_files_module, only: iOutFile
    implicit none
 
    character(len=2), intent(in) :: sym

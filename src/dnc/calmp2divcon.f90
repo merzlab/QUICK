@@ -4,7 +4,16 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine calmp2divcon
-   use allmod
+   use quick_divcon_module, only: np, wtospoint, nBasisDC, DCSubn, DCSub, DCCoren, DCCore, &
+                                   coDCSub, eValDCSub, nElecMP2Sub, mp2Shell
+   use quick_basis_module, only: quick_basis, nshell, nbasis, Ycutoff, orbmp2dc, orbmp2dcsub, &
+                                 orbmp2i331dc, orbmp2j331dc, orbmp2k331dc, orbmp2k331dcsub
+   use quick_molspec_module, only: natom, quick_molspec
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_scratch_module, only: quick_scratch
+   use quick_files_module, only: ioutfile
+   use quick_method_module, only: quick_method
+   use quick_timer_module, only: timer_begin, timer_end, timer_cumer
    use quick_gaussian_class_module
    implicit double precision(a-h,o-z)
 

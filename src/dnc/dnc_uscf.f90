@@ -4,8 +4,18 @@
   !-------------------------------------------------------
   ! 11/02/2010 Yipu Miao: Add paralle option for HF calculation
   subroutine uelectdiisdc(jscf,ierr)
-  
-     use allmod
+
+     use quick_divcon_module, only: np, nbasisdc, ODCSub, XDCSub, coDCSub, coDCSubtran, eValDCSub, &
+                                    ODCSubtemp, VECtemp, Vtemp, EVAL1temp, IDEGEN1temp, &
+                                    OBDCSub, cobDCSub, cobDCSubtran, eValbDCSub
+     use quick_basis_module, only: nbasis
+     use quick_method_module, only: quick_method, adjust_Cutoff
+     use quick_molspec_module, only: quick_molspec
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_scratch_module, only: quick_scratch
+     use quick_uscf_module, only: allocate_quick_uscf, deallocate_quick_uscf
+     use quick_files_module, only: iOutFile, write_molden
+     use quick_timer_module, only: timer_begin, timer_end, timer_cumer
      use quick_gridpoints_module
      use quick_uscf_operator_module, only: uscf_operator
 !     use quick_scf_module  
@@ -1091,7 +1101,12 @@ endif
 !
 !
 subroutine fermiUSCF(efermi,jscf,fermi_ok)
-   use allmod
+   use quick_divcon_module, only: np, dcsubn, dcsub, nbasisdc, eValbDCSub, PBDCSub, PBDCSubtran, coBDCSubtran, coBDCSub, &
+                                   DCLogic, invDCOverlap
+   use quick_basis_module, only: quick_basis, nbasis
+   use quick_molspec_module, only: quick_molspec
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_files_module, only: iOutFile
    implicit double precision(a-h,o-z)
    logical fermidone
    integer jscf

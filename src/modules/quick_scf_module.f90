@@ -113,6 +113,7 @@ contains
   ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
   subroutine scf(ierr)
      use quick_method_module, only: quick_method
+     use quick_files_module, only: iIntFile, intFileName
 
      implicit none
 
@@ -171,7 +172,7 @@ contains
      use quick_scratch_module, only: quick_scratch
      use quick_basis_module, only: nbasis, NBSuse
      use quick_calculated_module, only: quick_qm_struct
-     use quick_files_module, only: iOutFile, write_molden
+     use quick_files_module, only: iOutFile, write_molden, iIntFile, intFileName
      use quick_method_module, only: quick_method, adjust_Cutoff
      use quick_molspec_module, only: quick_molspec
      use quick_size_module, only: MIN_SCF

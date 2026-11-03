@@ -3,7 +3,11 @@
 
 ! Vertical Recursion by Xiao HE 07/07/07 version
 subroutine shellmp2divcon(i33,ittsub)
-   use allmod
+   use quick_molspec_module, only: xyz
+   use quick_basis_module, only: quick_basis, Apri, Ppri, cutprim, dnmax, Yxiao, Yxiaotemp, &
+                                 III, JJJ, KKK, LLL
+   use quick_params_module, only: Sumindex
+   use quick_method_module, only: quick_method
 
    Implicit double precision(a-h,o-z)
 
@@ -131,7 +135,11 @@ end subroutine shellmp2divcon
 ! Horrizontal recursion and Fock matrix builder by Xiao HE 07/07/07 version
 subroutine classmp2divcon(I,J,K,L,NNA,NNC,NNAB,NNCD,i33,ittsub)
    ! subroutine class
-   use allmod
+   use quick_basis_module, only: quick_basis, cutprim, dnmax, Yxiao, orbmp2i331dc, &
+                                 III, JJJ, KKK, LLL, IJKLtype, IJtype, KLtype, Y
+   use quick_method_module, only: quick_method
+   use quick_divcon_module, only: wtospoint
+   use quick_calculated_module, only: quick_qm_struct
 
    Implicit double precision(A-H,O-Z)
    double precision store(120,120)

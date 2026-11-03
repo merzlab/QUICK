@@ -7,6 +7,8 @@
 subroutine hrrwhole
    use quick_basis_module, only: quick_basis, IJKLtype, III, JJJ, KKK, LLL, IJtype, KLtype, Y
    use quick_params_module, only: trans
+   use quick_method_module, only: quick_method
+   use quick_calculated_module, only: quick_qm_struct
 
    implicit none
 

@@ -10,9 +10,16 @@
   !  possible basis. Note that the Fock matrix is symmetric.
   !  This code now also does all the HF energy calculation. Ed.
   !-------------------------------------------------------
-     use allmod
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_method_module, only: quick_method
+     use quick_scratch_module, only: quick_scratch
+     use quick_basis_module, only: nbasis, jshell, cutmatrix
+#if defined(MPIV)
+     use quick_basis_module, only: mpi_jshelln, mpi_jshell
+#endif
+     use quick_timer_module, only: timer_begin, timer_end, timer_cumer
      use quick_cutoff_module, only: oshell_density_cutoff
-     use quick_eri_oshell_module, only: getOshellEriDC, getOshellEriEnergy 
+     use quick_eri_oshell_module, only: getOshellEriDC, getOshellEriEnergy
      use quick_oei_module, only:get1eEnergy, get1e
   
 #if defined(MPIV)
@@ -263,22 +270,24 @@
   !  the gradient of the alpha density with the beta density.
   !  Grad(Phimu Phinu) is the gradient of Phimu times Phinu. 
   !----------------------------------------------------------------
-     use allmod
+     use quick_calculated_module, only: quick_qm_struct
+     use quick_method_module, only: quick_method
+     use quick_basis_module, only: nbasis, phixiao, dphidxxiao, dphidyxiao, dphidzxiao
      use quick_gridpoints_module
      use quick_dft_module, only: b3lypf, b3lyp_e, becke, becke_e, lyp, lyp_e
      use xc_f90_types_m
      use xc_f90_lib_m
-  
+
 #if defined(MPIV)
      use quick_mpi_module, only: bMPI, master, quick_comm, quick_comm_rank, quick_mpi_error
      use mpi
 #endif
 
      implicit none
-  
+
      !integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2, I, J
      !common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
-  
+
      logical, intent(in) :: deltaO
      double precision, dimension(2) :: libxc_rho
      double precision, dimension(3) :: libxc_sigma

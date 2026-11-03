@@ -41,7 +41,11 @@
 !     tolerance noise, not a DIIS-lag-sized error) is self-consistent
 !     with the exported density and safe to use as-is.
 subroutine wrtQMData
-   use allmod
+   use quick_method_module, only: quick_method
+   use quick_molspec_module, only: quick_molspec, natom
+   use quick_basis_module, only: nbasis, NBSuse, quick_basis, itype, maxcontract, ncontract, aexp, dcoeff
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_files_module, only: basisSetName
    use quick_io_module, only: qmdata_init, qmdata_write, qmdata_close
    implicit none
 

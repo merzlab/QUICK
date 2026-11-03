@@ -24,7 +24,8 @@
 !
 
 subroutine mfcc_check_atom_order(ierr)
-   use allmod
+   use quick_files_module, only: iOutFile, PDBFileName, baseinFileName
+   use quick_mfcc_module, only: mfcc_perm, mfcc_reordered
    use quick_mpi_module, only: master
 #ifdef MPIV
    use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
@@ -237,7 +238,8 @@ end subroutine mfcc_check_atom_order
 !-------------------------------------------------------
 
 subroutine mfcc_apply_reorder()
-   use allmod
+   use quick_molspec_module, only: quick_molspec, natom, xyz
+   use quick_mfcc_module, only: mfcc_perm, mfcc_reordered
    implicit none
 
    integer :: i, j

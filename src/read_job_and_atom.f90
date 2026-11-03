@@ -15,7 +15,7 @@ subroutine read_job_and_atom(ierr)
    use quick_mpi_module, only: bMPI, master
    use quick_files_module, only: inFileName, inFile, iOutFile, isTemplate, &
                                  read_data_file, read_basis_file, print_data_file, &
-                                 print_basis_file, print_ecp_file
+                                 print_basis_file, print_ecp_file, print_qmdata_file
    use quick_calculated_module, only: quick_qm_struct, read
    use quick_ecp_module, only: tolecp, thrshecp, itolecp
    use quick_api_module, only: quick_api

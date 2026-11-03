@@ -15,7 +15,7 @@ subroutine getEnergy(isGuess, ierr)
    use quick_calculated_module, only: quick_qm_struct, allocate_quick_qm_struct_fullx
    use quick_basis_module, only: nbasis, NBSuse
    use quick_scratch_module, only: quick_scratch
-   use quick_files_module, only: ioutfile
+   use quick_files_module, only: ioutfile, iIntFile, intFileName
    use quick_gridpoints_module, only: quick_xcg_tmp, quick_dft_grid, form_dft_grid, print_grid_info
    use quick_scf_module, only: scf
    use quick_uscf_module, only: uscf

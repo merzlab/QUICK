@@ -34,7 +34,21 @@
 !-------------------------------------------------------
 
 subroutine inidivcon(natomsaved)
-  use allmod
+  use quick_divcon_module, only: DCCore, DCBuffer1, DCBuffer2, DCSub, wtospoint, &
+                                 DCCoren, DCBuffer1n, DCBuffer2n, DCSubn, nBasisDC, &
+                                 nElecDCSub, selectNN, nElecMP2Sub, DCSubn1, &
+                                 DCOverlap, DCConnect, kShellS, kShellF, DCLogic, &
+                                 invDCOverlap, ODCSub, PDCSub, XDCSub, SMatrixDCSub, &
+                                 coDCSub, PDCSubtran, coDCSubtran, OneDCSub, &
+                                 OBDCSub, PBDCSub, cobDCSub, PBDCSubtran, cobDCSubtran, &
+                                 eValDCSub, eValbDCSub, disDivMFCC, np, NNMax, npsaved, &
+                                 selectC, charge, spin, selectN, selectCA, ccharge, &
+                                 mpi_dc_fragn, mpi_dc_frag, mpi_dc_nbasis
+  use quick_basis_module, only: quick_basis, nbasis, jshell
+  use quick_method_module, only: quick_method
+  use quick_molspec_module, only: quick_molspec, natom, xyz
+  use quick_files_module, only: iOutFile, iPDBFile, PDBFileName
+  use quick_mfcc_module, only: Ftmp, linetmp
   use quick_mpi_module, only: master
 #if defined(MPIV)
   use quick_mpi_module, only: bMPI, quick_comm, quick_comm_size, quick_mpi_error
@@ -1031,7 +1045,9 @@ end subroutine inidivcon
 !
 
 subroutine Onedivided
-  use allmod
+  use quick_divcon_module, only: np, dcsubn, dcsub, OneDCSub
+  use quick_basis_module, only: quick_basis
+  use quick_calculated_module, only: quick_qm_struct
   implicit double precision (a-h,o-z)
 
   do i=1,np
@@ -1063,7 +1079,9 @@ end subroutine Onedivided
 ! To get X matrix from D&C 
 !
 subroutine Xdivided
-  use allmod
+  use quick_divcon_module, only: np, dcsubn, dcsub, XDCSub
+  use quick_basis_module, only: quick_basis
+  use quick_calculated_module, only: quick_qm_struct
   implicit double precision (a-h,o-z)
 
   do i=1,np
@@ -1094,7 +1112,9 @@ end subroutine Xdivided
 !
 
 subroutine Odivided
-  use allmod
+  use quick_divcon_module, only: np, dcsubn, dcsub, ODCSub
+  use quick_basis_module, only: quick_basis
+  use quick_calculated_module, only: quick_qm_struct
   implicit double precision (a-h,o-z)
 
   do i=1,np
@@ -1126,7 +1146,9 @@ end subroutine Odivided
 !
 
 subroutine OBdivided
-  use allmod
+  use quick_divcon_module, only: np, dcsubn, dcsub, OBDCSub
+  use quick_basis_module, only: quick_basis
+  use quick_calculated_module, only: quick_qm_struct
   implicit double precision (a-h,o-z)
 
   do i=1,np
@@ -1157,7 +1179,9 @@ end subroutine OBdivided
 ! pdc model for D&C 
 !
 subroutine Pdcdivided
-  use allmod
+  use quick_divcon_module, only: np, dcsubn, dcsub, PDCSub
+  use quick_basis_module, only: quick_basis
+  use quick_calculated_module, only: quick_qm_struct
   implicit double precision (a-h,o-z)
 
   do i=1,np
@@ -1188,7 +1212,9 @@ end subroutine Pdcdivided
 ! pbdc model for D&C 
 !
 subroutine PBdcdivided
-  use allmod
+  use quick_divcon_module, only: np, dcsubn, dcsub, PBDCSub
+  use quick_basis_module, only: quick_basis
+  use quick_calculated_module, only: quick_qm_struct
   implicit double precision (a-h,o-z)
 
   do i=1,np
@@ -1220,7 +1246,9 @@ end subroutine PBdcdivided
 ! To get S matrix from D&C 
 !
 subroutine divideS
-  use allmod
+  use quick_divcon_module, only: np, dcsubn, dcsub, SMatrixDCSub
+  use quick_basis_module, only: quick_basis
+  use quick_calculated_module, only: quick_qm_struct
   implicit double precision (a-h,o-z)
 
   do i=1,np
@@ -1250,7 +1278,10 @@ end subroutine divideS
 !
 
 subroutine divideX
-  use allmod
+  use quick_divcon_module, only: np, dcsubn, nBasisDC, SMatrixDCSub, XDCSub, &
+                                 ODCSubtemp, VECtemp, Vtemp, EVAL1temp, IDEGEN1temp
+  use quick_basis_module, only: nbasis
+  use quick_scratch_module, only: quick_scratch
   implicit double precision(a-h,o-z)
 
   dimension Sminhalf(nbasis), &
@@ -1367,7 +1398,8 @@ end subroutine dividex
 
 
 subroutine wtoscorr
-  use allmod
+  use quick_divcon_module, only: np, dcsubn, dcsub, wtospoint
+  use quick_basis_module, only: quick_basis
   implicit double precision (a-h,o-z)
 
   do itt=1,np
@@ -1397,7 +1429,10 @@ end subroutine wtoscorr
 !-------------------------------------------------------
 
 subroutine write_frag_xyz(iunit,fname,coord,natomt,lpost)
-  use allmod
+  use quick_files_module, only: iOutFile
+  use quick_divcon_module, only: np, dcsubn, dcsub, dccoren, nelecdcsub, nbasisdc
+  use quick_constants_module, only: symbol
+  use quick_molspec_module, only: quick_molspec
   implicit none
 
   integer, intent(in) :: iunit,natomt
