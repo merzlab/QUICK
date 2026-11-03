@@ -224,12 +224,12 @@ subroutine get_cshell_eridc(II_arg)
    !------------------------------------------------
    ! This subroutine is to get 2e integral
    !------------------------------------------------
-   use quick_basis_module, only: jshell, Ycutoff, cutmatrix
+   use quick_basis_module, only: jshell, Ycutoff, cutmatrix, dnmax
    use quick_method_module, only: quick_method
    use quick_divcon_module, only: dcconnect
    implicit none
 
-   double precision :: testtmp, cutoffTest, DNmax
+   double precision :: testtmp, cutoffTest
    integer :: II_arg
    integer :: II, JJ, KK, LL, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2

@@ -47,7 +47,8 @@ subroutine inidivcon(natomsaved)
   use quick_basis_module, only: quick_basis, nbasis, jshell
   use quick_method_module, only: quick_method
   use quick_molspec_module, only: quick_molspec, natom, xyz
-  use quick_files_module, only: iOutFile, iPDBFile, PDBFileName
+  use quick_files_module, only: iOutFile, iPDBFile, PDBFileName, &
+                                 iFragPreFile, iFragPostFile, fragPreFileName, fragPostFileName
   use quick_mfcc_module, only: Ftmp, linetmp
   use quick_mpi_module, only: master
 #if defined(MPIV)
