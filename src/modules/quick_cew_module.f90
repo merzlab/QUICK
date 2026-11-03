@@ -317,7 +317,13 @@ contains
 
 #ifdef CUEST
     if (quick_method%usecuest) then
+       ! will only get lri and not call quad contribution
+       call gpu_get_lri(quick_qm_struct%o)
        call quick_cuest_cew_prescf_quad
+
+       if ( .not. (quick_method%grad .or. quick_method%opt) ) then 
+         call gpu_delete_lri(ierr)
+       endif
     else
 #endif
        call gpu_upload_cew_vrecip(ierr)

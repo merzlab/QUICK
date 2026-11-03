@@ -519,7 +519,9 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
 
     //compute xc quad potential
     upload_sim_to_constant_dft(gpu);
+#ifndef CUEST
     getcew_quad(gpu);
+#endif
 
 #if defined(USE_LEGACY_ATOMICS)
     gpu->gpu_calculated->oULL->Download();
