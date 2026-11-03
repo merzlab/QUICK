@@ -295,12 +295,12 @@
     call MPI_BCAST(dcsub,npsaved*natomt,mpi_integer,0,quick_comm,quick_mpi_error)
     call MPI_BCAST(dcsubn,npsaved,mpi_integer,0,quick_comm,quick_mpi_error)
 
-    ! dclogic is allocated (np,ndcmax,ndcmax) in inidivcon.f90, with ndcmax the
-    ! true largest fragment (maxval of dcsubn), already broadcast there before
-    ! that allocation -- dcsubn above has just been broadcast again here, so
-    ! recomputing the same maxval from it is exact and needs no extra variable
-    ! to carry across the two files.
-    call MPI_BCAST(dclogic,npsaved*maxval(dcsubn(1:npsaved))*maxval(dcsubn(1:npsaved)), &
+    ! dclogic is allocated (np,ndcmax,ndcmax) in inidivcon.f90 -- AFTER fragment
+    ! elimination has already reduced np below npsaved, so its first dimension
+    ! is np, not npsaved (unlike every other array broadcast above, which is
+    ! sized by npsaved because it's allocated before elimination). Using
+    ! npsaved here would broadcast past the end of the allocated array.
+    call MPI_BCAST(dclogic,np*maxval(dcsubn(1:np))*maxval(dcsubn(1:np)), &
           mpi_integer,0,quick_comm,quick_mpi_error)
 
     call MPI_BCAST(nbasisdc,npsaved,mpi_integer,0,quick_comm,quick_mpi_error)
