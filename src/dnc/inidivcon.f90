@@ -34,6 +34,7 @@
 !-------------------------------------------------------
 
 subroutine inidivcon(natomsaved)
+  use quick_constants_module, only: BOHR
   use quick_divcon_module, only: DCCore, DCBuffer1, DCBuffer2, DCSub, wtospoint, &
                                  DCCoren, DCBuffer1n, DCBuffer2n, DCSubn, nBasisDC, &
                                  nElecDCSub, selectNN, nElecMP2Sub, DCSubn1, &
