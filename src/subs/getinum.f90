@@ -14,8 +14,13 @@
 !-----------------------------------------------------------
 subroutine getinum(string,ib,ie,ivalue,ierror)
 
-  implicit double precision (a-h,o-z)
-  character string*(*),char*1,efield(4)*1
+  implicit none
+  character, intent(in) :: string*(*)
+  integer, intent(inout) :: ib
+  integer, intent(in) :: ie
+  integer, intent(out) :: ivalue, ierror
+  character :: char*1, efield(4)*1
+  integer :: isign
 
   ierror = 0
   ivalue = 0

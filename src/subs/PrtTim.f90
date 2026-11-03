@@ -14,7 +14,11 @@
 !*     in parent program def. "double precision Tim0,CPUTim"; "Tim0=CPUTim(0)" for initial time
 !-----------------------------------------------------------
 subroutine PrtTim(IOut,sec)
-  Implicit double precision(A-H,O-Z)
+  implicit none
+  integer, intent(in) :: iout
+  double precision, intent(in) :: sec
+  integer :: ndays, nhours, nmin
+  double precision :: time
 
 1000 Format('| Job cpu time:',I3,' days ',I2,' hours ',I2,' minutes ',F4.1,' seconds.')
 

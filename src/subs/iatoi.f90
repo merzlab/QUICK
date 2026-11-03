@@ -12,10 +12,14 @@
 
 subroutine iatoi(str, istart, lstr, integ, ierror)
 
-  implicit double precision(a-h,o-z)
+  implicit none
 
-  character str*(*), ch
+  character, intent(in) :: str*(*)
+  integer, intent(in) :: istart
+  integer, intent(out) :: lstr, integ, ierror
+  character :: ch
   logical :: int, min
+  integer :: izero, nstr, i
 
   integ = 0
   izero = ichar('0')

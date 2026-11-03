@@ -27,9 +27,9 @@
 !
 
 module dftd3_core
-  use dftd3_sizes
-  use dftd3_common
-  use dftd3_pars
+  use dftd3_sizes, only: max_elem, maxc, nlines
+  use dftd3_common, only: wp, int64, k1, k2, k3, autoang, autokcal, autoev, limit
+  use dftd3_pars, only: pars, init_pars
   implicit none
 
 
@@ -201,10 +201,10 @@ contains
       case ("b2-plyp")
            rs6 =0.486434
            s18 =0.672820
-           rs18=3.656466                                                                                                                                              
-           s6  =0.640000                                                                                                                                              
-      case ("b3-lyp")                                                                                                                                                 
-           rs6 =0.278672                                                                                                                                              
+           rs18=3.656466
+           s6  =0.640000
+      case ("b3-lyp")
+           rs6 =0.278672
            s18 =1.466677
            rs18=4.606311
       case ("b97-d")
@@ -1129,14 +1129,14 @@ contains
             damp6 =1.d0/( 1.d0+6.d0*t6 )
             t8 = (r/(rs8*R0))**(-alp8)
             damp8 =1.d0/( 1.d0+6.d0*t8 )
-  
+
             tmp1=s6*6.d0*damp6*C6/r7
             tmp2=s8*6.d0*C6*r42*damp8/r9
             ! d(r^(-6))/d(r_ij)
             drij(linij)=drij(linij)-tmp1 &
                 & -4.d0*tmp2
-  
-  
+
+
             drij(linij)=drij(linij) &
                 & +tmp1*alp6*t6*damp6 &
                 & +3.d0*tmp2*alp8*t8*damp8
@@ -1147,16 +1147,16 @@ contains
             damp6 =1.d0/( 1.d0+6.d0*t6 )
             t8 = (r/R0+R0*rs8)**(-alp8)
             damp8 =1.d0/( 1.d0+6.d0*t8 )
-  
+
             tmp1=s6*6.d0*damp6*C6/r7
             tmp2=s8*6.d0*C6*r42*damp8/r9
             ! d(r^(-6))/d(r_ij)
-            drij(linij)=drij(linij)-tmp1 &  
+            drij(linij)=drij(linij)-tmp1 &
                 &  -4.d0*tmp2
-  
-  
+
+
             drij(linij)=drij(linij) &
-                & +tmp1*alp6*t6*damp6*r/(r+rs6*R0*R0*rs8) & 
+                & +tmp1*alp6*t6*damp6*r/(r+rs6*R0*R0*rs8) &
                 & +3.d0*tmp2*alp8*t8*damp8*r/(r+R0*R0*rs8)
             !d(f_dmp)/d(r_ij)
 
@@ -2689,7 +2689,7 @@ contains
               R0=r0ab(iz(jat),iz(iat))
               rr=R0/r
 
-              ! damping 
+              ! damping
               if(version.eq.3)then
                 ! DFT-D3 zero-damp
                 tmp=rs6*rr
@@ -3492,13 +3492,13 @@ contains
                   damp6 =1.d0/( 1.d0+6.d0*t6 )
                   t8 = (r/(R0)+R0*rs8)**(-alp8)
                   damp8 =1.d0/( 1.d0+6.d0*t8 )
-  
+
                   tmp1=s6*6.d0*damp6*C6/r7
                   tmp2=s8*6.d0*C6*r42*damp8/r9
                   drij(tauz,tauy,taux,lin(iat,iat))=drij(tauz,tauy,taux,lin(iat, &
                       & iat)) - (tmp1 +4.d0*tmp2)*0.5d0               ! d(r^(-6))/d(r_ij)
-  
-  
+
+
                   drij(tauz,tauy,taux,lin(iat,iat))=drij(tauz,tauy,taux,lin(iat, &
                       & iat)) +(tmp1*alp6*t6*damp6*r/(r+rs6*R0*R0*rs8) &
                       & +3.d0*tmp2*alp8*t8*damp8*r/(r+R0*R0*rs8))*0.5d0  !d(f_dmp)/d(r_ij)
@@ -3585,15 +3585,15 @@ contains
                   damp6 =1.d0/( 1.d0+6.d0*t6 )
                   t8 = (r/(R0)+R0*rs8)**(-alp8)
                   damp8 =1.d0/( 1.d0+6.d0*t8 )
-  
+
                   tmp1=s6*6.d0*damp6*C6/r7
                   tmp2=s8*6.d0*C6*r42*damp8/r9
                   drij(tauz,tauy,taux,linij)=drij(tauz,tauy,taux, &
                       & linij) - (tmp1 +4.d0*tmp2)  ! d(r^(-6))/d(r_ij)
-  
-  
+
+
                   drij(tauz,tauy,taux,linij)=drij(tauz,tauy,taux,linij) &
-                      & +(tmp1*alp6*t6*damp6*r/(r+rs6*R0*R0*rs8) & 
+                      & +(tmp1*alp6*t6*damp6*r/(r+rs6*R0*R0*rs8) &
                       & +3.d0*tmp2*alp8*t8*damp8*r/(r+R0*R0*rs8)) !d(f_dmp)/d(r_ij)
                 endif
                 !
@@ -4978,7 +4978,7 @@ contains
     det = aa(1,1) * (aa(2,2) * aa(3,3) - aa(3,2) * aa(2,3))&
         & - aa(1,2) * (aa(2,1) * aa(3,3) - aa(3,1) * aa(2,3))&
         & + aa(1,3) * (aa(2,1) * aa(3,2) - aa(3,1) * aa(2,2))
-    
+
   end function determinant
 
 

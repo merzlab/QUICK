@@ -121,7 +121,7 @@ subroutine dlf_dimer_init(icoord)
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr,stdout,printl,pi
-  use dlf_dimer
+  use dlf_dimer, only: dimer, rot_lbfgs
   use dlf_allocate, only: allocate,deallocate
   implicit none
   integer, intent(in)   :: icoord ! choice of dimer details 
@@ -352,9 +352,8 @@ end subroutine dlf_dimer_init
 subroutine dlf_dimer_destroy
 !! SOURCE
   ! deallocate arrays concerning internal coordinates
-  use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr
-  use dlf_dimer
+  use dlf_dimer, only: dimer, rot_lbfgs
   use dlf_allocate, only: deallocate
   implicit none
   logical :: exists
@@ -417,7 +416,7 @@ subroutine dlf_dimer_xtoi(trerun_energy,testconv)
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr,stdout,printl,pi
   use dlf_stat, only: stat
-  use dlf_dimer
+  use dlf_dimer, only: dimer, rot_lbfgs
   use dlf_allocate, only: allocate,deallocate
   implicit none
   logical, intent(out)  :: trerun_energy
@@ -574,7 +573,7 @@ subroutine dlf_dimer_was_midpoint(trerun_energy,testconv)
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr,stdout,printl
   use dlf_stat, only: stat
-  use dlf_dimer
+  use dlf_dimer, only: dimer
   use dlf_allocate, only: allocate,deallocate
   implicit none
   logical, intent(out)  :: trerun_energy
@@ -712,7 +711,7 @@ subroutine dlf_dimer_was_g1(internal,stoprot)
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr,stdout,printl,pi
   use dlf_stat, only: stat
-  use dlf_dimer
+  use dlf_dimer, only: dimer, rot_lbfgs
   use dlf_allocate, only: allocate,deallocate
   implicit none
   logical,   intent(in)  :: internal ! internal gradient is already known
@@ -856,7 +855,7 @@ subroutine dlf_dimer_was_g1prime(stoprot,phi1)
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr,stdout,printl,pi
   use dlf_stat, only: stat
-  use dlf_dimer
+  use dlf_dimer, only: dimer, rot_lbfgs
   use dlf_allocate, only: allocate,deallocate
   implicit none
   logical,   intent(out) :: stoprot
@@ -1119,7 +1118,7 @@ subroutine dlf_dimer_itox
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stdout,printl
-  use dlf_dimer, only: dimer,rot_lbfgs
+  use dlf_dimer, only: dimer, rot_lbfgs
   implicit none
   logical               :: tok
   real(rk)              :: svar
@@ -1194,7 +1193,6 @@ end subroutine dlf_dimer_itox
 !! SYNOPSIS
 subroutine dlf_checkpoint_dimer_write
 !! SOURCE
-  use dlf_parameter_module, only: rk
   use dlf_global, only: stderr
   use dlf_dimer, only: dimer
   use dlf_checkpoint, only: tchkform,write_separator
@@ -1251,7 +1249,6 @@ end subroutine dlf_checkpoint_dimer_write
 !! SYNOPSIS
 subroutine dlf_checkpoint_dimer_read(tok)
 !! SOURCE
-  use dlf_parameter_module, only: rk
   use dlf_global, only: stderr,stdout,printl
   use dlf_dimer, only: dimer
   use dlf_checkpoint, only: tchkform,read_separator

@@ -98,8 +98,8 @@ subroutine dlf_parallel_opt(trestarted_report, tconv, &
   use dlf_global, only: glob,stderr,stdout,printl,printf
   use dlf_stat, only: stat
   use dlf_allocate, only: allocate,deallocate
-  use dlf_checkpoint
-  use dlf_sort_module
+  use dlf_checkpoint, only: tchkform, read_separator, write_separator
+  use dlf_sort_module, only: dlf_sort
   implicit none
 #ifdef GAMESS
   real(rk) :: core(*) ! GAMESS memory, not used in DL-FIND

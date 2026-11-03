@@ -3,9 +3,21 @@
     ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
     subroutine pt2der(gridx,gridy,gridz,dxdx,dxdy,dxdz,dydy,dydz,dzdz,Iphi,icount)
-    use allmod
-    use quick_gridpoints_module
-    implicit double precision(a-h,o-z)
+    use quick_basis_module, only: quick_basis, itype, dcoeff, aexp
+    use quick_molspec_module, only: xyz
+    use quick_gridpoints_module, only: sigrad2, quick_dft_grid
+    implicit none
+
+    double precision, intent(in) :: gridx, gridy, gridz
+    double precision, intent(out) :: dxdx, dxdy, dxdz, dydy, dydz, dzdz
+    integer, intent(in) :: Iphi, icount
+    
+    double precision :: x1, y1, z1, rsquared, xtype, ytype, ztype
+    double precision :: x1imin2, x1imin1, x1i, x1iplus1, x1iplus2
+    double precision :: y1imin2, y1imin1, y1i, y1iplus1, y1iplus2
+    double precision :: z1imin2, z1imin1, z1i, z1iplus1, z1iplus2
+    double precision :: temp, twoA, fourAsqr
+    integer :: kcount, Icon
 
     ! Given a point in space, this function calculates the value of basis
     ! function I and the value of its cartesian derivatives in all three

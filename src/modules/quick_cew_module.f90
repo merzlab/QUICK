@@ -122,7 +122,6 @@ contains
     use quick_molspec_module, only: quick_molspec
     use quick_lri_module, only : computeLRI
     use quick_calculated_module, only : quick_qm_struct
-    use quick_basis_module
     use quick_method_module, only: quick_method
 #if defined(MPIV)
     use quick_mpi_module, only: quick_comm, quick_comm_rank, quick_mpi_error, &
@@ -402,11 +401,11 @@ contains
 
 
   subroutine quick_cew_prescf_quad()
-   use allmod
-   use xc_f90_types_m
-   use xc_f90_lib_m
+   use quick_basis_module, only: dphidxxiao, dphidyxiao, dphidzxiao, phixiao, quick_basis
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_method_module, only: quick_method
+   use quick_molspec_module, only: quick_molspec
    use quick_gridpoints_module, only : quick_dft_grid
-   use quick_molspec_module, only : quick_molspec
 #if defined(MPIV)
    use quick_mpi_module, only: bMPI, quick_comm_rank
    use mpi
@@ -886,19 +885,17 @@ contains
 
 
   subroutine quick_cew_grad_quad()
-   use allmod
-   use xc_f90_types_m
-   use xc_f90_lib_m
+   use quick_basis_module, only: dphidxxiao, dphidyxiao, dphidzxiao, phixiao, quick_basis
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_method_module, only: quick_method
+   use quick_molspec_module, only: natom, quick_molspec, xyz
    use quick_gridpoints_module, only : quick_dft_grid
-   !use quick_api_module, only : quick_api
-   use quick_calculated_module, only : quick_qm_struct
-   use quick_molspec_module, only : quick_molspec
 #if defined(MPIV)
    use quick_mpi_module, only: bMPI, quick_comm_rank
    use mpi
 #endif
    
-   implicit double precision(a-h,o-z)
+   implicit none
 
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2

@@ -31,12 +31,12 @@ end subroutine PrtDate
 !-----------------------------------------------------------
 !*Deck GDate
 Subroutine GDate(Date1)
-  Implicit Integer(A-Z)
-  !C
-  !C     This wrapper routine either calls FDate (on bsd systems) or
-  !C     builds the 24-character date in some other way.
-  !C
-  Character*(*) Date1
+   implicit none
+   !C
+   !C     This wrapper routine either calls FDate (on bsd systems) or
+   !C     builds the 24-character date in some other way.
+   !C
+   Character*(*) Date1
   !C
   !C#ifdef IBM_RS6K
   !C#define GDATE_doNE
