@@ -44,9 +44,10 @@ module quick_cew_module
 #ifdef CUEST
   double precision, allocatable :: cuest_gridxyz(:,:)
   double precision, allocatable :: cuest_gridwt(:)
-  ! holds (w_P*Vrecip_P)_P for input to cuEST
+  ! Vrecip_save holds (Vrecip_P)_P for input to cuEST
+  ! wVrecip_save holds (w_P*Vrecip_P)_P for input to cuEST
   ! allocated in prescf, deallocated after gradient
-  double precision, allocatable :: wVrecip(:)
+  double precision, allocatable :: Vrecip_save(:), wVrecip_save(:)
 #endif
 
   
@@ -609,17 +610,20 @@ contains
 
       if (.not. allocated(cuest_gridxyz)) allocate(cuest_gridxyz(3, npoint))
       if (.not. allocated(cuest_gridwt)) allocate(cuest_gridwt(npoint))
-      if (.not. allocated(wVrecip)) allocate(wVrecip(npoint))
+      if (.not. allocated(Vrecip_save)) allocate(Vrecip_save(npoint))
+      if (.not. allocated(wVrecip_save)) allocate(wVrecip_save(npoint))
 
       call cuest_get_grid_xyz(cuest_gridxyz)
       call cuest_get_xc_grid_weight(CUEST_WEIGHTSPEC_TOTAL, cuest_gridwt)
 
       do i = 1, npoint
          call cew_getrecip(cuest_gridxyz(1,i), Vrecip)
-         wVrecip(i) = cuest_gridwt(i)*(-Vrecip)
+         Vrecip_save(i) = -Vrecip
       enddo
 
-      call cuest_get_xc_potential(wVrecip, int(2e9, c_int64_t), CUEST_APPROXSPEC_LDA, Vrecip_mat)
+      wVrecip_save = cuest_gridwt*Vrecip_save
+
+      call cuest_get_xc_potential(wVrecip_save, int(2e9, c_int64_t), CUEST_APPROXSPEC_LDA, Vrecip_mat)
 
       quick_qm_struct%o = quick_qm_struct%o + Vrecip_mat
 
@@ -633,7 +637,8 @@ contains
       if (.not. quick_method%grad) then
          if (allocated(cuest_gridxyz)) deallocate(cuest_gridxyz)
          if (allocated(cuest_gridwt)) deallocate(cuest_gridwt)
-         if (allocated(wVrecip)) deallocate(wVrecip)
+         if (allocated(Vrecip_save)) deallocate(Vrecip_save)
+         if (allocated(wVrecip_save)) deallocate(Vrecip_save)
       endif
       
    end subroutine quick_cuest_cew_prescf_quad
@@ -1271,8 +1276,7 @@ end do
       integer(c_int64_t) :: npoint
 
       ! rho(P) is electron density at grid point P
-      ! enedens(P) is the energy density (rho_P)(V_P) at grid point P
-      double precision, allocatable :: rho(:), enedens(:), gradhold_grid(:)
+      double precision, allocatable :: rho(:), gradhold_grid(:)
       double precision :: gradhold_atom(3*natom)
       double precision :: dVdR(3)
       double precision :: chgdens
@@ -1280,16 +1284,13 @@ end do
       call cuest_get_xc_grid_npoint(npoint)
 
       allocate(rho(npoint))
-      allocate(enedens(npoint))
       allocate(gradhold_grid(3*npoint))
 
       call cuest_get_xc_dense(quick_qm_struct%co, rho)
 
-      enedens = rho*wVrecip
-
       ! gradhold_atom_A  = \sum_P (w_P)(V_P)(del rho/del R_A)
       ! gradhold_grid_Q = (w_Q)(nabla rho_Q)(V_Q)
-      call cuest_get_grid_der(quick_qm_struct%co, wVrecip, gradhold_atom, gradhold_grid)
+      call cuest_get_grid_der(quick_qm_struct%co, wVrecip_save, gradhold_atom, gradhold_grid)
 
       ! accumulate into gradient so we can use gradhold_atom again
       quick_qm_struct%gradient = quick_qm_struct%gradient + 0.5d0*gradhold_atom
@@ -1306,15 +1307,17 @@ end do
          gradhold_grid(ii+3) = gradhold_grid(ii+3) + chgdens*dVdR(3)
       enddo
 
-      call cuest_get_grid_point_der(enedens, gradhold_grid, gradhold_atom)
+      ! overwrite Vrecip_save with energy density = ((rho_P)(Vrecip_P))_P
+      Vrecip_save = rho*Vrecip_save
+      call cuest_get_grid_point_der(Vrecip_save, gradhold_grid, gradhold_atom)
       quick_qm_struct%gradient = quick_qm_struct%gradient + 0.5d0*gradhold_atom
 
       deallocate(rho)
-      deallocate(enedens)
       deallocate(gradhold_grid)
       if (allocated(cuest_gridxyz)) deallocate(cuest_gridxyz)
       if (allocated(cuest_gridwt)) deallocate(cuest_gridwt)
-      if (allocated(wVrecip)) deallocate(wVrecip)
+      if (allocated(Vrecip_save)) deallocate(Vrecip_save)
+      if (allocated(wVrecip_save)) deallocate(wVrecip_save)
       
    end subroutine quick_cuest_cew_grad_quad
 #endif
