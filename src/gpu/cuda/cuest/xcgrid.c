@@ -275,6 +275,7 @@ cuest_get_xc_potential (double *Vgrid, int64_t devsiz, int8_t approxspec, double
     const size_t Vgrid_siz = npoint * ndim * sizeof (double);
     const size_t V_siz     = nbasis * nbasis * sizeof (double);
     cudaMallocChecked (&d_Vgrid, Vgrid_siz);
+    cudaMemcpyChecked (d_Vgrid, Vgrid, Vgrid_siz, cudaMemcpyHostToDevice);
     cudaMallocChecked (&d_V, V_siz);
 
     checkCuestErrors (cuestXCPotentialComputeWorkspaceQuery (
