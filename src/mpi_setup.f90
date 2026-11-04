@@ -58,7 +58,7 @@
            basisFileName, basisSetName, basisCustName, ECPDir, ECPFileName, inFileName, &
            outFileName, dmxFileName, rstFileName, CPHFFileName, dataFileName, intFileName, &
            moldenFileName, espFileName, efieldFileName, VdwSurfFileName, fragPreFileName, &
-           fragPostFileName, mfccXyzFileName
+           fragPostFileName, mfccXyzFileName, mfccRptXyzFileName
      use mpi
 
      implicit none
