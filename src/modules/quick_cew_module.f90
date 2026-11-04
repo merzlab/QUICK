@@ -657,6 +657,11 @@ contains
 #if defined(MPIV)
    use quick_mpi_module, only: quick_comm_rank, natomll, natomul, nextatomll, nextatomul
 #endif
+#ifdef CUEST
+    use quick_basis_module, only: nbasis
+    use quick_scratch_module, only: quick_scratch
+    use quick_cuest_module
+#endif
 
     implicit none
 
@@ -799,7 +804,15 @@ contains
 
 #if defined(GPU) || defined(MPIV_GPU)
 #ifdef CUEST
-    if (quick_method%usecuest) call gpu_upload_ptchg_grad
+    if (quick_method%usecuest) then
+      call gpu_upload_ptchg_grad
+
+      if (.not. allocated(quick_scratch%tmphold)) allocate(quick_scratch%tmphold(nbasis, nbasis))
+      quick_scratch%tmphold = quick_qm_struct%dense
+      call cuest_correct_P(quick_scratch%tmphold, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+      call gpu_upload_density_matrix(quick_scratch%tmphold)
+      deallocate(quick_scratch%tmphold)
+    endif
 #endif
     call gpu_get_lri_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
 
