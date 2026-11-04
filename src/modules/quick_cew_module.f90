@@ -804,9 +804,9 @@ contains
     call gpu_get_lri_grad(quick_qm_struct%gradient,quick_qm_struct%ptchg_gradient)
 
     call gpu_delete_lri(ierr)
-#ifdef CUEST
-    if (quick_method%usecuest) call gpu_delete_ptchg_grad
-#endif
+! #ifdef CUEST
+!     if (quick_method%usecuest) call gpu_delete_ptchg_grad
+! #endif
 
 #ifdef CUEST
     ! this is safe for HF and DFT because DFT accumulates this
@@ -1296,15 +1296,14 @@ end do
       quick_qm_struct%gradient = quick_qm_struct%gradient + 0.5d0*gradhold_atom
 
       ! gradhold_grid_Q = w_Q[(nabla rho_Q)(V_Q) + (rho_Q)(nabla V_Q)]
-      dVdR = 0.0d0
       do i = 1, npoint
-         call cew_getgrdatpt(cuest_gridxyz(1,i), dVdR(1))
+         chgdens = -2.0d0*cuest_gridwt(i)*rho(i)
+         call cew_accdens(cuest_gridxyz(1,i), chgdens, dVdR(1))
 
-         chgdens = rho(i)*cuest_gridwt(i)
          ii = 3*(i-1)
-         gradhold_grid(ii+1) = gradhold_grid(ii+1) + chgdens*dVdR(1)
-         gradhold_grid(ii+2) = gradhold_grid(ii+2) + chgdens*dVdR(2)
-         gradhold_grid(ii+3) = gradhold_grid(ii+3) + chgdens*dVdR(3)
+         gradhold_grid(ii+1) = gradhold_grid(ii+1) + dVdR(1)
+         gradhold_grid(ii+2) = gradhold_grid(ii+2) + dVdR(2)
+         gradhold_grid(ii+3) = gradhold_grid(ii+3) + dVdR(3)
       enddo
 
       ! overwrite Vrecip_save with energy density = ((rho_P)(Vrecip_P))_P
