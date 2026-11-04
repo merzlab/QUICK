@@ -8,6 +8,7 @@
 ! 10/20/2010 YIPU MIAO Add MPI option to DIIS div&con
 ! this is dii for div & con
 subroutine electdiisdc(jscf,ierr)
+     use quick_size_module, only: MIN_SCF
      use quick_divcon_module, only: np, nbasisdc, ODCSub, XDCSub, coDCSub, coDCSubtran, eValDCSub, &
                                     ODCSubtemp, VECtemp, Vtemp, EVAL1temp, IDEGEN1temp, nElecMP2Sub
      use quick_basis_module, only: nbasis

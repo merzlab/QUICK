@@ -5,6 +5,7 @@
   ! 11/02/2010 Yipu Miao: Add paralle option for HF calculation
   subroutine uelectdiisdc(jscf,ierr)
 
+     use quick_size_module, only: MIN_SCF
      use quick_divcon_module, only: np, nbasisdc, ODCSub, XDCSub, coDCSub, coDCSubtran, eValDCSub, &
                                     ODCSubtemp, VECtemp, Vtemp, EVAL1temp, IDEGEN1temp, &
                                     OBDCSub, cobDCSub, cobDCSubtran, eValbDCSub
