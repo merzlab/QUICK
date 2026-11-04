@@ -46,6 +46,31 @@ module quick_mfcc_repeat_module
    public :: mfcc_rpt_align, mfcc_rpt_ao_rotation, mfcc_rpt_rotate_density
    public :: MFCC_RPT_RMSD_TOL, MFCC_RPT_PERM_MAXAT, MFCC_RPT_MAXREP
 
+   ! The grouping of the standalone fragments, filled once by mfcc_rpt_assign
+   ! and then read by everyone who needs it.
+   !
+   ! It lives here rather than inside mfcc_fragment_scf because two different
+   ! places need the same answer: mfcc() writes the collapsed xyz from it, and
+   ! the fragment SCF driver solves and rotates from it. It is a function of the
+   ! fragment geometries alone, so computing it once and sharing it also
+   ! guarantees the picture in the xyz is the set of sub-molecules that actually
+   ! get solved, rather than a second opinion that might disagree.
+   public :: mfcc_rpt_assign, mfcc_rpt_dealloc
+   public :: mfcc_rpt_repof, mfcc_rpt_repslot, mfcc_rpt_ncopies, mfcc_rpt_rotof
+   public :: mfcc_rpt_nrep, mfcc_rpt_rmsdmax, mfcc_rpt_rmsdrep, mfcc_rpt_done
+
+   integer, allocatable :: mfcc_rpt_repof(:)    ! <0 is a representative (-index),
+                                                ! >0 names one, 0 is neither
+   integer, allocatable :: mfcc_rpt_repslot(:)  ! fragment slot of each representative
+   integer, allocatable :: mfcc_rpt_ncopies(:)  ! fragments each representative stands for,
+                                                ! itself included
+   double precision, allocatable :: mfcc_rpt_rotof(:,:,:)  ! rotation onto its representative
+   double precision, allocatable :: mfcc_rpt_rmsdrep(:)    ! worst superposition rmsd per
+                                                           ! representative, 0 if it has no copies
+   integer :: mfcc_rpt_nrep = 0
+   double precision :: mfcc_rpt_rmsdmax = 0.0d0
+   logical :: mfcc_rpt_done = .false.
+
    ! Two copies count as the same rigid species when their atoms superpose to
    ! within this root mean square deviation, in Angstrom.
    !
@@ -89,6 +114,163 @@ module quick_mfcc_repeat_module
    end type mfcc_layout_type
 
 contains
+
+   !-------------------------------------------------------------------!
+   ! mfcc_rpt_assign                                                   !
+   !                                                                   !
+   ! Decide which standalone fragments are copies of which, and of     !
+   ! what rotation. This is step 1 of the three the RPT option takes:   !
+   !                                                                   !
+   !   1. Scan the fragments and pick representatives. A fragment joins !
+   !      an existing representative when it has the same elements in   !
+   !      the same order, the same charge and the same real-atom range, !
+   !      and superposes onto it; otherwise it becomes a representative !
+   !      itself. Geometry only, no SCF, so every rank reaches the same !
+   !      answer without communicating and the whole thing costs        !
+   !      milliseconds even for thousands of waters.                    !
+   !                                                                    !
+   !   2. Solve the representatives (mfcc_rpt_standalone).              !
+   !                                                                    !
+   !   3. Produce every other copy as U^T D U, two small matrix         !
+   !      products instead of an SCF (mfcc_rpt_standalone).             !
+   !                                                                    !
+   ! A fragment that matches no representative is left to be solved on  !
+   ! its own, so an unexpected species, or a flexible molecule caught   !
+   ! in several conformations, stays correct; it simply does not        !
+   ! benefit.                                                           !
+   !                                                                    !
+   ! Called from mfcc() when the collapsed xyz is to be written, and    !
+   ! from mfcc_fragment_scf before the fragment SCFs; whichever runs    !
+   ! first does the work and mfcc_rpt_done makes the other a no-op.     !
+   !___________________________________________________________________!
+   subroutine mfcc_rpt_assign(ierr)
+      use quick_mfcc_module, only: npmfcc, nmfccextra, mfccatom, mfcccord, &
+                                   mfccatomxiao, mfcccharge, mfccstart, mfccfinal
+      implicit none
+      integer, intent(inout) :: ierr
+
+      integer :: kx, k, ir, nat, ia
+      integer, allocatable :: zref(:), ztgt(:)
+      double precision :: rot(3,3), rmsd
+      logical :: ok
+
+      if (mfcc_rpt_done) return
+
+      call mfcc_rpt_dealloc()
+      if (nmfccextra .le. 0) then
+         mfcc_rpt_nrep = 0
+         mfcc_rpt_done = .true.
+         return
+      endif
+
+      allocate(mfcc_rpt_repof(nmfccextra), mfcc_rpt_repslot(MFCC_RPT_MAXREP), &
+               mfcc_rpt_ncopies(MFCC_RPT_MAXREP), mfcc_rpt_rmsdrep(MFCC_RPT_MAXREP), &
+               mfcc_rpt_rotof(3,3,nmfccextra), stat=ia)
+      if (ia /= 0) then
+         ierr = 34
+         return
+      endif
+
+      mfcc_rpt_repof = 0
+      mfcc_rpt_repslot = 0
+      mfcc_rpt_ncopies = 0
+      mfcc_rpt_rmsdrep = 0.0d0
+      mfcc_rpt_rotof = 0.0d0
+      mfcc_rpt_nrep = 0
+      mfcc_rpt_rmsdmax = 0.0d0
+
+      do kx = 1, nmfccextra
+         k = npmfcc + kx
+         nat = mfccatom(k)
+         if (allocated(ztgt)) deallocate(ztgt)
+         allocate(ztgt(nat))
+         call mfcc_rpt_zlist(nat,mfccatomxiao(1,k),ztgt,ierr)
+         if (ierr /= 0) return
+
+         do ir = 1, mfcc_rpt_nrep
+            if (mfccatom(mfcc_rpt_repslot(ir)) .ne. nat) cycle
+            if (mfcccharge(mfcc_rpt_repslot(ir)) .ne. mfcccharge(k)) cycle
+            ! mfccbases/mfccbasef are derived from these, so a representative
+            ! with a different real-atom range would give the copy the wrong
+            ! block of the density.
+            if (mfccstart(mfcc_rpt_repslot(ir)) .ne. mfccstart(k)) cycle
+            if (mfccfinal(mfcc_rpt_repslot(ir)) .ne. mfccfinal(k)) cycle
+            if (allocated(zref)) deallocate(zref)
+            allocate(zref(nat))
+            call mfcc_rpt_zlist(nat,mfccatomxiao(1,mfcc_rpt_repslot(ir)),zref,ierr)
+            if (ierr /= 0) return
+            call mfcc_rpt_align(nat,zref,mfcccord(1,1,mfcc_rpt_repslot(ir)), &
+                                ztgt,mfcccord(1,1,k),rot,rmsd,ok)
+            if (ok) then
+               mfcc_rpt_repof(kx) = ir
+               mfcc_rpt_rotof(1:3,1:3,kx) = rot
+               mfcc_rpt_ncopies(ir) = mfcc_rpt_ncopies(ir) + 1
+               mfcc_rpt_rmsdrep(ir) = max(mfcc_rpt_rmsdrep(ir),rmsd)
+               mfcc_rpt_rmsdmax = max(mfcc_rpt_rmsdmax,rmsd)
+               exit
+            endif
+         enddo
+
+         if (mfcc_rpt_repof(kx) .eq. 0 .and. mfcc_rpt_nrep .lt. MFCC_RPT_MAXREP) then
+            mfcc_rpt_nrep = mfcc_rpt_nrep + 1
+            mfcc_rpt_repslot(mfcc_rpt_nrep) = k
+            mfcc_rpt_repof(kx) = -mfcc_rpt_nrep   ! marks "is the representative itself"
+            mfcc_rpt_ncopies(mfcc_rpt_nrep) = 1   ! counts itself
+         endif
+      enddo
+
+      if (allocated(zref)) deallocate(zref)
+      if (allocated(ztgt)) deallocate(ztgt)
+      mfcc_rpt_done = .true.
+
+   end subroutine mfcc_rpt_assign
+
+
+   subroutine mfcc_rpt_dealloc()
+      implicit none
+      if (allocated(mfcc_rpt_repof))   deallocate(mfcc_rpt_repof)
+      if (allocated(mfcc_rpt_repslot)) deallocate(mfcc_rpt_repslot)
+      if (allocated(mfcc_rpt_ncopies)) deallocate(mfcc_rpt_ncopies)
+      if (allocated(mfcc_rpt_rmsdrep)) deallocate(mfcc_rpt_rmsdrep)
+      if (allocated(mfcc_rpt_rotof))   deallocate(mfcc_rpt_rotof)
+      mfcc_rpt_nrep = 0
+      mfcc_rpt_rmsdmax = 0.0d0
+      mfcc_rpt_done = .false.
+   end subroutine mfcc_rpt_dealloc
+
+
+   !-------------------------------------------------------------------!
+   ! mfcc_rpt_zlist                                                    !
+   !                                                                   !
+   ! Atomic numbers of one fragment, in the order its atoms are stored.!
+   !-------------------------------------------------------------------!
+   subroutine mfcc_rpt_zlist(nat,sym,z,ierr)
+      use quick_constants_module, only: symbol, SYMBOL_MAX
+      implicit none
+      integer, intent(in) :: nat
+      character(len=2), intent(in) :: sym(*)
+      integer, intent(out) :: z(nat)
+      integer, intent(inout) :: ierr
+      integer :: i, j
+      character(len=2) :: want
+
+      do i = 1, nat
+         want = adjustl(sym(i))
+         z(i) = 0
+         do j = 1, SYMBOL_MAX
+            if (symbol(j) .eq. want) then
+               z(i) = j
+               exit
+            endif
+         enddo
+         if (z(i) .eq. 0) then
+            ierr = 44
+            return
+         endif
+      enddo
+
+   end subroutine mfcc_rpt_zlist
+
 
    !-------------------------------------------------------------------!
    ! mfcc_rpt_snapshot_layout                                          !

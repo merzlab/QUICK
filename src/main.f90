@@ -44,8 +44,8 @@
     use quick_molspec_module, only: quick_molspec, natom, alloc
     use quick_basis_module, only: nbasis
     use quick_files_module, only: write_molden, set_quick_files, print_quick_io_file
-    use quick_files_module, only: mfccXyzFileName
-    use quick_mfcc_module, only: npmfcc, kxiaoconnect
+    use quick_files_module, only: mfccXyzFileName, mfccRptXyzFileName
+    use quick_mfcc_module, only: npmfcc, nmfccextra, kxiaoconnect
     use quick_molsurface_module, only: generate_MKS_surfaces
 #if defined(GPU) || defined(MPIV_GPU)
     use quick_basis_module, only: quick_basis, aexp, cutprim, dcoeff, itype, &
@@ -159,9 +159,11 @@
         if (quick_method%mfccfrag) then
             if (master) then
                 call PrtAct(ioutfile,"MFCC fragmentation only, stopping here")
-                write(ioutfile,'(" Fragments:",i6,"   caps:",i6,"   contacts kept:",i6)') &
-                      npmfcc, npmfcc-1, kxiaoconnect
+                write(ioutfile,'(" Fragments:",i6,"   caps:",i6,"   standalone:",i6, &
+                      &"   contacts kept:",i6)') npmfcc, npmfcc-1, nmfccextra, kxiaoconnect
                 write(ioutfile,'(" Geometries written to ",a)') trim(mfccXyzFileName)
+                if (quick_method%mfccrpt .and. nmfccextra .gt. 0) &
+                      write(ioutfile,'(" Repeats collapsed in       ",a)') trim(mfccRptXyzFileName)
                 write(ioutfile,'(" No SCF and no initial guess were performed.")')
                 call flush(ioutfile)
             endif
