@@ -138,6 +138,10 @@ contains
             natomll, natomul, nextatomll, nextatomul
     use mpi
 #endif    
+#ifdef CUEST
+    use quick_scratch_module, only: quick_scratch
+    use quick_cuest_module
+#endif
 
     implicit none
 
@@ -319,11 +323,17 @@ contains
 #ifdef CUEST
     if (quick_method%usecuest) then
        ! will only get lri and not call quad contribution
-       call gpu_get_lri(quick_qm_struct%o)
+       if (.not. allocated(quick_scratch%tmphold)) allocate(quick_scratch%tmphold(nbasis, nbasis))
+       quick_scratch%tmphold = 0.0d0
+       call gpu_get_lri(quick_scratch%tmphold)
+       call cuest_correct_o(quick_scratch%tmphold, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST)
+       quick_qm_struct%o = quick_qm_struct%o + quick_scratch%tmphold
+
        call quick_cuest_cew_prescf_quad
 
        if ( .not. (quick_method%grad .or. quick_method%opt) ) then 
          call gpu_delete_lri(ierr)
+         deallocate(quick_scratch%tmphold)
        endif
     else
 #endif
