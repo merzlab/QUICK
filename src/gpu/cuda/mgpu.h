@@ -57,6 +57,30 @@ extern "C" void mgpu_query_(int *mpi_comm_rank, int *mgpu_id, int* ierr)
 
 
 //-----------------------------------------------
+// Get/set the rank and size that the greedy ERI/OEI distributors key off
+// of. gpu->mpi_comm_rank/size are set once, at job start, from the real
+// MPI communicator. Code that temporarily solves independent sub-problems
+// under a different (e.g. MPI_COMM_SELF) communicator -- such as
+// mfcc_fragment_scf, where each rank solves its own standalone fragment --
+// must override these too, or mgpu_eri_greedy_distribute keeps splitting
+// each fragment's own shell pairs across the original N-way partition and
+// every rank silently keeps only its own ~1/N share, with no real
+// cross-rank reduction left to recombine the rest.
+//-----------------------------------------------
+extern "C" void mgpu_get_rank_size_(int *mpi_comm_rank, int *mpi_comm_size)
+{
+    *mpi_comm_rank = gpu->mpi_comm_rank;
+    *mpi_comm_size = gpu->mpi_comm_size;
+}
+
+extern "C" void mgpu_set_rank_size_(int *mpi_comm_rank, int *mpi_comm_size)
+{
+    gpu->mpi_comm_rank = *mpi_comm_rank;
+    gpu->mpi_comm_size = *mpi_comm_size;
+}
+
+
+//-----------------------------------------------
 // Initialize the devices
 //-----------------------------------------------
 extern "C" void mgpu_init_device_(int *mpi_comm_f, int *mpi_comm_rank, int *mpi_comm_size, int *device, int* ierr)

@@ -60,6 +60,7 @@ subroutine mfcc_fragment_scf(ierr)
    logical :: MPIsaved, mastersaved, real_master
    integer :: myrank, nranks
    integer :: commsaved, ranksaved, sizesaved
+   integer :: gpuranksaved, gpusizesaved
    integer :: nd1, nd2, nd3, nc1, nc2, nc3
    logical :: do_rpt
    double precision, allocatable :: xyzsaved(:,:)
@@ -123,6 +124,24 @@ subroutine mfcc_fragment_scf(ierr)
       quick_comm_rank = 0
       quick_comm_size = 1
       master = .true.
+
+      ! gpu->mpi_comm_rank/size are a separate C-side copy (set once at job
+      ! start by mgpu_init_device, main.f90) that mgpu_eri_greedy_distribute/
+      ! mgpu_oei_greedy_distribute key off of to split shell pairs across
+      ! ranks. Left at their original (rank, N) values here, each rank would
+      ! keep computing only its own ~1/N slice of every fragment's own
+      ! two-electron integrals, with no real reduction left under
+      ! MPI_COMM_SELF to recombine the rest: every fragment's Fock build
+      ! silently loses (N-1)/N of its 2e contribution. Confirmed via
+      ! debug instrumentation in mgpu_eri_greedy_distribute (tot_pcore for
+      ! this rank consistently ~nitems/4 on a 4-rank cudampi Trp-cage MFCC
+      ! run, 2026-11-04) before this was understood or fixed.
+#if defined(GPU) || defined(MPIV_GPU)
+      if (quick_method%bGPU) then
+         call mgpu_get_rank_size(gpuranksaved, gpusizesaved)
+         call mgpu_set_rank_size(0, 1)
+      endif
+#endif
    endif
 #endif
    quick_method%HF = .true.
@@ -425,6 +444,10 @@ subroutine mfcc_fragment_scf(ierr)
       quick_comm = commsaved
       quick_comm_rank = ranksaved
       quick_comm_size = sizesaved
+
+#if defined(GPU) || defined(MPIV_GPU)
+      if (quick_method%bGPU) call mgpu_set_rank_size(gpuranksaved, gpusizesaved)
+#endif
 
       nd1 = size(mfccdens,1); nd2 = size(mfccdens,2); nd3 = size(mfccdens,3)
       call mfcc_reduce_dens(mfccdens,    nd1,nd2,nd3)
