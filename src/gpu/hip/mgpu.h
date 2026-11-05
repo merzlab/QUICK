@@ -57,6 +57,31 @@ extern "C" void mgpu_query_(int *mpi_comm_rank, int *mgpu_id, int* ierr)
 
 
 //-----------------------------------------------
+// Get/set the rank and size that the greedy ERI/OEI distributors key off
+// of. Mirrors src/gpu/cuda/mgpu.h -- see that file for why this is needed:
+// code that temporarily solves independent sub-problems under a different
+// (e.g. MPI_COMM_SELF) communicator, such as mfcc_fragment_scf, must
+// override gpu->mpi_comm_rank/size too, or the greedy distributors keep
+// splitting each sub-problem's own work across the original N-way
+// partition. Added so mfcc_fragment_scf.f90's call to this pair (guarded
+// by the same #if defined(GPU) || defined(MPIV_GPU) as the CUDA path)
+// still links for a HIP+MPI build, even though that bug was only actually
+// observed and fixed on CUDA+MPI.
+//-----------------------------------------------
+extern "C" void mgpu_get_rank_size_(int *mpi_comm_rank, int *mpi_comm_size)
+{
+    *mpi_comm_rank = gpu->mpi_comm_rank;
+    *mpi_comm_size = gpu->mpi_comm_size;
+}
+
+extern "C" void mgpu_set_rank_size_(int *mpi_comm_rank, int *mpi_comm_size)
+{
+    gpu->mpi_comm_rank = *mpi_comm_rank;
+    gpu->mpi_comm_size = *mpi_comm_size;
+}
+
+
+//-----------------------------------------------
 // Initialize the devices
 //-----------------------------------------------
 extern "C" void mgpu_init_device_(int *mpi_comm_f, int *mpi_comm_rank, int *mpi_comm_size, int *device, int* ierr)
