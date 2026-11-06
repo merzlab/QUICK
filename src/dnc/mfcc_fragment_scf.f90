@@ -730,7 +730,7 @@ subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibas
    use quick_calculated_module, only: quick_qm_struct, alloc, init, dealloc
    use quick_basis_module, only: quick_basis, nbasis, cutprim, Ycutoff, normalize_basis, &
                                   nshell, nprim, jshell, jbasis, maxcontract, ncontract, &
-                                  itype, aexp, dcoeff, alloc, dealloc
+                                  itype, aexp, dcoeff, alloc, dealloc, dc_eri_onthefly
    implicit none
 
    integer, intent(in) :: nat, iatstart, iatfinal, icharge
@@ -793,8 +793,13 @@ subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibas
    ! them in exactly this order.
    call alloc(quick_basis)
    call alloc(quick_qm_struct)
-   cutprim = 0.0d0
-   quick_basis%Xcoeff = 0.0d0
+   ! cutprim/Xcoeff aren't allocated at all when dc_eri_onthefly() -- see
+   ! allocate_basis (quick_basis_module.f90) -- so skip zero-initializing
+   ! them here, same as getMol.f90.
+   if (.not. dc_eri_onthefly()) then
+      cutprim = 0.0d0
+      quick_basis%Xcoeff = 0.0d0
+   endif
    call init(quick_qm_struct)
    call normalize_basis()
 

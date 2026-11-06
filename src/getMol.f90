@@ -16,7 +16,8 @@ subroutine getMol(ierr)
     use quick_molspec_module, only: quick_molspec, natom, xyz, read_quick_molspec_2
     use quick_molspec_module, only: set_quick_molspec, print_quick_molspec
     use quick_calculated_module, only: quick_qm_struct, allocate_quick_qm_struct, init_quick_qm_struct
-    use quick_basis_module, only: quick_basis, nbasis, cutprim, normalize_basis, allocate_basis, print_quick_basis
+    use quick_basis_module, only: quick_basis, nbasis, cutprim, normalize_basis, allocate_basis, &
+                                   print_quick_basis, dc_eri_onthefly
     use quick_files_module, only: iOutfile, iDataFile, inFile, inFileName, dataFileName, isTemplate
     use quick_exception_module, only: RaiseException
 
@@ -101,8 +102,13 @@ subroutine getMol(ierr)
 
    call allocate_basis(quick_basis)
    call allocate_quick_qm_struct(quick_qm_struct)
-   cutprim = 0.0d0
-   quick_basis%Xcoeff = 0.0d0
+   ! cutprim/Xcoeff aren't allocated at all when dc_eri_onthefly() -- see
+   ! allocate_basis (quick_basis_module.f90) -- so skip zero-initializing
+   ! them here.
+   if (.not. dc_eri_onthefly()) then
+      cutprim = 0.0d0
+      quick_basis%Xcoeff = 0.0d0
+   endif
    call init_quick_qm_struct(quick_qm_struct)
 
    !-----------MPI/MASTER------------------------

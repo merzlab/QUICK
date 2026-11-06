@@ -58,7 +58,7 @@ end subroutine deallocate_quick_cutoff
 
 
 subroutine schwarzoff
-  use quick_basis_module, only: nshell, jbasis, YCutoff, cutprim
+  use quick_basis_module, only: nshell, jbasis, YCutoff, cutprim, dc_eri_onthefly
   use quick_mpi_module, only: master
 #if defined(MPIV)
   use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
@@ -89,7 +89,14 @@ subroutine schwarzoff
 #ifdef MPIV
       if (bMPI) then
          call MPI_BCAST(YCutoff,nshell*nshell,mpi_double_precision,0,quick_comm,quick_mpi_error)
-         call MPI_BCAST(cutprim,jbasis*jbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         ! cutprim isn't computed/allocated at all when dc_eri_onthefly()
+         ! -- primitive-level screening is dropped entirely on that path
+         ! (see shellcutoff below), so skip broadcasting it. (This also
+         ! happens to be a jbasis^2-sized int32-overflow-risk MPI_BCAST for
+         ! large systems, same class as the ones fixed in
+         ! get_eri_precomputables/eri.fh -- moot once onthefly is active.)
+         if (.not. dc_eri_onthefly()) &
+            call MPI_BCAST(cutprim,jbasis*jbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
          call MPI_BARRIER(quick_comm,quick_mpi_error)
       endif
 #endif
@@ -98,7 +105,8 @@ end subroutine schwarzoff
 
 
 subroutine shellcutoff(II,JJ,Ymax)
-   use quick_basis_module, only: quick_basis, Yxiao, Yxiaotemp, Yxiaoprim, cutprim, Apri, Ppri
+   use quick_basis_module, only: quick_basis, Yxiao, Yxiaotemp, Yxiaoprim, cutprim, Apri, Ppri, &
+                                 dc_eri_onthefly, eri_onthefly_pair
    use quick_molspec_module, only: xyz
    use quick_params_module, only: Sumindex
 
@@ -108,6 +116,7 @@ subroutine shellcutoff(II,JJ,Ymax)
    integer :: NNAB, NNCD, NABCDTYPE, NNA, NNC, NABCD, ITT
    integer :: JJJ, III, LLL, KKK, Nprij, Nprii, Nprik, Npril
    integer :: iitemp, I2, I1, IIxiao, JJxiao, I, J, K, L
+   logical :: onthefly
    double precision :: Ymax, AB, CD, ROU, ABCD, ABCDxiao, RPQ, XXXtemp, T, Ymaxprim
 
   double precision P(3),Q(3),W(3),KAB,KCD
@@ -123,6 +132,8 @@ subroutine shellcutoff(II,JJ,Ymax)
 
   KK=II
   LL=JJ
+
+  onthefly = dc_eri_onthefly()
 
   Ymax=0.0d0
 
@@ -161,17 +172,25 @@ subroutine shellcutoff(II,JJ,Ymax)
      Nprij=quick_basis%kstart(JJ)+JJJ-1
      do III=1,quick_basis%kprim(II)
         Nprii=quick_basis%kstart(II)+III-1
-        AB=Apri(Nprii,Nprij)
+        if (onthefly) then
+           call eri_onthefly_pair(II,III,JJ,JJJ,AB,P)
+        else
+           AB=Apri(Nprii,Nprij)
+        endif
         ABtemp=0.5d0/AB
         do M=1,3
-           P(M)=Ppri(M,Nprii,Nprij)
+           if (.not. onthefly) P(M)=Ppri(M,Nprii,Nprij)
            Ptemp(M)=P(M)-RA(M)
         enddo
         do LLL=1,quick_basis%kprim(LL)
            Npril=quick_basis%kstart(LL)+LLL-1
            do KKK=1,quick_basis%kprim(KK)
               Nprik=quick_basis%kstart(KK)+KKK-1
-              CD=Apri(Nprik,Npril)
+              if (onthefly) then
+                 call eri_onthefly_pair(KK,KKK,LL,LLL,CD,Q)
+              else
+                 CD=Apri(Nprik,Npril)
+              endif
               ABCD=AB+CD
               ROU=AB*CD/ABCD
               RPQ=0.0d0
@@ -183,7 +202,7 @@ subroutine shellcutoff(II,JJ,Ymax)
               ABCDtemp=0.5d0/ABCD
 
               do M=1,3
-                 Q(M)=Ppri(M,Nprik,Npril)
+                 if (.not. onthefly) Q(M)=Ppri(M,Nprik,Npril)
                  W(M)=(P(M)*AB+Q(M)*CD)/ABCD
                  XXXtemp=P(M)-Q(M)
                  RPQ=RPQ+XXXtemp*XXXtemp
@@ -221,6 +240,11 @@ subroutine shellcutoff(II,JJ,Ymax)
         enddo
      enddo
   enddo
+  ! cutprim isn't computed/allocated at all when dc_eri_onthefly() --
+  ! primitive-level screening is dropped entirely on that path (see the
+  ! always-pass keepprim gate in cshell/oshell/iclass_cshell/iclass_oshell,
+  ! eri.fh), so skip this block, which exists only to fill cutprim.
+  if (.not. onthefly) then
   do IIxiao=1,quick_basis%kprim(II)
      Nprii=quick_basis%kstart(II)+IIxiao-1
      do JJxiao=1,quick_basis%kprim(JJ)
@@ -247,6 +271,7 @@ subroutine shellcutoff(II,JJ,Ymax)
 
      enddo
   enddo
+  endif
 
   do I=NII1,NII2
      if(I.eq.0)then
@@ -272,7 +297,7 @@ end subroutine shellcutoff
 
 
 subroutine classcutoff(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax)
-  use quick_basis_module, only: quick_basis, Yxiao
+  use quick_basis_module, only: quick_basis, Yxiao, dc_eri_onthefly, eri_onthefly_xcoeff
   use quick_params_module, only: trans
   use quick_constants_module, only: X0
 
@@ -281,6 +306,7 @@ subroutine classcutoff(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax)
   integer :: i, j, k, l, ii, jj, kk, ll, III, JJJ, KKK, LLL, nna, nnc, nnab, nncd
   integer :: M, M1, M3, MA, MAB, MCD, MCX, MM1, MM2, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2
   integer :: Nprii, Nprij, Nprik, Npril
+  logical :: onthefly
   double precision :: X2, Y, Y1, Y2, Ytemp, Ymax
 
   double precision store(120,120)
@@ -306,19 +332,29 @@ subroutine classcutoff(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax)
 
   common /xiaostore/store
 
+  onthefly = dc_eri_onthefly()
+
   ITT=0
   do JJJ=1,quick_basis%kprim(JJ)
      Nprij=quick_basis%kstart(JJ)+JJJ-1
      do III=1,quick_basis%kprim(II)
         Nprii=quick_basis%kstart(II)+III-1
 
-        X2=X0*quick_basis%Xcoeff(Nprii,Nprij,I,J)
+        if (onthefly) then
+           X2=X0*eri_onthefly_xcoeff(II,III,JJ,JJJ,I,J)
+        else
+           X2=X0*quick_basis%Xcoeff(Nprii,Nprij,I,J)
+        endif
         do LLL=1,quick_basis%kprim(LL)
            Npril=quick_basis%kstart(LL)+LLL-1
            do KKK=1,quick_basis%kprim(KK)
               Nprik=quick_basis%kstart(KK)+KKK-1
               ITT=ITT+1
-              X44(ITT)=X2*quick_basis%Xcoeff(Nprik,Npril,K,L)
+              if (onthefly) then
+                 X44(ITT)=X2*eri_onthefly_xcoeff(KK,KKK,LL,LLL,K,L)
+              else
+                 X44(ITT)=X2*quick_basis%Xcoeff(Nprik,Npril,K,L)
+              endif
             enddo
         enddo
      enddo

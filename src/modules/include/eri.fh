@@ -79,7 +79,7 @@ contains
  ! Recurrence Relations. J. Chem. Phys. 1988, 89, 5777–5786.
  !__________________________________________________________________
 subroutine get_eri_precomputables
-   use quick_basis_module, only: jshell, jbasis, Apri, Kpri, Ppri, quick_basis
+   use quick_basis_module, only: jshell, jbasis, Apri, Kpri, Ppri, quick_basis, dc_eri_onthefly
    use quick_molspec_module, only: xyz
    use quick_mpi_module, only: master
 #if defined(MPIV)
@@ -92,6 +92,13 @@ subroutine get_eri_precomputables
    integer ics,ips,jcs,jps,itemp,itemp2,i
    integer NA,NB
    double precision AA,BB,XYZA(3),XYZB(3),DAB
+
+   ! Apri/Kpri/Ppri/Xcoeff aren't allocated at all when dc_eri_onthefly()
+   ! -- cshell/oshell and iclass_cshell/iclass_oshell compute the
+   ! equivalent per-pair quantities on demand instead (see
+   ! eri_onthefly_pair/eri_onthefly_xcoeff, quick_basis_module.f90).
+   if (dc_eri_onthefly()) return
+
    if (master) then
    ! ics cycle
    do ics=1,jshell                       ! ics is the shell no.
@@ -293,7 +300,7 @@ subroutine oshell
 subroutine cshell
 #endif
     use quick_basis_module, only: III, JJJ, KKK, LLL, dnmax, Apri, Ppri, cutprim, Yxiao, &
-                                  Yxiaotemp, quick_basis
+                                  Yxiaotemp, quick_basis, dc_eri_onthefly, eri_onthefly_pair
    use quick_method_module, only: quick_method
    use quick_params_module, only: Sumindex
    use quick_molspec_module, only: xyz
@@ -306,6 +313,7 @@ subroutine cshell
    integer :: NNA, NNC, NNAB, NNCD, NABCDTYPE, NABCD, IITEMP, I1, I2
    integer :: Nprii, Nprij, Nprik, Npril
    integer :: NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+   logical :: onthefly, keepprim
    double precision :: AB, CD, ROU, RPQ, ABCDxiao, CUTOFFPRIM, CUTOFFPRIM1, ABCD
    double precision :: ABtemp, CDtemp, ABcom, CDcom, ABCDtemp
    double precision :: XXXtemp, T
@@ -319,6 +327,8 @@ subroutine cshell
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
    COMMON /COM1/RA,RB,RC,RD
+
+   onthefly = dc_eri_onthefly()
 
    do M=1,3
       RA(M)=xyz(M,quick_basis%katom(II))
@@ -364,10 +374,16 @@ subroutine cshell
       do III=1,quick_basis%kprim(II)
          Nprii=quick_basis%kstart(II)+III-1
          !For NpriI and NpriJ primitives, we calculate the following quantities
-         AB=Apri(Nprii,Nprij)    ! AB = Apri = expo(NpriI)+expo(NpriJ). Eqn 8 of HGP.
+         if (onthefly) then
+            call eri_onthefly_pair(II,III,JJ,JJJ,AB,P)
+         else
+            AB=Apri(Nprii,Nprij)    ! AB = Apri = expo(NpriI)+expo(NpriJ). Eqn 8 of HGP.
+         endif
          ABtemp=0.5d0/AB         ! ABtemp = 1/(2Apri) = 1/2(expo(NpriI)+expo(NpriJ))
-         ! This is term is required for Eqn 6 of HGP. 
-         cutoffprim1=dnmax*cutprim(Nprii,Nprij)
+         ! This is term is required for Eqn 6 of HGP. Dropped on the
+         ! on-the-fly path -- cutprim isn't computed/allocated there, see
+         ! the keepprim gate below.
+         if (.not. onthefly) cutoffprim1=dnmax*cutprim(Nprii,Nprij)
 
          do M=1,3
             !Eqn 9 of HGP
@@ -376,9 +392,9 @@ subroutine cshell
             ! ->  ------>       expo(I)*xyz(I)+expo(J)*xyz(J)
             ! P = P'(I,J)  = ------------------------------
             !                       expo(I) + expo(J)
-            P(M)=Ppri(M,Nprii,Nprij)
+            if (.not. onthefly) P(M)=Ppri(M,Nprii,Nprij)
 
-            !Multiplication of Eqns 9  by Eqn 8 of HGP.. 
+            !Multiplication of Eqns 9  by Eqn 8 of HGP..
             !                        -->            -->
             ! ----->         expo(I)*xyz(I)+expo(J)*xyz(J)                                 -->            -->
             ! AAtemp = ----------------------------------- * (expo(I) + expo(J)) = expo(I)*xyz(I)+expo(J)*xyz(J)
@@ -402,12 +418,27 @@ subroutine cshell
                Nprik=quick_basis%kstart(KK)+KKK-1
 
                ! prim cutoff: cutoffprim(I,J,K,L) = dnmax * cutprim(I,J) * cutprim(K,L)
-               cutoffprim=cutoffprim1*cutprim(Nprik,Npril)
-               if(cutoffprim.gt.quick_method%primLimit)then
+               ! Dropped entirely on the on-the-fly path (cutprim isn't
+               ! computed/allocated there) -- relies on the shell-level
+               ! Ycutoff/cutmatrix screening in get_cshell_eri/get_oshell_eri
+               ! instead, so every primitive quartet is kept, which keeps
+               ! this loop's ITT count in lockstep with iclass_cshell/
+               ! iclass_oshell's identical gate.
+               if (onthefly) then
+                  keepprim = .true.
+               else
+                  cutoffprim=cutoffprim1*cutprim(Nprik,Npril)
+                  keepprim = (cutoffprim.gt.quick_method%primLimit)
+               endif
+               if(keepprim)then
 
                   !Nita quantity of HGP Eqn 10. This is same as
-                  !zita (AB) above. 
-                  CD=Apri(Nprik,Npril)  ! CD = Apri = expo(NpriK) + expo(NpriL)
+                  !zita (AB) above.
+                  if (onthefly) then
+                     call eri_onthefly_pair(KK,KKK,LL,LLL,CD,Q)
+                  else
+                     CD=Apri(Nprik,Npril)  ! CD = Apri = expo(NpriK) + expo(NpriL)
+                  endif
 
                   !First term of HGP Eqn 12 without sqrt. 
                   ABCD=AB+CD            ! ABCD = expo(NpriI)+expo(NpriJ)+expo(NpriK)+expo(NpriL)
@@ -446,7 +477,7 @@ subroutine cshell
                      ! ->  ------>       expo(K)*xyz(K)+expo(L)*xyz(L)
                      ! Q = P'(K,L)  = ------------------------------
                      !                       expo(K) + expo(L)
-                     Q(M)=Ppri(M,Nprik,Npril)
+                     if (.not. onthefly) Q(M)=Ppri(M,Nprik,Npril)
 
                      !HGP Eqn 10. 
                      ! W' is the weight center for NpriI,NpriJ,NpriK and NpriL
@@ -545,7 +576,7 @@ subroutine iclass_oshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
 subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
 #endif
    use quick_basis_module, only: nbasis, IJKLtype, III, JJJ, KKK, LLL, IJtype, KLtype, Y, &
-                                 dnmax, cutprim, Yxiao, quick_basis
+                                 dnmax, cutprim, Yxiao, quick_basis, dc_eri_onthefly, eri_onthefly_xcoeff
    use quick_calculated_module, only: quick_qm_struct
    use quick_method_module, only: quick_method
    use quick_molspec_module, only: xyz
@@ -556,8 +587,9 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
 
    ! Dummy arguments
    integer, intent(in) :: I, J, K, L, NNA, NNC, NNAB, NNCD
-   
+
    ! Local variables
+   logical :: onthefly, keepprim
    integer :: NN, M, MM1, MM2, ITT, ITEMP
    integer :: NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
    integer :: III1, III2, JJJ1, JJJ2, KKK1, KKK2, LLL1, LLL2
@@ -592,6 +624,8 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /xiaostore/store
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+
+   onthefly = dc_eri_onthefly()
 
    do MM2 = NNC, NNCD
       do MM1 = NNA, NNAB
@@ -629,21 +663,38 @@ subroutine iclass_cshell(I,J,K,L,NNA,NNC,NNAB,NNCD)
          !X0 = 2.0d0*(PI)**(2.5d0), constants for HGP 15 
          ! multiplied twice for KAB and KCD
 
-         X2=X0*quick_basis%Xcoeff(Nprii,Nprij,I,J)
-         cutoffprim1=dnmax*cutprim(Nprii,Nprij)
+         if (onthefly) then
+            X2=X0*eri_onthefly_xcoeff(II,III,JJ,JJJ,I,J)
+         else
+            X2=X0*quick_basis%Xcoeff(Nprii,Nprij,I,J)
+            cutoffprim1=dnmax*cutprim(Nprii,Nprij)
+         endif
 
          do LLL=1,quick_basis%kprim(LL)
             Npril=quick_basis%kstart(LL)+LLL-1
 
             do KKK=1,quick_basis%kprim(KK)
                Nprik=quick_basis%kstart(KK)+KKK-1
-               cutoffprim=cutoffprim1*cutprim(Nprik,Npril)
-               if(cutoffprim.gt.quick_method%primLimit)then
+               ! Same always-pass gate as cshell/oshell under onthefly --
+               ! this ITT sequence must stay in lockstep with theirs (see
+               ! the long comment in cshell/oshell), or Yxiao/X44 end up
+               ! multiplied against the wrong primitive-quartet pairing.
+               if (onthefly) then
+                  keepprim = .true.
+               else
+                  cutoffprim=cutoffprim1*cutprim(Nprik,Npril)
+                  keepprim = (cutoffprim.gt.quick_method%primLimit)
+               endif
+               if(keepprim)then
 
                   itt = itt+1
                   !This is the KAB x KCD value reqired for HGP 12.
                   !itt is the m value.
-                  X44(ITT) = X2*quick_basis%Xcoeff(Nprik,Npril,K,L)
+                  if (onthefly) then
+                     X44(ITT) = X2*eri_onthefly_xcoeff(KK,KKK,LL,LLL,K,L)
+                  else
+                     X44(ITT) = X2*quick_basis%Xcoeff(Nprik,Npril,K,L)
+                  endif
                endif
             enddo
          enddo
