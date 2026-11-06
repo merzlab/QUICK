@@ -48,6 +48,8 @@ module quick_files_module
     ! Written in addition to the above when RPT is on: the same dump with every
     ! repeated species collapsed to the one copy that is actually solved.
     character(len=80) :: mfccRptXyzFileName = ''
+    ! User-supplied per-residue charge overrides, read when MFCCCHG is given.
+    character(len=80) :: mfccChgFileName = ''
 
 
     ! Basis set and directory
@@ -84,6 +86,7 @@ module quick_files_module
     integer :: iFragPostFile  = FRAGPOSTFILEHANDLE   ! DnC subsystems after fragment elimination
     integer :: iMfccXyzFile   = MFCCXYZFILEHANDLE    ! MFCC fragments and caps
     integer :: iMfccRptXyzFile = MFCCRPTXYZFILEHANDLE ! the same, repeats collapsed (RPT)
+    integer :: iMfccChgFile   = MFCCCHGFILEHANDLE    ! per-residue charge overrides (MFCCCHG)
 
 
     logical :: fexist = .false.         ! Check if file exists
@@ -154,6 +157,7 @@ module quick_files_module
         fragPostFileName = trim(adjustl(baseinFileName)) // '_frag_post_elim.xyz'
         mfccXyzFileName = trim(adjustl(baseinFileName)) // '_mfcc.xyz'
         mfccRptXyzFileName = trim(adjustl(baseinFileName)) // '_mfcc_RPT.xyz'
+        mfccChgFileName = trim(adjustl(baseinFileName)) // '.charges'
     end subroutine
 
 

@@ -3,9 +3,13 @@
 subroutine mfcc(natomsaved)
    use quick_divcon_module, only: np
    use quick_files_module, only: iOutFile, iPDBFile, PDBFileName, iMfccXyzFile, mfccXyzFileName, &
-                                 iMfccRptXyzFile, mfccRptXyzFileName
+                                 iMfccRptXyzFile, mfccRptXyzFileName, &
+                                 iMfccChgFile, mfccChgFileName
    use quick_method_module, only: quick_method
-   use quick_mfcc_species_module, only: mfcc_is_amino_acid, mfcc_species_charge, mfcc_species_kind
+   use quick_molspec_module, only: quick_molspec
+   use quick_mfcc_species_module, only: mfcc_is_amino_acid, mfcc_species_charge, mfcc_species_kind, &
+                                 mfcc_chg_read, mfcc_chg_lookup, mfcc_chg_n, mfcc_chg_name, &
+                                 mfcc_chg_seq, mfcc_chg_val, mfcc_chg_used
    use quick_mfcc_module
    use quick_mfcc_repeat_module, only: mfcc_rpt_assign, mfcc_rpt_dealloc, mfcc_rpt_done, &
                                        mfcc_rpt_nrep, mfcc_rpt_repof
@@ -39,7 +43,12 @@ subroutine mfcc(natomsaved)
    integer, allocatable :: pepidx(:)           ! resSeq -> peptide fragment index, 0 if not peptide
    integer, allocatable :: xresof(:)           ! resSeq -> standalone fragment index, 0 if peptide
    integer, allocatable :: xfirst(:), xlast(:) ! atom range of each standalone fragment
+   integer, allocatable :: xseq(:)             ! pdb resSeq of each standalone fragment
    character(len=3), allocatable :: xname(:)   ! residue name of each standalone fragment
+   ! MFCCCHG charge overrides
+   integer :: chgovr, ichg, ip, ifirst, nchgapp, chgtot, nhit
+   logical :: ovrfound, ovrbad
+   character(len=3) :: ovrname
    integer :: maxres, ires2, npep, nxtra, pep_first, pep_last
    integer, allocatable :: natres(:)
    integer :: nsolv, nion, nlig, nunk, kx, nat_x
@@ -148,6 +157,28 @@ subroutine mfcc(natomsaved)
     call quick_exit(iOutFile,1)
   endif
 
+  ! Charge overrides, if MFCCCHG was given. Read here because maxres is now
+  ! known, so a residue number outside the structure can be rejected rather
+  ! than used as an array index.
+  if (quick_method%mfccchg) then
+    mfccierr = 0
+    call mfcc_chg_read(iMfccChgFile, mfccChgFileName, iOutFile, mfccierr)
+    if (mfccierr /= 0) then
+      call PrtErr(iOutFile,'Could not read the MFCC charge override file.')
+      call quick_exit(iOutFile,1)
+    endif
+    write(ioutfile,'(" MFCC read ",i0," charge override(s) from ",a)') &
+          mfcc_chg_n, trim(mfccChgFileName)
+    do ichg = 1, mfcc_chg_n
+      if (mfcc_chg_seq(ichg) .lt. 1 .or. mfcc_chg_seq(ichg) .gt. maxres) then
+        call PrtErr(iOutFile,'A charge override names a residue number that is not in the pdb.')
+        write(ioutfile,'("   ",a3,1x,i0,1x,i0,"   (pdb residue numbers run 1 ..",i0,")")') &
+              mfcc_chg_name(ichg), mfcc_chg_seq(ichg), mfcc_chg_val(ichg), maxres
+        call quick_exit(iOutFile,1)
+      endif
+    enddo
+  endif
+
   allocate(pepidx(maxres), xresof(maxres))
   pepidx = 0
   xresof = 0
@@ -182,10 +213,12 @@ subroutine mfcc(natomsaved)
   endif
 
   ! Standalone fragment atom ranges, and the peptide atom span.
-  allocate(xfirst(max(nxtra,1)), xlast(max(nxtra,1)), xname(max(nxtra,1)))
+  allocate(xfirst(max(nxtra,1)), xlast(max(nxtra,1)), xname(max(nxtra,1)), &
+           xseq(max(nxtra,1)))
   xfirst = 0
   xlast = 0
   xname = '   '
+  xseq = 0
   pep_first = 0
   pep_last = 0
   do i = 1, number
@@ -197,6 +230,7 @@ subroutine mfcc(natomsaved)
       if (xfirst(kx) .eq. 0) xfirst(kx) = i
       xlast(kx) = i
       xname(kx) = residue(i)
+      xseq(kx) = class(i)        ! still the pdb resSeq; renumbered below
     endif
   enddo
 
@@ -761,6 +795,21 @@ subroutine mfcc(natomsaved)
     matomstart(k)  = xfirst(kx)
     matomfinal(k)  = xlast(kx)
     mfcccharge(k)  = mfcc_species_charge(xname(kx), nat_x, chgunknown)
+    ! A user-supplied charge replaces whatever the name-based table said, and
+    ! settles the unknown case outright: that is the whole point of the file.
+    if (quick_method%mfccchg) then
+      call mfcc_chg_lookup(xseq(kx), xname(kx), chgovr, ovrfound, ovrbad, ovrname)
+      if (ovrfound) then
+        if (ovrbad) then
+          call PrtErr(iOutFile,'A charge override names the wrong residue for that number.')
+          write(ioutfile,'("   the file says residue ",i0," is ",a3,", the pdb says it is ",a3)') &
+                xseq(kx), ovrname, xname(kx)
+          call quick_exit(iOutFile,1)
+        endif
+        mfcccharge(k) = chgovr
+        chgunknown = .false.
+      endif
+    endif
     if (chgunknown) nunk = nunk + 1
 
     do kk = xfirst(kx), xlast(kx)
@@ -780,8 +829,15 @@ subroutine mfcc(natomsaved)
     write(ioutfile,'("|          later, but an even one will pass silently. Check these:")')
     do kx = 1, nxtra
       nat_x = xlast(kx)-xfirst(kx)+1
-      if (mfcc_species_charge(xname(kx), nat_x, chgunknown) .eq. 0 .and. chgunknown) &
+      if (mfcc_species_charge(xname(kx), nat_x, chgunknown) .eq. 0 .and. chgunknown) then
+        ! Silent for anything the user gave a charge for; mfcccharge already
+        ! holds it and there is nothing left to warn about.
+        if (quick_method%mfccchg) then
+          call mfcc_chg_lookup(xseq(kx), xname(kx), chgovr, ovrfound, ovrbad, ovrname)
+          if (ovrfound) cycle
+        endif
         write(ioutfile,'("|            ",a3,"  (",i6," atoms)")') xname(kx), nat_x
+      endif
     enddo
     write(ioutfile,'(a)')
     call flush(ioutfile)
@@ -971,6 +1027,73 @@ subroutine mfcc(natomsaved)
       endif
     enddo
 
+    ! --- user-supplied overrides for peptide residues ---
+    !
+    ! A peptide residue's atoms are split between a fragment and its caps, so
+    ! the charge is placed on one atom and the span sums below carry it into
+    ! whichever sub-molecule owns that atom. This is how the automatic
+    ! detections already work (the C-terminal -1 sits on OXT), so an override
+    ! needs no separate machinery.
+    !
+    ! Any detected charge inside the residue is cleared first. The keyword is
+    ! an override, not an addition: 'GLU 46 0' has to be able to neutralise a
+    ! carboxylate the detection pass found, and without the clear it would
+    ! leave the -1 in place and silently do nothing.
+    nchgapp = 0
+    if (quick_method%mfccchg) then
+      do ichg = 1, mfcc_chg_n
+        ip = pepidx(mfcc_chg_seq(ichg))
+        if (ip .le. 0) cycle                     ! not a peptide residue
+        ifirst = 0
+        do i = 1, number
+          if (class(i) .ne. ip) cycle
+          if (ifirst .eq. 0) ifirst = i
+          atomchg(i) = 0
+        enddo
+        if (ifirst .eq. 0) cycle
+        ! The name is checked against the structure, not trusted, so a typo in
+        ! the number cannot quietly charge a different residue.
+        if (mfcc_chg_name(ichg) .ne. adjustl(residue(ifirst))) then
+          call PrtErr(iOutFile,'A charge override names the wrong residue for that number.')
+          write(ioutfile,'("   the file says residue ",i0," is ",a3,", the pdb says it is ",a3)') &
+                mfcc_chg_seq(ichg), mfcc_chg_name(ichg), adjustl(residue(ifirst))
+          call quick_exit(iOutFile,1)
+        endif
+        atomchg(ifirst) = mfcc_chg_val(ichg)
+        mfcc_chg_used(ichg) = .true.
+        nchgapp = nchgapp + 1
+
+        ! Say which sub-molecule ends up carrying it. The atom chosen above is
+        ! the residue's first, and which fragment or cap owns that atom follows
+        ! from where the chain was cut, not from anything the user controls, so
+        ! printing it is the difference between a placement they can check and
+        ! one they have to reverse-engineer.
+        ! A residue in the overlap between two fragments shows up in both of
+        ! them and in the cap that corrects for the overlap, so the charge is
+        ! listed three times here. That is not triple counting: the MFCC sum is
+        ! fragments minus caps, so +1 +1 -1 leaves the charge once. Each
+        ! sub-molecule really does contain the charged group and really is an
+        ! ion, which is why each must be told about it.
+        nhit = 0
+        do ires = 1, npmfcc
+          if (ifirst .ge. matomstart(ires) .and. ifirst .le. matomfinal(ires)) then
+            nhit = nhit + 1
+            write(ioutfile,'("   residue ",i0," (",a3,") charge ",i0," -> fragment ",i0)') &
+                  mfcc_chg_seq(ichg), adjustl(residue(ifirst)), mfcc_chg_val(ichg), ires
+          endif
+        enddo
+        do ires = 1, npmfcc-1
+          if (ifirst .ge. matomstartcap(ires) .and. ifirst .le. matomfinalcap(ires)) then
+            nhit = nhit + 1
+            write(ioutfile,'("   residue ",i0," (",a3,") charge ",i0," -> cap ",i0)') &
+                  mfcc_chg_seq(ichg), adjustl(residue(ifirst)), mfcc_chg_val(ichg), ires
+          endif
+        enddo
+        if (nhit .gt. 1) write(ioutfile,'("     (fragments overlap and the caps subtract the &
+              &overlap, so this charge is counted once overall)")')
+      enddo
+    endif
+
     ! --- sum over the span each sub-molecule really covers ---
     do ires = 1, npmfcc
       mfcccharge(ires) = 0
@@ -985,7 +1108,42 @@ subroutine mfcc(natomsaved)
       enddo
     enddo
 
-    write(ioutfile,'(" MFCC total formal charge from detected groups: ",i4)') sum(atomchg)
+    ! The peptide total alone used to be reported as "the" total, which left
+    ! out every standalone species: on trypsin it printed -3 while the model
+    ! was really -1, because the Ca(2+) sits in mfcccharge and never in
+    ! atomchg. Report both parts and the sum.
+    chgtot = sum(atomchg) + sum(mfcccharge(npmfcc+1:npmfcc+nmfccextra))
+    write(ioutfile,'(" MFCC formal charge: peptide ",i0,"  + standalone species ",i0, &
+          &"  = ",i0)') sum(atomchg), sum(mfcccharge(npmfcc+1:npmfcc+nmfccextra)), chgtot
+
+    if (quick_method%mfccchg .and. nchgapp .gt. 0) &
+      write(ioutfile,'(" MFCC applied ",i0," charge override(s) to peptide residues")') nchgapp
+
+    ! Every entry must have matched something. An override that silently
+    ! applied to nothing is the failure mode this whole file exists to avoid.
+    if (quick_method%mfccchg) then
+      do ichg = 1, mfcc_chg_n
+        if (.not.mfcc_chg_used(ichg)) then
+          call PrtErr(iOutFile,'A charge override matched no residue in the structure.')
+          write(ioutfile,'("   ",a3,1x,i0,1x,i0)') mfcc_chg_name(ichg), &
+                mfcc_chg_seq(ichg), mfcc_chg_val(ichg)
+          call quick_exit(iOutFile,1)
+        endif
+      enddo
+    endif
+
+    ! The fragments add up to chgtot, so if the molecule was given a different
+    ! charge the guess and the SCF are describing different species. Worth
+    ! saying out loud: it is the kind of mismatch that produces a converged
+    ! number that simply answers another question.
+    if (chgtot .ne. quick_molspec%molchg) then
+      call PrtWrn(iOutFile,'MFCC fragment charges do not sum to the molecular charge.')
+      write(ioutfile,'("|          fragments sum to ",i0,", but the molecule is set to ",i0,".")') &
+            chgtot, quick_molspec%molchg
+      write(ioutfile,'("|          Set CHARGE=",i0," to agree, or correct the residue charges.")') chgtot
+      write(ioutfile,'(a)')
+      call flush(ioutfile)
+    endif
     deallocate(atomchg)
   end block
 
