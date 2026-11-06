@@ -32,6 +32,13 @@ module quick_mpi_module
     !       from external code (i.e., comm may or may not be set
     !       to MPI_COMM_WORLD)
     integer :: quick_comm = MPI_COMM_NULL
+
+    ! Max element count per individual MPI collective call for the chunked
+    ! helpers below -- several MPI libraries actually linked against this
+    ! code (e.g. OpenMPI 4.1.x on our HPC cluster) implement only the
+    ! classic MPI-3.1 Fortran bindings, whose "count" argument is a plain
+    ! 4-byte C int no matter what Fortran integer kind the caller passes in.
+    integer(kind=8), parameter :: MAX_MPI_COUNT = 500000000_8
 #endif
     ! error codes from MPI API calls
     integer :: quick_mpi_error
@@ -113,6 +120,89 @@ module quick_mpi_module
 
       if(allocated(mgpu_ids)) deallocate(mgpu_ids)
     end subroutine deallocate_mgpu
+
+
+#ifdef MPIV
+    ! Chunked MPI collectives for buffers that may exceed INT32_MAX elements
+    ! (e.g. jbasis^2-scale DnC/ERI tables for large systems) -- widening a
+    ! Fortran variable to 8 bytes does NOT avoid the overflow on its own
+    ! (see MAX_MPI_COUNT above), since the count still truncates/misbehaves
+    ! once it crosses 2^31-1 at the MPI call boundary. These helpers instead
+    ! split one logical collective into multiple calls, each within a safe
+    ! 4-byte count.
+
+    ! Broadcasts a double precision buffer of total_count elements, which may
+    ! exceed INT32_MAX. buf must be the first element of a contiguous array
+    ! (Fortran sequence association) -- callers of a multi-dimensional array
+    ! pass e.g. Apri(1,1).
+    subroutine mpi_bcast_dp_chunked(buf, total_count, root, comm, ierr)
+        implicit none
+        double precision :: buf(*)
+        integer(kind=8), intent(in) :: total_count
+        integer, intent(in) :: root, comm
+        integer, intent(out) :: ierr
+        integer(kind=8) :: offset, remaining
+        integer :: this_chunk
+
+        offset = 0_8
+        remaining = total_count
+        ierr = 0
+        do while (remaining > 0_8)
+            this_chunk = int(min(remaining, MAX_MPI_COUNT), kind=4)
+            call MPI_BCAST(buf(offset+1), this_chunk, mpi_double_precision, root, comm, ierr)
+            if (ierr /= 0) return
+            offset = offset + int(this_chunk, kind=8)
+            remaining = remaining - int(this_chunk, kind=8)
+        end do
+    end subroutine mpi_bcast_dp_chunked
+
+    ! Same as mpi_bcast_dp_chunked, for default-kind INTEGER buffers.
+    subroutine mpi_bcast_int_chunked(buf, total_count, root, comm, ierr)
+        implicit none
+        integer :: buf(*)
+        integer(kind=8), intent(in) :: total_count
+        integer, intent(in) :: root, comm
+        integer, intent(out) :: ierr
+        integer(kind=8) :: offset, remaining
+        integer :: this_chunk
+
+        offset = 0_8
+        remaining = total_count
+        ierr = 0
+        do while (remaining > 0_8)
+            this_chunk = int(min(remaining, MAX_MPI_COUNT), kind=4)
+            call MPI_BCAST(buf(offset+1), this_chunk, mpi_integer, root, comm, ierr)
+            if (ierr /= 0) return
+            offset = offset + int(this_chunk, kind=8)
+            remaining = remaining - int(this_chunk, kind=8)
+        end do
+    end subroutine mpi_bcast_int_chunked
+
+    ! Elementwise SUM all-reduce of a double precision buffer of total_count
+    ! elements, chunked the same way. sendbuf and recvbuf must be distinct
+    ! actual arrays (MPI_ALLREDUCE forbids aliasing sendbuf/recvbuf).
+    subroutine mpi_allreduce_sum_dp_chunked(sendbuf, recvbuf, total_count, comm, ierr)
+        implicit none
+        double precision :: sendbuf(*), recvbuf(*)
+        integer(kind=8), intent(in) :: total_count
+        integer, intent(in) :: comm
+        integer, intent(out) :: ierr
+        integer(kind=8) :: offset, remaining
+        integer :: this_chunk
+
+        offset = 0_8
+        remaining = total_count
+        ierr = 0
+        do while (remaining > 0_8)
+            this_chunk = int(min(remaining, MAX_MPI_COUNT), kind=4)
+            call MPI_ALLREDUCE(sendbuf(offset+1), recvbuf(offset+1), this_chunk, &
+                                mpi_double_precision, MPI_SUM, comm, ierr)
+            if (ierr /= 0) return
+            offset = offset + int(this_chunk, kind=8)
+            remaining = remaining - int(this_chunk, kind=8)
+        end do
+    end subroutine mpi_allreduce_sum_dp_chunked
+#endif
 
 
 #if defined(CEW)

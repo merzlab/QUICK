@@ -83,7 +83,7 @@ subroutine get_eri_precomputables
    use quick_molspec_module, only: xyz
    use quick_mpi_module, only: master
 #if defined(MPIV)
-   use quick_mpi_module, only: bMPI, quick_mpi_error, quick_comm
+   use quick_mpi_module, only: bMPI, quick_mpi_error, quick_comm, mpi_bcast_dp_chunked
    use mpi
 #endif
 
@@ -152,10 +152,23 @@ subroutine get_eri_precomputables
 
 #ifdef MPIV
       if (bMPI) then
-         call MPI_BCAST(Ppri,3*jbasis*jbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
-         call MPI_BCAST(Kpri,jbasis*jbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
-         call MPI_BCAST(Apri,jbasis*jbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
-         call MPI_BCAST(quick_basis%Xcoeff,jbasis*jbasis*4*4,mpi_double_precision,0,quick_comm,quick_mpi_error)
+         ! jbasis^2-scale buffers can exceed INT32_MAX elements for large
+         ! systems (e.g. jbasis~60,678 for T4-Lysozyme -> jbasis^2~3.68e9).
+         ! Broadcast in <=INT32_MAX chunks (mpi_bcast_dp_chunked,
+         ! quick_mpi_module.f90) rather than one MPI_BCAST call, since the
+         ! classic MPI-3.1 Fortran "count" argument is a 4-byte C int on
+         ! several MPI libraries we link against (e.g. OpenMPI 4.1.x) no
+         ! matter what Fortran integer kind is used to compute it -- the
+         ! multiplications below are promoted to 8-byte explicitly so the
+         ! element count itself doesn't overflow before it's even chunked.
+         call mpi_bcast_dp_chunked(Ppri(1,1,1), &
+               3_8*int(jbasis,kind=8)*int(jbasis,kind=8), 0, quick_comm, quick_mpi_error)
+         call mpi_bcast_dp_chunked(Kpri(1,1), &
+               int(jbasis,kind=8)*int(jbasis,kind=8), 0, quick_comm, quick_mpi_error)
+         call mpi_bcast_dp_chunked(Apri(1,1), &
+               int(jbasis,kind=8)*int(jbasis,kind=8), 0, quick_comm, quick_mpi_error)
+         call mpi_bcast_dp_chunked(quick_basis%Xcoeff(1,1,0,0), &
+               int(jbasis,kind=8)*int(jbasis,kind=8)*16_8, 0, quick_comm, quick_mpi_error)
          call MPI_BARRIER(quick_comm,quick_mpi_error)
       endif
 #endif

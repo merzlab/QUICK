@@ -1007,7 +1007,7 @@ end subroutine mfcc_symbol_to_z
 !-------------------------------------------------------
 
 subroutine mfcc_reduce_dens(a,n1,n2,n3)
-   use quick_mpi_module, only: quick_comm, quick_mpi_error
+   use quick_mpi_module, only: quick_comm, quick_mpi_error, mpi_allreduce_sum_dp_chunked
    use mpi
    implicit none
    integer, intent(in) :: n1,n2,n3
@@ -1016,7 +1016,10 @@ subroutine mfcc_reduce_dens(a,n1,n2,n3)
 
    allocate(tmp(n1,n2,n3))
    tmp = a
-   call MPI_ALLREDUCE(tmp,a,n1*n2*n3,mpi_double_precision,MPI_SUM,quick_comm,quick_mpi_error)
+   ! Chunked (see quick_mpi_module.f90): n1*n2*n3 = nfrag*maxbas*maxbas can
+   ! exceed INT32_MAX for very large DnC/MFCC systems.
+   call mpi_allreduce_sum_dp_chunked(tmp(1,1,1), a(1,1,1), &
+         int(n1,kind=8)*int(n2,kind=8)*int(n3,kind=8), quick_comm, quick_mpi_error)
    deallocate(tmp)
 end subroutine mfcc_reduce_dens
 
