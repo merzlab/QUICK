@@ -901,6 +901,27 @@ __global__ void __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_sp
                         MAX(LOC2(devSim.cutMatrix, jj, kk, nshell, nshell), LOC2(devSim.cutMatrix, jj, ll, nshell, nshell))));
 #endif
 
+            // DnC fragment-connectivity screening -- CUDA port of eri.fh's
+            // getCshellEriDC/getOshellEriDC 6-way dcconnect OR gate. Each
+            // DNMax arm is zeroed unless its *complementary* shell pair is
+            // fragment-connected (same mapping as the CPU gate: dcconnect(II,JJ)
+            // gates the cutMatrix(KK,LL) arm, dcconnect(KK,LL) gates cutMatrix(II,JJ),
+            // dcconnect(II,KK)<->cutMatrix(JJ,LL), dcconnect(JJ,LL)<->cutMatrix(II,KK),
+            // dcconnect(II,LL)<->cutMatrix(JJ,KK), dcconnect(JJ,KK)<->cutMatrix(II,LL)),
+            // mathematically equivalent to the CPU's 6-way OR of per-arm checks.
+            // devSim.dcConnect is NULL for non-DnC jobs, so this is a no-op then
+            // (today's GPU-DnC behavior, unchanged) -- it is only non-NULL when
+            // gpu_upload_dcconnect has uploaded it for a DIVCON/DCMP2only job.
+            if (devSim.dcConnect != NULL) {
+                DNMax = MAX(
+                        MAX(4.0 * LOC2(devSim.cutMatrix, ii, jj, nshell, nshell) * LOC2(devSim.dcConnect, kk, ll, nshell, nshell),
+                            4.0 * LOC2(devSim.cutMatrix, kk, ll, nshell, nshell) * LOC2(devSim.dcConnect, ii, jj, nshell, nshell)),
+                        MAX(MAX(LOC2(devSim.cutMatrix, ii, ll, nshell, nshell) * LOC2(devSim.dcConnect, jj, kk, nshell, nshell),
+                                LOC2(devSim.cutMatrix, ii, kk, nshell, nshell) * LOC2(devSim.dcConnect, jj, ll, nshell, nshell)),
+                            MAX(LOC2(devSim.cutMatrix, jj, kk, nshell, nshell) * LOC2(devSim.dcConnect, ii, ll, nshell, nshell),
+                                LOC2(devSim.cutMatrix, jj, ll, nshell, nshell) * LOC2(devSim.dcConnect, ii, kk, nshell, nshell))));
+            }
+
 #if defined(USE_TEXTURE) && defined(USE_TEXTURE_YCUTOFF)
             tmpInt2Val = tex1Dfetch(tex_YCutoff, kk + ll * nshell);
             val_kk_ll = __hiloint2double(tmpInt2Val.y, tmpInt2Val.x);

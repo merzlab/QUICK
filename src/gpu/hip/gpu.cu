@@ -636,6 +636,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu->gpu_cutoff->cutMatrix = NULL;
     gpu->gpu_cutoff->YCutoff = NULL;
     gpu->gpu_cutoff->cutPrim = NULL;
+    gpu->gpu_sim.dcConnect = NULL; // CUDA-only for now; see gpu_type.h's dcConnect comment
     gpu->gpu_cutoff->integralCutoff = 0.0;
     gpu->gpu_cutoff->coreIntegralCutoff = 0.0;
     gpu->gpu_cutoff->primLimit = 0.0;

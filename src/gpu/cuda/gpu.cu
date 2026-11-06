@@ -636,6 +636,8 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu->gpu_cutoff->cutMatrix = NULL;
     gpu->gpu_cutoff->YCutoff = NULL;
     gpu->gpu_cutoff->cutPrim = NULL;
+    gpu->gpu_cutoff->dcConnect = NULL;
+    gpu->gpu_sim.dcConnect = NULL; // only non-NULL for DnC jobs; set by gpu_upload_dcconnect_
     gpu->gpu_cutoff->integralCutoff = 0.0;
     gpu->gpu_cutoff->coreIntegralCutoff = 0.0;
     gpu->gpu_cutoff->primLimit = 0.0;
@@ -1492,6 +1494,25 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
 //    gpu->gpu_cutoff->sorted_YCutoffIJ->DeleteCPU();
 
     PRINTDEBUG("COMPLETE UPLOADING CUTOFF");
+}
+
+
+//-----------------------------------------------
+//  upload DnC fragment-connectivity flags (jshell x jshell), mirroring
+//  gpu_upload_cutoff_matrix_. Only called for DnC jobs; devSim.dcConnect
+//  stays NULL otherwise, which the 2e-integral kernels use to tell a DnC
+//  job from a plain one. CUDA only for now -- HIP mirror deferred.
+//-----------------------------------------------
+extern "C" void gpu_upload_dcconnect_(int* dcConnect)
+{
+    PRINTDEBUG("BEGIN TO UPLOAD DCCONNECT");
+
+    gpu->gpu_cutoff->dcConnect = new gpu_buffer_type<int>(dcConnect, gpu->nshell, gpu->nshell);
+    gpu->gpu_cutoff->dcConnect->Upload( );
+
+    gpu->gpu_sim.dcConnect = gpu->gpu_cutoff->dcConnect->_devData;
+
+    PRINTDEBUG("COMPLETE UPLOADING DCCONNECT");
 }
 
 
@@ -2925,6 +2946,7 @@ extern "C" void gpu_cleanup_()
     SAFE_DELETE(gpu->gpu_cutoff->sorted_YCutoffIJ);
     SAFE_DELETE(gpu->gpu_cutoff->YCutoff);
     SAFE_DELETE(gpu->gpu_cutoff->cutPrim);
+    SAFE_DELETE(gpu->gpu_cutoff->dcConnect);
 
     SAFE_DELETE(gpu->allxyz);
     SAFE_DELETE(gpu->allchg);
@@ -2983,6 +3005,7 @@ extern "C" void gpu_cleanup_fragment_()
     SAFE_DELETE(gpu->gpu_cutoff->sorted_YCutoffIJ);
     SAFE_DELETE(gpu->gpu_cutoff->YCutoff);
     SAFE_DELETE(gpu->gpu_cutoff->cutPrim);
+    SAFE_DELETE(gpu->gpu_cutoff->dcConnect);
 
     SAFE_DELETE(gpu->allxyz);
     SAFE_DELETE(gpu->allchg);
@@ -3233,6 +3256,7 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
     delete gpu->gpu_cutoff->sorted_YCutoffIJ;
     delete gpu->gpu_cutoff->YCutoff;
     delete gpu->gpu_cutoff->cutPrim;
+    delete gpu->gpu_cutoff->dcConnect;
 #if defined(USE_LEGACY_ATOMICS)
     delete gpu->gpu_calculated->oULL;
 #endif    

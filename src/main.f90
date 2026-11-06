@@ -52,6 +52,7 @@
             jbasis, jshell, maxcontract, ncontract, nprim, nshell, Ycutoff
     use quick_molspec_module, only : xyz
     use quick_method_module, only: delete, upload
+    use quick_divcon_module, only: DCConnect
 #endif
     use quick_mpi_module, only: master
 #if defined(MPIV)
@@ -246,6 +247,7 @@
         quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal, quick_basis%Qsbasis, quick_basis%Qfbasis, &
         quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
       call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
+      if (quick_method%DIVCON .or. quick_method%DCMP2only) call gpu_upload_dcconnect(DCConnect)
       call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
     endif
 #endif

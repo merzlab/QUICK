@@ -80,6 +80,9 @@ struct gpu_cutoff_type {
     gpu_buffer_type<QUICKDouble> *YCutoff;
     gpu_buffer_type<QUICKDouble> *cutPrim;
 
+    // DnC fragment-connectivity flags (jshell x jshell), NULL for non-DnC jobs
+    gpu_buffer_type<int> *dcConnect;
+
     // Cutoff criteria
     QUICKDouble integralCutoff;
     QUICKDouble coreIntegralCutoff;
@@ -336,6 +339,7 @@ struct gpu_simulation_type {
     QUICKDouble *cutMatrix;
     QUICKDouble *YCutoff;
     QUICKDouble *cutPrim;
+    int *dcConnect; // NULL for non-DnC jobs; jshell x jshell fragment-connectivity flags
     QUICKDouble integralCutoff;
     QUICKDouble coreIntegralCutoff;
     QUICKDouble primLimit;
