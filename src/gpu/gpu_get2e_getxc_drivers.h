@@ -496,7 +496,7 @@ extern "C" void gpu_get_oei_grad_(QUICKDouble* grad, QUICKDouble* ptchg_grad)
 
 
 #if defined(CEW)
-extern "C" void gpu_get_lri_(QUICKDouble* o)
+extern "C" void gpu_get_lri_(QUICKDouble* o, bool quad)
 {
     //    gpu -> gpu_calculated -> o        =   new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
@@ -519,9 +519,8 @@ extern "C" void gpu_get_lri_(QUICKDouble* o)
 
     //compute xc quad potential
     upload_sim_to_constant_dft(gpu);
-#ifndef CUEST
-    getcew_quad(gpu);
-#endif
+    if (quad)
+        getcew_quad(gpu);
 
 #if defined(USE_LEGACY_ATOMICS)
     gpu->gpu_calculated->oULL->Download();
