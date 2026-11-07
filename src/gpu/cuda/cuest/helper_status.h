@@ -57,6 +57,12 @@ static const char *cuestGetErrorEnum(cuestStatus_t error) {
             return "CUEST_STATUS_UNKNOWN_ERROR";
         case CUEST_STATUS_UNSUPPORTED_ARGUMENT:
             return "CUEST_STATUS_UNSUPPORTED_ARGUMENT";
+        case CUEST_STATUS_UNSUPPORTED_ARCHITECTURE:
+            return "CUEST_STATUS_UNSUPPORTED_ARCHITECTURE";
+        case CUEST_STATUS_INVALID_PLAN:
+            return "CUEST_STATUS_INVALID_PLAN";
+        case CUEST_STATUS_HOME_NOT_FOUND:
+            return "CUEST_STATUS_HOME_NOT_FOUND";
     }
 
     return "<unknown>";
