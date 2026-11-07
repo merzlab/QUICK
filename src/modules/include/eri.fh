@@ -79,7 +79,8 @@ contains
  ! Recurrence Relations. J. Chem. Phys. 1988, 89, 5777–5786.
  !__________________________________________________________________
 subroutine get_eri_precomputables
-   use quick_basis_module, only: jshell, jbasis, Apri, Kpri, Ppri, quick_basis, dc_eri_onthefly
+   use quick_basis_module, only: jshell, jbasis, Apri, Kpri, Ppri, quick_basis, dc_eri_onthefly, &
+                                 gpu_eri_onthefly
    use quick_molspec_module, only: xyz
    use quick_mpi_module, only: master
 #if defined(MPIV)
@@ -97,7 +98,11 @@ subroutine get_eri_precomputables
    ! -- cshell/oshell and iclass_cshell/iclass_oshell compute the
    ! equivalent per-pair quantities on demand instead (see
    ! eri_onthefly_pair/eri_onthefly_xcoeff, quick_basis_module.f90).
-   if (dc_eri_onthefly()) return
+   ! Also skipped when gpu_eri_onthefly(): those four arrays are never
+   ! read on GPU at all (GPU-DnC dispatches to gpu_get_cshell_eri/
+   ! gpu_get_oshell_eri, with its own independent device-side copies),
+   ! so computing them would be pure waste on top of being unallocated.
+   if (dc_eri_onthefly() .or. gpu_eri_onthefly()) return
 
    if (master) then
    ! ics cycle

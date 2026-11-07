@@ -320,11 +320,23 @@ contains
       ! on demand inside cshell/oshell and iclass_cshell/iclass_oshell
       ! (eri.fh) rather than precomputed into a dense table, so skip the
       ! allocation entirely.
-      if (dc_eri_onthefly()) return
+      !
+      ! cutprim is kept separate: GPU jobs always need it (main.f90's
+      ! gpu_upload_cutoff_matrix uploads it as a dense jbasis*jbasis
+      ! buffer, read directly by the GPU kernels' DNMax screening), even
+      ! when gpu_eri_onthefly() skips Apri/Kpri/Ppri/Xcoeff below -- those
+      ! four really are unread on GPU (dnc_scf_operator/dnc_uscf_operator
+      ! dispatch to gpu_get_cshell_eri/gpu_get_oshell_eri instead of the
+      ! Fortran cshell/oshell/iclass_* loops when bGPU is true). So
+      ! cutprim's own allocation stays gated by dc_eri_onthefly() alone.
+      if (.not. dc_eri_onthefly()) then
+         if(.not. allocated(cutprim)) allocate(cutprim(jbasis,jbasis))
+      endif
+
+      if (dc_eri_onthefly() .or. gpu_eri_onthefly()) return
 
       if(.not. allocated(Apri)) allocate(Apri(jbasis,jbasis))
       if(.not. allocated(Kpri)) allocate(Kpri(jbasis,jbasis))
-      if(.not. allocated(cutprim)) allocate(cutprim(jbasis,jbasis))
       if(.not. allocated(Ppri)) allocate(Ppri(3,jbasis,jbasis))
       if(.not. allocated(self%Xcoeff)) allocate(self%Xcoeff(jbasis,jbasis,0:3,0:3))
    end subroutine

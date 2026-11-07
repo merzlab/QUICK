@@ -61,7 +61,7 @@ subroutine schwarzoff
   use quick_basis_module, only: nshell, jbasis, YCutoff, cutprim, dc_eri_onthefly
   use quick_mpi_module, only: master
 #if defined(MPIV)
-  use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error
+  use quick_mpi_module, only: bMPI, quick_comm, quick_mpi_error, mpi_bcast_dp_chunked
   use mpi
 #endif
 
@@ -91,12 +91,16 @@ subroutine schwarzoff
          call MPI_BCAST(YCutoff,nshell*nshell,mpi_double_precision,0,quick_comm,quick_mpi_error)
          ! cutprim isn't computed/allocated at all when dc_eri_onthefly()
          ! -- primitive-level screening is dropped entirely on that path
-         ! (see shellcutoff below), so skip broadcasting it. (This also
-         ! happens to be a jbasis^2-sized int32-overflow-risk MPI_BCAST for
-         ! large systems, same class as the ones fixed in
-         ! get_eri_precomputables/eri.fh -- moot once onthefly is active.)
+         ! (see shellcutoff below), so skip broadcasting it. Still
+         ! broadcast for gpu_eri_onthefly(): GPU jobs (flag or not) always
+         ! need cutprim (gpu_upload_cutoff_matrix). jbasis^2 can exceed
+         ! INT32_MAX for large systems (e.g. jbasis~60,678 for
+         ! T4-Lysozyme -> jbasis^2~3.68e9), same class of overflow fixed
+         ! in get_eri_precomputables/eri.fh -- chunk it the same way
+         ! rather than a single MPI_BCAST.
          if (.not. dc_eri_onthefly()) &
-            call MPI_BCAST(cutprim,jbasis*jbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+            call mpi_bcast_dp_chunked(cutprim(1,1), &
+                  int(jbasis,kind=8)*int(jbasis,kind=8), 0, quick_comm, quick_mpi_error)
          call MPI_BARRIER(quick_comm,quick_mpi_error)
       endif
 #endif
@@ -106,7 +110,7 @@ end subroutine schwarzoff
 
 subroutine shellcutoff(II,JJ,Ymax)
    use quick_basis_module, only: quick_basis, Yxiao, Yxiaotemp, Yxiaoprim, cutprim, Apri, Ppri, &
-                                 dc_eri_onthefly, eri_onthefly_pair
+                                 dc_eri_onthefly, gpu_eri_onthefly, eri_onthefly_pair
    use quick_molspec_module, only: xyz
    use quick_params_module, only: Sumindex
 
@@ -116,7 +120,15 @@ subroutine shellcutoff(II,JJ,Ymax)
    integer :: NNAB, NNCD, NABCDTYPE, NNA, NNC, NABCD, ITT
    integer :: JJJ, III, LLL, KKK, Nprij, Nprii, Nprik, Npril
    integer :: iitemp, I2, I1, IIxiao, JJxiao, I, J, K, L
-   logical :: onthefly
+   ! onthefly: true when Apri/Ppri aren't allocated, so AB/P must be
+   ! recomputed via eri_onthefly_pair instead of read from them --
+   ! true for either on-the-fly mode (CPU dc_eri_onthefly, or GPU
+   ! gpu_eri_onthefly, which also skips Apri/Ppri's allocation; see
+   ! allocate_basis). fill_cutprim: true when cutprim itself should be
+   ! computed and stored -- GPU jobs always need cutprim regardless of
+   ! gpu_eri_onthefly() (gpu_upload_cutoff_matrix), so this stays tied
+   ! to dc_eri_onthefly() alone, decoupled from onthefly above.
+   logical :: onthefly, fill_cutprim
    double precision :: Ymax, AB, CD, ROU, ABCD, ABCDxiao, RPQ, XXXtemp, T, Ymaxprim
 
   double precision P(3),Q(3),W(3),KAB,KCD
@@ -133,7 +145,8 @@ subroutine shellcutoff(II,JJ,Ymax)
   KK=II
   LL=JJ
 
-  onthefly = dc_eri_onthefly()
+  onthefly = dc_eri_onthefly() .or. gpu_eri_onthefly()
+  fill_cutprim = .not. dc_eri_onthefly()
 
   Ymax=0.0d0
 
@@ -243,8 +256,11 @@ subroutine shellcutoff(II,JJ,Ymax)
   ! cutprim isn't computed/allocated at all when dc_eri_onthefly() --
   ! primitive-level screening is dropped entirely on that path (see the
   ! always-pass keepprim gate in cshell/oshell/iclass_cshell/iclass_oshell,
-  ! eri.fh), so skip this block, which exists only to fill cutprim.
-  if (.not. onthefly) then
+  ! eri.fh), so skip this block, which exists only to fill cutprim. GPU
+  ! jobs still need cutprim filled even when gpu_eri_onthefly() skips
+  ! Apri/Ppri above (gated by onthefly, not fill_cutprim), since
+  ! gpu_upload_cutoff_matrix reads it as a dense buffer regardless.
+  if (fill_cutprim) then
   do IIxiao=1,quick_basis%kprim(II)
      Nprii=quick_basis%kstart(II)+IIxiao-1
      do JJxiao=1,quick_basis%kprim(JJ)
@@ -297,7 +313,7 @@ end subroutine shellcutoff
 
 
 subroutine classcutoff(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax)
-  use quick_basis_module, only: quick_basis, Yxiao, dc_eri_onthefly, eri_onthefly_xcoeff
+  use quick_basis_module, only: quick_basis, Yxiao, dc_eri_onthefly, gpu_eri_onthefly, eri_onthefly_xcoeff
   use quick_params_module, only: trans
   use quick_constants_module, only: X0
 
@@ -332,7 +348,10 @@ subroutine classcutoff(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax)
 
   common /xiaostore/store
 
-  onthefly = dc_eri_onthefly()
+  ! Xcoeff is allocated under the same gate as Apri/Kpri/Ppri (see
+  ! allocate_basis) -- skip reading it, same as those, for either
+  ! on-the-fly mode.
+  onthefly = dc_eri_onthefly() .or. gpu_eri_onthefly()
 
   ITT=0
   do JJJ=1,quick_basis%kprim(JJ)
@@ -493,7 +512,7 @@ End subroutine classcutoff
 
 
 subroutine classprim(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax1,IIIxiao,JJJxiao)
-  use quick_basis_module, only: quick_basis, Yxiaoprim
+  use quick_basis_module, only: quick_basis, Yxiaoprim, gpu_eri_onthefly, eri_onthefly_xcoeff
   use quick_params_module, only: trans
   use quick_constants_module, only: X0
 
@@ -529,12 +548,21 @@ subroutine classprim(I,J,K,L,II,JJ,KK,LL,NNA,NNC,NNAB,NNCD,Ymax1,IIIxiao,JJJxiao
   common /xiaostore/store
 
 
+  ! classprim is only called from shellcutoff's fill_cutprim block, i.e.
+  ! when .not. dc_eri_onthefly() -- but that block also runs for GPU
+  ! jobs under gpu_eri_onthefly() (cutprim must still be filled there),
+  ! where quick_basis%Xcoeff isn't allocated (see allocate_basis), so
+  ! fall back to the on-the-fly per-pair equivalent in that case.
   ITT=0
   do JJJ=1,quick_basis%kprim(JJ)
      Nprij=quick_basis%kstart(JJ)+JJJ-1
      do III=1,quick_basis%kprim(II)
         Nprii=quick_basis%kstart(II)+III-1
-        X2=X0*quick_basis%Xcoeff(Nprii,Nprij,I,J)
+        if (gpu_eri_onthefly()) then
+           X2=X0*eri_onthefly_xcoeff(II,III,JJ,JJJ,I,J)
+        else
+           X2=X0*quick_basis%Xcoeff(Nprii,Nprij,I,J)
+        endif
         X4444(III,JJJ)=X2
      enddo
   enddo

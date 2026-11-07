@@ -730,7 +730,8 @@ subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibas
    use quick_calculated_module, only: quick_qm_struct, alloc, init, dealloc
    use quick_basis_module, only: quick_basis, nbasis, cutprim, Ycutoff, normalize_basis, &
                                   nshell, nprim, jshell, jbasis, maxcontract, ncontract, &
-                                  itype, aexp, dcoeff, alloc, dealloc, dc_eri_onthefly
+                                  itype, aexp, dcoeff, alloc, dealloc, dc_eri_onthefly, &
+                                  gpu_eri_onthefly
    implicit none
 
    integer, intent(in) :: nat, iatstart, iatfinal, icharge
@@ -795,11 +796,13 @@ subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibas
    call alloc(quick_qm_struct)
    ! cutprim/Xcoeff aren't allocated at all when dc_eri_onthefly() -- see
    ! allocate_basis (quick_basis_module.f90) -- so skip zero-initializing
-   ! them here, same as getMol.f90.
-   if (.not. dc_eri_onthefly()) then
-      cutprim = 0.0d0
-      quick_basis%Xcoeff = 0.0d0
-   endif
+   ! them here, same as getMol.f90. Xcoeff is also unallocated for
+   ! gpu_eri_onthefly() (this fragment loop calls getEriPrecomputables/
+   ! schwarzoff below regardless of whether GPU on-the-fly upload is
+   ! wired in for MFCC), but cutprim stays allocated for GPU regardless,
+   ! so the two need separate gates -- same split as getMol.f90.
+   if (.not. dc_eri_onthefly()) cutprim = 0.0d0
+   if (.not. (dc_eri_onthefly() .or. gpu_eri_onthefly())) quick_basis%Xcoeff = 0.0d0
    call init(quick_qm_struct)
    call normalize_basis()
 
