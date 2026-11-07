@@ -32,7 +32,8 @@ extern "C" {
 
 #ifdef CUESTAPI
 
-#define allocateWorkspace(wd) allocateWorkspace_ (wd, __FILE__, __LINE__)
+#define allocateWorkspace(wd) allocateWorkspace_ (wd, __FILE__, __LINE__, true)
+#define allocateWorkspacePooled(wd) allocateWorkspace_ (wd, __FILE__, __LINE__, false)
 
 /**
  * Allocates and initializes a cuestWorkspace_t structure based on a cuestWorkspaceDescriptor_t.
@@ -48,7 +49,7 @@ extern "C" {
  *         for freeing all resources using freeWorkspace().
  *
  */
-static cuestWorkspace_t* allocateWorkspace_(const cuestWorkspaceDescriptor_t* workspaceDescriptor, const char *caller_file, int caller_line)
+static cuestWorkspace_t* allocateWorkspace_(const cuestWorkspaceDescriptor_t* workspaceDescriptor, const char *caller_file, int caller_line, bool allocdev)
 {
     /* Check that a valid workspace descriptor has been provided. */
     if (workspaceDescriptor == NULL) {
@@ -83,7 +84,7 @@ static cuestWorkspace_t* allocateWorkspace_(const cuestWorkspaceDescriptor_t* wo
     }
 
     /* Allocate the device buffer if the size is non-zero. */
-    if (workspace->deviceBufferSizeInBytes) {
+    if (allocdev && workspace->deviceBufferSizeInBytes) {
         void* devicePtr = NULL;
         cudaError_t err = cudaMalloc(&devicePtr, workspace->deviceBufferSizeInBytes);
         if (err != cudaSuccess) {
@@ -104,6 +105,9 @@ static cuestWorkspace_t* allocateWorkspace_(const cuestWorkspaceDescriptor_t* wo
     return workspace;
 }
 
+#define freeWorkspace(w) freeWorkspace_(w, true)
+#define freeWorkspacePooled(w) freeWorkspace_(w, false)
+
 /**
  * Frees all memory associated with a cuestWorkspace_t.
  *
@@ -114,7 +118,7 @@ static cuestWorkspace_t* allocateWorkspace_(const cuestWorkspaceDescriptor_t* wo
  * @param[in] workspace  Pointer to the cuestWorkspace_t structure to be freed. If NULL, the function does nothing.
  *
  */
-static void freeWorkspace(cuestWorkspace_t* workspace)
+static void freeWorkspace_(cuestWorkspace_t* workspace, bool freedev)
 {
     if (!workspace) return;
 
@@ -125,7 +129,7 @@ static void freeWorkspace(cuestWorkspace_t* workspace)
     }
 
     /* Frss the device buffer if it is not NULL. */
-    if (workspace->deviceBuffer) {
+    if (freedev && workspace->deviceBuffer) {
         cudaError_t err = cudaFree((void*) workspace->deviceBuffer);
         if (err != cudaSuccess) {
             fprintf(stderr, "cudaFree failed: %s\n", cudaGetErrorString(err));

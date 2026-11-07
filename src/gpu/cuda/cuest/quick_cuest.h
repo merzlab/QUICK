@@ -127,6 +127,11 @@ typedef struct {
 } quick_cuest_PC_buf_t;
 
 typedef struct {
+    size_t xc_siz;
+    void  *xc;
+} quick_cuest_gpu_mempool_t;
+
+typedef struct {
     uint64_t natom;
     uint64_t nshell;
     uint64_t nbasis;
@@ -147,7 +152,8 @@ typedef struct {
     double nl_C;
     double nl_b;
 
-    bool dft; // if use DFT or not
+    bool dft;  // if use DFT or not
+    bool grid; // if use xc grid or not
 } quick_cuest_data_t;
 
 typedef struct {
@@ -176,17 +182,18 @@ extern quick_cuest_grad_mem_t    quick_cuest_grad_mem;
 extern quick_cuest_data_t        quick_cuest_data;
 extern quick_cuest_memchk_t      quick_cuest_memchk;
 extern quick_cuest_memtrace_t    quick_cuest_memtrace;
+extern quick_cuest_gpu_mempool_t quick_cuest_gpu_mempool;
 extern FILE                     *quick_cuest_log_fp;
 
 void cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocca, int64_t noccb,
                  int64_t nauxshell, int64_t maxcontract, int64_t maxcontract_aux, int8_t *iattype,
                  double *xyz, double *chg, int64_t nextatom, double *extxyz, double *extchg);
-// void cuest_init (int64_t natom, int64_t nshell, int64_t nbasis, int64_t nocc, int64_t nauxshell,
-//                  int64_t maxcontract, int64_t maxcontract_aux, int8_t *iattype, double *xyz,
-//                  double *chg, int64_t nextatom, double *extxyz, double *extchg);
 
 /** Deinitializes the basis set, pair list, and DF integral plan */
 void cuest_deinit ();
+
+void cuest_alloc_mempool ();
+void cuest_free_mempool ();
 
 void cuest_init_basis (int64_t *ncenter, int64_t *katom_, int64_t *ktype_, int64_t *kprim_,
                        double *aexp, double *dcoeff, bool aux);

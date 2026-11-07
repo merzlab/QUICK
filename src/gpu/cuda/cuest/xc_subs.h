@@ -40,6 +40,9 @@ cuest_init_cshell_xc (int32_t fnl, int64_t devsiz)
     // cuestAtomGrid_t *agrids = malloc (natom * sizeof (cuestAtomGrid_t));
     // form_agrid (n_rad_pts, n_ang_pts, agrids);
 
+    // we called this function, so we are using the grid
+    quick_cuest_data.grid = true;
+
     // ===================== //
     // set up molecular grid //
     // ===================== //
@@ -215,7 +218,9 @@ cuest_init_cshell_xc (int32_t fnl, int64_t devsiz)
     MEMLOG_TMPWD ("V_xc Compute");
 #endif
 
-    quick_cuest_compute_mem.Vxc_wksp      = allocateWorkspace (tmpWD);
+    quick_cuest_compute_mem.Vxc_wksp = allocateWorkspacePooled (tmpWD);
+    quick_cuest_gpu_mempool.xc_siz
+        = MAX (quick_cuest_gpu_mempool.xc_siz, tmpWD->deviceBufferSizeInBytes);
     quick_cuest_compute_mem.weights_saved = false;
 
     if (nl) {
@@ -261,7 +266,9 @@ cuest_init_cshell_xc (int32_t fnl, int64_t devsiz)
         MEMLOG_TMPWD ("Nonlocal V_xc Compute");
 #endif
 
-        quick_cuest_compute_mem.Vxc_nl_wksp = allocateWorkspace (tmpWD);
+        quick_cuest_compute_mem.Vxc_nl_wksp = allocateWorkspacePooled (tmpWD);
+        quick_cuest_gpu_mempool.xc_siz
+            = MAX (quick_cuest_gpu_mempool.xc_siz, tmpWD->deviceBufferSizeInBytes);
 
         quick_cuest_compute_mem.Vxc_nl = malloc (nbasis * nbasis * sizeof (double));
         add_host_alloc (nbasis * nbasis * sizeof (double));
@@ -278,6 +285,8 @@ cuest_deinit_cshell_xc ()
     if (!quick_cuest_data.dft)
         return;
 
+    DEBUGLOG ("V_xc Compute: Freeing memory")
+
     const uint64_t nbasis = quick_cuest_data.nbasis;
 
     cudaFreeChecked (quick_cuest_compute_mem.d_Vxc);
@@ -293,7 +302,7 @@ cuest_deinit_cshell_xc ()
     if (quick_cuest_compute_mem.weights_saved)
         free (quick_cuest_compute_mem.weights_save);
     free_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
-    freeWorkspace (quick_cuest_compute_mem.Vxc_wksp);
+    freeWorkspacePooled (quick_cuest_compute_mem.Vxc_wksp);
 #ifdef OSHELL
     checkCuestErrors (cuestParametersDestroy (CUEST_XCPOTENTIALUKSCOMPUTE_PARAMETERS,
                                               quick_cuest_compute_mem.Vxc_par));
@@ -306,7 +315,7 @@ cuest_deinit_cshell_xc ()
     if (quick_cuest_data.nl_C != 0 && quick_cuest_data.nl_b != 0) {
         free (quick_cuest_compute_mem.Vxc_nl);
         free_host_alloc (nbasis * nbasis * sizeof (double));
-        freeWorkspace (quick_cuest_compute_mem.Vxc_nl_wksp);
+        freeWorkspacePooled (quick_cuest_compute_mem.Vxc_nl_wksp);
 #ifdef OSHELL
         checkCuestErrors (cuestParametersDestroy (CUEST_NONLOCALXCPOTENTIALUKSCOMPUTE_PARAMETERS,
                                                   quick_cuest_compute_mem.Vxc_nl_par));
@@ -430,7 +439,7 @@ cuest_init_cshell_xc_grad (int64_t devsiz)
         tmpWD, quick_cuest_data.nocc, NULL, quick_cuest_grad_mem.d_grad));
 #endif
 
-    MEMLOG_TMPWD ("xc Gradient Compute");
+    MEMLOG_TMPWD ("XC Gradient Compute");
     quick_cuest_grad_mem.xc_wksp = allocateWorkspace (tmpWD);
 
     if (quick_cuest_data.nl_C != 0 || quick_cuest_data.nl_b != 0) {
@@ -470,6 +479,8 @@ cuest_deinit_oshell_xc_grad ()
 cuest_deinit_cshell_xc_grad ()
 #endif
 {
+    DEBUGLOG ("XC Gradient Compute: Freeing memory")
+
     const uint64_t natom = quick_cuest_data.natom;
 
     free (quick_cuest_grad_mem.xc_vbs);

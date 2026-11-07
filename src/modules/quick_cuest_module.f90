@@ -575,6 +575,16 @@ module quick_cuest_module
       end subroutine cuest_get_grid_point_der
    end interface
 
+   interface
+      subroutine cuest_alloc_mempool() bind(c, name="cuest_alloc_mempool")
+      end subroutine cuest_alloc_mempool
+   end interface
+
+   interface
+      subroutine cuest_free_mempool() bind(c, name="cuest_free_mempool")
+      end subroutine cuest_free_mempool
+   end interface
+
 contains
 
    subroutine cuest_debuglog(str)

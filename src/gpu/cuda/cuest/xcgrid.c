@@ -145,19 +145,23 @@ cuest_init_xc_dense (int8_t approxspec, int64_t devsiz)
         handle, quick_cuest_struct.XCIntPlan, approx, quick_cuest_compute_mem.rho_par, vbs, tmpWD,
         quick_cuest_data.nocc, NULL, quick_cuest_compute_mem.d_rho));
 
-    MEMLOG_TMPWD ("XC Density Compute");
-    quick_cuest_compute_mem.rho_wksp = allocateWorkspace (tmpWD);
+    MEMLOG_TMPWD ("XC Density Compute (pooled)");
+    quick_cuest_compute_mem.rho_wksp = allocateWorkspacePooled (tmpWD);
+    quick_cuest_gpu_mempool.xc_siz
+        = MAX (quick_cuest_gpu_mempool.xc_siz, tmpWD->deviceBufferSizeInBytes);
 }
 
 void
 cuest_deinit_xc_dense ()
 {
+    DEBUGLOG ("XC Density Compute (pooled): Freeing memory");
+
     cudaFreeChecked (quick_cuest_compute_mem.d_rho);
     free_dev_alloc (quick_cuest_compute_mem.rho_ndim * quick_cuest_data.npoint * sizeof (double));
 
     free (quick_cuest_compute_mem.rho_vbs);
     free_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
-    freeWorkspace (quick_cuest_compute_mem.rho_wksp);
+    freeWorkspacePooled (quick_cuest_compute_mem.rho_wksp);
     checkCuestErrors (cuestParametersDestroy (CUEST_XCDENSITYCOMPUTE_PARAMETERS,
                                               quick_cuest_compute_mem.rho_par));
 }
@@ -281,19 +285,22 @@ cuest_get_xc_potential (double *Vgrid, int64_t devsiz, int8_t approxspec, double
     checkCuestErrors (cuestXCPotentialComputeWorkspaceQuery (
         handle, quick_cuest_struct.XCIntPlan, approx, par, vbs, tmpWD, d_Vgrid, d_V));
 
-    MEMLOG ("XC Grid Potential");
-    cuestWorkspace_t *wksp = allocateWorkspace (tmpWD);
+    MEMLOG ("XC Grid Potential (pooled)");
+    cuestWorkspace_t *wksp = allocateWorkspacePooled (tmpWD);
+    wksp->deviceBuffer     = (uintptr_t)quick_cuest_gpu_mempool.xc;
 
     checkCuestErrors (cuestXCPotentialCompute (handle, quick_cuest_struct.XCIntPlan, approx, par,
                                                vbs, wksp, d_Vgrid, d_V));
 
     cudaMemcpyChecked (V, d_V, V_siz, cudaMemcpyDeviceToHost);
 
+    MEMLOG ("XC Grid Potential (pooled)");
+
     cudaFreeChecked (d_V);
     cudaFreeChecked (d_Vgrid);
     free_dev_alloc (V_siz);
     free_dev_alloc (Vgrid_siz);
-    freeWorkspace (wksp);
+    freeWorkspacePooled (wksp);
     cuestParametersDestroy (CUEST_XCPOTENTIALCOMPUTE_PARAMETERS, &par);
 }
 
@@ -339,15 +346,19 @@ cuest_init_grid_der (int8_t approxspec, int64_t devsiz)
         handle, quick_cuest_struct.XCIntPlan, approx, quick_cuest_compute_mem.der_par, vbs, tmpWD,
         quick_cuest_data.nocc, NULL, NULL, d_basisgrad, d_gridgrad));
 
-    MEMLOG_TMPWD ("XC Derivative Compute");
-    quick_cuest_compute_mem.der_wksp = allocateWorkspace (tmpWD);
+    MEMLOG_TMPWD ("XC Derivative Compute (pooled)");
+    quick_cuest_compute_mem.der_wksp = allocateWorkspacePooled (tmpWD);
+    quick_cuest_gpu_mempool.xc_siz
+        = MAX (quick_cuest_gpu_mempool.xc_siz, tmpWD->deviceBufferSizeInBytes);
 
     checkCuestErrors (cuestXCGridDerivativeComputeWorkspaceQuery (
         handle, quick_cuest_struct.XCIntPlan, quick_cuest_compute_mem.gridder_par, tmpWD, NULL,
         NULL, d_basisgrad));
 
-    MEMLOG_TMPWD ("XC Grid Derivative Compute");
-    quick_cuest_compute_mem.gridder_wksp = allocateWorkspace (tmpWD);
+    MEMLOG_TMPWD ("XC Grid Derivative Compute (pooled)");
+    quick_cuest_compute_mem.gridder_wksp = allocateWorkspacePooled (tmpWD);
+    quick_cuest_gpu_mempool.xc_siz
+        = MAX (quick_cuest_gpu_mempool.xc_siz, tmpWD->deviceBufferSizeInBytes);
 }
 
 void
@@ -407,6 +418,9 @@ cuest_get_grid_point_der (double *enedens, double *gridgrad, double *outgrad)
 void
 cuest_deinit_grid_der ()
 {
+    DEBUGLOG ("XC Derivative Compute (pooled): Freeing memory");
+    DEBUGLOG ("XC Grid Derivative Compute (pooled): Freeing memory");
+
     cudaFreeChecked (quick_cuest_compute_mem.d_der_v);
     cudaFreeChecked (quick_cuest_compute_mem.d_basisgrad);
     cudaFreeChecked (quick_cuest_compute_mem.d_gridgrad);
@@ -416,8 +430,8 @@ cuest_deinit_grid_der ()
 
     free (quick_cuest_compute_mem.der_vbs);
     free_host_alloc (sizeof (cuestWorkspaceDescriptor_t));
-    freeWorkspace (quick_cuest_compute_mem.der_wksp);
-    freeWorkspace (quick_cuest_compute_mem.gridder_wksp);
+    freeWorkspacePooled (quick_cuest_compute_mem.der_wksp);
+    freeWorkspacePooled (quick_cuest_compute_mem.gridder_wksp);
     checkCuestErrors (cuestParametersDestroy (CUEST_XCDERIVATIVECOMPUTE_PARAMETERS,
                                               quick_cuest_compute_mem.der_par));
     checkCuestErrors (cuestParametersDestroy (CUEST_XCGRIDDERIVATIVECOMPUTE_PARAMETERS,

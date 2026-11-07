@@ -179,6 +179,8 @@ subroutine finalize_cuest
    use quick_cew_module, only: quick_cew
 #endif
 
+   call cuest_free_mempool
+
    call cuest_deinit_oei_plan
    call cuest_deinit_df
 #ifdef CEW

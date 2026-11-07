@@ -9,6 +9,7 @@ quick_cuest_PC_buf_t      quick_cuest_PC_buf;
 quick_cuest_data_t        quick_cuest_data;
 quick_cuest_memchk_t      quick_cuest_memchk;
 quick_cuest_memtrace_t    quick_cuest_memtrace;
+quick_cuest_gpu_mempool_t quick_cuest_gpu_mempool;
 FILE                     *quick_cuest_log_fp;
 
 void

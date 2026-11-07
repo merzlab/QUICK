@@ -203,3 +203,29 @@ cuest_deinit ()
     quick_cuest_memchk      = (quick_cuest_memchk_t){ 0 };
     quick_cuest_memtrace    = (quick_cuest_memtrace_t){ 0 };
 }
+
+void
+cuest_alloc_mempool ()
+{
+    if (quick_cuest_data.grid) {
+        cudaMallocChecked (&quick_cuest_gpu_mempool.xc, quick_cuest_gpu_mempool.xc_siz);
+
+        if (quick_cuest_data.dft) {
+            quick_cuest_compute_mem.Vxc_wksp->deviceBuffer = (uintptr_t)quick_cuest_gpu_mempool.xc;
+            if (!(quick_cuest_data.nl_b == 0 && quick_cuest_data.nl_C == 0))
+                quick_cuest_compute_mem.Vxc_nl_wksp->deviceBuffer
+                    = (uintptr_t)quick_cuest_gpu_mempool.xc;
+        }
+
+        quick_cuest_compute_mem.rho_wksp->deviceBuffer     = (uintptr_t)quick_cuest_gpu_mempool.xc;
+        quick_cuest_compute_mem.der_wksp->deviceBuffer     = (uintptr_t)quick_cuest_gpu_mempool.xc;
+        quick_cuest_compute_mem.gridder_wksp->deviceBuffer = (uintptr_t)quick_cuest_gpu_mempool.xc;
+    }
+}
+
+void
+cuest_free_mempool ()
+{
+    cudaFreeChecked (quick_cuest_gpu_mempool.xc);
+    free_dev_alloc (quick_cuest_gpu_mempool.xc_siz);
+}

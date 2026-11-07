@@ -5,6 +5,9 @@
 
 #include "quick_cuest.h"
 
+#define MIN(x, y) ((x) <= (y) ? (x) : (y))
+#define MAX(x, y) ((x) >= (y) ? (x) : (y))
+
 #define SWAP(x, y, type)                                                                           \
     do {                                                                                           \
         type swap_temporary_variable_88888888_ = (x);                                              \
