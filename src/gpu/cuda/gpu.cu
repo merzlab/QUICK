@@ -638,6 +638,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu->gpu_cutoff->cutPrim = NULL;
     gpu->gpu_cutoff->dcConnect = NULL;
     gpu->gpu_sim.dcConnect = NULL; // only non-NULL for DnC jobs; set by gpu_upload_dcconnect_
+    gpu->onTheFly = false; // only true for DnC jobs; set by gpu_upload_onthefly_
     gpu->gpu_cutoff->integralCutoff = 0.0;
     gpu->gpu_cutoff->coreIntegralCutoff = 0.0;
     gpu->gpu_cutoff->primLimit = 0.0;
@@ -1517,6 +1518,22 @@ extern "C" void gpu_upload_dcconnect_(int* dcConnect)
 
 
 //-----------------------------------------------
+//  set the GPU on-the-fly AB/P recompute flag (quick_method%gpuOnTheFly).
+//  Must be called before gpu_upload_basis_, which reads gpu->onTheFly to
+//  decide whether to allocate/build/upload the dense expoSum/
+//  weightedCenterX/Y/Z tables. Only called from the DnC path; every other
+//  caller of gpu_upload_basis never calls this, so gpu->onTheFly stays at
+//  its gpu_setup_ default of false and behavior is unchanged for them.
+//-----------------------------------------------
+extern "C" void gpu_upload_onthefly_(bool* onTheFly)
+{
+    PRINTDEBUG("BEGIN TO UPLOAD ONTHEFLY FLAG");
+    gpu->onTheFly = (*onTheFly != 0);
+    PRINTDEBUG("COMPLETE UPLOADING ONTHEFLY FLAG");
+}
+
+
+//-----------------------------------------------
 //  upload information for OEI calculation
 //-----------------------------------------------
 extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble* extchg, int *ierr)
@@ -1818,6 +1835,15 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
         int* Qnumber, int* Qstart, int* Qfinal,int* Qsbasis, int* Qfbasis,
         QUICKDouble* gccoeff, QUICKDouble* cons, QUICKDouble* gcexpo, int* KLMN)
 {
+    // Set only by gpu_upload_onthefly_() (DnC-only, opt-in), which must be
+    // called immediately before this function if the caller wants it.
+    // Consumed once and reset here so every other caller of
+    // gpu_upload_basis -- including ones that never call
+    // gpu_upload_onthefly_ at all, and ones that call gpu_upload_basis
+    // again later without re-pairing it (e.g. per-fragment MFCC uploads)
+    // -- is safe by construction and keeps today's dense-table behavior.
+    bool onTheFly = gpu->onTheFly;
+    gpu->onTheFly = false;
 #if defined(DEBUG)
     GPU_TIMER_CREATE();
     GPU_TIMER_START();
@@ -1902,10 +1928,19 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
     gpu->gpu_sim.prim_total = gpu->gpu_basis->prim_total;
 
     gpu->gpu_basis->Xcoeff                      =   new gpu_buffer_type<QUICKDouble>(2*gpu->jbasis, 2*gpu->jbasis);
-    gpu->gpu_basis->expoSum                     =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
-    gpu->gpu_basis->weightedCenterX             =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
-    gpu->gpu_basis->weightedCenterY             =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
-    gpu->gpu_basis->weightedCenterZ             =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
+    // expoSum/weightedCenterX/Y/Z are prim_total^2 each -- the dominant
+    // GPU-DnC memory cost (tens of GB at T4-Lysozyme scale). When onTheFly
+    // is set, skip allocating/building/uploading them entirely and leave
+    // them NULL; gpu_get2e_subs.h/gpu_oei.h recompute AB/P on the fly per
+    // primitive pair instead (devSim.expoSum == NULL is the kernel-side
+    // flag), mirroring eri_onthefly_pair's CPU math. Xcoeff stays a dense
+    // table unconditionally (jbasis^2 scale, same as cutPrim/YCutoff).
+    if (!onTheFly) {
+        gpu->gpu_basis->expoSum                 =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
+        gpu->gpu_basis->weightedCenterX         =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
+        gpu->gpu_basis->weightedCenterY         =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
+        gpu->gpu_basis->weightedCenterZ         =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
+    }
 
     /*
        After uploading basis set information, we want to do some more things on CPU so that will accelarate GPU.
@@ -2028,18 +2063,20 @@ move p orbital to the end of the sequence. so the Qshell stands for the length o
                     int ii_start = gpu->gpu_basis->prim_start->_hostData[i];
                     int jj_start = gpu->gpu_basis->prim_start->_hostData[j];
 
-                    //expoSum(i,j) = expo(i)+expo(j)
-                    LOC2(gpu->gpu_basis->expoSum->_hostData, ii_start+ii, jj_start+jj, prim_total, prim_total) = II + JJ;
+                    if (!onTheFly) {
+                        //expoSum(i,j) = expo(i)+expo(j)
+                        LOC2(gpu->gpu_basis->expoSum->_hostData, ii_start+ii, jj_start+jj, prim_total, prim_total) = II + JJ;
 
 
-                    //        ------------->                 ->          ->
-                    //        weightedCenter(i,j) = (expo(i)*i + expo(j)*j)/(expo(i)+expo(j))
-                    LOC2(gpu->gpu_basis->weightedCenterX->_hostData, ii_start+ii, jj_start+jj, prim_total, prim_total) = \
-                                                                                                                         (LOC2(gpu->xyz->_hostData, 0, kAtomI-1, 3, gpu->natom) * II + LOC2(gpu->xyz->_hostData, 0, kAtomJ-1, 3, gpu->natom)*JJ)/(II+JJ);
-                    LOC2(gpu->gpu_basis->weightedCenterY->_hostData, ii_start+ii, jj_start+jj, prim_total, prim_total) = \
-                                                                                                                         (LOC2(gpu->xyz->_hostData, 1, kAtomI-1, 3, gpu->natom) * II + LOC2(gpu->xyz->_hostData, 1, kAtomJ-1, 3, gpu->natom)*JJ)/(II+JJ);
-                    LOC2(gpu->gpu_basis->weightedCenterZ->_hostData, ii_start+ii, jj_start+jj, prim_total, prim_total) = \
-                                                                                                                         (LOC2(gpu->xyz->_hostData, 2, kAtomI-1, 3, gpu->natom) * II + LOC2(gpu->xyz->_hostData, 2, kAtomJ-1, 3, gpu->natom)*JJ)/(II+JJ);
+                        //        ------------->                 ->          ->
+                        //        weightedCenter(i,j) = (expo(i)*i + expo(j)*j)/(expo(i)+expo(j))
+                        LOC2(gpu->gpu_basis->weightedCenterX->_hostData, ii_start+ii, jj_start+jj, prim_total, prim_total) = \
+                                                                                                                             (LOC2(gpu->xyz->_hostData, 0, kAtomI-1, 3, gpu->natom) * II + LOC2(gpu->xyz->_hostData, 0, kAtomJ-1, 3, gpu->natom)*JJ)/(II+JJ);
+                        LOC2(gpu->gpu_basis->weightedCenterY->_hostData, ii_start+ii, jj_start+jj, prim_total, prim_total) = \
+                                                                                                                             (LOC2(gpu->xyz->_hostData, 1, kAtomI-1, 3, gpu->natom) * II + LOC2(gpu->xyz->_hostData, 1, kAtomJ-1, 3, gpu->natom)*JJ)/(II+JJ);
+                        LOC2(gpu->gpu_basis->weightedCenterZ->_hostData, ii_start+ii, jj_start+jj, prim_total, prim_total) = \
+                                                                                                                             (LOC2(gpu->xyz->_hostData, 2, kAtomI-1, 3, gpu->natom) * II + LOC2(gpu->xyz->_hostData, 2, kAtomJ-1, 3, gpu->natom)*JJ)/(II+JJ);
+                    }
 
 
                     // Xcoeff = exp(-II*JJ/(II+JJ) * DIJ) / (II+JJ) * coeff(i) * coeff(j) * X0
@@ -2080,17 +2117,22 @@ move p orbital to the end of the sequence. so the Qshell stands for the length o
     gpu->gpu_basis->KLMN->Upload();
     gpu->gpu_basis->prim_start->Upload();
     gpu->gpu_basis->Xcoeff->Upload();
-    gpu->gpu_basis->expoSum->Upload();
-    gpu->gpu_basis->weightedCenterX->Upload();
-    gpu->gpu_basis->weightedCenterY->Upload();
-    gpu->gpu_basis->weightedCenterZ->Upload();
+    if (!onTheFly) {
+        gpu->gpu_basis->expoSum->Upload();
+        gpu->gpu_basis->weightedCenterX->Upload();
+        gpu->gpu_basis->weightedCenterY->Upload();
+        gpu->gpu_basis->weightedCenterZ->Upload();
+    }
     gpu->gpu_basis->sorted_Q->Upload();
     gpu->gpu_basis->sorted_Qnumber->Upload();
 
-    gpu->gpu_sim.expoSum                      =   gpu->gpu_basis->expoSum->_devData;
-    gpu->gpu_sim.weightedCenterX              =   gpu->gpu_basis->weightedCenterX->_devData;
-    gpu->gpu_sim.weightedCenterY              =   gpu->gpu_basis->weightedCenterY->_devData;
-    gpu->gpu_sim.weightedCenterZ              =   gpu->gpu_basis->weightedCenterZ->_devData;
+    // NULL for onTheFly jobs -- devSim.expoSum == NULL is the kernel-side
+    // flag that gpu_get2e_subs.h/gpu_oei.h check to switch to on-the-fly
+    // recompute instead of reading these arrays.
+    gpu->gpu_sim.expoSum                      =   onTheFly ? NULL : gpu->gpu_basis->expoSum->_devData;
+    gpu->gpu_sim.weightedCenterX              =   onTheFly ? NULL : gpu->gpu_basis->weightedCenterX->_devData;
+    gpu->gpu_sim.weightedCenterY              =   onTheFly ? NULL : gpu->gpu_basis->weightedCenterY->_devData;
+    gpu->gpu_sim.weightedCenterZ              =   onTheFly ? NULL : gpu->gpu_basis->weightedCenterZ->_devData;
     gpu->gpu_sim.sorted_Q                     =   gpu->gpu_basis->sorted_Q->_devData;
     gpu->gpu_sim.sorted_Qnumber               =   gpu->gpu_basis->sorted_Qnumber->_devData;
     gpu->gpu_sim.Xcoeff                       =   gpu->gpu_basis->Xcoeff->_devData;
@@ -2122,10 +2164,12 @@ move p orbital to the end of the sequence. so the Qshell stands for the length o
     gpu->gpu_sim.gcexpo                       =   gpu->gpu_basis->gcexpo->_devData;
     gpu->gpu_sim.KLMN                         =   gpu->gpu_basis->KLMN->_devData;
 
-    gpu->gpu_basis->expoSum->DeleteCPU();
-    gpu->gpu_basis->weightedCenterX->DeleteCPU();
-    gpu->gpu_basis->weightedCenterY->DeleteCPU();
-    gpu->gpu_basis->weightedCenterZ->DeleteCPU();
+    if (!onTheFly) {
+        gpu->gpu_basis->expoSum->DeleteCPU();
+        gpu->gpu_basis->weightedCenterX->DeleteCPU();
+        gpu->gpu_basis->weightedCenterY->DeleteCPU();
+        gpu->gpu_basis->weightedCenterZ->DeleteCPU();
+    }
     gpu->gpu_basis->Xcoeff->DeleteCPU();
 
     gpu->gpu_basis->ncontract->DeleteCPU();

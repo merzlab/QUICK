@@ -29,6 +29,7 @@ extern "C" void gpu_upload_cutoff_(QUICKDouble *, QUICKDouble *, QUICKDouble *,
         QUICKDouble *, QUICKDouble *);
 extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble *, QUICKDouble *);
 extern "C" void gpu_upload_dcconnect_(int *);
+extern "C" void gpu_upload_onthefly_(bool *);
 extern "C" void gpu_upload_energy_(QUICKDouble *);
 extern "C" void gpu_upload_calculated_(QUICKDouble *, QUICKDouble *, QUICKDouble *, QUICKDouble *);
 extern "C" void gpu_upload_beta_density_matrix_(QUICKDouble *);

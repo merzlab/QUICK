@@ -487,6 +487,10 @@ struct gpu_type {
     int jshell;
     int jbasis;
     int maxL;
+    // DnC-only (opt-in), set by gpu_upload_onthefly_(); default false so
+    // every other caller of gpu_upload_basis_ keeps the dense expoSum/
+    // weightedCenterX/Y/Z table (today's unchanged behavior).
+    bool onTheFly;
 
     gpu_buffer_type<int> *iattype;
     gpu_buffer_type<QUICKDouble> *xyz;

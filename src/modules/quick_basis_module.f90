@@ -368,6 +368,26 @@ contains
    end function dc_eri_onthefly
 
 
+   ! GPU counterpart of dc_eri_onthefly(), gating the separate GPU memory-wall
+   ! fix: gpu_upload_basis's expoSum/weightedCenterX/Y/Z arrays (prim_total^2
+   ! each -- tens of GB at T4-Lysozyme scale, the dominant GPU-DnC memory
+   ! cost, far bigger than Xcoeff's jbasis^2 scale which stays a dense table
+   ! regardless). Unlike dc_eri_onthefly(), this is NOT automatic for every
+   ! DIVCON+GPU job -- it additionally requires the explicit gpuOnTheFly
+   ! keyword, so no existing GPU workflow (DnC or otherwise) changes behavior
+   ! unless a user opts in. Also excludes ext_grid/esp_charge: compute_oeprop
+   ! (gpu_oeprop.h) reads the dense table too and isn't being converted here.
+   logical function gpu_eri_onthefly()
+      use quick_method_module, only: quick_method
+      implicit none
+
+      gpu_eri_onthefly = quick_method%DIVCON .and. quick_method%gpuOnTheFly &
+            .and. (.not. quick_method%MP2) .and. (.not. quick_method%DCMP2only) &
+            .and. (.not. quick_method%grad) .and. (.not. quick_method%ext_grid) &
+            .and. (.not. quick_method%esp_charge)
+   end function gpu_eri_onthefly
+
+
    ! On-the-fly equivalents of Apri/Ppri and Xcoeff, used in place of the
    ! dense jbasis^2 table lookups -- inside cshell/oshell and
    ! iclass_cshell/iclass_oshell (src/modules/include/eri.fh), and inside

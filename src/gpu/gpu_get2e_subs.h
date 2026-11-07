@@ -32,6 +32,33 @@
 
 #if !defined(__gpu_get2e_subs_h_)
   #define __gpu_get2e_subs_h_
+
+/*
+ On-the-fly replacement for the expoSum/weightedCenterX/Y/Z (AB/P) lookup tables.
+ Only used when devSim.expoSum == NULL (quick_method%gpuOnTheFly DnC jobs);
+ mirrors the host-side precompute loop in gpu.cu (and CPU's eri_onthefly_pair)
+ exactly, using arrays that are always uploaded (gcexpo, xyz, katom, Ksumtype).
+ */
+__device__ static inline void onthefly_AB_P(const int ISH, const int JSH, const int primI, const int primJ,
+        QUICKDouble &AB, QUICKDouble &Px, QUICKDouble &Py, QUICKDouble &Pz)
+{
+    int kAtomI = devSim.katom[ISH];
+    int kAtomJ = devSim.katom[JSH];
+    int KsumtypeI = devSim.Ksumtype[ISH];
+    int KsumtypeJ = devSim.Ksumtype[JSH];
+
+    QUICKDouble expoI = LOC2(devSim.gcexpo, primI, KsumtypeI - 1, MAXPRIM, devSim.nbasis);
+    QUICKDouble expoJ = LOC2(devSim.gcexpo, primJ, KsumtypeJ - 1, MAXPRIM, devSim.nbasis);
+
+    AB = expoI + expoJ;
+    Px = (LOC2(devSim.xyz, 0, kAtomI - 1, 3, devSim.natom) * expoI
+            + LOC2(devSim.xyz, 0, kAtomJ - 1, 3, devSim.natom) * expoJ) / AB;
+    Py = (LOC2(devSim.xyz, 1, kAtomI - 1, 3, devSim.natom) * expoI
+            + LOC2(devSim.xyz, 1, kAtomJ - 1, 3, devSim.natom) * expoJ) / AB;
+    Pz = (LOC2(devSim.xyz, 2, kAtomI - 1, 3, devSim.natom) * expoI
+            + LOC2(devSim.xyz, 2, kAtomJ - 1, 3, devSim.natom) * expoJ) / AB;
+}
+
   #if !defined(OSHELL)
 __device__ static inline bool call_iclass(const int I, const int J, const int K, const int L,
         const int II, const int JJ, const int KK, const int LL)
@@ -192,10 +219,15 @@ __device__ static inline void iclass_spdf10
         int ii_start = devSim.prim_start[II];
         int jj_start = devSim.prim_start[JJ];
         
-        QUICKDouble AB = LOC2(devSim.expoSum, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
-        QUICKDouble Px = LOC2(devSim.weightedCenterX, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
-        QUICKDouble Py = LOC2(devSim.weightedCenterY, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
-        QUICKDouble Pz = LOC2(devSim.weightedCenterZ, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+        QUICKDouble AB, Px, Py, Pz;
+        if (devSim.expoSum != NULL) {
+            AB = LOC2(devSim.expoSum, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+            Px = LOC2(devSim.weightedCenterX, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+            Py = LOC2(devSim.weightedCenterY, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+            Pz = LOC2(devSim.weightedCenterZ, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+        } else {
+            onthefly_AB_P(II, JJ, III, JJJ, AB, Px, Py, Pz);
+        }
         
         /*
          X1 is the contracted coeffecient, which is pre-calcuated in CPU stage as well.
@@ -225,7 +257,15 @@ __device__ static inline void iclass_spdf10
                  */
                 int kk_start = devSim.prim_start[KK];
                 int ll_start = devSim.prim_start[LL];
-                QUICKDouble CD = LOC2(devSim.expoSum, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                QUICKDouble CD, Qx, Qy, Qz;
+                if (devSim.expoSum != NULL) {
+                    CD = LOC2(devSim.expoSum, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                    Qx = LOC2(devSim.weightedCenterX, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                    Qy = LOC2(devSim.weightedCenterY, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                    Qz = LOC2(devSim.weightedCenterZ, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                } else {
+                    onthefly_AB_P(KK, LL, KKK, LLL, CD, Qx, Qy, Qz);
+                }
                 QUICKDouble ABCD = 1.0 / (AB + CD);
                 
                 /*
@@ -259,10 +299,6 @@ __device__ static inline void iclass_spdf10
                  ->  -> 2
                  T = ROU * | P - Q|
                  */
-                QUICKDouble Qx = LOC2(devSim.weightedCenterX, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
-                QUICKDouble Qy = LOC2(devSim.weightedCenterY, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
-                QUICKDouble Qz = LOC2(devSim.weightedCenterZ, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
-                
                 FmT(I + J + K + L, AB * CD * ABCD * (SQR(Px - Qx) + SQR(Py - Qy) + SQR(Pz - Qz)),
                         YVerticalTemp);
 
@@ -1286,10 +1322,15 @@ __device__ static inline void iclass_AOInt_spdf10
         int ii_start = devSim.prim_start[II];
         int jj_start = devSim.prim_start[JJ];
         
-        QUICKDouble AB = LOC2(devSim.expoSum, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
-        QUICKDouble Px = LOC2(devSim.weightedCenterX, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
-        QUICKDouble Py = LOC2(devSim.weightedCenterY, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
-        QUICKDouble Pz = LOC2(devSim.weightedCenterZ, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+        QUICKDouble AB, Px, Py, Pz;
+        if (devSim.expoSum != NULL) {
+            AB = LOC2(devSim.expoSum, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+            Px = LOC2(devSim.weightedCenterX, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+            Py = LOC2(devSim.weightedCenterY, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+            Pz = LOC2(devSim.weightedCenterZ, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+        } else {
+            onthefly_AB_P(II, JJ, III, JJJ, AB, Px, Py, Pz);
+        }
         
         /*
          X1 is the contracted coeffecient, which is pre-calcuated in CPU stage as well.
@@ -1320,7 +1361,15 @@ __device__ static inline void iclass_AOInt_spdf10
                  */
                 int kk_start = devSim.prim_start[KK];
                 int ll_start = devSim.prim_start[LL];
-                QUICKDouble CD = LOC2(devSim.expoSum, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                QUICKDouble CD, Qx, Qy, Qz;
+                if (devSim.expoSum != NULL) {
+                    CD = LOC2(devSim.expoSum, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                    Qx = LOC2(devSim.weightedCenterX, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                    Qy = LOC2(devSim.weightedCenterY, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                    Qz = LOC2(devSim.weightedCenterZ, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                } else {
+                    onthefly_AB_P(KK, LL, KKK, LLL, CD, Qx, Qy, Qz);
+                }
                 QUICKDouble ABCD = 1.0 / (AB + CD);
                 
                 /*
@@ -1348,10 +1397,6 @@ __device__ static inline void iclass_AOInt_spdf10
                  ```````````->  -> 2
                  T = ROU * | P - Q|
                  */
-                QUICKDouble Qx = LOC2(devSim.weightedCenterX, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
-                QUICKDouble Qy = LOC2(devSim.weightedCenterY, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
-                QUICKDouble Qz = LOC2(devSim.weightedCenterZ, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
-                
                 FmT(I + J + K + L, AB * CD * ABCD * (SQR(Px - Qx) + SQR(Py - Qy) + SQR(Pz - Qz)),
                         YVerticalTemp);
 

@@ -1497,6 +1497,35 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
 
 
 //-----------------------------------------------
+//  DnC fragment-connectivity screening (dcconnect) is CUDA-only so far.
+//  main.f90 calls this unconditionally for any DIVCON/DCMP2only job, so
+//  HIP needs a linkable no-op stub; gpu_sim.dcConnect stays NULL (see
+//  gpu_type.h), so the shared kernel body falls back to its pre-existing
+//  full (non-DnC) screening behavior, unchanged.
+//-----------------------------------------------
+extern "C" void gpu_upload_dcconnect_(int* dcConnect)
+{
+    PRINTDEBUG("BEGIN TO UPLOAD DCCONNECT (HIP no-op)");
+    gpu->gpu_sim.dcConnect = NULL;
+    PRINTDEBUG("COMPLETE UPLOADING DCCONNECT (HIP no-op)");
+}
+
+
+//-----------------------------------------------
+//  GPU on-the-fly AB/P recompute is CUDA-only so far. main.f90 calls this
+//  unconditionally for any DIVCON/DCMP2only job, so HIP needs a linkable
+//  no-op stub; the shared expoSum/weightedCenterX/Y/Z table stays always
+//  allocated on HIP regardless, so the value is simply ignored.
+//-----------------------------------------------
+extern "C" void gpu_upload_onthefly_(bool* onTheFly)
+{
+    PRINTDEBUG("BEGIN TO UPLOAD ONTHEFLY FLAG (HIP no-op)");
+    (void) onTheFly;
+    PRINTDEBUG("COMPLETE UPLOADING ONTHEFLY FLAG (HIP no-op)");
+}
+
+
+//-----------------------------------------------
 //  upload information for OEI calculation
 //-----------------------------------------------
 extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble* extchg, int *ierr)
