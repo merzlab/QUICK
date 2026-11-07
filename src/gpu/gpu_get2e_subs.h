@@ -59,6 +59,39 @@ __device__ static inline void onthefly_AB_P(const int ISH, const int JSH, const 
             + LOC2(devSim.xyz, 2, kAtomJ - 1, 3, devSim.natom) * expoJ) / AB;
 }
 
+/*
+ On-the-fly replacement for the Xcoeff lookup table. Only used when
+ devSim.Xcoeff == NULL (quick_method%gpuOnTheFly DnC jobs); mirrors the
+ host-side precompute loop in gpu.cu's gpu_upload_basis_ exactly (same
+ primitive-pair prefactor times the per-angular-momentum contraction
+ coefficients), using arrays that are always uploaded (gcexpo, gccoeff,
+ xyz, katom, Ksumtype). angI/angJ are the absolute angular-momentum
+ class indices (the shell-pair's I/J or K/L, not offset by Qstart).
+ */
+__device__ static inline QUICKDouble onthefly_Xcoeff(const int ISH, const int JSH, const int primI, const int primJ,
+        const int angI, const int angJ)
+{
+    int kAtomI = devSim.katom[ISH];
+    int kAtomJ = devSim.katom[JSH];
+    int KsumtypeI = devSim.Ksumtype[ISH];
+    int KsumtypeJ = devSim.Ksumtype[JSH];
+
+    QUICKDouble expoI = LOC2(devSim.gcexpo, primI, KsumtypeI - 1, MAXPRIM, devSim.nbasis);
+    QUICKDouble expoJ = LOC2(devSim.gcexpo, primJ, KsumtypeJ - 1, MAXPRIM, devSim.nbasis);
+
+    QUICKDouble DIJ = 0.0;
+    for (int k = 0; k < 3; k++) {
+        QUICKDouble d = LOC2(devSim.xyz, k, kAtomI - 1, 3, devSim.natom)
+                - LOC2(devSim.xyz, k, kAtomJ - 1, 3, devSim.natom);
+        DIJ += d * d;
+    }
+
+    QUICKDouble X = exp(-expoI * expoJ / (expoI + expoJ) * DIJ) / (expoI + expoJ);
+
+    return X0 * X * LOC2(devSim.gccoeff, primI, KsumtypeI + angI - 1, MAXPRIM, devSim.nbasis)
+            * LOC2(devSim.gccoeff, primJ, KsumtypeJ + angJ - 1, MAXPRIM, devSim.nbasis);
+}
+
   #if !defined(OSHELL)
 __device__ static inline bool call_iclass(const int I, const int J, const int K, const int L,
         const int II, const int JJ, const int KK, const int LL)
@@ -234,9 +267,14 @@ __device__ static inline void iclass_spdf10
          cutoffprim is used to cut too small prim gaussian function when bring density matrix into consideration.
          */
         QUICKDouble cutoffPrim = DNMax * LOC2(devSim.cutPrim, kStartI + III, kStartJ + JJJ, devSim.jbasis, devSim.jbasis);
-        QUICKDouble X1 = LOC4(devSim.Xcoeff, kStartI + III, kStartJ + JJJ, I - devSim.Qstart[II], J - devSim.Qstart[JJ],
-                devSim.jbasis, devSim.jbasis, 2, 2);
-        
+        QUICKDouble X1;
+        if (devSim.Xcoeff != NULL) {
+            X1 = LOC4(devSim.Xcoeff, kStartI + III, kStartJ + JJJ, I - devSim.Qstart[II], J - devSim.Qstart[JJ],
+                    devSim.jbasis, devSim.jbasis, 2, 2);
+        } else {
+            X1 = onthefly_Xcoeff(II, JJ, III, JJJ, I, J);
+        }
+
         for (int j = 0; j < kPrimK * kPrimL; j++) {
             int LLL = (int) (j / kPrimK);
             int KKK = (int) (j - kPrimK * LLL);
@@ -271,14 +309,19 @@ __device__ static inline void iclass_spdf10
                 /*
                  X2 is the multiplication of four indices normalized coeffecient
                  */
+                QUICKDouble X2;
+                if (devSim.Xcoeff != NULL) {
 #if defined(USE_TEXTURE) && defined(USE_TEXTURE_XCOEFF)
-                int2 XcoeffInt2 = tex1Dfetch(tex_Xcoeff, L - devSim.Qstart[LL] +
-                        (K - devSim.Qstart[KK] + ((kStartL + LLL) + (kStartK + KKK) * devSim.jbasis) * 2) * 2);
-                QUICKDouble X2 = sqrt(ABCD) * X1 * __hiloint2double(XcoeffInt2.y, XcoeffInt2.x);
+                    int2 XcoeffInt2 = tex1Dfetch(tex_Xcoeff, L - devSim.Qstart[LL] +
+                            (K - devSim.Qstart[KK] + ((kStartL + LLL) + (kStartK + KKK) * devSim.jbasis) * 2) * 2);
+                    X2 = sqrt(ABCD) * X1 * __hiloint2double(XcoeffInt2.y, XcoeffInt2.x);
 #else
-                QUICKDouble X2 = sqrt(ABCD) * X1 * LOC4(devSim.Xcoeff, kStartK + KKK, kStartL + LLL,
-                        K - devSim.Qstart[KK], L - devSim.Qstart[LL], devSim.jbasis, devSim.jbasis, 2, 2);
-#endif                
+                    X2 = sqrt(ABCD) * X1 * LOC4(devSim.Xcoeff, kStartK + KKK, kStartL + LLL,
+                            K - devSim.Qstart[KK], L - devSim.Qstart[LL], devSim.jbasis, devSim.jbasis, 2, 2);
+#endif
+                } else {
+                    X2 = sqrt(ABCD) * X1 * onthefly_Xcoeff(KK, LL, KKK, LLL, K, L);
+                }
 
                 /*
                  Q' is the weighting center of K and L
@@ -1337,9 +1380,14 @@ __device__ static inline void iclass_AOInt_spdf10
          cutoffprim is used to cut too small prim gaussian function when bring density matrix into consideration.
          */
         QUICKDouble cutoffPrim = DNMax * LOC2(devSim.cutPrim, kStartI + III, kStartJ + JJJ, devSim.jbasis, devSim.jbasis);
-        QUICKDouble X1 = LOC4(devSim.Xcoeff, kStartI + III, kStartJ + JJJ,
-                I - devSim.Qstart[II], J - devSim.Qstart[JJ], devSim.jbasis, devSim.jbasis, 2, 2);
-        
+        QUICKDouble X1;
+        if (devSim.Xcoeff != NULL) {
+            X1 = LOC4(devSim.Xcoeff, kStartI + III, kStartJ + JJJ,
+                    I - devSim.Qstart[II], J - devSim.Qstart[JJ], devSim.jbasis, devSim.jbasis, 2, 2);
+        } else {
+            X1 = onthefly_Xcoeff(II, JJ, III, JJJ, I, J);
+        }
+
         for (int j = 0; j < kPrimK * kPrimL; j++) {
             int LLL = (int) j / kPrimK;
             int KKK = (int) j - kPrimK * LLL;
@@ -1375,9 +1423,14 @@ __device__ static inline void iclass_AOInt_spdf10
                 /*
                  X2 is the multiplication of four indices normalized coeffecient
                  */
-                QUICKDouble X2 = sqrt(ABCD) * X1 * LOC4(devSim.Xcoeff, kStartK + KKK, kStartL + LLL,
-                        K - devSim.Qstart[KK], L - devSim.Qstart[LL], devSim.jbasis, devSim.jbasis, 2, 2);
-                
+                QUICKDouble X2;
+                if (devSim.Xcoeff != NULL) {
+                    X2 = sqrt(ABCD) * X1 * LOC4(devSim.Xcoeff, kStartK + KKK, kStartL + LLL,
+                            K - devSim.Qstart[KK], L - devSim.Qstart[LL], devSim.jbasis, devSim.jbasis, 2, 2);
+                } else {
+                    X2 = sqrt(ABCD) * X1 * onthefly_Xcoeff(KK, LL, KKK, LLL, K, L);
+                }
+
                 /*
                  Q' is the weighting center of K and L
                  ```````````````````````````--->           --->

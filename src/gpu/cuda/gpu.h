@@ -107,7 +107,7 @@ void upload_sim_to_constant_lri(_gpu_type);
 void upload_para_to_const();
 
 void bind_eri_texture(_gpu_type);
-void unbind_eri_texture();
+void unbind_eri_texture(_gpu_type);
 
 
 #endif

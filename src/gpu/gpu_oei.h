@@ -52,6 +52,38 @@ __device__ static inline void onthefly_AB_P(const int ISH, const int JSH, const 
             + LOC2(devSim.xyz, 2, kAtomJ - 1, 3, devSim.natom) * expoJ) / AB;
 }
 
+/*
+ On-the-fly replacement for the Xcoeff_oei lookup table. Only used when
+ devSim.Xcoeff_oei == NULL (quick_method%gpuOnTheFly DnC jobs); mirrors
+ the host-side precompute loop in gpu.cu's gpu_upload_oei_ exactly.
+ angI/angJ are the absolute angular-momentum class indices (I/J, not
+ offset by Qstart).
+ */
+__device__ static inline QUICKDouble onthefly_Xcoeff_oei(const int ISH, const int JSH, const int primI, const int primJ,
+        const int angI, const int angJ)
+{
+    int kAtomI = devSim.katom[ISH];
+    int kAtomJ = devSim.katom[JSH];
+    int KsumtypeI = devSim.Ksumtype[ISH];
+    int KsumtypeJ = devSim.Ksumtype[JSH];
+
+    QUICKDouble expoI = LOC2(devSim.gcexpo, primI, KsumtypeI - 1, MAXPRIM, devSim.nbasis);
+    QUICKDouble expoJ = LOC2(devSim.gcexpo, primJ, KsumtypeJ - 1, MAXPRIM, devSim.nbasis);
+
+    QUICKDouble DIJ = 0.0;
+    for (int k = 0; k < 3; k++) {
+        QUICKDouble d = LOC2(devSim.xyz, k, kAtomI - 1, 3, devSim.natom)
+                - LOC2(devSim.xyz, k, kAtomJ - 1, 3, devSim.natom);
+        DIJ += d * d;
+    }
+
+    QUICKDouble X = 2.0 * PI_TO_3HALF * sqrt((expoI + expoJ) / PI)
+            * pow((expoI + expoJ), -1.5) * exp((-expoI * expoJ * DIJ) / (expoI + expoJ));
+
+    return X * LOC2(devSim.gccoeff, primI, KsumtypeI + angI - 1, MAXPRIM, devSim.nbasis)
+            * LOC2(devSim.gccoeff, primJ, KsumtypeJ + angJ - 1, MAXPRIM, devSim.nbasis);
+}
+
 __device__ static inline void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ,
         unsigned int iatom, unsigned int totalatom, QUICKDouble * const YVerticalTemp,
         QUICKDouble * const store, QUICKDouble * const store2) {
@@ -128,8 +160,13 @@ __device__ static inline void iclass_oei(unsigned int I, unsigned int J, unsigne
         }
 
         // get Xcoeff, which is a product of overlap prefactor and contraction coefficients
-        const QUICKDouble Xcoeff_oei = LOC4(devSim.Xcoeff_oei, kStartI + III, kStartJ + JJJ,
-                I - devSim.Qstart[II], J - devSim.Qstart[JJ], devSim.jbasis, devSim.jbasis, 2, 2);
+        QUICKDouble Xcoeff_oei;
+        if (devSim.Xcoeff_oei != NULL) {
+            Xcoeff_oei = LOC4(devSim.Xcoeff_oei, kStartI + III, kStartJ + JJJ,
+                    I - devSim.Qstart[II], J - devSim.Qstart[JJ], devSim.jbasis, devSim.jbasis, 2, 2);
+        } else {
+            Xcoeff_oei = onthefly_Xcoeff_oei(II, JJ, III, JJJ, I, J);
+        }
 
         if (abs(Xcoeff_oei) > devSim.coreIntegralCutoff) {
             const QUICKDouble Cx = LOC2(devSim.allxyz, 0, iatom, 3, totalatom);
