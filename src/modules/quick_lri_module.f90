@@ -395,7 +395,7 @@ contains
   ! core hamiltonian.                                                    !
   !______________________________________________________________________!
   subroutine iclass_lri(I,J,K,L,NNA,NNC,NNAB,NNCD,II,JJ)
-    use quick_basis_module, only: IJKLtype, IJtype, KLtype, Y, Yxiao, quick_basis
+    use quick_basis_module, only: IJKLtype, IJtype, KLtype, Y, Yxiao, quick_basis, III, JJJ
     use quick_constants_module, only: PI, X0
     use quick_calculated_module, only: quick_qm_struct
 
@@ -405,7 +405,7 @@ contains
 
     integer :: ITT, Nprii, Nprij, MM1, MM2, itemp, III1, III2, JJJ1, JJJ2, KKK1, KKK2, &
                LLL1, LLL2, NBI1, NBI2, NBJ1, NBJ2, NBK1, NBK2, NBL1, NBL2 
-    integer :: III, JJJ, KKK, LLL
+    integer :: KKK, LLL
     double precision :: X44(129600)
     double precision :: X2, Ytemp
 
