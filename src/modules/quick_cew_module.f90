@@ -1039,6 +1039,10 @@ contains
    integer :: k,oi,i
    !double precision,allocatable :: spcder(:)
    double precision :: grdx,grdy,grdz
+   double precision :: density, densityb, densitysum, dfdr, dphi2dx, dphi2dy, &
+                       dphi2dz, dphidx, dphidy, dphidz, gax, gay, gaz, gbx, &
+                       gby, gbz, gridx, gridy, gridz, phi, phi2, quicktest, &
+                       sigma, sswt, weight, xdot, ydot, zdot, zkec
    double precision :: sumg(3),localsswt
    double precision :: dp(3,natom)
    double precision :: ap(3,natom)

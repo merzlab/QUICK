@@ -201,7 +201,7 @@ contains
     use quick_molspec_module, only: quick_molspec, natom
     use quick_files_module, only: iOutFile
 #ifdef CEW
-    use quick_cew_module, only: quick_cew
+    use quick_cew_module, only: quick_cew, quick_cew_grad
 #if defined(GPU) || defined(MPIV_GPU)
     use quick_cew_module, only: delete
 #endif
