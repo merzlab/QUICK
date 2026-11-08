@@ -68,7 +68,7 @@ subroutine dlf_mpi_initialize
 
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr,stdout
-  use dlf_mpi_module
+  use dlf_mpi_module, only: ax_tasks_comm, buff_size, global_comm, mpi_ik, mpi_rk, task_comm
   implicit none
 
   integer :: ierr, colour, key
@@ -139,7 +139,7 @@ subroutine dlf_mpi_abort
 
   use dlf_parameter_module, only: rk
   use dlf_global, only: stderr,stdout
-  use dlf_mpi_module
+  use dlf_mpi_module, only: ax_tasks_comm, buff_size, global_comm, mpi_ik, mpi_rk, task_comm
   implicit none
 
   integer :: ierr
@@ -167,7 +167,7 @@ subroutine dlf_mpi_finalize
 !! SOURCE
 
   use dlf_global, only: stdout
-  use dlf_mpi_module
+  use dlf_mpi_module, only: ax_tasks_comm, buff_size, global_comm, mpi_ik, mpi_rk, task_comm
   implicit none
 
   integer :: ierr
@@ -212,7 +212,7 @@ subroutine dlf_make_taskfarm(tdlf_farm)
 
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stderr,stdout
-  use dlf_mpi_module
+  use dlf_mpi_module, only: ax_tasks_comm, buff_size, global_comm, mpi_ik, mpi_rk, task_comm
   implicit none
 
   integer :: ierr, colour, key
@@ -301,7 +301,7 @@ subroutine dlf_mpi_counters
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stdout,printl
   use dlf_stat, only: stat
-  use dlf_mpi_module
+  use dlf_mpi_module, only: ax_tasks_comm, buff_size, global_comm, mpi_ik, mpi_rk, task_comm
   implicit none
 
   integer :: iproc, n, ierr
@@ -383,7 +383,7 @@ subroutine dlf_mpi_memory(sto,maxsto)
 
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stdout
-  use dlf_mpi_module
+  use dlf_mpi_module, only: ax_tasks_comm, buff_size, global_comm, mpi_ik, mpi_rk, task_comm
   implicit none
 
   integer :: sto, maxsto
@@ -474,7 +474,7 @@ subroutine dlf_mpi_time(descr, cput, wallt)
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stdout,printl
-  use dlf_mpi_module
+  use dlf_mpi_module, only: ax_tasks_comm, buff_size, global_comm, mpi_ik, mpi_rk, task_comm
 
   implicit none
   integer  :: iproc, n, ierr
@@ -555,7 +555,7 @@ subroutine dlf_global_real_bcast(a,n,iproc)
 
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob
-  use dlf_mpi_module
+  use dlf_mpi_module, only: ax_tasks_comm, buff_size, global_comm, mpi_ik, mpi_rk, task_comm
   implicit none
 
   integer :: iproc, n, ierr
@@ -597,7 +597,7 @@ subroutine dlf_global_int_bcast(a,n,iproc)
 
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob
-  use dlf_mpi_module
+  use dlf_mpi_module, only: ax_tasks_comm, buff_size, global_comm, mpi_ik, mpi_rk, task_comm
   implicit none
 
   integer :: iproc, n, ierr
@@ -638,7 +638,7 @@ subroutine dlf_global_log_bcast(a,n,iproc)
 
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob
-  use dlf_mpi_module
+  use dlf_mpi_module, only: ax_tasks_comm, buff_size, global_comm, mpi_ik, mpi_rk, task_comm
   implicit none
 
   integer :: iproc, n, ierr
@@ -682,7 +682,7 @@ subroutine dlf_global_real_sum(a,n)
 
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob
-  use dlf_mpi_module
+  use dlf_mpi_module, only: ax_tasks_comm, buff_size, global_comm, mpi_ik, mpi_rk, task_comm
   implicit none
 
   integer :: n, ierr, length, start, finish
@@ -746,7 +746,7 @@ subroutine dlf_tasks_real_sum(a,n)
 
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob
-  use dlf_mpi_module
+  use dlf_mpi_module, only: ax_tasks_comm, buff_size, global_comm, mpi_ik, mpi_rk, task_comm
   implicit none
 
   integer :: n, ierr, length, start, finish
@@ -814,7 +814,7 @@ subroutine dlf_tasks_int_sum(a,n)
 
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob
-  use dlf_mpi_module
+  use dlf_mpi_module, only: ax_tasks_comm, buff_size, global_comm, mpi_ik, mpi_rk, task_comm
   implicit none
 
   integer :: n, ierr, length, start, finish
@@ -879,7 +879,7 @@ subroutine dlf_tasks_int_gather(a,n,b,m,iproc)
 
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob
-  use dlf_mpi_module
+  use dlf_mpi_module, only: ax_tasks_comm, buff_size, global_comm, mpi_ik, mpi_rk, task_comm
   implicit none
 
   integer :: n, m, ierr, iproc
@@ -937,7 +937,7 @@ subroutine dlf_tasks_real_gather(a,n,b,m,iproc)
 
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob
-  use dlf_mpi_module
+  use dlf_mpi_module, only: ax_tasks_comm, buff_size, global_comm, mpi_ik, mpi_rk, task_comm
   implicit none
 
   integer :: n, m, ierr, iproc

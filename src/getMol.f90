@@ -12,14 +12,18 @@
 subroutine getMol(ierr)
    ! This subroutine is to get molecule information
    ! and assign basis function.
-   use allmod
-   use quick_gridpoints_module
-   use quick_exception_module
+   use quick_method_module, only: quick_method
+    use quick_molspec_module, only: quick_molspec, natom, xyz, read_quick_molspec_2
+    use quick_molspec_module, only: set_quick_molspec, print_quick_molspec
+    use quick_calculated_module, only: quick_qm_struct, allocate_quick_qm_struct, init_quick_qm_struct
+    use quick_basis_module, only: quick_basis, nbasis, cutprim, normalize_basis, allocate_basis, print_quick_basis
+    use quick_files_module, only: iOutfile, iDataFile, inFile, inFileName, dataFileName, isTemplate
+    use quick_exception_module, only: RaiseException
+
    use quick_io_module, only: chk_read, chk_read_opt_traj
-   use quick_mpi_module, only: master
+    use quick_mpi_module, only: master
 #if defined(MPIV)
-   use quick_mpi_module, only: bMPI
-   use mpi
+    use quick_mpi_module, only: bMPI
 #endif
 #ifdef CUEST
    use quick_fitbasis_module, only: quick_fitbasis, readfitbasis, print
@@ -54,13 +58,13 @@ subroutine getMol(ierr)
           call quick_open(infile,inFileName,'O','F','W',.true.,ierr)
           CHECK_ERROR(ierr)
           ! read molecule coordinates
-          call read2(quick_molspec,inFile,ierr)
+          call read_quick_molspec_2(quick_molspec,inFile,ierr)
           close(inFile)
         endif
       endif
 
       quick_qm_struct%nbasis => nbasis
-      call set(quick_molspec,ierr)
+      call set_quick_molspec(quick_molspec,ierr)
 
       ! quick forward coordinates stored in namelist to instant variables
       xyz(1:3,1:natom)=quick_molspec%xyz(1:3,1:natom)
@@ -102,19 +106,19 @@ subroutine getMol(ierr)
 
    quick_qm_struct%nbasis => nbasis
 
-   call alloc(quick_basis)
-   call alloc(quick_qm_struct)
+   call allocate_basis(quick_basis)
+   call allocate_quick_qm_struct(quick_qm_struct)
    cutprim = 0.0d0
    quick_basis%Xcoeff = 0.0d0
-   call init(quick_qm_struct)
+   call init_quick_qm_struct(quick_qm_struct)
 
    !-----------MPI/MASTER------------------------
    if (master) then
       ! now print molecule specification to output file
-      call print(quick_molspec,iOutFile,ierr)
-      call print(quick_basis,iOutFile)
+      call print_quick_molspec(quick_molspec,iOutFile,ierr)
+      call print_quick_basis(quick_basis,iOutFile)
 #ifdef CUEST
-      if (quick_method%usecuest) call print(quick_fitbasis, ioutfile)
+      if (quick_method%usecuest) call print_quick_fitbasis(quick_fitbasis, ioutfile)
 #endif
 
       ! the following some step are setup for basis and for ECP or DFT calculation
@@ -152,9 +156,8 @@ end subroutine getmol
 ! check mol spec and method
 !--------------------
 subroutine check_quick_method_and_molspec(io,quick_molspec_arg,quick_method_arg,ierr)
-   use quick_method_module
-   use quick_molspec_module
-   use quick_exception_module
+   use quick_method_module, only: quick_method_type
+   use quick_molspec_module, only: quick_molspec_type, natom
 
    implicit none
 
@@ -249,9 +252,11 @@ end subroutine check_quick_method_and_molspec
 ! Initial Densitry Matrix
 !--------------------------------------
 subroutine initialGuess(ierr)
-   use allmod
+   use quick_method_module, only: quick_method
+   use quick_calculated_module, only: quick_qm_struct
+   use quick_basis_module, only: nbasis
+   use quick_files_module, only: iDataFile, dataFileName, iOutFile
    use quick_sad_guess_module, only: getSadDense
-   use quick_exception_module
    use quick_io_module, only: chk_read, read_real8_rank3
    use quick_mpi_module, only: master
 #ifdef CUEST

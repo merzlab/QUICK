@@ -78,7 +78,7 @@ subroutine convergence_test(icycle,tene,tconv)
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob,stdout,printl
-  use dlf_convergence
+  use dlf_convergence, only: rk, texternal, tole, tolg, tolrmsg, tolrmss, tols, vale, valg, valrmsg, valrmss, vals
   implicit none
   integer,intent(in)  :: icycle ! just for printing
   logical,intent(in)  :: tene   ! store current energy as old energy?
@@ -211,7 +211,7 @@ subroutine convergence_get(name,val)
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob
-  use dlf_convergence
+  use dlf_convergence, only: locg, vale
   implicit none
   character(*),intent(in)  :: name
   real(rk)    ,intent(out) :: val
@@ -238,7 +238,7 @@ end subroutine convergence_get
 subroutine convergence_set_info(msg,nvar,energy,gradient,step)
 !! SOURCE
   use dlf_parameter_module, only: rk
-  use dlf_convergence
+  use dlf_convergence, only: locg, locs, message, texternal, vale, valg, valrmsg, valrmss, vals
   implicit none
   character(*),intent(in)  :: msg
   integer     ,intent(in)  :: nvar

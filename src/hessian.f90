@@ -3,7 +3,10 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine calchessian(failed)
-  use allmod
+  use quick_method_module, only: quick_method
+  use quick_molspec_module, only: quick_molspec, xyz, natom
+  use quick_calculated_module, only: quick_qm_struct
+  use quick_files_module, only: ioutfile, iCPHFFile, CPHFFileName
   implicit double precision(a-h,o-z)
   logical failed
   
@@ -45,9 +48,13 @@ end subroutine calchessian
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine fdhessian(failed)
-  use allmod
-  use quick_grad_cshell_module, only: cshell_gradient
-  use quick_exception_module
+  use quick_method_module, only: quick_method
+  use quick_molspec_module, only: quick_molspec, xyz, natom
+  use quick_calculated_module, only: quick_qm_struct
+   use quick_files_module, only: ioutfile, iCPHFFile, CPHFFileName
+   use quick_grad_cshell_module, only: cshell_gradient
+   use quick_exception_module, only: RaiseException
+
   use quick_mpi_module, only: master
 
   implicit double precision(a-h,o-z)
@@ -73,7 +80,7 @@ subroutine fdhessian(failed)
   stepsize = 1.d-4
   if (master) then
     itemp = ioutfile
-    open(iCPHFfile,file=CPHFfilename,status='unknown')
+    open(iCPHFFile,file=CPHFFileName,status='unknown')
     ioutfile = icphffile
   endif
 
@@ -137,7 +144,12 @@ end subroutine fdhessian
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine HFHessian
-  use allmod
+  use quick_method_module, only: quick_method
+  use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+  use quick_molspec_module, only: quick_molspec, xyz, natom
+  use quick_calculated_module, only: quick_qm_struct
+  use quick_files_module, only: ioutfile, iCPHFFile, CPHFFileName
+  use quick_SCRATCH_module, only: quick_scratch
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic
 
@@ -2063,24 +2075,24 @@ subroutine HFHessian
 
 
         if (change > 1.D-10) then
-           open(iCPHFfile,file=CPHFfilename,status='unknown')
+           open(iCPHFFile,file=CPHFFileName,status='unknown')
            do I=1,idimA
               do J=1,idimA
                  W2IJ = 0.0D0
                  do K=1,idimA
                     W2IJ = W2IJ + W(K,I)*quick_qm_struct%cphfa(K,J)
                  enddo
-                 write (iCPHFfile,'(E30.20)') W2IJ
+                 write (iCPHFFile,'(E30.20)') W2IJ
               enddo
            enddo
-           close  (iCPHFfile)
-           open(iCPHFfile,file=CPHFfilename,status='unknown')
+           close  (iCPHFFile)
+           open(iCPHFFile,file=CPHFFileName,status='unknown')
            do I=1,idimA
               do J=1,idimA
-                 read (iCPHFfile,'(E30.20)') W(J,I)
+                 read (iCPHFFile,'(E30.20)') W(J,I)
               enddo
            enddo
-           close(iCPHFfile)
+           close(iCPHFFile)
         endif
         
      enddo
@@ -2118,7 +2130,10 @@ end subroutine hfhessian
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine hess2elec(Ibas,Jbas,IIbas,JJbas,coeff)
-  use allmod
+  use quick_method_module, only: quick_method
+  use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+  use quick_molspec_module, only: quick_molspec, xyz, natom
+  use quick_calculated_module, only: quick_qm_struct
   implicit double precision(a-h,o-z)
 
   dimension itype2(3,4)
@@ -3849,9 +3864,13 @@ end subroutine hess2elec
 
 
 subroutine hfdmxderuse(IDX)
-  use allmod
+  use quick_method_module, only: quick_method
+  use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+  use quick_molspec_module, only: quick_molspec, xyz, natom
+  use quick_calculated_module, only: quick_qm_struct
   use quick_overlap_module, only: gpt
   use quick_oei_module, only: ekinetic
+  use quick_SCRATCH_module, only: quick_scratch
   implicit double precision(a-h,o-z)
   dimension GRADIENT2(natom*3)
   double precision g_table(200),a,b
@@ -4344,7 +4363,10 @@ end subroutine hfdmxderuse
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine grad2elec(Ibas,Jbas,IIbas,JJbas,coeff)
-  use allmod
+  use quick_method_module, only: quick_method
+  use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+  use quick_molspec_module, only: quick_molspec, xyz, natom
+  use quick_calculated_module, only: quick_qm_struct
   implicit double precision(a-h,o-z)
 
   dimension itype2(3,4)
@@ -4555,7 +4577,11 @@ end subroutine grad2elec
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine graddmx2elec(Ibas,Jbas,IIbas,JJbas,GRADIENT2)
-  use allmod
+  use quick_method_module, only: quick_method
+  use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+  use quick_molspec_module, only: quick_molspec, xyz, natom
+  use quick_calculated_module, only: quick_qm_struct
+  use quick_SCRATCH_module, only: quick_scratch
   implicit double precision(a-h,o-z)
 
   dimension GRADIENT2(natom*3)
@@ -4866,8 +4892,13 @@ end subroutine graddmx2elec
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine dmxderiv(IDX,BU)
-  use allmod
+  use quick_method_module, only: quick_method
+  use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+  use quick_molspec_module, only: quick_molspec, xyz, natom
+  use quick_calculated_module, only: quick_qm_struct
+  use quick_files_module, only: ioutfile, iCPHFFile, CPHFFileName
   use quick_overlap_module, only: gpt, overlap
+  use quick_SCRATCH_module, only: quick_scratch
   implicit double precision(a-h,o-z)
   double precision BU(*)
   double precision g_table(200),a,b
@@ -5202,8 +5233,7 @@ end subroutine dmxderiv
 double precision function electricfld(a,b,i,j,k,ii,jj,kk, &
      idx,idy,idz,Ax,Ay,Az, &
      Bx,By,Bz,Cx,Cy,Cz,Z)
-  use quick_constants_module
-  use quick_overlap_module, only: overlap
+   use quick_overlap_module, only: overlap
   implicit double precision(a-h,o-z)
   dimension aux(0:20)
   double precision :: g_table(200)
@@ -5269,9 +5299,14 @@ end function electricfld
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine ewtdmxder(IDX)
-  use allmod
+  use quick_method_module, only: quick_method
+  use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+  use quick_molspec_module, only: quick_molspec, xyz, natom
+  use quick_calculated_module, only: quick_qm_struct
+  use quick_uscf_operator_module, only: uscf_operator
   use quick_overlap_module, only: gpt, overlap
   use quick_uscf_operator_module, only: uscf_operator
+  use quick_SCRATCH_module, only: quick_scratch
   implicit double precision(a-h,o-z)
   dimension temp(nbasis,nbasis),ewtdmx(nbasis,nbasis)
   double precision g_table(200),a,b
@@ -5621,7 +5656,11 @@ end subroutine ewtdmxder
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine duhfoperatora(IDX)
-  use allmod
+  use quick_method_module, only: quick_method
+  use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+  use quick_molspec_module, only: quick_molspec, xyz, natom
+  use quick_calculated_module, only: quick_qm_struct
+  use quick_SCRATCH_module, only: quick_scratch
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic
   implicit double precision(a-h,o-z)
@@ -6502,9 +6541,13 @@ end subroutine duhfoperatora
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine duhfoperatorb(IDX)
-  use allmod
+  use quick_method_module, only: quick_method
+  use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+  use quick_molspec_module, only: quick_molspec, xyz, natom
+  use quick_calculated_module, only: quick_qm_struct
   use quick_overlap_module, only: gpt, overlap
   use quick_oei_module, only: ekinetic
+  use quick_SCRATCH_module, only: quick_scratch
   implicit double precision(a-h,o-z)
   dimension igrad(3)
   logical :: IonMove, JonMove, ConMove
@@ -7377,7 +7420,10 @@ end subroutine duhfoperatorb
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 
 subroutine move1twoe(Ibas,Jbas,IIbas,JJbas,Iatom,Imomentum,repint)
-  use allmod
+  use quick_method_module, only: quick_method
+  use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+  use quick_molspec_module, only: quick_molspec, xyz, natom
+  use quick_calculated_module, only: quick_qm_struct
   implicit double precision(a-h,o-z)
 
   dimension itype2(3,4)
@@ -7881,7 +7927,10 @@ end function elctfldrecurse
 ! PROGRAMMED BY S. L. DIXON, OCT., 1991.
 
 
-    use allmod
+    use quick_method_module, only: quick_method
+    use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+    use quick_molspec_module, only: quick_molspec, xyz, natom
+    use quick_calculated_module, only: quick_qm_struct
     IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 ! DIMENSION A(NDIM,*),V(3,*),EVAL1(*),IDEGEN1(*),EVEC1(NDIM,*)
     DIMENSION A(natom*3,natom*3),V(3,natom*3),EVAL1(natom*3), &
@@ -7988,7 +8037,10 @@ end function elctfldrecurse
 ! PROGRAMMED BY S. L. DIXON, OCT., 1991.
 
 
-    use allmod
+    use quick_method_module, only: quick_method
+    use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+    use quick_molspec_module, only: quick_molspec, xyz, natom
+    use quick_calculated_module, only: quick_qm_struct
     IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 ! DIMENSION A(NDIM,*),V(3,*)
     DIMENSION A(natom*3,natom*3),V(3,natom*3)
@@ -8111,7 +8163,10 @@ end function elctfldrecurse
 ! PROGRAMMED BY S. L. DIXON.
 
 
-    use allmod
+    use quick_method_module, only: quick_method
+    use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+    use quick_molspec_module, only: quick_molspec, xyz, natom
+    use quick_calculated_module, only: quick_qm_struct
     IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 ! DIMENSION A(NDIM,*),BETAH(3,*),EVAL1(*)
     DIMENSION A(natom*3,natom*3),BETAH(3,natom*3),EVAL1(natom*3)
@@ -8306,7 +8361,10 @@ end function elctfldrecurse
 
 ! IDEGEN1 = DEGENERACIES OF EIGENVALUES.
 
-    use allmod
+    use quick_method_module, only: quick_method
+    use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+    use quick_molspec_module, only: quick_molspec, xyz, natom
+    use quick_calculated_module, only: quick_qm_struct
     IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 ! DIMENSION EVAL1(*),IDEGEN1(*)
     DIMENSION EVAL1(natom*3),IDEGEN1(natom*3)
@@ -8387,7 +8445,10 @@ end function elctfldrecurse
 ! PROGRAMMED BY S. L. DIXON, OCT., 1991.
 
 
-    use allmod
+    use quick_method_module, only: quick_method
+    use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+    use quick_molspec_module, only: quick_molspec, xyz, natom
+    use quick_calculated_module, only: quick_qm_struct
     IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 ! DIMENSION A(NDIM,*),AWORK(3,*),EVAL1(*),IDEGEN1(*),EVEC1(NDIM,*)
     DIMENSION A(natom*3,natom*3),AWORK(3,natom*3),EVAL1(natom*3), &
@@ -8580,7 +8641,10 @@ end function elctfldrecurse
 ! PROGRAMMED BY S. L. DIXON.
 
 
-    use allmod
+    use quick_method_module, only: quick_method
+    use quick_basis_module, only: quick_basis, itype, nbasis, aexp, dcoeff, ncontract
+    use quick_molspec_module, only: quick_molspec, xyz, natom
+    use quick_calculated_module, only: quick_qm_struct
     IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 ! DIMENSION VECT(NDIM,*)
     DIMENSION VECT(natom*3,natom*3)

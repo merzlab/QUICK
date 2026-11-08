@@ -100,7 +100,7 @@ subroutine dlf_microiter_init
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob, stdout
-  use dlf_microiter
+  use dlf_microiter, only: microiter, microiter_type, rk
   use dlf_allocate, only: allocate,deallocate
   use dlf_stat, only: stat
   implicit none
@@ -185,7 +185,7 @@ subroutine dlf_microiter_destroy
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob, stdout
-  use dlf_microiter
+  use dlf_microiter, only: microiter, microiter_type, rk
   use dlf_allocate, only: allocate,deallocate
   implicit none
   logical :: exists
@@ -226,7 +226,7 @@ subroutine dlf_microiter_check_macrostep
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob, stdout
-  use dlf_microiter
+  use dlf_microiter, only: microiter, microiter_type, rk
   implicit none
   integer :: ivar, iglobstart, iglobend
   
@@ -261,7 +261,7 @@ subroutine dlf_microiter_reset_macrostep
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob, stdout
-  use dlf_microiter
+  use dlf_microiter, only: microiter, microiter_type, rk
   implicit none
   integer :: ivar, iglobstart, iglobend
   
@@ -304,7 +304,7 @@ subroutine dlf_microiter_enter
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob, stdout
-  use dlf_microiter
+  use dlf_microiter, only: microiter, microiter_type, rk
   use dlf_stat, only: stat
   implicit none
 
@@ -352,7 +352,7 @@ subroutine dlf_microiter_itomic
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob, stdout
-  use dlf_microiter
+  use dlf_microiter, only: microiter, microiter_type, rk
   implicit none
   integer :: ivar, imicstart, imicend, iglobstart, iglobend
 
@@ -397,7 +397,7 @@ subroutine dlf_microiter_formstep
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob, stdout
-  use dlf_microiter
+  use dlf_microiter, only: microiter, microiter_type, rk
   implicit none
 
   call dlf_lbfgs_step(microiter%micicoords, microiter%micigradient, &
@@ -427,7 +427,7 @@ subroutine dlf_microiter_scalestep
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob, stdout
-  use dlf_microiter
+  use dlf_microiter, only: microiter, microiter_type, rk
   implicit none
   integer :: ivar, icount
 
@@ -460,7 +460,7 @@ subroutine dlf_microiter_step
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob, stdout
-  use dlf_microiter
+  use dlf_microiter, only: microiter, microiter_type, rk
   use dlf_stat, only: stat
   implicit none
   integer :: ivar, imicstart, imicend, iglobstart, iglobend
@@ -506,7 +506,7 @@ subroutine dlf_microiter_test_acceptance(tswitch)
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob, stdout
-  use dlf_microiter
+  use dlf_microiter, only: microiter, microiter_type, rk
   implicit none
   logical, intent(out) :: tswitch
   integer :: ivar, imicstart, imicend, iglobstart, iglobend
@@ -562,7 +562,7 @@ subroutine dlf_microiter_convergence(tconv)
 !! SOURCE
   use dlf_parameter_module, only: rk
   use dlf_global, only: glob, stdout
-  use dlf_microiter
+  use dlf_microiter, only: microiter, microiter_type, rk
   use dlf_stat, only: stat
   implicit none
   logical, intent(out) :: tconv

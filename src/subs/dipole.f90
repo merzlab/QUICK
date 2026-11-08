@@ -6,12 +6,33 @@
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 !-------------------------------------------------------
     subroutine dipole
-    use allmod
+    use quick_SCRATCH_module, only: quick_scratch
+    use quick_basis_module, only: ncontract, itype, aexp, dcoeff, nbasis, NBSuse, quick_basis
+    use quick_calculated_module, only: quick_qm_struct
+    use quick_constants_module, only: EMASS, SYMBOL
+    use quick_files_module, only: iOutFile
+    use quick_method_module, only: quick_method
+    use quick_molspec_module, only: quick_molspec, xyz, natom
+    use quick_timer_module, only: timer_begin, timer_end, timer_cumer
 #ifdef CUEST
     use quick_cuest_module, only: cuest_correct_P, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
 #endif
-    implicit double precision(a-h,o-z)
+
+    implicit none
+    
+    interface
+        double precision function xmoment(a,b,i,j,k,ii,jj,kk, &
+        iux,iuy,iuz,Ax,Ay,Az, &
+        Bx,By,Bz,Cx,Cy,Cz)
+            double precision, intent(in) :: a, b, ax, ay, az, bx, by, bz, cx, cy, cz
+            integer, intent(in) :: i, j, k, ii, jj, kk, iux, iuy, iuz
+        end function xmoment
+    end interface
+    
     double precision xyzdipole(3,natom)
+    integer :: i, j, ibas, jbas, icon, jcon
+    double precision :: cmx, cmy, cmz, totweight, weight, xdip, ydip, zdip
+    double precision :: totdip, sx, sy, sz, denseji
 #ifdef CUEST
     double precision :: densetmp(nbasis, nbasis)
 #endif
@@ -234,8 +255,24 @@
     double precision function xmoment(a,b,i,j,k,ii,jj,kk, &
     iux,iuy,iuz,Ax,Ay,Az, &
     Bx,By,Bz,Cx,Cy,Cz)
-    use quick_constants_module
-    implicit double precision(a-h,o-z)
+    use quick_overlap_module, only: overlap
+    implicit none
+    
+    interface
+        recursive function xmomentrecurse(a,b, &
+        i,j,k,ii,jj,kk,iux,iuy,iuz, &
+        Ax,Ay,Az,Bx,By,Bz, &
+        Cx,Cy,Cz,Px,Py,Pz,g) &
+        result(xmomentrec)
+            double precision :: a, b, ax, ay, az, bx, by, bz, cx, cy, cz, px, py, pz, g
+            integer, intent(in) :: i, j, k, ii, jj, kk, iux, iuy, iuz
+            double precision :: xmomentrec
+        end function xmomentrecurse
+    end interface
+    
+    double precision, intent(in) :: a, b, ax, ay, az, bx, by, bz, cx, cy, cz
+    integer, intent(in) :: i, j, k, ii, jj, kk, iux, iuy, iuz
+    double precision :: g, px, py, pz, apass, bpass
 
     ! Variables needed later:
     !    pi=3.1415926535897932385
@@ -283,9 +320,14 @@
     result(xmomentrec)
     
     use quick_overlap_module, only: overlap
-    implicit double precision(a-h,o-z)
-    dimension iexponents(9),center(12)
-    double precision g_table(200)
+    implicit none
+    double precision :: a, b, ax, ay, az, bx, by, bz, cx, cy, cz, px, py, pz, g
+    integer, intent(in) :: i, j, k, ii, jj, kk, iux, iuy, iuz
+    integer, dimension(9) :: iexponents
+    double precision, dimension(12) :: center
+    double precision :: g_table(200)
+    integer :: l, ilownum, ilowex
+    double precision :: apass, bpass, temp, pc, pa, coeff
 
 ! The this is taken from the recursive relation found in Obara and Saika,
 ! J. Chem. Phys. 84 (7) 1986, 3963.

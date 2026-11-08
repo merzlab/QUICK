@@ -270,7 +270,8 @@ end subroutine dlf_hdlc_init
 subroutine dlf_hdlc_get_nivar(region, nivar)
 !! SOURCE
   use dlf_global, only: glob, stdout
-  use dlfhdlc_hdlclib, only: hdlc, get_cons_regions
+  use dlfhdlc_hdlclib, only: hdlc
+  use dlfhdlc_constraint, only: get_cons_regions
   implicit none
   integer, intent(in) :: region
   integer  ,intent(out) :: nivar
@@ -338,10 +339,12 @@ subroutine dlf_hdlc_create(nat,nicore,spec,micspec,attypes,nimage,xcoords,xweigh
   use dlf_global, only: printl,stdout
   use dlf_allocate, only: allocate, deallocate
   use dlfhdlc_hdlclib, only: hdlc,matrix,int_matrix,matrix_create,matrix_set, &
-      int_matrix_destroy,matrix_destroy, &
+      matrix_destroy, &
       ! subroutines
-      connect_prim, ci_conn, assign_cons, hdlc_create, assign_cons, &
       hdlc_create
+  use dlfhdlc_matrixlib, only: int_matrix_destroy
+  use dlfhdlc_primitive, only: connect_prim, ci_conn
+  use dlfhdlc_constraint, only: assign_cons
   use dlf_parameter_module, only: rk
   implicit none
   integer ,intent(in) :: nat
@@ -557,8 +560,8 @@ end subroutine dlf_hdlc_create
 subroutine dlf_hdlc_getweight(nat,nivar,nicore,micspec,xweight,iweight)
 !! SOURCE
   use dlf_parameter_module, only: rk
-  use dlf_global, only: printl,stdout  
-  use dlfhdlc_hdlclib
+  use dlf_global, only: printl,stdout
+  use dlfhdlc_hdlclib, only: hdlc, residue_type
   implicit none
   integer ,intent(in) :: nat
   integer ,intent(in) :: nivar

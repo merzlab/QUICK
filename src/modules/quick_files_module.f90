@@ -144,8 +144,7 @@ module quick_files_module
 
 
     subroutine read_data_file(line)
-      use quick_exception_module
-      use quick_input_parser_module  
+      use quick_input_parser_module, only: read
 
       implicit none
 
@@ -166,7 +165,7 @@ module quick_files_module
 
 
     subroutine read_basis_file(keywd,ierr)
-        use quick_exception_module
+        use quick_exception_module, only: RaiseException
         use quick_mpi_module, only: master
 
         implicit none

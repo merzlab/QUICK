@@ -66,7 +66,7 @@ subroutine get_wall_time(time)
 end subroutine get_wall_time
 
 subroutine map_clock(name,number)
-  use dlf_time
+  use dlf_time, only: clock, maxclock, rk, time_type, warning
   implicit none
   character(*),intent(IN) :: name
   integer     ,intent(out):: number
@@ -90,7 +90,7 @@ subroutine map_clock(name,number)
 end subroutine map_clock
 
 subroutine clock_start(name)
-  use dlf_time
+  use dlf_time, only: clock, maxclock, rk, time_type, warning
   implicit none
   character(*),intent(IN) :: name
   integer                 :: number
@@ -111,7 +111,7 @@ subroutine clock_start(name)
 end subroutine clock_start
 
 subroutine clock_stop(name)
-  use dlf_time
+  use dlf_time, only: clock, maxclock, rk, time_type, warning
   implicit none
   character(*),intent(IN) :: name
   integer                 :: number
@@ -134,7 +134,7 @@ subroutine clock_stop(name)
 end subroutine clock_stop
 
 subroutine time_init
-  use dlf_time
+  use dlf_time, only: clock, maxclock, rk, time_type, warning
   implicit none
 ! **********************************************************************
   clock(:)%running=.false.
@@ -143,7 +143,7 @@ subroutine time_init
 end subroutine time_init
 
 subroutine time_report
-  use dlf_time
+  use dlf_time, only: clock, maxclock, rk, time_type, warning
   use dlf_global, only: stdout,printl,glob
   implicit none
   character(50)   :: descr(maxclock)

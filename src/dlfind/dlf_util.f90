@@ -386,7 +386,7 @@ module dlf_store
   ! and deleted
   !
   use dlf_parameter_module, only: rk
-  use dlf_global, only: stderr,stdout
+   use dlf_global, only: stdout
   use dlf_allocate, only: allocate,deallocate
   implicit none
 

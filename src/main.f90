@@ -22,16 +22,16 @@
 
 #include "util.fh"
 
-    program quick
+     program quick
 
-    use divPB_Private, only: initialize_DivPBVars
-    use quick_cutoff_module, only: schwarzoff
-    use quick_exception_module
+     use quick_cutoff_module, only: schwarzoff
+     use quick_exception_module, only: RaiseException
+
     use quick_eri_cshell_module, only: getEriPrecomputables
     use quick_grad_cshell_module, only: cshell_gradient
     use quick_grad_oshell_module, only: oshell_gradient
     use quick_oeproperties_module, only: compute_oeprop
-    use quick_optimizer_module
+    use quick_optimizer_module, only: lopt
     use quick_sad_guess_module, only: getSadGuess
     use quick_calculated_module, only: quick_qm_struct
     use quick_molden_module, only : quick_molden, initializeExport, exportCoordinates, exportBasis, &
@@ -40,11 +40,11 @@
                                chk_create_opt_traj
     use quick_timer_module, only : timer_end, timer_cumer, timer_begin
     use quick_method_module, only : quick_method
-    use quick_files_module, only: ioutfile, outFileName, iDataFile, dataFileName
+     use quick_files_module, only: ioutfile, outFileName
     use quick_molspec_module, only: quick_molspec, natom, alloc
     use quick_basis_module, only: nbasis
-    use quick_files_module, only: write_molden, set_quick_files, print_quick_io_file
-    use quick_molsurface_module, only: generate_MKS_surfaces
+     use quick_files_module, only: write_molden, set_quick_files, print_quick_io_file
+
 #if defined(GPU) || defined(MPIV_GPU)
     use quick_basis_module, only: quick_basis, aexp, cutprim, dcoeff, itype, &
             jbasis, jshell, maxcontract, ncontract, nprim, nshell, Ycutoff

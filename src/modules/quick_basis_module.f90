@@ -32,7 +32,6 @@ module quick_basis_module
    !                basis functions. ibasis denotes the basis set chosen for.
    !------------------------------------------------------------------------
 
-   use quick_gaussian_class_module
    implicit none
 
    type quick_basis_type
@@ -209,8 +208,7 @@ contains
    ! Allocate quick basis
    !----------------
    subroutine allocate_quick_basis(self,natom_arg,nshell_arg,nbasis_arg)
-        use quick_gaussian_class_module
-        use quick_size_module
+        use quick_size_module, only: MAXPRIM
 
         implicit none
 
@@ -268,7 +266,6 @@ contains
    ! deallocate quick basis
    !----------------
    subroutine deallocate_quick_basis(self)
-        use quick_gaussian_class_module
 
         implicit none
 
@@ -369,7 +366,7 @@ contains
 
 
    subroutine normalize_basis()
-      use quick_constants_module
+      use quick_constants_module, only: PITO3HALF
 
       implicit none
 

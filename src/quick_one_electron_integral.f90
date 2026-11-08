@@ -21,7 +21,7 @@
 ! Ed Brothers. November 2, 2001
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 double precision function repulsion(gi,gj,gk,gl,pos1,pos2,pos3,pos4) result(repint)
-   use quick_gaussian_class_module
+   use quick_gaussian_class_module, only: gaussian
    implicit none
 
    type(gaussian) :: gi,gj,gk,gl
@@ -63,10 +63,19 @@ double precision function repulsion_prim(a, b, c, d, &
                                          Bx, By, Bz, &
                                          Cx, Cy, Cz, &
                                          Dx, Dy, Dz) result(repulsion)
-   use quick_constants_module
+   use quick_constants_module, only: PI
    use quick_overlap_module, only: ssoverlap
-   implicit double precision(a-h,o-z)
-   dimension aux(0:20)
+   implicit none
+   
+   double precision, intent(in) :: a, b, c, d
+   integer, intent(in) :: i, j, k, ii, jj, kk, i2, j2, k2, ii2, jj2, kk2
+   double precision, intent(in) :: Ax, Ay, Az, Bx, By, Bz, Cx, Cy, Cz, Dx, Dy, Dz
+   
+   double precision, dimension(0:20) :: aux
+   double precision :: constant, g, h, Px, Py, Pz, Qx, Qy, Qz
+   double precision :: Wx, Wy, Wz, rho, PQsquare, T
+   double precision :: reprecurse
+   integer :: L, Maxm
 
    ! Variables needed later:
 
@@ -141,8 +150,20 @@ double precision recursive function reprecurse(i,j,k,ii,jj,kk, &
       g,h,rho) &
       result(reprec)
 
-   implicit double precision(a-h,o-z)
-   dimension iexponents(12),center(21),aux(0:20)
+   implicit none
+   
+   integer, intent(in) :: i, j, k, ii, jj, kk, i2, j2, k2, ii2, jj2, kk2, m
+   double precision, dimension(0:20), intent(in) :: aux
+   double precision, intent(in) :: Ax, Ay, Az, Bx, By, Bz
+   double precision, intent(in) :: Cx, Cy, Cz, Dx, Dy, Dz
+   double precision, intent(in) :: Px, Py, Pz, Qx, Qy, Qz
+   double precision, intent(in) :: Wx, Wy, Wz, rho
+   double precision, intent(inout) :: g, h
+   
+   integer, dimension(12) :: iexponents
+   double precision, dimension(21) :: center
+   integer :: ilownum, ilowex, L
+   double precision :: coeff, gpass, hpass, temp, PA, WP
 
    ! The this is taken from the recursive relation found in Obara and Saika,
    ! J. Chem. Phys. 84 (7) 1986, 3963.
@@ -535,11 +556,18 @@ end
 ! 3456789012345678901234567890123456789012345678901234567890123456789012<<STOP
 double precision function attraction(a,b,i,j,k,ii,jj,kk,Ax,Ay,Az, &
       Bx,By,Bz,Cx,Cy,Cz,Z)
-   use quick_constants_module
+   use quick_constants_module, only: PI
    use quick_overlap_module, only: gpt, overlap
-   implicit double precision(a-h,o-z)
-   dimension aux(0:20)
-   double precision g_table(200)
+   implicit none
+   
+   double precision, intent(in) :: a, b, Ax, Ay, Az, Bx, By, Bz, Cx, Cy, Cz, Z
+   integer, intent(in) :: i, j, k, ii, jj, kk
+   
+   double precision, dimension(0:20) :: aux
+   double precision :: g_table(200)
+   double precision :: g, Px, Py, Pz, PCsquare, U, constant
+   double precision :: attrecurse
+   integer :: L, Maxm
 
    ! Variables needed later:
    !    pi=3.1415926535897932385
@@ -592,8 +620,17 @@ end function attraction
 
 double precision recursive function attrecurse(i,j,k,ii,jj,kk,m,aux,Ax,Ay, &
       Az,Bx,By,Bz,Cx,Cy,Cz,Px,Py,Pz,g) result(attrec)
-   implicit double precision(a-h,o-z)
-   dimension iexponents(6),center(12),aux(0:20)
+   implicit none
+   
+   integer, intent(in) :: i, j, k, ii, jj, kk, m
+   double precision, dimension(0:20), intent(in) :: aux
+   double precision, intent(in) :: Ax, Ay, Az, Bx, By, Bz
+   double precision, intent(in) :: Cx, Cy, Cz, Px, Py, Pz, g
+   
+    integer, dimension(6) :: iexponents
+    double precision, dimension(12) :: center
+    integer :: ilownum, ilowex, L, locnum
+    double precision :: PA, PC, coeff, temp, wp, hpass, gpass
 
    ! The this is taken from the recursive relation found in Obara and Saika,
    ! J. Chem. Phys. 84 (7) 1986, 3963.

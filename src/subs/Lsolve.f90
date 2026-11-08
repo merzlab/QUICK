@@ -27,8 +27,15 @@ SUBROUTINE LSOLVE(N,ISIZE,A,B,W,THRESH,X,IERROR)
   ! This code was written by Steve Dixon for use in Divcon, and has been
   ! slightly adapted for use in this code. -Ed Brothers.
 
-  IMPLICIT doUBLE PRECISION (A-H,O-Z)
-  DIMENSION A(ISIZE,ISIZE),B(ISIZE),W(ISIZE),X(ISIZE)
+  implicit none
+  integer, intent(in) :: n, isize
+  double precision, intent(inout) :: a(isize,isize)
+  double precision, intent(inout) :: b(isize)
+  double precision, intent(out) :: w(isize), x(isize)
+  double precision, intent(inout) :: thresh
+  integer, intent(out) :: ierror
+  double precision :: ave, amin, aikmax, aik, bswap, t
+  integer :: i, j, k, irow
   IERROR = 0
   if(THRESH <= 0.0D0) THRESH = 1.0D-12
   if(N == 1)then

@@ -5,9 +5,11 @@
 ! subroutine hrrwhole(IJKLtype,III,JJJ,KKK,LLL,Y)
 !Horrizontal Recursion subroutines by hand, these parts can be optimized by MAPLE
 subroutine hrrwhole
-   use allmod
+   use quick_basis_module, only: quick_basis, IJKLtype, III, JJJ, KKK, LLL, IJtype, KLtype, Y
+   use quick_params_module, only: trans
 
-   Implicit double precision(A-H,O-Z)
+   implicit none
+
    double precision store(120,120)
    INTEGER NA(3),NB(3),NC(3),ND(3)
    double precision RA(3),RB(3),RC(3),RD(3)
@@ -15,6 +17,10 @@ subroutine hrrwhole
 
    double precision coefangxiaoL(20),coefangxiaoR(20)
    integer angxiaoL(20),angxiaoR(20),numangularL,numangularR
+   
+   ! Additional declarations for missing local variables
+   integer :: M, itemp, jtemp, jxiao, MA, MAB, MB, MCD, MCX, i, md
+   double precision :: ctemp, Y1, Y2, yxiaotemp1, yxiaotemp2, yxiaotemp3
 
    COMMON /COM1/RA,RB,RC,RD
 
@@ -288,15 +294,20 @@ end subroutine hrrwhole
 
 subroutine lefthrr(RA,RB,KLMNA,KLMNB,IKnumber,coefangxiao,angxiao,numangular)
 
-   use allmod
+   use quick_params_module, only: trans
 
-   Implicit double precision(A-H,O-Z)
+   implicit none
+
    INTEGER KLMNA(3),KLMNB(3),NA(3),NB(3)
    double precision RA(3),RB(3)
    Integer M1,M2,M3,M4
 
    double precision coefangxiao(20)
    integer angxiao(20),numangular,IKnumber
+   
+   ! Additional declarations for missing local variables
+   integer :: m, itemp, jtemp, ktemp
+   double precision :: ytemp, Yxiaotemp1, Yxiaotemp2, Yxiaotemp3
 
    select case (IKnumber)
 
@@ -314,7 +325,7 @@ subroutine lefthrr(RA,RB,KLMNA,KLMNB,IKnumber,coefangxiao,angxiao,numangular)
 
       do itemp=1,3
          if(NB(itemp).ne.0)then
-            Y=(RA(itemp)-RB(itemp))
+            Ytemp=(RA(itemp)-RB(itemp))
             goto 111
          endif
       enddo
@@ -322,7 +333,7 @@ subroutine lefthrr(RA,RB,KLMNA,KLMNB,IKnumber,coefangxiao,angxiao,numangular)
       111  numangular=2
       coefangxiao(1)=1.0d0
       angxiao(1)=M1
-      coefangxiao(2)=Y
+      coefangxiao(2)=Ytemp
       angxiao(2)=1
 
 
@@ -348,7 +359,7 @@ subroutine lefthrr(RA,RB,KLMNA,KLMNB,IKnumber,coefangxiao,angxiao,numangular)
 
       do itemp=1,3
          if(NB(itemp).ne.0)then
-            Y=(RA(itemp)-RB(itemp))
+            Ytemp=(RA(itemp)-RB(itemp))
             goto 222
          endif
       enddo
@@ -356,7 +367,7 @@ subroutine lefthrr(RA,RB,KLMNA,KLMNB,IKnumber,coefangxiao,angxiao,numangular)
       222  numangular=2
       coefangxiao(1)=1.0d0
       angxiao(1)=M1
-      coefangxiao(2)=Y
+      coefangxiao(2)=Ytemp
       angxiao(2)=M2
 
    case (20,30,40)
@@ -382,10 +393,10 @@ subroutine lefthrr(RA,RB,KLMNA,KLMNB,IKnumber,coefangxiao,angxiao,numangular)
       do itemp=1,3
          if(NB(itemp).eq.2)then
             numangular=3
-            Y=(RA(itemp)-RB(itemp))
-            coefangxiao(2)=2.0d0*Y
+            Ytemp=(RA(itemp)-RB(itemp))
+            coefangxiao(2)=2.0d0*Ytemp
             angxiao(2)=itemp+1
-            coefangxiao(3)=Y*Y
+            coefangxiao(3)=Ytemp*Ytemp
             angxiao(3)=1
             goto 333
          endif
@@ -442,11 +453,11 @@ subroutine lefthrr(RA,RB,KLMNA,KLMNB,IKnumber,coefangxiao,angxiao,numangular)
       do itemp=1,3
          if(NB(itemp).eq.2)then
             numangular=3
-            Y=(RA(itemp)-RB(itemp))
-            coefangxiao(2)=2.0d0*Y
+            Ytemp=(RA(itemp)-RB(itemp))
+            coefangxiao(2)=2.0d0*Ytemp
             NA(itemp)=NA(itemp)+1
             angxiao(2)=trans(NA(1),NA(2),NA(3))
-            coefangxiao(3)=Y*Y
+            coefangxiao(3)=Ytemp*Ytemp
             angxiao(3)=M2
             goto 555
          endif
@@ -485,11 +496,11 @@ subroutine lefthrr(RA,RB,KLMNA,KLMNB,IKnumber,coefangxiao,angxiao,numangular)
       do itemp=1,3
          if(NB(itemp).eq.2)then
             numangular=3
-            Y=(RA(itemp)-RB(itemp))
-            coefangxiao(2)=2.0d0*Y
+            Ytemp=(RA(itemp)-RB(itemp))
+            coefangxiao(2)=2.0d0*Ytemp
             NA(itemp)=NA(itemp)+1
             angxiao(2)=trans(NA(1),NA(2),NA(3))
-            coefangxiao(3)=Y*Y
+            coefangxiao(3)=Ytemp*Ytemp
             angxiao(3)=M2
             goto 666
          endif
@@ -527,19 +538,19 @@ subroutine lefthrr(RA,RB,KLMNA,KLMNB,IKnumber,coefangxiao,angxiao,numangular)
       do itemp=1,3
          if(NB(itemp).eq.3)then
             numangular=4
-            Y=(RA(itemp)-RB(itemp))
+            Ytemp=(RA(itemp)-RB(itemp))
 
-            coefangxiao(2)=3.0d0*Y
+            coefangxiao(2)=3.0d0*Ytemp
             NA(itemp)=NA(itemp)+2
             angxiao(2)=trans(NA(1),NA(2),NA(3))
             NA(itemp)=NA(itemp)-2
 
-            coefangxiao(3)=3.0d0*Y*Y
+            coefangxiao(3)=3.0d0*Ytemp*Ytemp
             NA(itemp)=NA(itemp)+1
             angxiao(3)=trans(NA(1),NA(2),NA(3))
             NA(itemp)=NA(itemp)-1
 
-            coefangxiao(4)=Y*Y*Y
+            coefangxiao(4)=Ytemp*Ytemp*Ytemp
             angxiao(4)=M2
             goto 777
          endif
@@ -646,24 +657,24 @@ subroutine lefthrr(RA,RB,KLMNA,KLMNB,IKnumber,coefangxiao,angxiao,numangular)
       do itemp=1,3
          if(NB(itemp).eq.4)then
             numangular=5
-            Y=(RA(itemp)-RB(itemp))
+            Ytemp=(RA(itemp)-RB(itemp))
 
-            coefangxiao(2)=4.0d0*Y
+            coefangxiao(2)=4.0d0*Ytemp
             NA(itemp)=NA(itemp)+3
             angxiao(2)=trans(NA(1),NA(2),NA(3))
             NA(itemp)=NA(itemp)-3
 
-            coefangxiao(3)=6.0d0*Y*Y
+            coefangxiao(3)=6.0d0*Ytemp*Ytemp
             NA(itemp)=NA(itemp)+2
             angxiao(3)=trans(NA(1),NA(2),NA(3))
             NA(itemp)=NA(itemp)-2
 
-            coefangxiao(4)=4.0d0*Y*Y*Y
+            coefangxiao(4)=4.0d0*Ytemp*Ytemp*Ytemp
             NA(itemp)=NA(itemp)+1
             angxiao(4)=trans(NA(1),NA(2),NA(3))
             NA(itemp)=NA(itemp)-1
 
-            coefangxiao(5)=Y*Y*Y*Y
+            coefangxiao(5)=Ytemp*Ytemp*Ytemp*Ytemp
             angxiao(5)=M2
 
             goto 888
@@ -861,9 +872,12 @@ End subroutine lefthrr
 ! subroutine hrrwhole(IJKLtype,III,JJJ,KKK,LLL,Y)
 !Horrizontal Recursion subroutines by hand, these parts can be optimized by MAPLE
 subroutine hrrwholeopt
-   use allmod
+   use quick_basis_module, only: quick_basis, IJKLtype, III, JJJ, KKK, LLL, IJtype, KLtype, &
+                                  Yaa, Ybb, Ycc
+   use quick_params_module, only: trans
 
-   Implicit double precision(A-H,O-Z)
+   implicit none
+
    double precision store(120,120)
    INTEGER NA(3),NB(3),NC(3),ND(3)
    double precision RA(3),RB(3),RC(3),RD(3)
@@ -883,6 +897,10 @@ subroutine hrrwholeopt
    ! MM: some variables to improve memory access
    double precision :: tmp_Y, tmp_coefang
    integer :: itmp_ang, klmn_local
+   
+   ! Additional declarations for missing variables (yxiaotemp1-3 and i, jxiao, itemp are local only)
+   integer :: itemp, i, jxiao
+   double precision :: tempconstant, ij_grad_tmp, kl_grad_tmp, yxiaotemp1, yxiaotemp2, yxiaotemp3
 
    COMMON /COM1/RA,RB,RC,RD
 
