@@ -454,7 +454,10 @@ subroutine run_quick(self,ierr)
   use quick_molden_module, only: quick_molden, initializeExport, exportCoordinates, exportBasis, &
       exportMO, exportSCF, exportOPT
 #ifdef CEW 
-  use quick_cew_module, only: delete, quick_cew, upload
+  use quick_cew_module, only: quick_cew
+#if defined(GPU) || defined(MPIV_GPU)
+  use quick_cew_module, only: upload
+#endif
 #endif
 #if defined(MPIV)
   use quick_mpi_module, only: master
