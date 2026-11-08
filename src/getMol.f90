@@ -26,7 +26,7 @@ subroutine getMol(ierr)
     use quick_mpi_module, only: bMPI
 #endif
 #ifdef CUEST
-   use quick_fitbasis_module, only: quick_fitbasis, readfitbasis, print
+   use quick_fitbasis_module, only: quick_fitbasis, readfitbasis, print_quick_fitbasis
 #endif
 
    implicit none

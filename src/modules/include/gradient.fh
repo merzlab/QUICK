@@ -573,8 +573,9 @@ contains
     use mpi
 #endif
 #ifdef CUEST
-     use quick_cuest_module, only: cuest_get_V_grad
-     use quick_cuest_module, only: cuest_correct_P, cuest_correct_C, &
+     use quick_basis_module, only: nbasis, NBSuse
+     use quick_molspec_module, only: quick_molspec
+     use quick_cuest_module, only: cuest_get_V_grad, cuest_correct_P, cuest_correct_C, &
                                    CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
 #endif
 
@@ -806,6 +807,7 @@ contains
      use mpi
 #endif
 #ifdef CUEST
+     use quick_molspec_module, only: natom
      use quick_cuest_module, only: cuest_get_S_grad, cuest_get_T_grad
 #endif
 

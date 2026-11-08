@@ -459,6 +459,9 @@ subroutine run_quick(self,ierr)
 #if defined(MPIV)
   use quick_mpi_module, only: master
 #endif
+#ifdef CUEST
+  use quick_files_module, only: iOutFile
+#endif
 
   implicit none
 
