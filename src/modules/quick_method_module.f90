@@ -674,11 +674,14 @@ module quick_method_module
             CHECK_ERROR(ierr)
 
 #ifdef CUEST
-            if (index(keyWD, 'CUEST').ne.0) then
-               if (.not. self%DFT .or. self%cuest_fnl_code /= CUEST_FUNCTIONAL_UNKNOWN) then
-                  self%usecuest = .true.
-                  self%sadmo = .true.
+            if (found_keyword(keyWD, 'CUEST')) then
+               if (self%cuest_fnl_code == CUEST_FUNCTIONAL_UNKNOWN) then
+                  ierr = 43
+                  call RaiseException(ierr)
                endif
+
+               self%usecuest = .true.
+               self%sadmo = .true.
             endif
             print *, "usecuest=", self%usecuest
 #endif
@@ -1293,7 +1296,7 @@ module quick_method_module
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_HSE06
                    self%addK = .true.  ! because exchange fraction + lr exchange fraction = 0
                case default
-                   print *, "CUEST: found unsupported libxc functional with id=", quick_method%functional_id(1)
+                   ! print *, "CUEST: found unsupported libxc functional with id=", quick_method%functional_id(1)
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
            end select
         else ! nof_functionals == 2
@@ -1311,8 +1314,8 @@ module quick_method_module
                case (001007, 007001) ! LDA_X,LDA_C_VWN
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_SVWN5
                case default
-                   print *, "CUEST: found unsupported libxc functional with id=", &
-                            quick_method%functional_id(1), quick_method%functional_id(2)
+                   ! print *, "CUEST: found unsupported libxc functional with id=", &
+                   !          quick_method%functional_id(1), quick_method%functional_id(2)
                    self%cuest_fnl_code = CUEST_FUNCTIONAL_UNKNOWN
            end select
         endif

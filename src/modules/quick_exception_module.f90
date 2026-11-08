@@ -153,6 +153,9 @@ contains
       msg='Number of launched processes is greater than the available number of GPUs. Please &
               &relaunch with lower number of processes.'
 
+    case (43)
+      msg='Requested functional is unsupported by cuEST. Please disable cuEST or choose a different functional.'
+
     case default
       msg='Unknown error.'
 
