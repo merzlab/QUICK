@@ -92,10 +92,6 @@ contains
      use quick_mpi_module, only: master
      use mpi
 #endif
-#ifdef CUEST
-     use, intrinsic :: iso_c_binding, only: c_int64_t
-     use quick_cuest_module
-#endif
 
      implicit none
 

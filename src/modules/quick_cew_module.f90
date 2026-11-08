@@ -140,7 +140,8 @@ contains
     use, intrinsic :: iso_c_binding, only: c_bool
 #ifdef CUEST
     use quick_scratch_module, only: quick_scratch
-    use quick_cuest_module
+    use quick_basis_module, only: nbasis
+    use quick_cuest_module, only: cuest_correct_o, CUEST_CORRECT_REORDER_AND_NORM_QUICK_TO_CUEST
 #endif
 
     implicit none
@@ -597,7 +598,13 @@ contains
       use quick_basis_module, only: nbasis
       use quick_calculated_module, only: quick_qm_struct
       use quick_method_module, only: quick_method
-      use quick_cuest_module
+      use quick_cuest_module, only: cuest_get_xc_grid_npoint, cuest_get_grid_xyz, &
+                                    cuest_get_xc_grid_weight, cuest_get_xc_potential, &
+                                    CUEST_APPROXSPEC_LDA, CUEST_WEIGHTSPEC_TOTAL
+#ifdef CUESTDEBUG
+      use quick_cuest_module, only: cuest_debuglog, cuest_debuglog_PriSym, cuest_correct_o, &
+                                    CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
+#endif
       use, intrinsic :: iso_c_binding, only: c_int64_t
 
       integer(c_int64_t) :: npoint
@@ -670,7 +677,7 @@ contains
 #ifdef CUEST
     use quick_basis_module, only: nbasis
     use quick_scratch_module, only: quick_scratch
-    use quick_cuest_module
+    use quick_cuest_module, only: cuest_correct_P, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
 #endif
 
     implicit none
@@ -1290,7 +1297,8 @@ end do
    subroutine quick_cuest_cew_grad_quad()
       use quick_calculated_module, only: quick_qm_struct
       use quick_molspec_module, only: natom, quick_molspec
-      use quick_cuest_module
+      use quick_cuest_module, only: cuest_get_xc_grid_npoint, cuest_get_xc_dense, &
+                                    cuest_get_grid_der, cuest_get_grid_point_der
       use, intrinsic :: iso_c_binding, only: c_int64_t
 
       integer :: i, ii

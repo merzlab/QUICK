@@ -424,7 +424,10 @@ subroutine form_cuest_xc_quadrature(self, xcg_tmp)
    use quick_timer_module
 
    use, intrinsic :: iso_c_binding, only: c_int64_t, c_double
-   use quick_cuest_module
+   use quick_cuest_module, only: cuest_create_atom_grid_setup, cuest_create_atom_grid, &
+                                 cuest_init_oshell_xc, cuest_init_cshell_xc, cuest_destroy_atom_grid, &
+                                 cuest_init_xc_dense, cuest_init_grid_der, cuest_alloc_mempool, &
+                                 CUEST_APPROXSPEC_LDA
 
    implicit none
 

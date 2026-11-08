@@ -47,7 +47,8 @@ contains
 #endif
 #ifdef CUEST
      use quick_method_module, only: quick_method
-     use quick_cuest_module
+     use quick_cuest_module, only: cuest_get_eri_J, cuest_get_oshell_eri_K, cuest_get_oshell_xc, &
+                                   cuest_get_xc_nelec
 #endif
   
      implicit none

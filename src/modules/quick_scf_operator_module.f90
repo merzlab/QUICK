@@ -49,7 +49,8 @@ contains
     use, intrinsic :: iso_c_binding, only: c_int64_t
     use quick_method_module, only: quick_method
     use quick_molspec_module, only: quick_molspec
-    use quick_cuest_module
+    use quick_cuest_module, only: cuest_get_eri_J, cuest_get_cshell_eri_K, cuest_get_cshell_xc, &
+                                  cuest_get_xc_nelec
 #endif
   
      implicit none

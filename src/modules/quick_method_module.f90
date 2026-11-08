@@ -571,7 +571,8 @@ module quick_method_module
             use quick_files_module, only : write_molden
             use quick_input_parser_module, only: found_keyword
 #ifdef CUEST
-            use quick_cuest_module
+            use quick_cuest_module, only: CUEST_FUNCTIONAL_HF, CUEST_FUNCTIONAL_B3LYP, &
+                                          CUEST_FUNCTIONAL_UNKNOWN
 #endif
             implicit none
 
