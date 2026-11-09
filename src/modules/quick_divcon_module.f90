@@ -16,6 +16,17 @@ module quick_divcon_module
     integer, dimension(:,:), allocatable :: DCCore,DCBuffer1,DCBuffer2,DCSub,wtospoint
     integer, dimension(:), allocatable :: DCCoren,DCBuffer1n,DCBuffer2n,DCSubn,nBasisDC, &
                                           nElecDCSub,selectNN,nElecMP2Sub,DCSubn1
+
+    ! Reverse lookup, basis index -> (small, buffer-overlap-bounded) list of
+    ! fragments containing it, with the LOCAL index within each such
+    ! fragment's own ODCSub/PDCSub numbering. O(nbasis x BasisFragMaxOverlap):
+    ! BasisFragMaxOverlap is bounded by how many fragments' buffer regions can
+    ! overlap at one atom, not by np, so this does NOT grow quadratically with
+    ! system size the way wtospoint (np x nbasis, used only by the DC-MP2
+    ! path) would. Built once per geometry by BuildBasisFragMap (inidivcon.f90).
+    integer, dimension(:,:), allocatable :: BasisFragList,BasisFragLocalIdx
+    integer, dimension(:), allocatable :: BasisFragCount
+    integer :: BasisFragMaxOverlap
     integer, dimension(:,:), allocatable :: DCOverlap,DCConnect
     integer, dimension(:), allocatable :: kShellS,kShellF
     integer, dimension(:,:,:), allocatable :: DCLogic

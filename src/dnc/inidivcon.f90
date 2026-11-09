@@ -1034,6 +1034,21 @@ subroutine inidivcon(natomsaved)
   if (allocated(temp2d)) deallocate(temp2d)
   if (allocated(isurv)) deallocate(isurv)
 
+  ! dcsub/dcsubn/np are now consistent on every rank (STEP 4's broadcast
+  ! above), so every rank can build this lookup locally -- cheap integer
+  ! bookkeeping, no new communication needed. Gated exactly like the
+  ! fullX skip (quick_overlap_module.f90) it exists to support: this
+  ! lookup is currently unused by anything outside the single-point
+  ! DnC+DENSDIIS energy path that rewrite targets, so building it outside
+  ! that scope would just be dead work on every other DnC job (DC-MP2,
+  ! gradient, optimization, frequency, plain DIIS).
+  if (quick_method%DivCon .and. quick_method%densdiis .and. &
+      .not.quick_method%dcmp2only .and. .not.quick_method%MP2 .and. &
+      .not.quick_method%grad .and. .not.quick_method%opt .and. &
+      .not.quick_method%freq) then
+     call BuildBasisFragMap
+  endif
+
   !===================================================================
   ! End of inidivcon
   !===================================================================
@@ -1473,3 +1488,70 @@ subroutine write_frag_xyz(iunit,fname,coord,natomt,lpost)
   close(iunit)
 
 end subroutine write_frag_xyz
+
+!*******************************************************
+! BuildBasisFragMap
+!-------------------------------------------------------
+! Builds, once per geometry, an O(nbasis) reverse lookup from each global
+! basis index to the (small, buffer-overlap-bounded) list of fragments
+! that contain it, together with its LOCAL index within each such
+! fragment's own ODCSub/PDCSub numbering (same Kstart convention as
+! divideS/Odivided, so it stays compatible with them). This is the
+! opposite shape from wtospoint (np x nbasis, allocated only by the DC-MP2
+! path): BasisFragMaxOverlap is bounded by how many fragments' buffer
+! regions can overlap at one atom, not by np, so this does not grow
+! quadratically with system size.
+!
+subroutine BuildBasisFragMap
+  use quick_divcon_module, only: np, dcsubn, dcsub, BasisFragCount, BasisFragList, &
+                                 BasisFragLocalIdx, BasisFragMaxOverlap
+  use quick_basis_module, only: quick_basis, nbasis
+  implicit none
+
+  integer :: itt, jtt, iblockatom, itemp, a, kstart1
+
+  ! Pass 1: count, per basis index, how many fragments contain it.
+  if (.not. allocated(BasisFragCount)) allocate(BasisFragCount(nbasis))
+  BasisFragCount = 0
+
+  do itt=1,np
+     do jtt=1,dcsubn(itt)
+        iblockatom = dcsub(itt,jtt)
+        do itemp=quick_basis%first_basis_function(iblockatom), &
+                 quick_basis%last_basis_function(iblockatom)
+           BasisFragCount(itemp) = BasisFragCount(itemp) + 1
+        enddo
+     enddo
+  enddo
+
+  BasisFragMaxOverlap = maxval(BasisFragCount)
+
+  ! Pass 2: size to the actual max overlap found (not a guessed constant),
+  ! then fill both the fragment id and this basis index's local offset
+  ! within that fragment's own ODCSub/PDCSub block.
+  if (allocated(BasisFragList)) deallocate(BasisFragList)
+  if (allocated(BasisFragLocalIdx)) deallocate(BasisFragLocalIdx)
+  allocate(BasisFragList(nbasis,BasisFragMaxOverlap))
+  allocate(BasisFragLocalIdx(nbasis,BasisFragMaxOverlap))
+  BasisFragList = 0
+  BasisFragLocalIdx = 0
+  BasisFragCount = 0
+
+  do itt=1,np
+     kstart1=0
+     do jtt=1,dcsubn(itt)
+        iblockatom = dcsub(itt,jtt)
+        do itemp=quick_basis%first_basis_function(iblockatom), &
+                 quick_basis%last_basis_function(iblockatom)
+           a = itemp
+           BasisFragCount(a) = BasisFragCount(a) + 1
+           BasisFragList(a,BasisFragCount(a)) = itt
+           BasisFragLocalIdx(a,BasisFragCount(a)) = &
+              kstart1 + itemp - quick_basis%first_basis_function(iblockatom) + 1
+        enddo
+        kstart1 = kstart1 + quick_basis%last_basis_function(iblockatom) - &
+                            quick_basis%first_basis_function(iblockatom) + 1
+     enddo
+  enddo
+
+end subroutine BuildBasisFragMap
