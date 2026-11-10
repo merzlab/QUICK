@@ -47,6 +47,15 @@ subroutine mfcc(natomsaved)
    character(len=3), allocatable :: xname(:)   ! residue name of each standalone fragment
    ! MFCCCHG charge overrides
    integer :: chgovr, ichg, ip, ifirst, nchgapp, chgtot, nhit
+   ! Disulfide bridges. sspart(i) is the atom index of the sulfur that atom i is
+   ! bonded to across an S-S bridge, or 0 when it has none.
+   integer, allocatable :: sspart(:)
+   integer :: nss, nsscap, iss, jss
+   double precision :: ssd
+   ! A disulfide is 2.03-2.08 Angstrom in a protein. 2.5 leaves room for a
+   ! distorted or modestly refined structure while staying far below any
+   ! non-bonded S..S contact, which does not come within 3 Angstrom.
+   double precision, parameter :: SS_MAX = 2.5d0
    logical :: ovrfound, ovrbad
    character(len=3) :: ovrname
    integer :: maxres, ires2, npep, nxtra, pep_first, pep_last
@@ -119,6 +128,41 @@ subroutine mfcc(natomsaved)
    endif
 
    write(ioutfile,*) "MFCC processed PDB file"
+
+! ---------------------------------------------------------------------
+! Find the disulfide bridges.
+!
+! MFCC cuts the peptide backbone and caps each cut with a hydrogen, which is
+! what makes a fragment a closed shell molecule. A disulfide is a second kind of
+! bond through the chain, and nothing here knew about it: a CYX sulfur carries no
+! hydrogen of its own because it is bonded to its partner, so a fragment holding
+! one half of a bridge had a sulfur with an unsatisfied valence. On trypsin that
+! left 60 of 458 sub-molecules with an odd electron count and the run stopped in
+! the closed-shell guard. Pairs are found here and capped the same way the
+! backbone cuts are, once the fragments exist.
+! ---------------------------------------------------------------------
+   allocate(sspart(number))
+   sspart = 0
+   nss = 0
+   do i = 1, number
+     if (mfcc_element(atomname(i)) .ne. 'S ') cycle
+     if (sspart(i) .ne. 0) cycle
+     do j = i+1, number
+       if (mfcc_element(atomname(j)) .ne. 'S ') cycle
+       if (sspart(j) .ne. 0) cycle
+       ssd = dsqrt((coord(1,i)-coord(1,j))**2 + (coord(2,i)-coord(2,j))**2 &
+                 + (coord(3,i)-coord(3,j))**2)
+       if (ssd .le. SS_MAX) then
+         sspart(i) = j
+         sspart(j) = i
+         nss = nss + 1
+         write(ioutfile,'(" MFCC disulfide: atoms ",i7," and ",i7,"  (",a3,i5," - ",a3,i5,")  ", &
+               &f6.3," A")') i,j,residue(i),class(i),residue(j),class(j),ssd
+         exit
+       endif
+     enddo
+   enddo
+   if (nss .gt. 0) write(ioutfile,'(" MFCC found ",i0," disulfide bridge(s)")') nss
 
 ! Confirm reading of residue
 ! do i=1,number
@@ -314,7 +358,11 @@ subroutine mfcc(natomsaved)
     if (i .lt. npmfcc) mfccnat = mfccnat + natres(i+1)
     mfccnatmax = max(mfccnatmax, mfccnat)
   enddo
+  ! +2 for the backbone caps, and room for the disulfide caps: a fragment spans
+  ! three residues and a cap two, so a handful covers any realistic case. The
+  ! capping pass below checks the bound rather than trusting this.
   mfccnatmax = mfccnatmax + 2
+  if (nss .gt. 0) mfccnatmax = mfccnatmax + 6
   deallocate(natres)
 
   ! A standalone fragment has to fit in the same arrays.
@@ -819,6 +867,37 @@ subroutine mfcc(natomsaved)
       enddo
     enddo
   enddo
+
+! ---------------------------------------------------------------------
+! Cap the cut disulfides.
+!
+! Every fragment, cap and standalone sub-molecule now exists, and each one knows
+! the global atom range it was cut from. A sulfur inside that range whose bridge
+! partner lies outside it has lost the bond that satisfied its valence, so it
+! gets a hydrogen placed along the direction of the partner it can no longer
+! see. That is exactly what the backbone cuts already do, which is why the
+! capping hydrogen is appended past mfccfinal: like a backbone cap it belongs to
+! the sub-molecule's chemistry but not to the density block harvested from it.
+!
+! Both halves of a bridge get their own hydrogen when the bridge is cut, so the
+! two fragments are a pair of thiols rather than a pair of radicals. The guess
+! loses the S-S interaction itself, which is the usual MFCC trade: a cut bond is
+! represented by its capped halves.
+! ---------------------------------------------------------------------
+  if (nss .gt. 0) then
+    nsscap = 0
+    call mfcc_ss_cap(npmfcc+nxtra, mfccnatmax, mfccatom, mfcccord, mfccatomxiao, &
+          matomstart, matomfinal, number, coord, sspart, nsscap, mfccierr)
+    if (mfccierr .eq. 0) &
+      call mfcc_ss_cap(max(npmfcc-1,1), mfccnatmax, mfccatomcap, mfcccordcap, &
+            mfccatomxiaocap, matomstartcap, matomfinalcap, number, coord, sspart, &
+            nsscap, mfccierr)
+    if (mfccierr /= 0) then
+      call PrtErr(iOutFile,'A sub-molecule ran out of room for its disulfide capping hydrogens.')
+      call quick_exit(iOutFile,1)
+    endif
+    write(ioutfile,'(" MFCC capped ",i0," cut disulfide bond(s) with hydrogen")') nsscap
+  endif
 
   if (nunk .gt. 0) then
     call PrtWrn(iOutFile,'Some non-peptide residues have an unrecognised charge.')
@@ -1534,6 +1613,66 @@ subroutine mfcc_write_frag_xyz(iunit,collapse,xname)
 
 end subroutine mfcc_write_frag_xyz
 
+!-----------------------------------------------------------------------!
+! mfcc_ss_cap                                                           !
+!                                                                       !
+! Append a capping hydrogen to every sub-molecule that holds one end of  !
+! a cut disulfide bond.                                                  !
+!                                                                       !
+! mnat/mcord/msym are a sub-molecule array set (fragments, or caps), and  !
+! gs/gf the global atom range each sub-molecule was cut from. A sulfur in !
+! that range whose partner is outside it has a dangling valence, so a     !
+! hydrogen goes on it, pointing where the partner was.                    !
+!                                                                       !
+! The hydrogen is appended after the existing atoms, which places it past !
+! mfccfinal and therefore outside the basis range the density block is    !
+! harvested from -- the same treatment the backbone caps get.            !
+!-----------------------------------------------------------------------!
+subroutine mfcc_ss_cap(nsub, natmax, mnat, mcord, msym, gs, gf, &
+                       natom_g, coord_g, sspart, nadded, ierr)
+  implicit none
+  integer, intent(in) :: nsub, natmax, natom_g
+  integer, intent(inout) :: mnat(nsub)
+  double precision, intent(inout) :: mcord(3,natmax,nsub)
+  character(len=2), intent(inout) :: msym(natmax,nsub)
+  integer, intent(in) :: gs(nsub), gf(nsub)
+  double precision, intent(in) :: coord_g(3,natom_g)
+  integer, intent(in) :: sspart(natom_g)
+  integer, intent(inout) :: nadded, ierr
+
+  integer :: k, ia, ip, nnew
+  double precision :: xh, yh, zh
+
+  do k = 1, nsub
+    ! Unused slots are left at zero; the cap arrays run one short of the
+    ! fragment arrays and both are allocated to the larger size.
+    if (gs(k) .lt. 1 .or. gf(k) .lt. gs(k)) cycle
+    if (mnat(k) .lt. 1) cycle
+
+    do ia = gs(k), gf(k)
+      ip = sspart(ia)
+      if (ip .le. 0) cycle                  ! not part of a bridge
+      if (ip .ge. gs(k) .and. ip .le. gf(k)) cycle   ! partner is here too, bond intact
+
+      nnew = mnat(k) + 1
+      if (nnew .gt. natmax) then
+        ierr = 44
+        return
+      endif
+      call Sxyzchange(coord_g(1,ip),coord_g(2,ip),coord_g(3,ip), &
+                      coord_g(1,ia),coord_g(2,ia),coord_g(3,ia), xh,yh,zh)
+      msym(nnew,k) = 'H '
+      mcord(1,nnew,k) = xh
+      mcord(2,nnew,k) = yh
+      mcord(3,nnew,k) = zh
+      mnat(k) = nnew
+      nadded = nadded + 1
+    enddo
+  enddo
+
+end subroutine mfcc_ss_cap
+
+
 subroutine xyzchange(xold,yold,zold,xzero,yzero,zzero, &
   xnew,ynew,znew)
 
@@ -1547,6 +1686,24 @@ subroutine xyzchange(xold,yold,zold,xzero,yzero,zzero, &
   ynew=yzero+grad*(yold-yzero)
   znew=zzero+grad*(zold-zzero)
 end
+
+! Place a hydrogen 1.34 Angstrom from the sulfur at (xzero,yzero,zzero),
+! along the direction of the atom it was bonded to. Same construction as
+! xyzchange (C-H, 1.09) and Nxyzchange (N-H, 1.01), with the S-H bond length.
+subroutine Sxyzchange(xold,yold,zold,xzero,yzero,zzero, &
+  xnew,ynew,znew)
+
+  implicit none
+  real(8)::grad,xold,yold,zold,xzero,yzero,zzero
+  real(8)::xnew,ynew,znew
+
+  grad=dsqrt(1.34d0**2/((xold-xzero)**2+(yold-yzero)**2 &
+  +(zold-zzero)**2))
+  xnew=xzero+grad*(xold-xzero)
+  ynew=yzero+grad*(yold-yzero)
+  znew=zzero+grad*(zold-zzero)
+end subroutine Sxyzchange
+
 
 subroutine Nxyzchange(xold,yold,zold,xzero,yzero,zzero, &
   xnew,ynew,znew)
