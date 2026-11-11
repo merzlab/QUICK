@@ -44,7 +44,9 @@
 #if defined(__cplusplus)
 extern "C" {
 
-void CUDA_DIAG (double *, , const int *, const int *, const double *, double *);
+/* o, dim1, dim2, eval, evec, info -- see CUDA_DIAG in quick_cusolver.c for the
+ * meaning of the returned info flag. */
+void CUDA_DIAG (double *, const int *, const int *, double *, double *, int *);
 
 }
 #endif /* __cplusplus */

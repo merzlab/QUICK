@@ -183,6 +183,14 @@ contains
       msg='A file was opened with no name. The name was blank by the time it reached &
               &quick_open, which normally means set_quick_files never ran in that context.'
 
+    case(49)
+      msg='The eigensolver failed to diagonalize a matrix. The eigenvalues and eigenvectors &
+              &it returned are not valid, so any density built from them is meaningless. On &
+              &GPU builds this is most often cuSOLVER reporting non-convergence through &
+              &devInfo for a large matrix, which the divide and conquer per-subsystem &
+              &diagonalization is the usual way to reach. See the MAT_DIAG message above for &
+              &the solver info code and the matrix dimension.'
+
     case default
       msg='Unknown error.'
 
