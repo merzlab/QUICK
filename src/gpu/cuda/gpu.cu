@@ -567,6 +567,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu->gpu_calculated->nbasis = *nbasis;
     gpu->gpu_calculated->o = NULL;
     gpu->gpu_calculated->ob = NULL;
+    gpu->gpu_calculated->oCompact = NULL;
     gpu->gpu_calculated->dense = NULL;
     gpu->gpu_calculated->denseb = NULL;
 #if defined(USE_LEGACY_ATOMICS)
@@ -638,6 +639,22 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu->gpu_cutoff->cutPrim = NULL;
     gpu->gpu_cutoff->dcConnect = NULL;
     gpu->gpu_sim.dcConnect = NULL; // only non-NULL for DnC jobs; set by gpu_upload_dcconnect_
+    gpu->gpu_cutoff->fragBasisCount = NULL;
+    gpu->gpu_cutoff->fragBasisList = NULL;
+    gpu->gpu_cutoff->fragBasisLocalIdx = NULL;
+    gpu->gpu_cutoff->fragOffset = NULL;
+    gpu->gpu_cutoff->fragNbasis = NULL;
+    gpu->gpu_sim.use_compact_o = false; // only true for single-point DnC+DENSDIIS jobs;
+                                         // set by gpu_upload_fragmap_
+    gpu->gpu_sim.oCompact = NULL;
+    gpu->gpu_sim.fragBasisCount = NULL;
+    gpu->gpu_sim.fragBasisList = NULL;
+    gpu->gpu_sim.fragBasisLocalIdx = NULL;
+    gpu->gpu_sim.fragOffset = NULL;
+    gpu->gpu_sim.fragNbasis = NULL;
+    gpu->gpu_sim.fragMaxOverlap = 0;
+    gpu->gpu_sim.fragNp = 0;
+    gpu->gpu_sim.fragOCompactSize = 0;
     gpu->onTheFly = false; // only true for DnC jobs; set by gpu_upload_onthefly_
     gpu->gpu_cutoff->integralCutoff = 0.0;
     gpu->gpu_cutoff->coreIntegralCutoff = 0.0;
@@ -1518,6 +1535,131 @@ extern "C" void gpu_upload_dcconnect_(int* dcConnect)
 
 
 //-----------------------------------------------
+//  upload the basis-index -> fragment-membership map (mirrors the host-side
+//  BuildBasisFragMap, inidivcon.f90) plus the per-fragment offset table into
+//  the compact O buffer. Only called for single-point DnC+DENSDIIS jobs
+//  (same gate as gpu_upload_dcconnect_'s caller); sets devSim.use_compact_o
+//  so gpu_upload_calculated_ and the 2e-integral kernel's Fock writes
+//  (FOCK_ATOMIC_ADD_O, gpu_get2e_subs.h) redirect O into a compact
+//  per-fragment-block buffer instead of a dense (nbasis,nbasis) one.
+//
+//  P/dense is NOT touched by this -- it stays dense. Coulomb terms read
+//  density at pairs that are not guaranteed same-fragment (confirmed by
+//  direct inspection of the kernel's DENSE* reads), so a compact
+//  per-fragment-block P cannot serve every read a correct Coulomb term
+//  needs. Only O's write target is compacted here.
+//
+//  fragOffset is a 0-based prefix sum of length np+1 (fragOffset[0]=0,
+//  fragOffset[itt] = fragOffset[itt-1] + nbasisdc(itt)^2); fragOffset[np]
+//  is therefore the total compact buffer size in elements.
+//-----------------------------------------------
+extern "C" void gpu_upload_fragmap_(int* p_nbasis, int* p_np, int* p_maxOverlap,
+        int* fragBasisCount, int* fragBasisList, int* fragBasisLocalIdx, int* fragOffset,
+        int* fragNbasis)
+{
+    PRINTDEBUG("BEGIN TO UPLOAD FRAGMENT MAP");
+
+    int nbasis = *p_nbasis;
+    int np = *p_np;
+    int maxOverlap = *p_maxOverlap;
+    int totalCompact = fragOffset[np];
+
+#if defined(USE_LEGACY_ATOMICS) || defined(OSHELL)
+    // FOCK_ATOMIC_ADD_O (gpu_get2e_subs.h) only replaced the closed-shell,
+    // native-fp64-atomics O write sites -- on a build that instead uses the
+    // legacy fixed-point oULL atomics (pre-native-fp64-atomicAdd GPUs) or is
+    // compiled for open-shell, those write sites still target devSim.o/oULL
+    // directly and would never populate oCompact. Stay on the safe, dense-O
+    // path on those builds rather than silently gathering an all-zero O.
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: compact-O unsupported on this "
+            "build (USE_LEGACY_ATOMICS and/or OSHELL) -- falling back to dense O\n");
+    fflush(stderr);
+    gpu->gpu_sim.use_compact_o = false;
+    return;
+#endif
+
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: nbasis=%d, np=%d, maxOverlap=%d, "
+            "compact O buffer = %d elements (~%.3f GB) vs dense (nbasis,nbasis) ~%.3f GB\n",
+            nbasis, np, maxOverlap, totalCompact,
+            (double) totalCompact * sizeof(QUICKDouble) / (1024.0*1024.0*1024.0),
+            (double) nbasis * (double) nbasis * sizeof(QUICKDouble) / (1024.0*1024.0*1024.0));
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: ptrs gpu=%p gpu_cutoff=%p fragBasisCount(f90)=%p "
+            "fragBasisList(f90)=%p fragBasisLocalIdx(f90)=%p fragOffset(f90)=%p fragNbasis(f90)=%p\n",
+            (void*) gpu, (void*) (gpu ? gpu->gpu_cutoff : NULL), (void*) fragBasisCount,
+            (void*) fragBasisList, (void*) fragBasisLocalIdx, (void*) fragOffset, (void*) fragNbasis);
+    fflush(stderr);
+
+    gpu->gpu_cutoff->fragBasisCount = new gpu_buffer_type<int>(fragBasisCount, nbasis);
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragBasisCount allocated (host copy done)\n"); fflush(stderr);
+    gpu->gpu_cutoff->fragBasisCount->Upload();
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragBasisCount uploaded to device\n"); fflush(stderr);
+    gpu->gpu_sim.fragBasisCount = gpu->gpu_cutoff->fragBasisCount->_devData;
+
+    gpu->gpu_cutoff->fragBasisList = new gpu_buffer_type<int>(fragBasisList, nbasis, maxOverlap);
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragBasisList allocated (host copy done)\n"); fflush(stderr);
+    gpu->gpu_cutoff->fragBasisList->Upload();
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragBasisList uploaded to device\n"); fflush(stderr);
+    gpu->gpu_sim.fragBasisList = gpu->gpu_cutoff->fragBasisList->_devData;
+
+    gpu->gpu_cutoff->fragBasisLocalIdx = new gpu_buffer_type<int>(fragBasisLocalIdx, nbasis, maxOverlap);
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragBasisLocalIdx allocated (host copy done)\n"); fflush(stderr);
+    gpu->gpu_cutoff->fragBasisLocalIdx->Upload();
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragBasisLocalIdx uploaded to device\n"); fflush(stderr);
+    gpu->gpu_sim.fragBasisLocalIdx = gpu->gpu_cutoff->fragBasisLocalIdx->_devData;
+
+    gpu->gpu_cutoff->fragOffset = new gpu_buffer_type<int>(fragOffset, np + 1);
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragOffset allocated (host copy done)\n"); fflush(stderr);
+    gpu->gpu_cutoff->fragOffset->Upload();
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragOffset uploaded to device\n"); fflush(stderr);
+    gpu->gpu_sim.fragOffset = gpu->gpu_cutoff->fragOffset->_devData;
+
+    gpu->gpu_cutoff->fragNbasis = new gpu_buffer_type<int>(fragNbasis, np);
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragNbasis allocated (host copy done)\n"); fflush(stderr);
+    gpu->gpu_cutoff->fragNbasis->Upload();
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragNbasis uploaded to device\n"); fflush(stderr);
+    gpu->gpu_sim.fragNbasis = gpu->gpu_cutoff->fragNbasis->_devData;
+
+    gpu->gpu_sim.fragMaxOverlap = maxOverlap;
+    gpu->gpu_sim.fragNp = np;
+    gpu->gpu_sim.fragOCompactSize = totalCompact;
+    gpu->gpu_sim.use_compact_o = true;
+
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: done, use_compact_o=true\n"); fflush(stderr);
+    PRINTDEBUG("COMPLETE UPLOADING FRAGMENT MAP");
+}
+
+
+//-----------------------------------------------
+//  Copy the compact per-fragment-block O buffer's already-downloaded host
+//  data (gpu_get_cshell_eri_ calls oCompact->Download() before returning)
+//  out to a Fortran array of length gpu->gpu_sim.fragOCompactSize. Only
+//  meaningful when use_compact_o is true; GatherCompactO (inidivcon.f90)
+//  scatters the result into quick_qm_struct%o. See 9.14.
+//-----------------------------------------------
+extern "C" void gpu_download_compact_o_(QUICKDouble* compactO)
+{
+    PRINTDEBUG("BEGIN TO DOWNLOAD COMPACT O");
+    memcpy(compactO, gpu->gpu_calculated->oCompact->_hostData,
+            sizeof(QUICKDouble) * gpu->gpu_sim.fragOCompactSize);
+    PRINTDEBUG("COMPLETE DOWNLOADING COMPACT O");
+}
+
+
+//-----------------------------------------------
+//  Report whether compact-O ended up active after the most recent
+//  gpu_upload_fragmap_ call (it can be forced false there on a build that
+//  does not support it -- see USE_LEGACY_ATOMICS/OSHELL guard above).
+//  inidivcon.f90 calls this once per geometry to decide whether
+//  dnc_scf_operator.f90 should call gpu_download_compact_o/GatherCompactO
+//  each SCF iteration, or rely on the ordinary dense-O path instead.
+//-----------------------------------------------
+extern "C" void gpu_get_use_compact_o_(bool* flag)
+{
+    *flag = gpu->gpu_sim.use_compact_o;
+}
+
+
+//-----------------------------------------------
 //  set the GPU on-the-fly AB/P recompute flag (quick_method%gpuOnTheFly).
 //  Must be called before gpu_upload_basis_, which reads gpu->onTheFly to
 //  decide whether to allocate/build/upload the dense expoSum/
@@ -1759,19 +1901,66 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
 
     PRINTDEBUG("BEGIN TO UPLOAD O MATRIX");
 
-    gpu->gpu_calculated->o = new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
-    gpu->gpu_calculated->dense = new gpu_buffer_type<QUICKDouble>(dense, gpu->nbasis, gpu->nbasis);
+    double dense_gb = (double) gpu->nbasis * (double) gpu->nbasis * sizeof(QUICKDouble) / (1024.0*1024.0*1024.0);
+
+    if (gpu->gpu_sim.use_compact_o) {
+        // Single-point DnC+DENSDIIS job (see gpu_upload_fragmap_): O goes
+        // into a compact per-fragment-block buffer instead of a dense
+        // (nbasis,nbasis) one. P/dense is UNCHANGED below -- stays dense,
+        // since Coulomb terms read cross-fragment density pairs a compact
+        // per-fragment buffer cannot serve.
+        int totalCompact = gpu->gpu_sim.fragOCompactSize;
+        double compact_gb = (double) totalCompact * sizeof(QUICKDouble) / (1024.0*1024.0*1024.0);
+        fprintf(stderr, "[DEBUG] gpu_upload_calculated_: nbasis=%d, COMPACT O buffer ~%.3f GB "
+                "(%d elements, vs dense ~%.3f GB) + dense P ~%.3f GB (~%.3f GB combined)\n",
+                gpu->nbasis, compact_gb, totalCompact, dense_gb, dense_gb, compact_gb + dense_gb);
+        fflush(stderr);
+
+        // This is called once per fragment per SCF iteration for DnC jobs, so the
+        // previous call's buffer must be freed here -- otherwise every call leaks
+        // its predecessor's GPU allocation instead of replacing it, exhausting
+        // device memory over a large fragment loop.
+        if (gpu->gpu_calculated->oCompact != NULL) {
+            delete gpu->gpu_calculated->oCompact;
+            gpu->gpu_calculated->oCompact = NULL;
+        }
+        gpu->gpu_calculated->oCompact = new gpu_buffer_type<QUICKDouble>(totalCompact);
+        gpu->gpu_calculated->oCompact->Upload();
+        gpu->gpu_sim.oCompact = gpu->gpu_calculated->oCompact->_devData;
+    } else {
+        fprintf(stderr, "[DEBUG] gpu_upload_calculated_: nbasis=%d, allocating O + dense(P) GPU buffers, "
+                "~%.3f GB each (~%.3f GB combined)\n", gpu->nbasis, dense_gb, 2.0*dense_gb);
+        fflush(stderr);
+
+        // See the oCompact free above -- same leak-on-reassignment risk for o/oULL.
+        if (gpu->gpu_calculated->o != NULL) {
+            delete gpu->gpu_calculated->o;
+            gpu->gpu_calculated->o = NULL;
+        }
+        gpu->gpu_calculated->o = new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
 #if defined(USE_LEGACY_ATOMICS)
-    gpu->gpu_calculated->o->DeleteGPU();
-    gpu->gpu_calculated->oULL = new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
-    gpu->gpu_calculated->oULL->Upload();
-    gpu->gpu_sim.oULL = gpu->gpu_calculated->oULL->_devData;
+        gpu->gpu_calculated->o->DeleteGPU();
+        if (gpu->gpu_calculated->oULL != NULL) {
+            delete gpu->gpu_calculated->oULL;
+            gpu->gpu_calculated->oULL = NULL;
+        }
+        gpu->gpu_calculated->oULL = new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
+        gpu->gpu_calculated->oULL->Upload();
+        gpu->gpu_sim.oULL = gpu->gpu_calculated->oULL->_devData;
 #else
-    gpu->gpu_calculated->o->Upload();
-    gpu->gpu_sim.o = gpu->gpu_calculated->o->_devData;
+        gpu->gpu_calculated->o->Upload();
+        gpu->gpu_sim.o = gpu->gpu_calculated->o->_devData;
 #endif
+    }
 
+    // Same leak-on-reassignment risk as o/oCompact above: this runs once per
+    // fragment per SCF iteration for DnC jobs.
+    if (gpu->gpu_calculated->dense != NULL) {
+        delete gpu->gpu_calculated->dense;
+        gpu->gpu_calculated->dense = NULL;
+    }
+    gpu->gpu_calculated->dense = new gpu_buffer_type<QUICKDouble>(dense, gpu->nbasis, gpu->nbasis);
     gpu->gpu_calculated->dense->Upload();
     gpu->gpu_sim.dense = gpu->gpu_calculated->dense->_devData;
 
@@ -1797,10 +1986,27 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
 
     PRINTDEBUG("BEGIN TO UPLOAD BETA O MATRIX");
 
+    {
+        double buf_gb = (double) gpu->nbasis * (double) gpu->nbasis * sizeof(QUICKDouble) / (1024.0*1024.0*1024.0);
+        fprintf(stderr, "[DEBUG] gpu_upload_calculated_beta_: nbasis=%d, allocating Ob GPU buffer, "
+                "~%.3f GB\n", gpu->nbasis, buf_gb);
+        fflush(stderr);
+    }
+
+    // Freed before reassignment -- see gpu_upload_calculated_'s oCompact comment
+    // for why (this runs once per fragment per SCF iteration for DnC UHF jobs).
+    if (gpu->gpu_calculated->ob != NULL) {
+        delete gpu->gpu_calculated->ob;
+        gpu->gpu_calculated->ob = NULL;
+    }
     gpu->gpu_calculated->ob = new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
 #if defined(USE_LEGACY_ATOMICS)
     gpu->gpu_calculated->ob->DeleteGPU();
+    if (gpu->gpu_calculated->obULL != NULL) {
+        delete gpu->gpu_calculated->obULL;
+        gpu->gpu_calculated->obULL = NULL;
+    }
     gpu->gpu_calculated->obULL = new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
     gpu->gpu_calculated->obULL->Upload();
     gpu->gpu_sim.obULL = gpu->gpu_calculated->obULL->_devData;
@@ -1825,6 +2031,11 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
 //This method uploads density matrix onto gpu for XC gradient calculation
 extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense)
 {
+    // Freed before reassignment -- see gpu_upload_calculated_'s oCompact comment.
+    if (gpu->gpu_calculated->dense != NULL) {
+        delete gpu->gpu_calculated->dense;
+        gpu->gpu_calculated->dense = NULL;
+    }
     gpu->gpu_calculated->dense = new gpu_buffer_type<QUICKDouble>(dense,  gpu->nbasis, gpu->nbasis);
     gpu->gpu_calculated->dense->Upload();
     gpu->gpu_sim.dense = gpu->gpu_calculated->dense->_devData;
@@ -1833,6 +2044,11 @@ extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense)
 
 extern "C" void gpu_upload_beta_density_matrix_(QUICKDouble* denseb)
 {
+    // Freed before reassignment -- see gpu_upload_calculated_'s oCompact comment.
+    if (gpu->gpu_calculated->denseb != NULL) {
+        delete gpu->gpu_calculated->denseb;
+        gpu->gpu_calculated->denseb = NULL;
+    }
     gpu->gpu_calculated->denseb = new gpu_buffer_type<QUICKDouble>(denseb,  gpu->nbasis, gpu->nbasis);
     gpu->gpu_calculated->denseb->Upload();
     gpu->gpu_sim.denseb = gpu->gpu_calculated->denseb->_devData;
@@ -3013,6 +3229,13 @@ extern "C" void gpu_cleanup_()
     SAFE_DELETE(gpu->gpu_cutoff->YCutoff);
     SAFE_DELETE(gpu->gpu_cutoff->cutPrim);
     SAFE_DELETE(gpu->gpu_cutoff->dcConnect);
+    SAFE_DELETE(gpu->gpu_cutoff->fragBasisCount);
+    SAFE_DELETE(gpu->gpu_cutoff->fragBasisList);
+    SAFE_DELETE(gpu->gpu_cutoff->fragBasisLocalIdx);
+    SAFE_DELETE(gpu->gpu_cutoff->fragOffset);
+    SAFE_DELETE(gpu->gpu_cutoff->fragNbasis);
+    SAFE_DELETE(gpu->gpu_calculated->oCompact);
+    gpu->gpu_sim.use_compact_o = false;
 
     SAFE_DELETE(gpu->allxyz);
     SAFE_DELETE(gpu->allchg);
@@ -3072,6 +3295,13 @@ extern "C" void gpu_cleanup_fragment_()
     SAFE_DELETE(gpu->gpu_cutoff->YCutoff);
     SAFE_DELETE(gpu->gpu_cutoff->cutPrim);
     SAFE_DELETE(gpu->gpu_cutoff->dcConnect);
+    SAFE_DELETE(gpu->gpu_cutoff->fragBasisCount);
+    SAFE_DELETE(gpu->gpu_cutoff->fragBasisList);
+    SAFE_DELETE(gpu->gpu_cutoff->fragBasisLocalIdx);
+    SAFE_DELETE(gpu->gpu_cutoff->fragOffset);
+    SAFE_DELETE(gpu->gpu_cutoff->fragNbasis);
+    SAFE_DELETE(gpu->gpu_calculated->oCompact);
+    gpu->gpu_sim.use_compact_o = false;
 
     SAFE_DELETE(gpu->allxyz);
     SAFE_DELETE(gpu->allchg);

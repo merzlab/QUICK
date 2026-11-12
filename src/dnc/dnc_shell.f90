@@ -9,10 +9,10 @@ subroutine shellmp2divcon(i33,ittsub)
    use quick_params_module, only: Sumindex
    use quick_method_module, only: quick_method
 
-   Implicit double precision(a-h,o-z)
-
+   implicit none
+   integer, intent(in) :: i33, ittsub
+   integer, parameter :: NN=13
    double precision P(3),Q(3),W(3),KAB,KCD,AAtemp(3)
-   Parameter(NN=13)
    double precision FM(0:13)
    double precision RA(3),RB(3),RC(3),RD(3)
 
@@ -23,6 +23,17 @@ subroutine shellmp2divcon(i33,ittsub)
    COMMON /VRRcom/Qtemp,WQtemp,CDtemp,ABcom,Ptemp,WPtemp,ABtemp,CDcom,ABCDtemp
 
    COMMON /COM1/RA,RB,RC,RD
+
+   ! Former implicit locals, declared explicitly with no change to their
+   ! original implicit types -- mirrors calMP2.f90's shellmp2 (the non-DnC
+   ! twin this subroutine was copied from), which already carries this exact
+   ! "Undeclared variables" block.
+   integer :: M, NII1, NII2, NJJ1, NJJ2, NKK1, NKK2, NLL1, NLL2
+   integer :: NNAB, NNCD, NABCDTYPE, NNA, NNC, NABCD, ITT
+   integer :: Nprij, Nprii, Npril, Nprik
+   integer :: I, J, K, L, I2, I1, iitemp
+   double precision :: cutoffprim1, CD, ABCD, ROU, RPQ, ABCDxiao, cutoffprim
+   double precision :: T, XXXtemp, AB
 
    do M=1,3
       RA(M)=xyz(M,quick_basis%katom(II))
@@ -140,15 +151,19 @@ subroutine classmp2divcon(I,J,K,L,NNA,NNC,NNAB,NNCD,i33,ittsub)
    use quick_method_module, only: quick_method
    use quick_divcon_module, only: wtospoint
    use quick_calculated_module, only: quick_qm_struct
+   use quick_constants_module, only: X0
 
-   Implicit double precision(A-H,O-Z)
+   implicit none
+   integer, parameter :: NN=13
+   integer, intent(in) :: I, J, K, L, NNA, NNC, NNAB, NNCD, i33, ittsub
    double precision store(120,120)
    INTEGER NA(3),NB(3),NC(3),ND(3)
    double precision P(3),Q(3),W(3),KAB,KCD
-   Parameter(NN=13)
    double precision FM(0:13)
    double precision RA(3),RB(3),RC(3),RD(3)
    double precision X44(129600)
+   ! Variables for COMMON blocks
+   double precision AA, BB, CC, DD, AB, CD, ROU, ABCD
 
    COMMON /COM1/RA,RB,RC,RD
    COMMON /COM2/AA,BB,CC,DD,AB,CD,ROU,ABCD
@@ -158,6 +173,18 @@ subroutine classmp2divcon(I,J,K,L,NNA,NNC,NNAB,NNCD,i33,ittsub)
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /xiaostore/store
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
+
+   ! Former implicit locals, declared explicitly with no change to their
+   ! original implicit types -- mirrors calMP2.f90's classmp2 (the non-DnC
+   ! twin this subroutine was copied from), which already carries this exact
+   ! "Undeclared variables" block.
+   integer :: ITT, Nprij, Nprii, Npril, Nprik
+   integer :: MM1, MM2, itemp, I2, I1
+   integer :: NII1, NJJ1, II111, JJ111
+   integer :: III1, III2, JJJ1, JJJ2, KKK1, KKK2, LLL1, LLL2
+   integer :: IIInew, JJJnew
+   integer :: KKKsub, LLLsub
+   double precision :: X2, cutoffprim1, cutoffprim, atemp, btemp, Ytemp
 
    ITT=0
 

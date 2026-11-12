@@ -44,7 +44,9 @@ subroutine inidivcon(natomsaved)
                                  OBDCSub, PBDCSub, cobDCSub, PBDCSubtran, cobDCSubtran, &
                                  eValDCSub, eValbDCSub, disDivMFCC, np, NNMax, npsaved, &
                                  selectC, charge, spin, selectN, selectCA, ccharge, &
-                                 mpi_dc_fragn, mpi_dc_frag, mpi_dc_nbasis
+                                 mpi_dc_fragn, mpi_dc_frag, mpi_dc_nbasis, BasisFragMaxOverlap, &
+                                 BasisFragCount, BasisFragList, BasisFragLocalIdx, &
+                                 GPUFragOffset, GPUUseCompactO, GPUCompactOBuf
   use quick_basis_module, only: quick_basis, nbasis, jshell
   use quick_method_module, only: quick_method
   use quick_molspec_module, only: quick_molspec, natom, xyz
@@ -57,7 +59,13 @@ subroutine inidivcon(natomsaved)
   use mpi
 #endif
 
-  implicit double precision (a-h,o-z)
+  implicit none
+
+  ! Former implicit locals, declared explicitly with no change to their
+  ! original implicit types.
+  double precision :: dis, rmin
+  integer :: i, icc, ii, iiii, io, itemp, itt, j, j2, jblockatom, jj, jnum, &
+             jtemp, jtt, jtt2, k1, k2, kk, m1, m2, m10, m20, nntemp, iblockatom
 
   double precision rbuffer1,rbuffer2
 
@@ -76,6 +84,7 @@ subroutine inidivcon(natomsaved)
   logical,allocatable:: buffer2log(:,:)
   logical,allocatable:: embedded(:,:)
   integer,allocatable:: temp1d(:),temp2d(:,:)
+  integer :: itt_gpu_upload                   ! loop var for GPUFragOffset, kept distinct from the itt used elsewhere in this subroutine
   integer,allocatable:: isurv(:)              ! subsystems surviving elimination
   integer nsurv                               ! how many of them
   integer ndcmax                              ! max atoms in any one fragment's dcsub, for dclogic
@@ -1047,6 +1056,78 @@ subroutine inidivcon(natomsaved)
       .not.quick_method%grad .and. .not.quick_method%opt .and. &
       .not.quick_method%freq) then
      call BuildBasisFragMap
+     if (master) then
+        write(iOutfile,'(a)')
+        write(iOutfile,'(" @ DEBUG [DnC+DENSDIIS, single-point]: BuildBasisFragMap built")')
+        write(iOutfile,'("   nbasis=",i0,"  np(fragments)=",i0,"  BasisFragMaxOverlap=",i0)') &
+           nbasis, np, BasisFragMaxOverlap
+        write(iOutfile,'("   BasisFragList+BasisFragLocalIdx storage: ~",f10.3," GB &
+           &(2 x nbasis x BasisFragMaxOverlap x 4-byte int)")') &
+           2.0d0*dble(nbasis)*dble(BasisFragMaxOverlap)*4.0d0/1024.0d0**3
+        write(iOutfile,'("   per-fragment O/P compact-block equivalent (sum nbasisdc(itt)^2): ~", &
+           &f10.3," GB each, vs dense (nbasis,nbasis): ~",f10.3," GB each")') &
+           sum(dble(nBasisDC(1:np))**2)*8.0d0/1024.0d0**3, &
+           dble(nbasis)*dble(nbasis)*8.0d0/1024.0d0**3
+        call flush(iOutfile)
+     endif
+
+     ! Upload the fragment map to GPU so the 2e-integral kernel can write O
+     ! into a compact per-fragment-block buffer instead of a dense
+     ! (nbasis,nbasis) one -- see 9.14 / FOCK_ATOMIC_ADD_O. Only for GPU
+     ! builds; gated identically to BuildBasisFragMap above. P/dense is NOT
+     ! compacted (Coulomb terms read cross-fragment density pairs), so this
+     ! only shrinks O's GPU footprint, not P's.
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+     if (quick_method%bGPU) then
+        if (allocated(GPUFragOffset)) deallocate(GPUFragOffset)
+        allocate(GPUFragOffset(0:np))
+        GPUFragOffset(0) = 0
+        do itt_gpu_upload = 1, np
+           GPUFragOffset(itt_gpu_upload) = GPUFragOffset(itt_gpu_upload-1) + &
+              nBasisDC(itt_gpu_upload)*nBasisDC(itt_gpu_upload)
+        enddo
+        if (master) then
+           write(iOutfile,'("   compact O GPU buffer actually allocated: ~",f10.3,&
+              &" GB (",i0," elements)")') &
+              dble(GPUFragOffset(np))*8.0d0/1024.0d0**3, GPUFragOffset(np)
+           call flush(iOutfile)
+        endif
+        call gpu_upload_fragmap(nbasis, np, BasisFragMaxOverlap, BasisFragCount, &
+           BasisFragList, BasisFragLocalIdx, GPUFragOffset, nBasisDC)
+
+        if (master) then
+           write(iOutfile,'(" @ DEBUG [DnC+DENSDIIS, single-point]: gpu_upload_fragmap returned")')
+           call flush(iOutfile)
+        endif
+
+        ! gpu_upload_fragmap_ can force compact-O off on a build it doesn't
+        ! support (legacy fixed-point atomics or open-shell -- see gpu.cu).
+        ! Read the actual outcome back once here so dnc_scf_operator.f90
+        ! knows whether to gather from the compact buffer each iteration or
+        ! rely on the ordinary dense-O path.
+        call gpu_get_use_compact_o(GPUUseCompactO)
+
+        if (master) then
+           write(iOutfile,'(" @ DEBUG [DnC+DENSDIIS, single-point]: gpu_get_use_compact_o &
+              &returned, GPUUseCompactO=",l1)') GPUUseCompactO
+           call flush(iOutfile)
+        endif
+
+        if (GPUUseCompactO) then
+           if (allocated(GPUCompactOBuf)) deallocate(GPUCompactOBuf)
+           allocate(GPUCompactOBuf(GPUFragOffset(np)))
+           if (master) then
+              write(iOutfile,'(" @ DEBUG [DnC+DENSDIIS, single-point]: GPUCompactOBuf allocated, &
+                 &",i0," elements")') GPUFragOffset(np)
+              call flush(iOutfile)
+           endif
+        else if (master) then
+           write(iOutfile,'(" @ DEBUG [DnC+DENSDIIS, single-point]: compact-O not supported &
+              &on this GPU build (legacy atomics and/or open-shell); falling back to dense O")')
+           call flush(iOutfile)
+        endif
+     endif
+#endif
   endif
 
   !===================================================================
@@ -1065,7 +1146,8 @@ subroutine Onedivided
   use quick_divcon_module, only: np, dcsubn, dcsub, OneDCSub
   use quick_basis_module, only: quick_basis
   use quick_calculated_module, only: quick_qm_struct
-  implicit double precision (a-h,o-z)
+  implicit none
+  integer :: i, kstart1, jxiao, j, itemp, kstart2, jxiao2, j2, jtemp
 
   do i=1,np
      kstart1=0
@@ -1099,7 +1181,8 @@ subroutine Xdivided
   use quick_divcon_module, only: np, dcsubn, dcsub, XDCSub
   use quick_basis_module, only: quick_basis
   use quick_calculated_module, only: quick_qm_struct
-  implicit double precision (a-h,o-z)
+  implicit none
+  integer :: i, kstart1, jxiao, j, itemp, kstart2, jxiao2, j2, jtemp
 
   do i=1,np
      kstart1=0
@@ -1132,7 +1215,8 @@ subroutine Odivided
   use quick_divcon_module, only: np, dcsubn, dcsub, ODCSub
   use quick_basis_module, only: quick_basis
   use quick_calculated_module, only: quick_qm_struct
-  implicit double precision (a-h,o-z)
+  implicit none
+  integer :: i, kstart1, jxiao, j, itemp, kstart2, jxiao2, j2, jtemp
 
   do i=1,np
      kstart1=0
@@ -1166,7 +1250,8 @@ subroutine OBdivided
   use quick_divcon_module, only: np, dcsubn, dcsub, OBDCSub
   use quick_basis_module, only: quick_basis
   use quick_calculated_module, only: quick_qm_struct
-  implicit double precision (a-h,o-z)
+  implicit none
+  integer :: i, kstart1, jxiao, j, itemp, kstart2, jxiao2, j2, jtemp
 
   do i=1,np
      kstart1=0
@@ -1199,7 +1284,8 @@ subroutine Pdcdivided
   use quick_divcon_module, only: np, dcsubn, dcsub, PDCSub
   use quick_basis_module, only: quick_basis
   use quick_calculated_module, only: quick_qm_struct
-  implicit double precision (a-h,o-z)
+  implicit none
+  integer :: i, kstart1, jxiao, j, itemp, kstart2, jxiao2, j2, jtemp
 
   do i=1,np
      kstart1=0
@@ -1232,7 +1318,8 @@ subroutine PBdcdivided
   use quick_divcon_module, only: np, dcsubn, dcsub, PBDCSub
   use quick_basis_module, only: quick_basis
   use quick_calculated_module, only: quick_qm_struct
-  implicit double precision (a-h,o-z)
+  implicit none
+  integer :: i, kstart1, jxiao, j, itemp, kstart2, jxiao2, j2, jtemp
 
   do i=1,np
      kstart1=0
@@ -1266,7 +1353,8 @@ subroutine divideS
   use quick_divcon_module, only: np, dcsubn, dcsub, SMatrixDCSub
   use quick_basis_module, only: quick_basis
   use quick_calculated_module, only: quick_qm_struct
-  implicit double precision (a-h,o-z)
+  implicit none
+  integer :: i, kstart1, jxiao, j, itemp, kstart2, jxiao2, j2, jtemp
 
   do i=1,np
      kstart1=0
@@ -1299,11 +1387,16 @@ subroutine divideX
                                  ODCSubtemp, VECtemp, Vtemp, EVAL1temp, IDEGEN1temp
   use quick_basis_module, only: nbasis
   use quick_scratch_module, only: quick_scratch
-  implicit double precision(a-h,o-z)
+  implicit none
 
-  dimension Sminhalf(nbasis), &
-       V(3,nbasis), &
-       IDEGEN1(nbasis)
+  ! Former implicit locals, declared explicitly with no change to their
+  ! original implicit types. "sum" shadows the SUM intrinsic within this
+  ! scope, exactly as it did implicitly before.
+  integer :: nbasissave, itt, iixiao, jjxiao, i, j, k
+  double precision :: sum
+  double precision :: Sminhalf(nbasis), &
+       V(3,nbasis)
+  integer :: IDEGEN1(nbasis)
 
   ! The purpose of this subroutine is to calculate the transformation
   ! matrix X.  The first step is forming the overlap matrix (Smatrix).
@@ -1417,7 +1510,8 @@ end subroutine dividex
 subroutine wtoscorr
   use quick_divcon_module, only: np, dcsubn, dcsub, wtospoint
   use quick_basis_module, only: quick_basis
-  implicit double precision (a-h,o-z)
+  implicit none
+  integer :: itt, itempcount, jtt, k, iii
 
   do itt=1,np
      itempcount=0
@@ -1555,3 +1649,66 @@ subroutine BuildBasisFragMap
   enddo
 
 end subroutine BuildBasisFragMap
+
+! Gathers the GPU's compact per-fragment-block O buffer (written by
+! FOCK_ATOMIC_ADD_O in the 2e-integral kernel, see 9.14 design notes) back
+! into the dense Fortran-side quick_qm_struct%o, ADDing it (matching the
+! dense path's DownloadSum semantics -- quick_qm_struct%o may already hold
+! an oSave baseline from the deltaO optimization).
+!
+! Mirrors Odivided's own per-fragment loop exactly (source/target swapped):
+! walks each fragment's own atom list once, so this is O(np * avg fragment
+! size^2), the same cost class as Odivided itself -- NOT an O(nbasis^2) scan.
+! Uses plain SET into a zeroed temporary dense array first, then one single
+! array-level ADD into quick_qm_struct%o: every fragment containing a given
+! (I,J) holds the identical value (by construction -- the GPU write fans
+! the same running total out to every common fragment), so revisiting (I,J)
+! via more than one fragment and re-SETting it is harmless; only final
+! fold-in needs ADD semantics, done once, not per-visit (visited more than
+! once with += would double-count).
+!
+! Validated (scatter+gather round trip, flattened column-major offset
+! arithmetic base+(lc-1)*nb+lr, matching LOC2's convention) bit-for-bit
+! against a real local DnC+DENSDIIS run before this was written.
+subroutine GatherCompactO(compactO, fragOffsetArr)
+  use quick_divcon_module, only: np, dcsubn, dcsub, nBasisDC
+  use quick_basis_module, only: quick_basis, nbasis
+  use quick_calculated_module, only: quick_qm_struct
+  implicit none
+
+  double precision, intent(in) :: compactO(*)
+  integer, intent(in) :: fragOffsetArr(0:np)
+
+  integer :: itt, nb, base, jxiao, jtemp2, jxiao2, j, j2, itemp, kstart1, kstart2, li, lj
+  double precision, allocatable :: oDelta(:,:)
+
+  allocate(oDelta(nbasis,nbasis))
+  oDelta = 0.0d0
+
+  do itt = 1, np
+     nb = nBasisDC(itt)
+     base = fragOffsetArr(itt-1)
+     kstart1 = 0
+     do jxiao = 1, dcsubn(itt)
+        j = dcsub(itt,jxiao)
+        do itemp = quick_basis%first_basis_function(j), quick_basis%last_basis_function(j)
+           li = kstart1 + itemp - quick_basis%first_basis_function(j) + 1
+           kstart2 = 0
+           do jxiao2 = 1, dcsubn(itt)
+              j2 = dcsub(itt,jxiao2)
+              do jtemp2 = quick_basis%first_basis_function(j2), quick_basis%last_basis_function(j2)
+                 lj = kstart2 + jtemp2 - quick_basis%first_basis_function(j2) + 1
+                 oDelta(itemp,jtemp2) = compactO(base + (lj-1)*nb + li)
+              enddo
+              kstart2 = kstart2 + quick_basis%last_basis_function(j2) - &
+                                   quick_basis%first_basis_function(j2) + 1
+           enddo
+        enddo
+        kstart1 = kstart1 + quick_basis%last_basis_function(j) - &
+                             quick_basis%first_basis_function(j) + 1
+     enddo
+  enddo
+
+  quick_qm_struct%o = quick_qm_struct%o + oDelta
+  deallocate(oDelta)
+end subroutine GatherCompactO

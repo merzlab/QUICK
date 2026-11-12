@@ -8,6 +8,7 @@
 ! 10/20/2010 YIPU MIAO Add MPI option to DIIS div&con
 ! this is dii for div & con
 subroutine electdiisdc(jscf,ierr)
+     use quick_constants_module, only: AU_TO_EV
      use quick_size_module, only: MIN_SCF
      use quick_divcon_module, only: np, nbasisdc, ODCSub, XDCSub, coDCSub, coDCSubtran, eValDCSub, &
                                     ODCSubtemp, VECtemp, Vtemp, EVAL1temp, IDEGEN1temp, nElecMP2Sub
@@ -47,7 +48,7 @@ subroutine electdiisdc(jscf,ierr)
      use mpi
 #endif
 
-   implicit double precision(a-h,o-z) 
+   implicit none
 
      ! variable inputed to return
      integer :: jscf                ! scf interation
@@ -69,9 +70,10 @@ subroutine electdiisdc(jscf,ierr)
 
      double precision :: c_coords(3),c_zeta,c_chg
 
-   dimension:: B(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1),BSAVE(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1)
-   dimension:: BCOPY(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1),W(quick_method%maxdiisscf+1)
-   dimension:: COEFF(quick_method%maxdiisscf+1),RHS(quick_method%maxdiisscf+1)
+   double precision, dimension(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1) :: B,BSAVE
+   double precision, dimension(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1) :: BCOPY
+   double precision, dimension(quick_method%maxdiisscf+1) :: W
+   double precision, dimension(quick_method%maxdiisscf+1) :: COEFF,RHS
    ! On the heap, not as automatic arrays. Sized (nbasis,nbasis,maxdiis) each,
    ! the pair is 27 MB for gly6/6-31G* (415 functions) and 135 MB for Trp-cage
    ! at STO-3G (919), which is well past a default 8 MB stack; whether it lands
@@ -87,6 +89,14 @@ subroutine electdiisdc(jscf,ierr)
    integer elecs,itemp
    double precision efermi(10),oneElecO(nbasis,nbasis)
    character(len=80) :: FileName = ''
+
+   ! Former implicit locals, declared explicitly with no change to their
+   ! original implicit types. iDataFile/dataFileName are only ever used
+   ! inside "#ifdef USEDAT", which no build in this tree ever defines --
+   ! declared anyway so this subroutine stays implicit-none-clean even if
+   ! that dead branch is ever revived.
+   integer :: natt, iDataFile
+   character(len=80) :: dataFileName = ''
 
    !---------------------------------------------------------------------------
    ! The purpose of this subroutine is to utilize Pulay's accelerated
@@ -947,13 +957,21 @@ subroutine fermiSCF(efermi,jscf,fermi_ok)
    use quick_molspec_module, only: quick_molspec
    use quick_calculated_module, only: quick_qm_struct
    use quick_files_module, only: iOutFile
-   implicit double precision(a-h,o-z)
+   implicit none
    logical fermidone
    integer jscf
    double precision :: efermi(10)
    ! .false. if the normalization constraint could not be satisfied, i.e. the
    ! assembled density does not hold quick_molspec%nelec electrons.
    logical, intent(out) :: fermi_ok
+
+   ! Former implicit locals, declared explicitly with no change to their
+   ! original implicit types.
+   double precision :: arg, betah, boltz, deltae, denseji, diff, elecs, &
+                        emax, emin, etoler, etotal, fermitemp, temp, &
+                        temp1, temp2, tempk
+   integer :: i, ii, iblockatom, imax, imin, itemp, itt, j, jblockatom, jj, &
+              jtemp, jtt, jtt2, k, kstart1, kstart2, maxit, niter
 
    ! Boltzmann constant in eV/Kelvin:
    boltz = 8.617335408d0*0.00001d0/27.2116d0

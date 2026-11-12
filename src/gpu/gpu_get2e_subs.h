@@ -92,6 +92,62 @@ __device__ static inline QUICKDouble onthefly_Xcoeff(const int ISH, const int JS
             * LOC2(devSim.gccoeff, primJ, KsumtypeJ + angJ - 1, MAXPRIM, devSim.nbasis);
 }
 
+/*
+ Redirects an O-matrix Fock-write (row, col are 0-based global basis
+ indices, matching every existing atomicAdd(&LOC2(devSim.o, row, col, ...))
+ call site) into the compact per-fragment-block buffer instead of the
+ dense (nbasis,nbasis) one, for single-point DnC+DENSDIIS jobs (see 9.14
+ design notes / gpu_upload_fragmap_ in gpu.cu). devSim.use_compact_o is
+ false for every other job, in which case this is byte-identical to the
+ original atomicAdd call it replaces -- zero behavior change outside the
+ gate.
+
+ Rule (proven bit-for-bit against Odivided's own per-fragment loop on a
+ real local DnC+DENSDIIS run before this was written, see inidivcon.f90's
+ GatherCompactO comment): write val into EVERY fragment that contains both
+ row and col (not just one -- fragments' buffer regions overlap, so a
+ given (row,col) pair can legitimately belong to more than one fragment's
+ own block, and each needs the same running total). A pair with no common
+ fragment is a cross-fragment exchange write that Odivided's own slicing
+ already discards -- dropped here too, matching existing behavior exactly
+ (this is not a new approximation, just not re-deriving a value nothing
+ downstream reads).
+
+ Writes BOTH (lr,lc) and (lc,lr) within each matching fragment's own block
+ (skipping the duplicate when lr==lc) so the compact buffer is already
+ symmetric on download -- deliberately not relying on whichever triangle
+ convention happens to hold for row/col at each of this file's ~34 call
+ sites, which is not uniform and not worth re-deriving per site.
+ */
+__device__ static inline void FOCK_ATOMIC_ADD_O(const int row, const int col, const QUICKDouble val)
+{
+    if (!devSim.use_compact_o) {
+        atomicAdd(&LOC2(devSim.o, row, col, devSim.nbasis, devSim.nbasis), val);
+        return;
+    }
+
+    int nfr = devSim.fragBasisCount[row];
+    int nfc = devSim.fragBasisCount[col];
+
+    for (int kr = 0; kr < nfr; kr++) {
+        int fr = LOC2(devSim.fragBasisList, row, kr, devSim.nbasis, devSim.fragMaxOverlap);
+        for (int kc = 0; kc < nfc; kc++) {
+            int fc = LOC2(devSim.fragBasisList, col, kc, devSim.nbasis, devSim.fragMaxOverlap);
+            if (fr == fc) {
+                int lr = LOC2(devSim.fragBasisLocalIdx, row, kr, devSim.nbasis, devSim.fragMaxOverlap) - 1;
+                int lc = LOC2(devSim.fragBasisLocalIdx, col, kc, devSim.nbasis, devSim.fragMaxOverlap) - 1;
+                int nb = devSim.fragNbasis[fr - 1];
+                int base = devSim.fragOffset[fr - 1];
+
+                atomicAdd(&devSim.oCompact[base + lc * nb + lr], val);
+                if (lr != lc) {
+                    atomicAdd(&devSim.oCompact[base + lr * nb + lc], val);
+                }
+            }
+        }
+    }
+}
+
   #if !defined(OSHELL)
 __device__ static inline bool call_iclass(const int I, const int J, const int K, const int L,
         const int II, const int JJ, const int KK, const int LL)
@@ -504,7 +560,7 @@ __device__ static inline void iclass_spdf10
 #  if defined(USE_LEGACY_ATOMICS)
                                 GPUATOMICADD(&LOC2(devSim.oULL, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
 #  else
-                                atomicAdd(&LOC2(devSim.o, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis), temp);
+                                FOCK_ATOMIC_ADD_O(LLL - 1, KKK - 1, temp);
 #  endif
 #if defined(OSHELL)
 #  if defined(USE_LEGACY_ATOMICS)
@@ -540,7 +596,7 @@ __device__ static inline void iclass_spdf10
                                 GPUATOMICADD(&LOC2(devSim.oULL, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
                                 GPUATOMICADD(&LOC2(devSim.obULL, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp2, OSCALE);
 #  else
-                                atomicAdd(&LOC2(devSim.o, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp);
+                                FOCK_ATOMIC_ADD_O(LLL - 1, III - 1, temp);
                                 atomicAdd(&LOC2(devSim.ob, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp2);
 #  endif
 #else
@@ -548,7 +604,7 @@ __device__ static inline void iclass_spdf10
 #  if defined(USE_LEGACY_ATOMICS)
                                 GPUATOMICADD(&LOC2(devSim.oULL, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
 #  else
-                                atomicAdd(&LOC2(devSim.o, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp);
+                                FOCK_ATOMIC_ADD_O(LLL - 1, III - 1, temp);
 #  endif
 #endif
                             }
@@ -588,7 +644,7 @@ __device__ static inline void iclass_spdf10
 #  if defined(USE_LEGACY_ATOMICS)
                                 GPUATOMICADD(&LOC2(devSim.oULL, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
 #  else
-                                atomicAdd(&LOC2(devSim.o, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), temp);
+                                FOCK_ATOMIC_ADD_O(MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, temp);
 #  endif
 #if defined(OSHELL)
 #  if defined(USE_LEGACY_ATOMICS)
@@ -603,7 +659,7 @@ __device__ static inline void iclass_spdf10
 #  if defined(USE_LEGACY_ATOMICS)
                                     GPUATOMICADD(&LOC2(devSim.oULL, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
 #  else
-                                    atomicAdd(&LOC2(devSim.o, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis), temp);
+                                    FOCK_ATOMIC_ADD_O(LLL - 1, JJJ - 1, temp);
 #  endif
 #if defined(OSHELL)
 #  if defined(USE_LEGACY_ATOMICS)
@@ -623,9 +679,9 @@ __device__ static inline void iclass_spdf10
                 GPUATOMICADD(&LOC2(devSim.oULL, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, devSim.nbasis, devSim.nbasis), o_JK_MM, OSCALE);
                 GPUATOMICADD(&LOC2(devSim.oULL, JJJ - 1, KKK - 1, devSim.nbasis, devSim.nbasis), o_JK, OSCALE);
 #  else
-                atomicAdd(&LOC2(devSim.o, KKK - 1, III - 1, devSim.nbasis, devSim.nbasis), o_KI);
-                atomicAdd(&LOC2(devSim.o, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, devSim.nbasis, devSim.nbasis), o_JK_MM);
-                atomicAdd(&LOC2(devSim.o, JJJ - 1, KKK - 1, devSim.nbasis, devSim.nbasis), o_JK);
+                FOCK_ATOMIC_ADD_O(KKK - 1, III - 1, o_KI);
+                FOCK_ATOMIC_ADD_O(MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, o_JK_MM);
+                FOCK_ATOMIC_ADD_O(JJJ - 1, KKK - 1, o_JK);
 #  endif
 #if defined(OSHELL)
 #  if defined(USE_LEGACY_ATOMICS)
@@ -643,7 +699,7 @@ __device__ static inline void iclass_spdf10
 #  if defined(USE_LEGACY_ATOMICS)
             GPUATOMICADD(&LOC2(devSim.oULL, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), o_JI, OSCALE);
 #  else
-            atomicAdd(&LOC2(devSim.o, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), o_JI);
+            FOCK_ATOMIC_ADD_O(JJJ - 1, III - 1, o_JI);
 #  endif
 #if defined(OSHELL)
 #  if defined(USE_LEGACY_ATOMICS)

@@ -112,6 +112,7 @@ void _gpuMalloc(void **ptr, size_t size, const char * const filename,
 
     if (ret != cudaSuccess) {
         const char *str = cudaGetErrorString(ret);
+        double req_gb = (double) size / (1024.0*1024.0*1024.0);
 
         fprintf(stderr, "[ERROR] GPU error: cudaMalloc failure\n");
 #if defined(MPIV_GPU)
@@ -121,6 +122,7 @@ void _gpuMalloc(void **ptr, size_t size, const char * const filename,
         fprintf(stderr, "  [INFO] At line %d in file %.*s\n",
                 line, (int) strlen(filename), filename);
 #endif
+        fprintf(stderr, "  [INFO] Requested size: %zu bytes (~%.3f GB)\n", size, req_gb);
         fprintf(stderr, "  [INFO] Error code: %d\n", ret);
         fprintf(stderr, "  [INFO] Error message: %.*s\n", (int) strlen(str), str);
 

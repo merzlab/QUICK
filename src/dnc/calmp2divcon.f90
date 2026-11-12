@@ -15,7 +15,7 @@ subroutine calmp2divcon
    use quick_method_module, only: quick_method
    use quick_timer_module, only: timer_begin, timer_end, timer_cumer
    use quick_gaussian_class_module
-   implicit double precision(a-h,o-z)
+   implicit none
 
    logical locallog1,locallog2
 
@@ -23,6 +23,18 @@ subroutine calmp2divcon
    integer II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    common /hrrstore/II,JJ,KK,LL,NBI1,NBI2,NBJ1,NBJ2,NBK1,NBK2,NBL1,NBL2
    integer ntemp, itt
+
+   ! Former implicit double precision(a-h,o-z)/integer(i-n) locals, declared
+   ! explicitly below with no change to their original implicit types. III,
+   ! JJJ, KKK, LLL below are local-only (shadow quick_basis_module's globals
+   ! of the same name, which this subroutine's "only:" use-list never
+   ! imported) -- preserved as-is to not change behavior.
+   double precision :: atemp, comax, emp2temp, ttt, xiaocutoffmp2, xiaotest1
+   integer :: i, i1, i3, iiat, iiatdc, iiatom, iiatomdc, iii, iiinew, iinbasisdc, &
+              iocc, is, ivir, j, j1, j3, j33, j33new, jjat, jjatom, jjj, jjjnew, &
+              k, k1, k3, k33, kkat, kkatom, kkk, l, l1, l3, l3new, llat, llatom, &
+              lll, nbasistemp, nii1, nii2, njj1, njj2, nkk1, nkk2, nll1, nll2, &
+              nxiao1, nxiao2, ii111, ii112, jj111, jj112, kk111, kk112, ll111, ll112
 
 RECORD_TIME(timer_begin%TMP2)
 

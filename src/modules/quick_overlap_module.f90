@@ -178,6 +178,7 @@ subroutine fullx
    use quick_method_module, only: quick_method
    use quick_files_module, only: ioutfile
    use quick_molspec_module, only: xyz
+   use quick_mpi_module, only: master
 
    implicit none
 
@@ -275,6 +276,14 @@ subroutine fullx
       quick_qm_struct%NBSuse => nbasis
       call allocate_quick_qm_struct_fullx(quick_qm_struct)
       call deallocfullx(quick_scratch)
+      if (master) then
+         write(ioutfile,'(a)')
+         write(ioutfile,'(" @ DEBUG [DnC+DENSDIIS, single-point]: fullX whole-system diagonalization &
+            &SKIPPED (per-fragment divideX used instead, see inidivcon.f90)")')
+         write(ioutfile,'("   nbasis=",i0,"; a dense (nbasis,nbasis) diagonalization workspace here &
+            &would have needed ~",f10.3," GB")') nbasis, dble(nbasis)*dble(nbasis)*8.0d0/1024.0d0**3
+         call flush(ioutfile)
+      endif
       return
    endif
 

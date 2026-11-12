@@ -38,6 +38,14 @@ struct gpu_calculated_type {
     gpu_buffer_type<QUICKDouble> *ob;     // beta O matrix
     gpu_buffer_type<QUICKDouble> *dense;  // Density Matrix
     gpu_buffer_type<QUICKDouble> *denseb; // Beta Density Matrix
+    // Compact per-fragment-block O storage, used INSTEAD of the dense o
+    // buffer above for single-point DnC+DENSDIIS jobs (see gpu_upload_fragmap_
+    // and FOCK_ATOMIC_ADD_O). NULL unless that gate is active. Sized to
+    // fragOffset[np] elements (sum of nbasisdc(itt)^2 across all fragments),
+    // not nbasis*nbasis -- this is the whole point (see 9.14 design notes).
+    // P/dense is NOT compacted: Coulomb terms read density at pairs that are
+    // not guaranteed same-fragment, so dense is kept for correctness.
+    gpu_buffer_type<QUICKDouble> *oCompact;
 #if defined(USE_LEGACY_ATOMICS)
     gpu_buffer_type<QUICKULL> *oULL;   // Unsigned long long int type O matrix
     gpu_buffer_type<QUICKULL> *obULL;  // Unsigned long long int type Ob matrix
@@ -82,6 +90,16 @@ struct gpu_cutoff_type {
 
     // DnC fragment-connectivity flags (jshell x jshell), NULL for non-DnC jobs
     gpu_buffer_type<int> *dcConnect;
+
+    // Basis-index -> fragment-membership map, mirroring the host-side
+    // BuildBasisFragMap (inidivcon.f90). Only uploaded (non-NULL) for
+    // single-point DnC+DENSDIIS jobs -- see gpu_upload_fragmap_. Each is
+    // flattened row-major, shape (nbasis, fragMaxOverlap).
+    gpu_buffer_type<int> *fragBasisCount;    // (nbasis) how many fragments contain basis index i
+    gpu_buffer_type<int> *fragBasisList;     // (nbasis, fragMaxOverlap) which fragments
+    gpu_buffer_type<int> *fragBasisLocalIdx; // (nbasis, fragMaxOverlap) local index within each
+    gpu_buffer_type<int> *fragOffset;        // (np+1) prefix-sum offsets into oCompact
+    gpu_buffer_type<int> *fragNbasis;        // (np) each fragment's own local nbasisdc(itt)
 
     // Cutoff criteria
     QUICKDouble integralCutoff;
@@ -316,6 +334,20 @@ struct gpu_simulation_type {
     QUICKULL *oULL;
     QUICKULL *obULL;
 #endif
+    // Compact per-fragment-block O storage (see FOCK_ATOMIC_ADD_O in
+    // gpu_get2e_subs.h and gpu_type.h's gpu_calculated_type::oCompact).
+    // use_compact_o selects between this and the dense o/oULL above; NULL/
+    // false for every job outside the single-point DnC+DENSDIIS gate.
+    bool use_compact_o;
+    QUICKDouble *oCompact;
+    int *fragBasisCount;
+    int *fragBasisList;
+    int *fragBasisLocalIdx;
+    int *fragOffset;
+    int *fragNbasis;
+    int fragMaxOverlap;
+    int fragNp;
+    int fragOCompactSize; // total compact-O buffer size in elements (fragOffset[fragNp])
     QUICKDouble *dense;
     QUICKDouble *denseb;
 

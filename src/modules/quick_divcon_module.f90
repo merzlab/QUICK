@@ -27,6 +27,28 @@ module quick_divcon_module
     integer, dimension(:,:), allocatable :: BasisFragList,BasisFragLocalIdx
     integer, dimension(:), allocatable :: BasisFragCount
     integer :: BasisFragMaxOverlap
+
+    ! Prefix-sum offsets into the GPU's compact per-fragment-block O buffer
+    ! (0-based: GPUFragOffset(0)=0, GPUFragOffset(itt)=GPUFragOffset(itt-1)+
+    ! nBasisDC(itt)^2), dimensioned (0:np). Built once per geometry in
+    ! inidivcon.f90 alongside BuildBasisFragMap, reused every SCF iteration
+    ! by GatherCompactO (dnc_scf_operator.f90) without recomputing. Only
+    ! meaningful for GPU, single-point DnC+DENSDIIS jobs -- see 9.14.
+    integer, dimension(:), allocatable :: GPUFragOffset
+
+    ! Whether the GPU build actually honored the compact-O request (false on
+    ! a legacy-fixed-point-atomics or open-shell build -- see
+    ! gpu_upload_fragmap_'s USE_LEGACY_ATOMICS/OSHELL guard in gpu.cu, which
+    ! falls back to dense O on those builds). Read back once per geometry in
+    ! inidivcon.f90 right after gpu_upload_fragmap; dnc_scf_operator.f90
+    ! gates its GatherCompactO call on this, not on the upload request alone.
+    logical :: GPUUseCompactO = .false.
+
+    ! Host-side landing buffer for gpu_download_compact_o, sized
+    ! GPUFragOffset(np) elements. Allocated once per geometry in
+    ! inidivcon.f90 alongside GPUFragOffset, reused every SCF iteration by
+    ! dnc_scf_operator.f90's gpu_download_compact_o + GatherCompactO calls.
+    double precision, dimension(:), allocatable :: GPUCompactOBuf
     integer, dimension(:,:), allocatable :: DCOverlap,DCConnect
     integer, dimension(:), allocatable :: kShellS,kShellF
     integer, dimension(:,:,:), allocatable :: DCLogic

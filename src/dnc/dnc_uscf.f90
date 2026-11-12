@@ -40,8 +40,8 @@
      use mpi
 #endif
   
-     implicit double precision(a-h,o-z)
-  
+     implicit none
+
      ! variable inputed to return
      integer :: jscf                ! scf interation
      integer, intent(inout) :: ierr
@@ -56,14 +56,15 @@
      integer :: IDIIS_Error_Start, IDIIS_Error_End
      double precision :: BIJ,DENSEJI,errormax,OJK,temp
      double precision :: Sum2Mat,rms
-     integer :: I,J,K,L,IERRORi,nbasissave,itt,NtempN
+     integer :: I,J,K,L,IERRORi,nbasissave,itt,NtempN,ierr1
   
      double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
      double precision :: PRMS,PRMS2,PCHANGE, tmp,Ttmp
 
-   dimension:: B(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1),BSAVE(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1)
-   dimension:: BCOPY(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1),W(quick_method%maxdiisscf+1)
-   dimension:: COEFF(quick_method%maxdiisscf+1),RHS(quick_method%maxdiisscf+1)
+   double precision, dimension(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1) :: B,BSAVE
+   double precision, dimension(quick_method%maxdiisscf+1,quick_method%maxdiisscf+1) :: BCOPY
+   double precision, dimension(quick_method%maxdiisscf+1) :: W
+   double precision, dimension(quick_method%maxdiisscf+1) :: COEFF,RHS
    ! On the heap rather than as automatic arrays: at (nbasis,nbasis,maxdiis)
    ! each these run to tens or hundreds of MB on a real system, which is well
    ! past a default stack. allerrorB and dInA are only used by DENSDIIS.
@@ -77,6 +78,14 @@
    logical :: diisoff=.false.
    integer elecs,itemp
    double precision efermi(10),oneElecO(nbasis,nbasis)
+
+   ! Former implicit locals, declared explicitly with no change to their
+   ! original implicit types. iDataFile/dataFileName are only ever used
+   ! inside "#ifdef USEDAT", which no build in this tree ever defines --
+   ! declared anyway so this subroutine stays implicit-none-clean even if
+   ! that dead branch is ever revived.
+   integer :: iDataFile
+   character(len=80) :: dataFileName = ''
   
      !---------------------------------------------------------------------------
      ! The purpose of this subroutine is to utilize Pulay's accelerated
@@ -1108,13 +1117,21 @@ subroutine fermiUSCF(efermi,jscf,fermi_ok)
    use quick_molspec_module, only: quick_molspec
    use quick_calculated_module, only: quick_qm_struct
    use quick_files_module, only: iOutFile
-   implicit double precision(a-h,o-z)
+   implicit none
    logical fermidone
    integer jscf
    double precision :: efermi(10)
    ! .false. if the normalization constraint could not be satisfied, i.e. the
    ! assembled beta density does not hold quick_molspec%nelecb electrons.
    logical, intent(out) :: fermi_ok
+
+   ! Former implicit locals, declared explicitly with no change to their
+   ! original implicit types.
+   double precision :: arg, betah, boltz, deltae, denseji, diff, elecs, &
+                        emax, emin, etoler, etotal, fermitemp, temp, &
+                        temp1, temp2, tempk
+   integer :: i, ii, iblockatom, imax, imin, itemp, itt, j, jblockatom, jj, &
+              jtemp, jtt, jtt2, k, kstart1, kstart2, maxit, niter
 
    ! Boltzmann constant in eV/Kelvin:
    boltz = 8.617335408d0*0.00001d0/27.2116d0
