@@ -972,13 +972,46 @@ subroutine fermiSCF(efermi,jscf,fermi_ok)
    ! finding the Fermi level.
    emin = 10000000.0d0
    emax =-10000000.0d0
+   ! Remember which subsystem owns each end of the bracket. The Fermi level can
+   ! only ever land inside it, so an implausible bracket is the earliest and
+   ! clearest sign that a subsystem diagonalization returned nonsense -- and
+   ! without naming the subsystem there is no way to tell one bad block from a
+   ! genuinely broken operator.
+   ittmin = 0
+   ittmax = 0
    do itt=1,np
       imin = 1!nelecdcsub(itt)/2
       imax = nbasisdc(itt)!nelecdcsub(itt)/2+1
 !      if(mod(nelecdcsub(itt),2).eq.1)imax = nelecdcsub(itt)/2+2
-      emin = min(emin,evaldcsub(itt,imin))
-      emax = max(emax,evaldcsub(itt,imax))
+      if (evaldcsub(itt,imin) .lt. emin) then
+         emin = evaldcsub(itt,imin)
+         ittmin = itt
+      endif
+      if (evaldcsub(itt,imax) .gt. emax) then
+         emax = evaldcsub(itt,imax)
+         ittmax = itt
+      endif
    enddo
+
+   ! A valence basis cannot produce orbital energies of this size. In STO-3G the
+   ! deepest core is about -90 Hartree (sulfur 1s) and the highest virtual only a
+   ! few Hartree, so anything past this bound means the eigenvalues themselves
+   ! are wrong, not that the molecule is unusual. Saying so here, with the
+   ! subsystem named, turns a run that merely fails to converge into one that
+   ! points at the block to look at.
+   if (emax .gt. 10.0d0 .or. emin .lt. -200.0d0) then
+      call PrtWrn(iOutFile,'A divide and conquer subsystem returned implausible orbital energies.')
+      write(ioutfile,'("|          highest eigenvalue ",es16.8," in subsystem ",i6, &
+            &" (",i6," basis functions)")') emax, ittmax, nbasisdc(max(ittmax,1))
+      write(ioutfile,'("|          lowest  eigenvalue ",es16.8," in subsystem ",i6, &
+            &" (",i6," basis functions)")') emin, ittmin, nbasisdc(max(ittmin,1))
+      write(ioutfile,'("|          The Fermi level is bracketed by these, so it cannot come out")')
+      write(ioutfile,'("|          sane either, and the assembled density will not be meaningful.")')
+      write(ioutfile,'("|          Suspect the per-subsystem diagonalization or the operator it")')
+      write(ioutfile,'("|          was handed, not the Fermi search below.")')
+      write(ioutfile,'(a)')
+      call flush(ioutfile)
+   endif
 
    ! Use a bisection technique to determine the fermi energy.
    !        emax =emax+2.0d0
@@ -1137,6 +1170,10 @@ subroutine fermiSCF(efermi,jscf,fermi_ok)
    ! At this point we get the fermi energy (Ei) and store for next cycle.
    ! es16.8 rather than f12.7: a diverged search overflows a fixed-width field
    ! and prints only asterisks, which hides the very number needed to debug it.
+   ! Deliberately left as it was: this exact line appears in the saved outputs of
+   ! the DIVCON regression tests. The bracket that confines the Fermi level is
+   ! reported by the implausible-eigenvalue warning above instead, which costs
+   ! nothing on a healthy run and says everything on a broken one.
    write (ioutfile,'("E(Fermi)    = ",es16.8,"  AFTER ",i3, " N.C. Cycles")') efermi(1),niter
 
    call flush(ioutfile)
