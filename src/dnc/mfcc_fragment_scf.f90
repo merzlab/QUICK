@@ -27,7 +27,10 @@ subroutine mfcc_fragment_scf(ierr)
    use quick_method_module, only: quick_method, quick_method_type
    use quick_molspec_module, only: quick_molspec, quick_molspec_type, natom, xyz
    use quick_calculated_module, only: quick_qm_struct, dealloc
-   use quick_mfcc_module, only: npmfcc, nmfccextra, kxiaoconnect, mfcccord, mfccatom, &
+   use quick_mfcc_module, only: nmfcccap, nmfccss, mfccatomss, mfccchargess, mfcccordss, &
+                                 mfccatomxiaoss, mfccstartss, mfccfinalss, &
+                                 mfccbasesss, mfccbasefss, mfccdensss, &
+                                 npmfcc, nmfccextra, kxiaoconnect, mfcccord, mfccatom, &
                                  mfccatomcap, mfccatomcon, mfccatomcon2, mfccatomconi, mfccatomconj, &
                                  mfccatomxiaocon, mfccatomxiaocon2, mfccbases, mfccbasef, &
                                  mfccbasescap, mfccbasefcap, mfccbasesconi, mfccbasefconi, &
@@ -61,7 +64,7 @@ subroutine mfcc_fragment_scf(ierr)
    integer :: myrank, nranks
    integer :: commsaved, ranksaved, sizesaved
    integer :: gpuranksaved, gpusizesaved
-   integer :: nd1, nd2, nd3, nc1, nc2, nc3
+   integer :: nd1, nd2, nd3, nc1, nc2, nc3, ns1, ns2, ns3
    logical :: do_rpt
    double precision, allocatable :: xyzsaved(:,:)
    type(quick_method_type) :: quick_method_save
@@ -233,11 +236,20 @@ subroutine mfcc_fragment_scf(ierr)
       maxbas = max(maxbas,nbasis)
    enddo
 
-   do k = 1, npmfcc-1
+   do k = 1, nmfcccap
       call deallocate_calculated
       call mfcc_set_submol(mfccatomcap(k),mfcccordcap(1,1,k),mfccatomxiaocap(1,k),mfccchargecap(k),ierr)
       if (ierr /= 0) goto 900
       call readbasis(natom,mfccstartcap(k),mfccfinalcap(k),nbs,nbf,ierr)
+      if (ierr /= 0) goto 900
+      maxbas = max(maxbas,nbasis)
+   enddo
+
+   do k = 1, nmfccss
+      call deallocate_calculated
+      call mfcc_set_submol(mfccatomss(k),mfcccordss(1,1,k),mfccatomxiaoss(1,k),mfccchargess(k),ierr)
+      if (ierr /= 0) goto 900
+      call readbasis(natom,mfccstartss(k),mfccfinalss(k),nbs,nbf,ierr)
       if (ierr /= 0) goto 900
       maxbas = max(maxbas,nbasis)
    enddo
@@ -295,10 +307,13 @@ subroutine mfcc_fragment_scf(ierr)
    ! same first dimension, so size them for the larger of the two. Sized at
    ! npmfcc, every standalone fragment wrote past the end of mfccdens: silent
    ! corruption with a hundred waters, a segfault with four hundred.
-   call allocate_MFCC(npmfcc+nmfccextra,ncon,maxbas)
+   ! The cap slots now run past npmfcc-1 as well, because the disulfide
+   ! correction appends two thiol concaps per bridge, so the shared first
+   ! dimension has to cover nmfcccap too.
+   call allocate_MFCC(max(npmfcc+nmfccextra,nmfcccap),ncon,maxbas,max(nmfccss,1))
 
    if (real_master) write(ioutfile,'(" MFCC fragments =",i4,"  standalone =",i6,"  caps =",i4, &
-         &"  connections =",i4,"  max basis =",i5)') npmfcc,nmfccextra,npmfcc-1,kxiaoconnect,maxbas
+         &"  connections =",i4,"  max basis =",i5)') npmfcc,nmfccextra,nmfcccap,kxiaoconnect,maxbas
 
    ! ---------------------------------------------------------------
    ! Pass 2: converge each sub-molecule and keep its density.
@@ -348,7 +363,7 @@ subroutine mfcc_fragment_scf(ierr)
       endif
    endif
 
-   do k = 1, npmfcc-1
+   do k = 1, nmfcccap
       if (mod(k-1,nranks) .ne. myrank) cycle
       call mfcc_run_submol(mfccatomcap(k),mfcccordcap(1,1,k),mfccatomxiaocap(1,k),mfccchargecap(k), &
             mfccstartcap(k),mfccfinalcap(k),mfccbasescap(k),mfccbasefcap(k),nb_frag,ierr)
@@ -358,6 +373,23 @@ subroutine mfcc_fragment_scf(ierr)
             quick_qm_struct%dense(mfccbasescap(k):mfccbasefcap(k),mfccbasescap(k):mfccbasefcap(k))
       if (real_master) write(ioutfile,'("   cap      ",i4," basis ",i5," local range ",i5," -",i5)') &
             k,nb_frag,mfccbasescap(k),mfccbasefcap(k)
+   enddo
+
+   ! The intact disulfides. Structurally these are ordinary sub-molecules; what
+   ! is different is only where their density goes afterwards, since their atoms
+   ! are one contiguous run locally but two separate runs globally. The whole
+   ! local block is kept, off diagonal included: that off diagonal IS the S-S
+   ! bond density, and it is the entire reason these blocks exist.
+   do k = 1, nmfccss
+      if (mod(k-1,nranks) .ne. myrank) cycle
+      call mfcc_run_submol(mfccatomss(k),mfcccordss(1,1,k),mfccatomxiaoss(1,k),mfccchargess(k), &
+            mfccstartss(k),mfccfinalss(k),mfccbasesss(k),mfccbasefss(k),nb_frag,ierr)
+      if (ierr /= 0) goto 900
+      nloc = mfccbasefss(k)-mfccbasesss(k)+1
+      mfccdensss(k,1:nloc,1:nloc) = &
+            quick_qm_struct%dense(mfccbasesss(k):mfccbasefss(k),mfccbasesss(k):mfccbasefss(k))
+      if (real_master) write(ioutfile,'("   S-S      ",i4," basis ",i5," local range ",i5," -",i5)') &
+            k,nb_frag,mfccbasesss(k),mfccbasefss(k)
    enddo
 
    ! ---------------------------------------------------------------
@@ -454,8 +486,14 @@ subroutine mfcc_fragment_scf(ierr)
       call mfcc_reduce_dens(mfccdenscap, nd1,nd2,nd3)
       call mfcc_reduce_idx(mfccbases,    npmfcc+nmfccextra)
       call mfcc_reduce_idx(mfccbasef,    npmfcc+nmfccextra)
-      call mfcc_reduce_idx(mfccbasescap, npmfcc)
-      call mfcc_reduce_idx(mfccbasefcap, npmfcc)
+      call mfcc_reduce_idx(mfccbasescap, max(nmfcccap,1))
+      call mfcc_reduce_idx(mfccbasefcap, max(nmfcccap,1))
+      if (nmfccss .gt. 0) then
+         ns1 = size(mfccdensss,1); ns2 = size(mfccdensss,2); ns3 = size(mfccdensss,3)
+         call mfcc_reduce_dens(mfccdensss, ns1,ns2,ns3)
+         call mfcc_reduce_idx(mfccbasesss, nmfccss)
+         call mfcc_reduce_idx(mfccbasefss, nmfccss)
+      endif
       if (kxiaoconnect .gt. 0) then
          nc1 = size(mfccdenscon,1); nc2 = size(mfccdenscon,2); nc3 = size(mfccdenscon,3)
          call mfcc_reduce_dens(mfccdensconi,nc1,nc2,nc3)

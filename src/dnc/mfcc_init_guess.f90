@@ -22,11 +22,11 @@
 ! The connection blocks hold the I and J sub-blocks side by side, which is
 ! why MFCC_initial_guess indexes them with an offset of the I block size,
 ! so they get 2*maxbas.
-subroutine allocate_MFCC(nfrag,ncon,maxbas)
+subroutine allocate_MFCC(nfrag,ncon,maxbas,nss)
    use quick_mfcc_module, only: MFCCDens, MFCCDensCap, MFCCDensCon, MFCCDensCon2, &
-                                 MFCCDensConI, MFCCDensConJ
+                                 MFCCDensConI, MFCCDensConJ, MFCCDensSS
    implicit none
-   integer, intent(in) :: nfrag,ncon,maxbas
+   integer, intent(in) :: nfrag,ncon,maxbas,nss
 
    allocate(MFCCDens(nfrag,maxbas,maxbas))
    allocate(MFCCDensCap(nfrag,maxbas,maxbas))
@@ -34,6 +34,7 @@ subroutine allocate_MFCC(nfrag,ncon,maxbas)
    allocate(MFCCDensCon2(ncon,2*maxbas,2*maxbas))
    allocate(MFCCDensConI(ncon,maxbas,maxbas))
    allocate(MFCCDensConJ(ncon,maxbas,maxbas))
+   allocate(MFCCDensSS(nss,maxbas,maxbas))
 
    ! MFCC_initial_guess accumulates into these, so they must start at zero.
    MFCCDens = 0.0d0
@@ -42,6 +43,7 @@ subroutine allocate_MFCC(nfrag,ncon,maxbas)
    MFCCDensCon2 = 0.0d0
    MFCCDensConI = 0.0d0
    MFCCDensConJ = 0.0d0
+   MFCCDensSS = 0.0d0
 
 end subroutine
 
@@ -50,7 +52,10 @@ subroutine MFCC_initial_guess
    use quick_method_module, only: quick_method
    use quick_calculated_module, only: quick_qm_struct
    use quick_basis_module, only: nbasis
-   use quick_mfcc_module, only: npmfcc, nmfccextra, kxiaoconnect, &
+   use quick_mfcc_module, only: nmfcccap, nmfccss, mfccbasesss, mfccbasefss, &
+                                 matombasesss1, matombasefss1, matombasesss2, matombasefss2, &
+                                 mfccdensss, &
+                                 npmfcc, nmfccextra, kxiaoconnect, &
                                  matombases, matombasef, mfccbases, mfccbasef, &
                                  matombasescap, matombasefcap, mfccbasescap, mfccbasefcap, &
                                  mfccbasesconi, mfccbasefconi, mfccbasesconj, mfccbasefconj, &
@@ -67,7 +72,7 @@ subroutine MFCC_initial_guess
          write(ioutfile,'("   fragment ",i3," global ",i5," -",i5,"   local ",i5," -",i5)') &
                ixiao,matombases(ixiao),matombasef(ixiao),mfccbases(ixiao),mfccbasef(ixiao)
       enddo
-      do ixiao=1,npmfcc-1
+      do ixiao=1,nmfcccap
          write(ioutfile,'("   cap      ",i3," global ",i5," -",i5,"   local ",i5," -",i5)') &
                ixiao,matombasescap(ixiao),matombasefcap(ixiao),mfccbasescap(ixiao),mfccbasefcap(ixiao)
       enddo
@@ -114,7 +119,7 @@ subroutine MFCC_initial_guess
       enddo
    enddo
 
-   do ixiao=1,npmfcc-1
+   do ixiao=1,nmfcccap
       do i=mfccbasescap(ixiao),mfccbasefcap(ixiao)
          do j=mfccbasescap(ixiao),mfccbasefcap(ixiao)
             quick_qm_struct%dense(matombasescap(ixiao)+i-mfccbasescap(ixiao),matombasescap(ixiao)+j-mfccbasescap(ixiao))= &
@@ -125,6 +130,63 @@ subroutine MFCC_initial_guess
                      matombasescap(ixiao)+j-mfccbasescap(ixiao),mfccdenscap(ixiao,i-mfccbasescap(ixiao)+1, &
                      j-mfccbasescap(ixiao)+1)
             endif
+         enddo
+      enddo
+   enddo
+
+   ! ------------------------------------------------------------------!
+   ! The intact disulfides.                                            !
+   !                                                                   !
+   ! Every block above maps its local basis range onto the global one   !
+   ! by a single offset, because its atoms are one run of the global    !
+   ! ordering. A disulfide block is not: its two halves sit in          !
+   ! different residues. Its atoms were laid out as                     !
+   !                                                                   !
+   !   [Hcap] [CB_i .. SG_i] [CB_j .. SG_j] [Hcap]                      !
+   !                                                                   !
+   ! so locally the real atoms are still contiguous and the split is    !
+   ! simply after the first half's basis functions. Mapping each local  !
+   ! index through ssg() below therefore needs nothing but the two      !
+   ! global starts.                                                     !
+   !                                                                   !
+   ! Both i and j run over the whole block, so the off diagonal between !
+   ! the halves is scattered as well. That off diagonal is the S-S bond !
+   ! density: it is what no amount of hydrogen capping could supply,    !
+   ! and it lands on basis function pairs that every other term in the  !
+   ! expansion leaves at zero.                                          !
+   !___________________________________________________________________!
+   do ixiao=1,nmfccss
+      lb  = mfccbasesss(ixiao)
+      lbf = mfccbasefss(ixiao)
+      nb1 = matombasefss1(ixiao)-matombasesss1(ixiao)+1
+      nb2 = matombasefss2(ixiao)-matombasesss2(ixiao)+1
+
+      ! Refuse to scatter a block whose halves do not add up to the local
+      ! range: that would mean basis.f90 never matched one of the global
+      ! atom ranges, and silently writing it somewhere would corrupt the
+      ! guess far from here.
+      if (lb .le. 0 .or. lbf .lt. lb .or. nb1 .le. 0 .or. nb2 .le. 0 .or. &
+          nb1+nb2 .ne. lbf-lb+1) then
+         call PrtWrn(iOutFile,'An MFCC disulfide block has an inconsistent basis map and was skipped.')
+         write(ioutfile,'("|          block ",i4," local ",i6," -",i6,"  halves ",i6," +",i6)') &
+               ixiao, lb, lbf, nb1, nb2
+         cycle
+      endif
+
+      do i=lb,lbf
+         if (i-lb+1 .le. nb1) then
+            igi = matombasesss1(ixiao) + (i-lb)
+         else
+            igi = matombasesss2(ixiao) + (i-lb-nb1)
+         endif
+         do j=lb,lbf
+            if (j-lb+1 .le. nb1) then
+               igj = matombasesss1(ixiao) + (j-lb)
+            else
+               igj = matombasesss2(ixiao) + (j-lb-nb1)
+            endif
+            quick_qm_struct%dense(igi,igj) = quick_qm_struct%dense(igi,igj) &
+                  + mfccdensss(ixiao,i-lb+1,j-lb+1)
          enddo
       enddo
    enddo
