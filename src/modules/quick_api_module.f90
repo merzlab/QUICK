@@ -160,7 +160,7 @@ subroutine check_fqin(fqin, keywd, ierr)
 
   call upcase(keywd, 256)
 
-  if (found_keyword(keywd, 'HF') .or. found_keyword(keywd, 'DFT') .and. found_keyword(keywd, 'BASIS=')) then
+  if ((found_keyword(keywd, 'HF') .or. found_keyword(keywd, 'DFT')) .and. found_keyword(keywd, 'BASIS')) then
     quick_api%hasKeywd = .true.
     quick_api%Keywd = keywd
   endif
@@ -454,10 +454,16 @@ subroutine run_quick(self,ierr)
   use quick_molden_module, only: quick_molden, initializeExport, exportCoordinates, exportBasis, &
       exportMO, exportSCF, exportOPT
 #ifdef CEW 
-  use quick_cew_module, only: delete, quick_cew, upload
+  use quick_cew_module, only: quick_cew
+#if defined(GPU) || defined(MPIV_GPU)
+  use quick_cew_module, only: upload
+#endif
 #endif
 #if defined(MPIV)
   use quick_mpi_module, only: master
+#endif
+#ifdef CUEST
+  use quick_files_module, only: iOutFile
 #endif
 
   implicit none
@@ -547,6 +553,13 @@ subroutine run_quick(self,ierr)
   timer_cumer%TIniGuess = timer_cumer%TIniGuess+timer_end%TIniGuess-timer_begin%TIniGuess &
                            - (timer_end%T2elb-timer_begin%T2elb)
 
+#ifdef CUEST
+  if (quick_method%usecuest) then
+      call PrtAct(iOutFile, "Initializing cuEST")
+      call initialize_cuest
+  endif
+#endif
+
   ! compute energy
   if ( .not. quick_method%opt .and. .not. quick_method%grad) then
     SAFE_CALL(getEnergy(.false.,ierr))
@@ -595,6 +608,13 @@ subroutine run_quick(self,ierr)
       if (quick_method%bGPU) then
         call gpu_cleanup()
       endif
+#endif
+
+#ifdef CUEST
+  if (quick_method%usecuest) then
+     call PrtAct(iOutFile, "Finalizing cuEST")
+     call finalize_cuest
+  endif
 #endif
 
 #ifdef MPIV

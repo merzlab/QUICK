@@ -14,6 +14,10 @@
     use quick_method_module, only: quick_method
     use quick_molspec_module, only: quick_molspec, xyz, natom
     use quick_timer_module, only: timer_begin, timer_end, timer_cumer
+#ifdef CUEST
+    use quick_cuest_module, only: cuest_correct_P, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK
+#endif
+
     implicit none
     
     interface
@@ -29,6 +33,9 @@
     integer :: i, j, ibas, jbas, icon, jcon
     double precision :: cmx, cmy, cmz, totweight, weight, xdip, ydip, zdip
     double precision :: totdip, sx, sy, sz, denseji
+#ifdef CUEST
+    double precision :: densetmp(nbasis, nbasis)
+#endif
 !-------------------------------------------------------
 ! The purpose of this subroutine is to generate the Mulliken and Lowdin
 ! charges, and then calculate the dipole moment.
@@ -36,6 +43,11 @@
 
     call prtact(ioutfile,"Begin Charge and Dipole Calculation")
     RECORD_TIME(timer_begin%TDip)
+
+    ! ! TODO: deallocate?
+    ! if (.not. allocated(quick_scratch%hold)) allocate(quick_scratch%hold(nbasis, nbasis))
+    ! if (.not. allocated(quick_scratch%hold2)) allocate(quick_scratch%hold2(nbasis, nbasis))
+
     !-------------------------------------------------------
     ! Part 1. Mulliken and Lowdin charge
     !-------------------------------------------------------
@@ -62,6 +74,8 @@
     ! charges:
     ! Lowdin Charge of atom A = core charge A -
     ! - (Sum over u on A)[S^(1/2)PS^(1/2)](uu)
+
+    ! TODO: fix lowdin charges when cuEST DFT
 
     ! If there is no near-linear dependency, S^(-1/2) = X.  Thus we have to calculate
     ! XSPSX = S^(-1/2)SPSS^(-1/2)= S^(1/2)PS^(1/2)
@@ -159,6 +173,13 @@
         zdip = zdip+quick_molspec%chg(I)*xyzdipole(3,I)
     ENDDO
 
+#ifdef CUEST
+    if (quick_method%usecuest) then
+       densetmp = quick_qm_struct%dense
+       call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_REORDER_AND_NORM_CUEST_TO_QUICK)
+    endif
+#endif
+
     DO Ibas=1,nbasis
         DO Jbas=Ibas,nbasis
             Sx =0.d0
@@ -207,6 +228,10 @@
             zdip = zdip - Sz*DENSEJI
         ENDDO
     ENDDO
+
+#ifdef CUEST
+   if (quick_method%usecuest) quick_qm_struct%dense = densetmp
+#endif
 
     totdip = ((xdip*xdip+ydip*ydip+zdip*zdip)**.5d0)*2.541765d0
     write (ioutfile,'(/,4x,"DIPOLE (DEBYE)")')

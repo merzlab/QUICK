@@ -1,0 +1,14 @@
+[
+  {
+    "file": "overlap.c",
+    "arguments": [
+      "/opt/homebrew/opt/llvm/bin/clang",
+      "overlap.c",
+      "-o",
+      "main",
+      "-DLOCAL"
+    ],
+    "directory": "/Users/msun/rehs2026/cuest/tests",
+    "output": "main"
+  }
+]

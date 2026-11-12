@@ -25,6 +25,9 @@ subroutine getMol(ierr)
 #if defined(MPIV)
     use quick_mpi_module, only: bMPI
 #endif
+#ifdef CUEST
+   use quick_fitbasis_module, only: quick_fitbasis, readfitbasis, print_quick_fitbasis
+#endif
 
    implicit none
 
@@ -82,6 +85,15 @@ subroutine getMol(ierr)
    ! have the number of electrons. Now we must assign basis functions. This
    ! is done in a subroutine.
    call readbasis(natom,0,0,0,0,ierr)
+   CHECK_ERROR(ierr)
+
+#ifdef CUEST
+   if (quick_method%usecuest) then
+      call readfitbasis(ierr)
+      CHECK_ERROR(ierr)
+   endif
+#endif
+
    ! F implementation of GPU ERI code currently doesnt support open shell
    ! gradient calculations
 #if defined(GPU) || defined(MPIV_GPU)
@@ -105,6 +117,9 @@ subroutine getMol(ierr)
       ! now print molecule specification to output file
       call print_quick_molspec(quick_molspec,iOutFile,ierr)
       call print_quick_basis(quick_basis,iOutFile)
+#ifdef CUEST
+      if (quick_method%usecuest) call print_quick_fitbasis(quick_fitbasis, ioutfile)
+#endif
 
       ! the following some step are setup for basis and for ECP or DFT calculation
       ! and see comments for details
@@ -244,6 +259,9 @@ subroutine initialGuess(ierr)
    use quick_sad_guess_module, only: getSadDense
    use quick_io_module, only: chk_read, read_real8_rank3
    use quick_mpi_module, only: master
+#ifdef CUEST
+   use quick_cuest_module, only: cuest_correct_P, CUEST_CORRECT_NORM_QUICK_TO_CUEST
+#endif
 
    implicit none
 
@@ -297,8 +315,14 @@ subroutine initialGuess(ierr)
       if (quick_method%readden) then
          if (master) then
             call chk_read('dense', nbasis, nbasis, quick_qm_struct%dense)
+#ifdef CUEST
+            if (quick_method%usecuest) call cuest_correct_P(quick_qm_struct%dense, CUEST_CORRECT_NORM_QUICK_TO_CUEST)
+#endif
             if (quick_method%unrst) then
                call chk_read('denseb', nbasis, nbasis, quick_qm_struct%denseb)
+#ifdef CUEST
+               if (quick_method%usecuest) call cuest_correct_P(quick_qm_struct%denseb, CUEST_CORRECT_NORM_QUICK_TO_CUEST)
+#endif
             endif
          endif
       else if (quick_method%SAD) then
