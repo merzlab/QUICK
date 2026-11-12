@@ -428,7 +428,7 @@ contains
         if(verbose) write(ioutfile,'("| ",42("-"))')
      endif
      if(verbose) write(ioutfile,'("| ","NCYC",6x)',advance="no")
-     if(verbose) write(ioutfile,'(" ENERGY ",8x,"DELTA_E",5x)',advance="no")
+     if(verbose) write(ioutfile,'(" ENERGY ",12x,"DELTA_E",5x)',advance="no")
      if(verbose) write(ioutfile,'(" MAX_ERR",4x,"RMS_CHG",4x,"MAX_CHG")')
      if (quick_method%printEnergy) then
         if(verbose) write(ioutfile,'("| ",72("-"))')
@@ -831,7 +831,7 @@ contains
   
         if(verbose) write (ioutfile,'("|",I3,1x)',advance="no") jscf
         if(quick_method%printEnergy)then
-           if(verbose) write (ioutfile,'(F16.9,2x)',advance="no") quick_qm_struct%Eel+quick_qm_struct%Ecore
+           if(verbose) write (ioutfile,'(F20.9,2x)',advance="no") quick_qm_struct%Eel+quick_qm_struct%Ecore
            if (jscf.ne.1) then
               if(verbose) write(ioutFile,'(E12.6,2x)',advance="no") oldEnergy-quick_qm_struct%Eel-quick_qm_struct%Ecore
            else
