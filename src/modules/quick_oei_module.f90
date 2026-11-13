@@ -88,6 +88,7 @@ subroutine get1e(deltaO)
    integer :: Ibas, IIsh, JJsh, i
 
    double precision :: temp2d(nbasis,nbasis)
+   double precision :: trhc
    logical, intent(in) :: deltaO
 
    !------------------------------------------------
@@ -165,8 +166,38 @@ subroutine get1e(deltaO)
 
          quick_qm_struct%oneElecO(:,:) = quick_qm_struct%o(:,:)
 
+         ! Hcore is kinetic energy plus nuclear attraction. The kinetic part is
+         ! positive definite and the attraction is what makes a molecule bind,
+         ! so the trace of the sum is negative for any real system -- strongly
+         ! so, since the core functions sit deep. A non-negative trace means
+         ! the attraction is absent or wrong, not that the molecule is unusual.
+         !
+         ! That is worth testing because the two halves are computed by
+         ! different code on different hardware: the kinetic part always on the
+         ! host, the attraction through gpu_get_oei on a GPU build and through
+         ! attrashell otherwise. If the GPU path returns nothing, the operator
+         ! silently becomes kinetic only -- positive definite, so every orbital
+         ! energy comes out positive and the energy with it, which is a long way
+         ! downstream from the cause.
+         trhc = 0.0d0
+         do i = 1, nbasis
+            trhc = trhc + quick_qm_struct%oneElecO(i,i)
+         enddo
+         if (trhc .ge. 0.0d0) then
+            call PrtWrn(iOutFile,'The one-electron matrix has a non-negative trace.')
+            write(iOutFile,'("|          trace(Hcore) = ",es16.8," over ",i0," basis functions.")') &
+                  trhc, nbasis
+            write(iOutFile,'("|          Hcore is kinetic plus nuclear attraction, so this trace")')
+            write(iOutFile,'("|          cannot be positive for a real molecule. The attraction")')
+            write(iOutFile,'("|          term is missing or wrong; on a GPU build it comes from")')
+            write(iOutFile,'("|          gpu_get_oei, on a CPU build from attrashell.")')
+            write(iOutFile,'(a)')
+            call flush(iOutFile)
+         endif
+
          if (quick_method%debug) then
                 write(iOutFile,*) "ONE ELECTRON MATRIX"
+                write(iOutFile,'(" trace(Hcore) = ",es16.8)') trhc
                 call PriSym(iOutFile,nbasis,quick_qm_struct%oneElecO,'f14.8')
          endif
          bCalc1e=.false.
@@ -248,6 +279,22 @@ subroutine get1e(deltaO)
       call copySym(quick_qm_struct%o,nbasis)
 
       quick_qm_struct%oneElecO(:,:) = quick_qm_struct%o(:,:)
+
+      ! Same check as the serial branch above: Hcore cannot have a non-negative
+      ! trace for a real molecule, so this catches a missing attraction term
+      ! here too, where the work was spread over ranks and gathered.
+      trhc = 0.0d0
+      do i = 1, nbasis
+         trhc = trhc + quick_qm_struct%oneElecO(i,i)
+      enddo
+      if (trhc .ge. 0.0d0 .and. master) then
+         call PrtWrn(iOutFile,'The one-electron matrix has a non-negative trace.')
+         write(iOutFile,'("|          trace(Hcore) = ",es16.8," over ",i0," basis functions.")') &
+               trhc, nbasis
+         write(iOutFile,'("|          The nuclear attraction term is missing or wrong.")')
+         write(iOutFile,'(a)')
+         call flush(iOutFile)
+      endif
 
       bCalc1e=.false.
       !------- END MPI/ALL NODES ------------
