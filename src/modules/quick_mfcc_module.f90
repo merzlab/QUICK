@@ -34,54 +34,6 @@ module quick_mfcc_module
     ! bridge, so the count is now carried explicitly.
     integer :: nmfcccap = 0
 
-    ! ------------------------------------------------------------------!
-    ! Disulfide correction blocks.                                       !
-    !                                                                    !
-    ! MFCC never cuts the bond it means to preserve: it moves the cut to  !
-    ! an innocuous single bond, lets the preserved bond sit whole inside  !
-    ! the fragment, and subtracts whatever that double counts as a        !
-    ! concap. A disulfide is a bond through the chain between two         !
-    ! sequence distant residues, and capping it with hydrogen (which is   !
-    ! still done, because it is what keeps those fragments closed shell)  !
-    ! leaves both halves described as thiols. Two thiols are not a        !
-    ! disulfide: the sulfur is in the wrong oxidation state in both.      !
-    !                                                                    !
-    ! So the bridge is restored as a correction, in exactly the MFCC      !
-    ! form. Per bridge:                                                   !
-    !                                                                    !
-    !   D += D(CH3-S-S-CH3) - D(CH3-S-H)_i - D(CH3-S-H)_j                !
-    !                                                                    !
-    ! The CH3-S-S-CH3 block carries the intact S-S at the real geometry,  !
-    ! cut at the two CA-CB bonds and capped there with hydrogen, which is !
-    ! the direct analogue of cutting the backbone at CA-C. The two        !
-    ! thiols are what the capped fragments already contributed, so they   !
-    ! are removed; they are ordinary concaps and live in the cap arrays.  !
-    !                                                                    !
-    ! The S-S block is the only piece of MFCC that does not map onto one  !
-    ! contiguous run of global basis functions: its two halves sit in     !
-    ! different residues. Its atoms are laid out locally as              !
-    !                                                                    !
-    !   [Hcap] [CB_i .. SG_i] [SG_j .. CB_j] [Hcap]                       !
-    !                                                                    !
-    ! so the real atoms are contiguous LOCALLY and split into two global  !
-    ! runs. Only the split point and the two global starts are needed,    !
-    ! and the off diagonal block between the halves is what carries the   !
-    ! S-S bond density itself.                                           !
-    !____________________________________________________________________!
-    integer :: nmfccss = 0
-    integer, allocatable :: mfccatomss(:), mfccchargess(:)
-    double precision, allocatable :: mfcccordss(:,:,:)
-    character(len=2), allocatable :: mfccatomxiaoss(:,:)
-    ! Local atom/basis range of the real (non cap) atoms, as mfcc_run_submol
-    ! reports it for any sub-molecule.
-    integer, allocatable :: mfccstartss(:), mfccfinalss(:)
-    integer, allocatable :: mfccbasesss(:), mfccbasefss(:)
-    ! Global atom ranges of the two halves, and the global basis start of each.
-    integer, allocatable :: matomstartss1(:), matomfinalss1(:)
-    integer, allocatable :: matomstartss2(:), matomfinalss2(:)
-    integer, allocatable :: matombasesss1(:), matombasefss1(:)
-    integer, allocatable :: matombasesss2(:), matombasefss2(:)
-
     integer, allocatable :: mfccatom(:), mfccatomcap(:)
     ! Per fragment/cap formal charge. Set from the terminus composition in
     ! mfcc_start; zero for everything else.
@@ -146,10 +98,6 @@ module quick_mfcc_module
 
     double precision, allocatable, dimension(:,:,:) :: mfccdens,mfccdenscap,mfccdenscon &
                                             ,mfccdenscon2,mfccdensconi,mfccdensconj
-    ! Density of each intact CH3-S-S-CH3 block. Unlike every other block this
-    ! one spans two separate runs of global basis functions, so its off diagonal
-    ! part -- the S-S bond density itself -- is scattered as well.
-    double precision, allocatable, dimension(:,:,:) :: mfccdensss
 
 contains
 
@@ -257,66 +205,6 @@ contains
 900   ierr = 34
       return
    end subroutine mfcc_alloc_con
-
-
-   !----------------------------------------------------------------------!
-   ! mfcc_alloc_ss / mfcc_dealloc_ss                                      !
-   !                                                                      !
-   ! The disulfide correction blocks, one per bridge. Sized separately    !
-   ! because how many bridges there are is only known once the S..S       !
-   ! search has run.                                                      !
-   !______________________________________________________________________!
-   subroutine mfcc_alloc_ss(nss, natmax, ierr)
-      implicit none
-      integer, intent(in)    :: nss, natmax
-      integer, intent(inout) :: ierr
-      integer :: ia, n
-
-      call mfcc_dealloc_ss()
-      n = max(nss,1)
-
-      allocate(mfccatomss(n), mfccchargess(n), &
-               mfccstartss(n), mfccfinalss(n), mfccbasesss(n), mfccbasefss(n), &
-               matomstartss1(n), matomfinalss1(n), matomstartss2(n), matomfinalss2(n), &
-               matombasesss1(n), matombasefss1(n), matombasesss2(n), matombasefss2(n), &
-               stat=ia)
-      if (ia /= 0) goto 900
-
-      allocate(mfcccordss(3,natmax,n), mfccatomxiaoss(natmax,n), stat=ia)
-      if (ia /= 0) goto 900
-
-      mfccatomss = 0; mfccchargess = 0
-      mfccstartss = 0; mfccfinalss = 0; mfccbasesss = 0; mfccbasefss = 0
-      matomstartss1 = 0; matomfinalss1 = 0; matomstartss2 = 0; matomfinalss2 = 0
-      matombasesss1 = 0; matombasefss1 = 0; matombasesss2 = 0; matombasefss2 = 0
-      mfcccordss = 0.0d0
-      mfccatomxiaoss = '  '
-      return
-
-900   ierr = 34
-      return
-   end subroutine mfcc_alloc_ss
-
-
-   subroutine mfcc_dealloc_ss()
-      implicit none
-      if (allocated(mfccatomss))     deallocate(mfccatomss)
-      if (allocated(mfccchargess))   deallocate(mfccchargess)
-      if (allocated(mfccstartss))    deallocate(mfccstartss)
-      if (allocated(mfccfinalss))    deallocate(mfccfinalss)
-      if (allocated(mfccbasesss))    deallocate(mfccbasesss)
-      if (allocated(mfccbasefss))    deallocate(mfccbasefss)
-      if (allocated(matomstartss1))  deallocate(matomstartss1)
-      if (allocated(matomfinalss1))  deallocate(matomfinalss1)
-      if (allocated(matomstartss2))  deallocate(matomstartss2)
-      if (allocated(matomfinalss2))  deallocate(matomfinalss2)
-      if (allocated(matombasesss1))  deallocate(matombasesss1)
-      if (allocated(matombasefss1))  deallocate(matombasefss1)
-      if (allocated(matombasesss2))  deallocate(matombasesss2)
-      if (allocated(matombasefss2))  deallocate(matombasefss2)
-      if (allocated(mfcccordss))     deallocate(mfcccordss)
-      if (allocated(mfccatomxiaoss)) deallocate(mfccatomxiaoss)
-   end subroutine mfcc_dealloc_ss
 
 
    subroutine mfcc_dealloc_frag()

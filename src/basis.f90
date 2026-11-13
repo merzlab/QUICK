@@ -28,9 +28,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                                   matombasescon, matombasescon2, matombasesconi, matombasesconj, &
                                   matomfinal, matomfinalcap, matomfinalcon, matomfinalcon2, &
                                   matomstart, matomstartcap, matomstartcon, matomstartcon2, &
-                                  mfccatom, mfcccharge, npmfcc, nmfccextra, nmfcccap, nmfccss, &
-                                  matomstartss1, matomfinalss1, matomstartss2, matomfinalss2, &
-                                  matombasesss1, matombasefss1, matombasesss2, matombasefss2, &
+                                  mfccatom, mfcccharge, npmfcc, nmfccextra, nmfcccap, &
                                   IMFCC, kxiaoconnect, mfcccord, &
                                   Ftmp, linetmp, mfccatomxiao, mfccstart, mfccfinal, &
                                   mfccbases, mfccbasef, &
@@ -262,14 +260,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
             endif
          enddo
 
-         ! The disulfide correction blocks are the only sub-molecules that span
-         ! two separate runs of global basis functions, so each half gets its
-         ! own global start and end.
-         do ixiao=1,nmfccss
-            if(matomstartss1(ixiao).eq.i) matombasesss1(ixiao)=nbasis+1
-            if(matomstartss2(ixiao).eq.i) matombasesss2(ixiao)=nbasis+1
-         enddo
-
          do ixiao=1,kxiaoconnect
             if(matomstartcon(ixiao).eq.i)then
                matombasescon(ixiao)=nbasis+1
@@ -303,11 +293,6 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
 
          do ixiao=1,nmfcccap
             if(matomfinalcap(ixiao).eq.i)matombasefcap(ixiao)=nbasis
-         enddo
-
-         do ixiao=1,nmfccss
-            if(matomfinalss1(ixiao).eq.i) matombasefss1(ixiao)=nbasis
-            if(matomfinalss2(ixiao).eq.i) matombasefss2(ixiao)=nbasis
          enddo
 
          do ixiao=1,kxiaoconnect
