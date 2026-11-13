@@ -384,11 +384,17 @@ __global__ void get_oei_grad_kernel() {
     unsigned int jshell = devSim.Qshell;
     unsigned int totalatom = devSim.natom + devSim.nextatom;
 
-    for (QUICKULL i = offset; i < jshell * jshell * totalatom; i += totalThreads) {
+    // Same 32 bit overflow as getOEI_kernel in gpu_oei.h, and the same fix:
+    // the number of (shell pair, atom) work items passes the range of a 32 bit
+    // unsigned well before a protein-sized system, so the product and the index
+    // arithmetic derived from it are computed in 64 bit.
+    const QUICKULL npair = (QUICKULL) jshell * (QUICKULL) jshell;
+
+    for (QUICKULL i = offset; i < npair * (QUICKULL) totalatom; i += totalThreads) {
         // use the global index to obtain shell pair. Note that here we obtain a couple of indices that helps us to obtain
         // shell number (ii and jj) and quantum numbers (iii, jjj).
-        unsigned int iatom = (int) i / (jshell * jshell);
-        unsigned int idx   = i - iatom * jshell * jshell;
+        unsigned int iatom = (unsigned int) (i / npair);
+        unsigned int idx   = (unsigned int) (i - (QUICKULL) iatom * npair);
 
 #ifdef MPIV_GPU
         if (devSim.mpi_boeicompute[idx] > 0) {
