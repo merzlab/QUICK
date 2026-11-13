@@ -1916,14 +1916,6 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
                 gpu->nbasis, compact_gb, totalCompact, dense_gb, dense_gb, compact_gb + dense_gb);
         fflush(stderr);
 
-        // This is called once per fragment per SCF iteration for DnC jobs, so the
-        // previous call's buffer must be freed here -- otherwise every call leaks
-        // its predecessor's GPU allocation instead of replacing it, exhausting
-        // device memory over a large fragment loop.
-        if (gpu->gpu_calculated->oCompact != NULL) {
-            delete gpu->gpu_calculated->oCompact;
-            gpu->gpu_calculated->oCompact = NULL;
-        }
         gpu->gpu_calculated->oCompact = new gpu_buffer_type<QUICKDouble>(totalCompact);
         gpu->gpu_calculated->oCompact->Upload();
         gpu->gpu_sim.oCompact = gpu->gpu_calculated->oCompact->_devData;
@@ -1932,19 +1924,10 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
                 "~%.3f GB each (~%.3f GB combined)\n", gpu->nbasis, dense_gb, 2.0*dense_gb);
         fflush(stderr);
 
-        // See the oCompact free above -- same leak-on-reassignment risk for o/oULL.
-        if (gpu->gpu_calculated->o != NULL) {
-            delete gpu->gpu_calculated->o;
-            gpu->gpu_calculated->o = NULL;
-        }
         gpu->gpu_calculated->o = new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
 #if defined(USE_LEGACY_ATOMICS)
         gpu->gpu_calculated->o->DeleteGPU();
-        if (gpu->gpu_calculated->oULL != NULL) {
-            delete gpu->gpu_calculated->oULL;
-            gpu->gpu_calculated->oULL = NULL;
-        }
         gpu->gpu_calculated->oULL = new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
         gpu->gpu_calculated->oULL->Upload();
         gpu->gpu_sim.oULL = gpu->gpu_calculated->oULL->_devData;
@@ -1954,12 +1937,6 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
 #endif
     }
 
-    // Same leak-on-reassignment risk as o/oCompact above: this runs once per
-    // fragment per SCF iteration for DnC jobs.
-    if (gpu->gpu_calculated->dense != NULL) {
-        delete gpu->gpu_calculated->dense;
-        gpu->gpu_calculated->dense = NULL;
-    }
     gpu->gpu_calculated->dense = new gpu_buffer_type<QUICKDouble>(dense, gpu->nbasis, gpu->nbasis);
     gpu->gpu_calculated->dense->Upload();
     gpu->gpu_sim.dense = gpu->gpu_calculated->dense->_devData;
@@ -1993,20 +1970,10 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
         fflush(stderr);
     }
 
-    // Freed before reassignment -- see gpu_upload_calculated_'s oCompact comment
-    // for why (this runs once per fragment per SCF iteration for DnC UHF jobs).
-    if (gpu->gpu_calculated->ob != NULL) {
-        delete gpu->gpu_calculated->ob;
-        gpu->gpu_calculated->ob = NULL;
-    }
     gpu->gpu_calculated->ob = new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
 #if defined(USE_LEGACY_ATOMICS)
     gpu->gpu_calculated->ob->DeleteGPU();
-    if (gpu->gpu_calculated->obULL != NULL) {
-        delete gpu->gpu_calculated->obULL;
-        gpu->gpu_calculated->obULL = NULL;
-    }
     gpu->gpu_calculated->obULL = new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
     gpu->gpu_calculated->obULL->Upload();
     gpu->gpu_sim.obULL = gpu->gpu_calculated->obULL->_devData;
@@ -2031,11 +1998,6 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
 //This method uploads density matrix onto gpu for XC gradient calculation
 extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense)
 {
-    // Freed before reassignment -- see gpu_upload_calculated_'s oCompact comment.
-    if (gpu->gpu_calculated->dense != NULL) {
-        delete gpu->gpu_calculated->dense;
-        gpu->gpu_calculated->dense = NULL;
-    }
     gpu->gpu_calculated->dense = new gpu_buffer_type<QUICKDouble>(dense,  gpu->nbasis, gpu->nbasis);
     gpu->gpu_calculated->dense->Upload();
     gpu->gpu_sim.dense = gpu->gpu_calculated->dense->_devData;
@@ -2044,11 +2006,6 @@ extern "C" void gpu_upload_density_matrix_(QUICKDouble* dense)
 
 extern "C" void gpu_upload_beta_density_matrix_(QUICKDouble* denseb)
 {
-    // Freed before reassignment -- see gpu_upload_calculated_'s oCompact comment.
-    if (gpu->gpu_calculated->denseb != NULL) {
-        delete gpu->gpu_calculated->denseb;
-        gpu->gpu_calculated->denseb = NULL;
-    }
     gpu->gpu_calculated->denseb = new gpu_buffer_type<QUICKDouble>(denseb,  gpu->nbasis, gpu->nbasis);
     gpu->gpu_calculated->denseb->Upload();
     gpu->gpu_sim.denseb = gpu->gpu_calculated->denseb->_devData;
