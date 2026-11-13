@@ -28,6 +28,12 @@ module quick_mfcc_module
     ! make them, so the cap arrays stay at npmfcc-1 while the fragment arrays
     ! run to npmfcc+nmfccextra.
     integer :: nmfccextra = 0
+    ! How many concaps there actually are. This was spelled npmfcc-1 at every
+    ! site that touched a cap, which was true only while the backbone cuts were
+    ! the only cuts. The disulfide correction below appends two more concaps per
+    ! bridge, so the count is now carried explicitly.
+    integer :: nmfcccap = 0
+
     integer, allocatable :: mfccatom(:), mfccatomcap(:)
     ! Per fragment/cap formal charge. Set from the terminus composition in
     ! mfcc_start; zero for everything else.

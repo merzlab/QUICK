@@ -58,7 +58,7 @@
            basisFileName, basisSetName, basisCustName, ECPDir, ECPFileName, inFileName, &
            outFileName, dmxFileName, rstFileName, CPHFFileName, dataFileName, intFileName, &
            moldenFileName, espFileName, efieldFileName, VdwSurfFileName, fragPreFileName, &
-           fragPostFileName, mfccXyzFileName, mfccRptXyzFileName
+           fragPostFileName, mfccXyzFileName, mfccRptXyzFileName, mfccChgFileName
      use mpi
 
      implicit none
@@ -105,6 +105,7 @@
     call MPI_BCAST(fragPostFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
     call MPI_BCAST(mfccXyzFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
     call MPI_BCAST(mfccRptXyzFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
+    call MPI_BCAST(mfccChgFileName,80,mpi_character,0,quick_comm,quick_mpi_error)
     if (quick_method%ecp) then
         call MPI_BCAST(tolecp,1,mpi_double_precision,0,quick_comm,quick_mpi_error)
         call MPI_BCAST(thrshecp,1,mpi_double_precision,0,quick_comm,quick_mpi_error)

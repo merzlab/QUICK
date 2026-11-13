@@ -28,7 +28,8 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
                                   matombasescon, matombasescon2, matombasesconi, matombasesconj, &
                                   matomfinal, matomfinalcap, matomfinalcon, matomfinalcon2, &
                                   matomstart, matomstartcap, matomstartcon, matomstartcon2, &
-                                  mfccatom, mfcccharge, npmfcc, nmfccextra, IMFCC, kxiaoconnect, mfcccord, &
+                                  mfccatom, mfcccharge, npmfcc, nmfccextra, nmfcccap, &
+                                  IMFCC, kxiaoconnect, mfcccord, &
                                   Ftmp, linetmp, mfccatomxiao, mfccstart, mfccfinal, &
                                   mfccbases, mfccbasef, &
                                   mfccatomcap, mfccchargecap, mfcccordcap, mfccatomxiaocap, &
@@ -252,7 +253,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
             endif
          enddo
 
-         do ixiao=1,npmfcc-1
+         do ixiao=1,nmfcccap
             if(matomstartcap(ixiao).eq.i)then
                matombasescap(ixiao)=nbasis+1
                !         print*,ixiao,'matombases(ixiao)=',matomstart(ixiao),matombases(ixiao)
@@ -290,7 +291,7 @@ subroutine readbasis(natomxiao,natomstart,natomfinal,nbasisstart,nbasisfinal,ier
             if(matomfinal(ixiao).eq.i)matombasef(ixiao)=nbasis
          enddo
 
-         do ixiao=1,npmfcc-1
+         do ixiao=1,nmfcccap
             if(matomfinalcap(ixiao).eq.i)matombasefcap(ixiao)=nbasis
          enddo
 

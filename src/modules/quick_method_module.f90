@@ -115,6 +115,7 @@ module quick_method_module
         logical :: mfccpure = .false.  ! purify the MFCC guess density (MFCCPURE)
         logical :: mfccfrag = .false.  ! fragment only, no SCF and no guess (MFCCFRAG)
         logical :: mfccrpt = .false.   ! reuse one SCF per repeated species (MFCC RPT)
+        logical :: mfccchg = .false.   ! read per-residue charge overrides (MFCCCHG)
         logical :: densdiis = .false.  ! DnC: Pulay mixing on the density instead
                                        ! of Fock DIIS on FDS-SDF (DENSDIIS)
 
@@ -299,6 +300,7 @@ module quick_method_module
             call MPI_BCAST(self%mfccpure,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%mfccfrag,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%mfccrpt,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%mfccchg,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%densdiis,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%ifragbasis,1,mpi_integer,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%iSG,1,mpi_integer,0,quick_comm,quick_mpi_error)
@@ -469,6 +471,7 @@ module quick_method_module
             if (self%mfccpure) write(io,'(" PURIFY THE MFCC GUESS DENSITY ")')
             if (self%mfccfrag) write(io,'(" MFCC FRAGMENTATION ONLY: NO SCF, NO INITIAL GUESS ")')
             if (self%mfccrpt) write(io,'(" REUSE ONE MFCC FRAGMENT SCF PER REPEATED SPECIES (RPT) ")')
+            if (self%mfccchg) write(io,'(" PER-RESIDUE CHARGE OVERRIDES FROM <stem>.charges (MFCCCHG) ")')
             if (self%densdiis) write(io,'(" DIIS ON THE DENSITY RESIDUAL (DIVIDE AND CONQUER) ")')
 
             if (self%FMM)  write(io,'(" FAST MULTIPOLE METHOD = TRUE ")')
@@ -664,6 +667,12 @@ module quick_method_module
             ! stays the default. Asking for it without MFCC is a no-op, which is
             ! reported in check() rather than silently ignored.
             if (found_keyword(keyWD,'RPT'))        self%mfccrpt=.true.
+            ! MFCCCHG reads per-residue formal charges from <stem>.charges. It
+            ! exists for ligands: a standard residue's charge follows from its
+            ! name and its hydrogens, but nothing in the name 'BEN' says that
+            ! benzamidine's amidinium carries a +1, and at charge 0 that
+            ! fragment has an odd electron count and cannot be solved at all.
+            if (found_keyword(keyWD,'MFCCCHG'))    self%mfccchg=.true.
             if (found_keyword(keyWD,'DENSDIIS'))   self%densdiis=.true.
             if (found_keyword(keyWD,'FMM'))        self%FMM=.true.
             if (found_keyword(keyWD,'MP2'))        self%MP2=.true.
@@ -1140,6 +1149,7 @@ module quick_method_module
             self%mfccpure = .false.    ! purify the MFCC guess density (MFCCPURE)
             self%mfccfrag = .false.    ! fragment only, no SCF (MFCCFRAG)
             self%mfccrpt = .false.     ! reuse one SCF per repeated species (MFCC RPT)
+            self%mfccchg = .false.     ! per-residue charge overrides (MFCCCHG)
             self%densdiis = .false.    ! Pulay mixing on the density for DnC (DENSDIIS)
             self%MFCCCUT = 3.0d0       ! contact cutoff for MFCC connection terms
 
@@ -1235,6 +1245,11 @@ module quick_method_module
             if (self%mfccrpt .and. .not.self%MFCC) then
                 call PrtWrn(io,"RPT ONLY APPLIES TO THE MFCC GUESS AND IS IGNORED WITHOUT THE MFCC KEYWORD")
                 self%mfccrpt = .false.
+            endif
+
+            if (self%mfccchg .and. .not.self%MFCC) then
+                call PrtWrn(io,"MFCCCHG ONLY APPLIES TO THE MFCC GUESS AND IS IGNORED WITHOUT THE MFCC KEYWORD")
+                self%mfccchg = .false.
             endif
 
             ! OPT not available for MP2

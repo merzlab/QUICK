@@ -34,15 +34,22 @@ SUBROUTINE CPU_DIAG(A, N, M, EVAL, EVEC, IERROR)
   LWMAX = 1+2*N+6*N**2
   EVEC = A
 
-  allocate(IWORK(LWMAX))
-  allocate(WORK(LWMAX))
+  ! IERROR is an intent(out) error flag and MAT_DIAG now treats a non-zero
+  ! value as fatal, so it must be defined on every path out of here -- the
+  ! N == 1 shortcut below returns without ever reaching dsyevd.
+  IERROR = 0
 
+  ! Taken before the work arrays are allocated: the shortcut needs neither,
+  ! and returning from between the allocate and the deallocate leaked them.
   if(N == 1)then
      EVAL(1) = A(1,1)
      EVEC(1,1) = 1.0D0
      RETURN
   endif
- 
+
+  allocate(IWORK(LWMAX))
+  allocate(WORK(LWMAX))
+
   ! Query the optimal workspace
   LWORK = -1
   LIWORK = -1

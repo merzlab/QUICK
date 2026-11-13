@@ -27,7 +27,8 @@ subroutine mfcc_fragment_scf(ierr)
    use quick_method_module, only: quick_method, quick_method_type
    use quick_molspec_module, only: quick_molspec, quick_molspec_type, natom, xyz
    use quick_calculated_module, only: quick_qm_struct, dealloc
-   use quick_mfcc_module, only: npmfcc, nmfccextra, kxiaoconnect, mfcccord, mfccatom, &
+   use quick_mfcc_module, only: nmfcccap, &
+                                 npmfcc, nmfccextra, kxiaoconnect, mfcccord, mfccatom, &
                                  mfccatomcap, mfccatomcon, mfccatomcon2, mfccatomconi, mfccatomconj, &
                                  mfccatomxiaocon, mfccatomxiaocon2, mfccbases, mfccbasef, &
                                  mfccbasescap, mfccbasefcap, mfccbasesconi, mfccbasefconi, &
@@ -233,7 +234,7 @@ subroutine mfcc_fragment_scf(ierr)
       maxbas = max(maxbas,nbasis)
    enddo
 
-   do k = 1, npmfcc-1
+   do k = 1, nmfcccap
       call deallocate_calculated
       call mfcc_set_submol(mfccatomcap(k),mfcccordcap(1,1,k),mfccatomxiaocap(1,k),mfccchargecap(k),ierr)
       if (ierr /= 0) goto 900
@@ -295,10 +296,10 @@ subroutine mfcc_fragment_scf(ierr)
    ! same first dimension, so size them for the larger of the two. Sized at
    ! npmfcc, every standalone fragment wrote past the end of mfccdens: silent
    ! corruption with a hundred waters, a segfault with four hundred.
-   call allocate_MFCC(npmfcc+nmfccextra,ncon,maxbas)
+   call allocate_MFCC(max(npmfcc+nmfccextra,nmfcccap),ncon,maxbas)
 
    if (real_master) write(ioutfile,'(" MFCC fragments =",i4,"  standalone =",i6,"  caps =",i4, &
-         &"  connections =",i4,"  max basis =",i5)') npmfcc,nmfccextra,npmfcc-1,kxiaoconnect,maxbas
+         &"  connections =",i4,"  max basis =",i5)') npmfcc,nmfccextra,nmfcccap,kxiaoconnect,maxbas
 
    ! ---------------------------------------------------------------
    ! Pass 2: converge each sub-molecule and keep its density.
@@ -348,7 +349,7 @@ subroutine mfcc_fragment_scf(ierr)
       endif
    endif
 
-   do k = 1, npmfcc-1
+   do k = 1, nmfcccap
       if (mod(k-1,nranks) .ne. myrank) cycle
       call mfcc_run_submol(mfccatomcap(k),mfcccordcap(1,1,k),mfccatomxiaocap(1,k),mfccchargecap(k), &
             mfccstartcap(k),mfccfinalcap(k),mfccbasescap(k),mfccbasefcap(k),nb_frag,ierr)
@@ -454,8 +455,8 @@ subroutine mfcc_fragment_scf(ierr)
       call mfcc_reduce_dens(mfccdenscap, nd1,nd2,nd3)
       call mfcc_reduce_idx(mfccbases,    npmfcc+nmfccextra)
       call mfcc_reduce_idx(mfccbasef,    npmfcc+nmfccextra)
-      call mfcc_reduce_idx(mfccbasescap, npmfcc)
-      call mfcc_reduce_idx(mfccbasefcap, npmfcc)
+      call mfcc_reduce_idx(mfccbasescap, max(nmfcccap,1))
+      call mfcc_reduce_idx(mfccbasefcap, max(nmfcccap,1))
       if (kxiaoconnect .gt. 0) then
          nc1 = size(mfccdenscon,1); nc2 = size(mfccdenscon,2); nc3 = size(mfccdenscon,3)
          call mfcc_reduce_dens(mfccdensconi,nc1,nc2,nc3)

@@ -38,6 +38,7 @@
 #define REORDERFILEHANDLE    2038
 #define QMDATAFILEHANDLE     2039
 #define MFCCRPTXYZFILEHANDLE 2040
+#define MFCCCHGFILEHANDLE    2041
 
 
 ! For the following definitions to work, one must use quick_exception_module

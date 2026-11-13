@@ -20,6 +20,29 @@ module quick_mfcc_species_module
    implicit none
    private
    public :: mfcc_is_amino_acid, mfcc_species_charge, mfcc_species_kind
+   public :: mfcc_chg_read, mfcc_chg_lookup, mfcc_chg_free
+   public :: mfcc_chg_n, mfcc_chg_name, mfcc_chg_seq, mfcc_chg_val, mfcc_chg_used
+
+   !--------------------------------------------------------------------!
+   ! User-supplied charge overrides, read from <stem>.charges when the   !
+   ! MFCCCHG keyword is given.                                           !
+   !                                                                     !
+   ! The charge of a standard residue can be worked out from its name    !
+   ! and the hydrogens bonded to its charged groups, which is what       !
+   ! mfcc_species_charge and the detection pass in mfcc_start do. A       !
+   ! ligand cannot: BEN is benzamidine, whose amidinium group carries a   !
+   ! +1 that nothing in the residue name reveals, and getting it wrong    !
+   ! is not a small error -- neutral C7H9N2 has 65 electrons, so the      !
+   ! fragment is not even closed shell. Hence this table, which lets the  !
+   ! user state the charge of any residue by name and number.            !
+   !--------------------------------------------------------------------!
+   integer :: mfcc_chg_n = 0
+   character(len=3), allocatable :: mfcc_chg_name(:)
+   integer, allocatable :: mfcc_chg_seq(:)
+   integer, allocatable :: mfcc_chg_val(:)
+   ! Set when an entry has been matched to a residue, so mfcc_start can
+   ! complain about one that matched nothing rather than ignore it.
+   logical, allocatable :: mfcc_chg_used(:)
 
    ! The twenty standard residues plus the protonation and linkage variants
    ! AMBER writes, which are what actually turn up in prepared files: LYN
@@ -117,6 +140,167 @@ contains
          chg = 0
       end select
    end function mfcc_species_charge
+
+
+   !--------------------------------------------------------------------!
+   ! mfcc_chg_read                                                      !
+   !                                                                    !
+   ! Read the charge override table. One residue per line:              !
+   !                                                                    !
+   !     # residue  resSeq  charge                                      !
+   !     BEN 225 +1                                                     !
+   !     CA  224 +2                                                     !
+   !                                                                    !
+   ! Blank lines and lines beginning # or ! are ignored, the three       !
+   ! fields are read list-directed so any amount of whitespace between   !
+   ! them is fine, and the charge may be written +1, 1 or -1.           !
+   !                                                                    !
+   ! Nothing is validated against the structure here, because this runs  !
+   ! before the pdb is known; mfcc_start matches each entry to a residue !
+   ! and is what rejects a name or number that does not exist.          !
+   !--------------------------------------------------------------------!
+   subroutine mfcc_chg_read(funit, fname, io, ierr)
+      implicit none
+      integer, intent(in) :: funit        ! unit to use
+      character(len=*), intent(in) :: fname
+      integer, intent(in) :: io           ! output unit for messages
+      integer, intent(inout) :: ierr
+
+      character(len=200) :: line
+      character(len=3) :: nm
+      integer :: ios, nline, k, iseq, ival, ia, j
+      logical :: exists
+
+      call mfcc_chg_free()
+
+      inquire(file=fname, exist=exists)
+      if (.not.exists) then
+         write(io,'(" MFCCCHG was requested but the charge file was not found: ",a)') trim(fname)
+         ierr = 49
+         return
+      endif
+
+      ! Two passes: count the data lines, then read them. Simpler than growing
+      ! the arrays, and the file is a handful of lines.
+      do k = 1, 2
+         if (k .eq. 2) then
+            allocate(mfcc_chg_name(max(nline,1)), mfcc_chg_seq(max(nline,1)), &
+                     mfcc_chg_val(max(nline,1)), mfcc_chg_used(max(nline,1)), stat=ia)
+            if (ia /= 0) then
+               ierr = 34
+               return
+            endif
+            mfcc_chg_name = '   '
+            mfcc_chg_seq = 0
+            mfcc_chg_val = 0
+            mfcc_chg_used = .false.
+         endif
+
+         open(funit, file=fname, status='OLD', form='FORMATTED', action='READ', iostat=ios)
+         if (ios /= 0) then
+            write(io,'(" Could not open the MFCC charge file: ",a)') trim(fname)
+            ierr = 49
+            return
+         endif
+
+         nline = 0
+         do
+            read(funit,'(a200)',iostat=ios) line
+            if (ios /= 0) exit
+            line = adjustl(line)
+            if (len_trim(line) .eq. 0) cycle
+            if (line(1:1) .eq. '#' .or. line(1:1) .eq. '!') cycle
+            nline = nline + 1
+            if (k .eq. 1) cycle
+
+            read(line,*,iostat=ios) nm, iseq, ival
+            if (ios /= 0) then
+               write(io,'(" Could not parse line ",i0," of ",a,":")') nline, trim(fname)
+               write(io,'("   ",a)') trim(line)
+               write(io,'(" Expected: residue name, residue number, charge (e.g. BEN 225 +1)")')
+               close(funit)
+               ierr = 49
+               return
+            endif
+            call mfcc_upcase3(nm)
+            mfcc_chg_name(nline) = nm
+            mfcc_chg_seq(nline) = iseq
+            mfcc_chg_val(nline) = ival
+         enddo
+         close(funit)
+      enddo
+
+      mfcc_chg_n = nline
+
+      ! Two entries for one residue number would make the result depend on the
+      ! order they happen to be scanned in.
+      do k = 1, mfcc_chg_n
+         do j = k+1, mfcc_chg_n
+            if (mfcc_chg_seq(j) .eq. mfcc_chg_seq(k)) then
+               write(io,'(" Residue ",i0," is listed twice in ",a)') mfcc_chg_seq(k), trim(fname)
+               ierr = 49
+               return
+            endif
+         enddo
+      enddo
+
+      if (mfcc_chg_n .eq. 0) then
+         write(io,'(" MFCCCHG was requested but ",a," holds no entries.")') trim(fname)
+         ierr = 49
+         return
+      endif
+
+   end subroutine mfcc_chg_read
+
+
+   !--------------------------------------------------------------------!
+   ! mfcc_chg_lookup                                                    !
+   !                                                                    !
+   ! Is there an override for this residue? Matching is by residue       !
+   ! number; the name is then compared as a check on the user, and a     !
+   ! mismatch is reported through nameref so the caller can refuse to    !
+   ! run rather than silently charge the wrong residue.                  !
+   !--------------------------------------------------------------------!
+   subroutine mfcc_chg_lookup(iseq, resnm, chg, found, mismatch, nameref)
+      implicit none
+      integer, intent(in) :: iseq
+      character(len=*), intent(in) :: resnm
+      integer, intent(out) :: chg
+      logical, intent(out) :: found, mismatch
+      character(len=3), intent(out) :: nameref
+      integer :: k
+      character(len=3) :: r
+
+      chg = 0
+      found = .false.
+      mismatch = .false.
+      nameref = '   '
+      if (mfcc_chg_n .le. 0) return
+
+      r = adjustl(resnm)
+      call mfcc_upcase3(r)
+
+      do k = 1, mfcc_chg_n
+         if (mfcc_chg_seq(k) .ne. iseq) cycle
+         found = .true.
+         nameref = mfcc_chg_name(k)
+         chg = mfcc_chg_val(k)
+         mfcc_chg_used(k) = .true.
+         if (mfcc_chg_name(k) .ne. r) mismatch = .true.
+         return
+      enddo
+
+   end subroutine mfcc_chg_lookup
+
+
+   subroutine mfcc_chg_free()
+      implicit none
+      if (allocated(mfcc_chg_name)) deallocate(mfcc_chg_name)
+      if (allocated(mfcc_chg_seq))  deallocate(mfcc_chg_seq)
+      if (allocated(mfcc_chg_val))  deallocate(mfcc_chg_val)
+      if (allocated(mfcc_chg_used)) deallocate(mfcc_chg_used)
+      mfcc_chg_n = 0
+   end subroutine mfcc_chg_free
 
 
    subroutine mfcc_upcase3(r)

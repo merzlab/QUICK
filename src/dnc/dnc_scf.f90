@@ -147,7 +147,7 @@ subroutine electdiisdc(jscf,ierr)
            write(ioutfile,'("| ",90("-"))')
         endif
         write(ioutfile,'("| ","NCYC",6x)',advance="no")
-        if (quick_method%printEnergy) write(ioutfile,'(" ENERGY ",8x,"DELTA_E",5x)',advance="no")
+        if (quick_method%printEnergy) write(ioutfile,'(" ENERGY ",12x,"DELTA_E",5x)',advance="no")
         write(ioutfile,'(" SCF_TIME",2x,"DII_CYC",2x," DII_TIME ",2x,"O_TIME",2x, &
               "DIAG_TIME",4x,"MAX_ERR",4x,"RMS_CHG",4x,"MAX_CHG")')
         if (quick_method%printEnergy) then
@@ -265,6 +265,48 @@ subroutine electdiisdc(jscf,ierr)
    if (quick_method%debug)  call debug_SCF(jscf)
 
    call scf_operatordc(deltaO)
+
+   ! How many electrons does the starting density actually hold?
+   !
+   ! This is the first point at which the question can be asked: the overlap is
+   ! only built by get1e inside the operator build just above, so a trace taken
+   ! any earlier -- in MFCC_initial_guess, say -- sees an overlap of zeros and
+   ! reports nothing. The density here is still the guess, because forming the
+   ! operator does not change it.
+   !
+   ! An MFCC guess is a sum of fragment blocks minus cap blocks that must
+   ! telescope to the whole molecule exactly once. If a block is scattered to
+   ! the wrong offset the trace is the cheapest thing that notices, and it
+   ! separates a misassembled guess from a poor but well formed one. A guess
+   ! that is merely approximate still holds nelec electrons to within a little.
+   if (jscf .eq. 1) then
+      trdens = 0.0d0
+      do itrc=1,nbasis
+         do jtrc=1,nbasis
+            trdens = trdens + quick_qm_struct%dense(jtrc,itrc)*quick_qm_struct%s(jtrc,itrc)
+         enddo
+      enddo
+      ! Reported only when it is wrong, and in debug. This runs inside the SCF,
+      ! which puts anything printed here between the "Begin Energy Calculation"
+      ! and "End Energy calculation" markers -- the window the regression suite
+      ! extracts as a test's energy record. An unconditional line there shifts
+      ! every following line by one and fails every DIVCON energy test on a
+      ! purely cosmetic diff.
+      if (quick_method%debug) &
+            write(ioutfile,'(" Starting density holds ",f16.6," electrons (expected ",i0,")")') &
+            trdens, quick_molspec%nelec
+      if (abs(trdens - dble(quick_molspec%nelec)) .gt. 0.01d0*dble(quick_molspec%nelec)) then
+         call PrtWrn(iOutFile,'The starting density does not hold the right number of electrons.')
+         write(ioutfile,'("|          recovered ",f16.6," against ",i0," expected, ",f9.2," % off.")') &
+               trdens, quick_molspec%nelec, &
+               100.0d0*(trdens-dble(quick_molspec%nelec))/dble(quick_molspec%nelec)
+         write(ioutfile,'("|          Too much density makes the Coulomb term swamp the nuclear")')
+         write(ioutfile,'("|          attraction, which drives every orbital energy positive and")')
+         write(ioutfile,'("|          the energy with it. Suspect how the guess was assembled.")')
+         write(ioutfile,'(a)')
+      endif
+      call flush(ioutfile)
+   endif
 
 !   if (quick_method%QCint) then
 !   if (jscf .eq. 2) then
@@ -810,7 +852,7 @@ endif
 
       write (ioutfile,'("|",I3,1x)',advance="no") jscf
       if(quick_method%printEnergy)then
-         write (ioutfile,'(F16.9,2x)',advance="no") quick_qm_struct%Eel+quick_qm_struct%Ecore
+         write (ioutfile,'(F20.9,2x)',advance="no") quick_qm_struct%Eel+quick_qm_struct%Ecore
          if (jscf.ne.1) then
             write(ioutFile,'(E12.6,2x)',advance="no") oldEnergy-quick_qm_struct%Eel-quick_qm_struct%Ecore
          else
@@ -990,13 +1032,46 @@ subroutine fermiSCF(efermi,jscf,fermi_ok)
    ! finding the Fermi level.
    emin = 10000000.0d0
    emax =-10000000.0d0
+   ! Remember which subsystem owns each end of the bracket. The Fermi level can
+   ! only ever land inside it, so an implausible bracket is the earliest and
+   ! clearest sign that a subsystem diagonalization returned nonsense -- and
+   ! without naming the subsystem there is no way to tell one bad block from a
+   ! genuinely broken operator.
+   ittmin = 0
+   ittmax = 0
    do itt=1,np
       imin = 1!nelecdcsub(itt)/2
       imax = nbasisdc(itt)!nelecdcsub(itt)/2+1
 !      if(mod(nelecdcsub(itt),2).eq.1)imax = nelecdcsub(itt)/2+2
-      emin = min(emin,evaldcsub(itt,imin))
-      emax = max(emax,evaldcsub(itt,imax))
+      if (evaldcsub(itt,imin) .lt. emin) then
+         emin = evaldcsub(itt,imin)
+         ittmin = itt
+      endif
+      if (evaldcsub(itt,imax) .gt. emax) then
+         emax = evaldcsub(itt,imax)
+         ittmax = itt
+      endif
    enddo
+
+   ! A valence basis cannot produce orbital energies of this size. In STO-3G the
+   ! deepest core is about -90 Hartree (sulfur 1s) and the highest virtual only a
+   ! few Hartree, so anything past this bound means the eigenvalues themselves
+   ! are wrong, not that the molecule is unusual. Saying so here, with the
+   ! subsystem named, turns a run that merely fails to converge into one that
+   ! points at the block to look at.
+   if (emax .gt. 10.0d0 .or. emin .lt. -200.0d0) then
+      call PrtWrn(iOutFile,'A divide and conquer subsystem returned implausible orbital energies.')
+      write(ioutfile,'("|          highest eigenvalue ",es16.8," in subsystem ",i6, &
+            &" (",i6," basis functions)")') emax, ittmax, nbasisdc(max(ittmax,1))
+      write(ioutfile,'("|          lowest  eigenvalue ",es16.8," in subsystem ",i6, &
+            &" (",i6," basis functions)")') emin, ittmin, nbasisdc(max(ittmin,1))
+      write(ioutfile,'("|          The Fermi level is bracketed by these, so it cannot come out")')
+      write(ioutfile,'("|          sane either, and the assembled density will not be meaningful.")')
+      write(ioutfile,'("|          Suspect the per-subsystem diagonalization or the operator it")')
+      write(ioutfile,'("|          was handed, not the Fermi search below.")')
+      write(ioutfile,'(a)')
+      call flush(ioutfile)
+   endif
 
    ! Use a bisection technique to determine the fermi energy.
    !        emax =emax+2.0d0
@@ -1155,6 +1230,10 @@ subroutine fermiSCF(efermi,jscf,fermi_ok)
    ! At this point we get the fermi energy (Ei) and store for next cycle.
    ! es16.8 rather than f12.7: a diverged search overflows a fixed-width field
    ! and prints only asterisks, which hides the very number needed to debug it.
+   ! Deliberately left as it was: this exact line appears in the saved outputs of
+   ! the DIVCON regression tests. The bracket that confines the Fermi level is
+   ! reported by the implausible-eigenvalue warning above instead, which costs
+   ! nothing on a healthy run and says everything on a broken one.
    write (ioutfile,'("E(Fermi)    = ",es16.8,"  AFTER ",i3, " N.C. Cycles")') efermi(1),niter
 
    call flush(ioutfile)

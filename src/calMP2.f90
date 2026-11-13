@@ -259,8 +259,8 @@ subroutine calmp2
 
   enddo
 
-  write (iOutFile,'("SECOND ORDER ENERGY =",F16.9)') quick_qm_struct%EMP2
-  write (iOutFile,'("EMP2                =",F16.9)') quick_qm_struct%Etot+quick_qm_struct%EMP2
+  write (iOutFile,'("SECOND ORDER ENERGY =",F20.9)') quick_qm_struct%EMP2
+  write (iOutFile,'("EMP2                =",F20.9)') quick_qm_struct%Etot+quick_qm_struct%EMP2
   call PrtAct(ioutfile,"End MP2 Calculation")
   return
 end subroutine calmp2
@@ -590,8 +590,8 @@ subroutine MPI_calmp2
   enddo
 
   if (master) then
-     write (iOutFile,'("SECOND ORDER ENERGY =",F16.9)') quick_qm_struct%EMP2
-     write (iOutFile,'("EMP2                =",F16.9)') quick_qm_struct%Etot+quick_qm_struct%EMP2
+     write (iOutFile,'("SECOND ORDER ENERGY =",F20.9)') quick_qm_struct%EMP2
+     write (iOutFile,'("EMP2                =",F20.9)') quick_qm_struct%Etot+quick_qm_struct%EMP2
      call PrtAct(ioutfile,"End MP2 Calculation")
   endif
   return
