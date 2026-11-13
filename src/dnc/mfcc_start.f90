@@ -50,7 +50,7 @@ subroutine mfcc(natomsaved)
    ! Disulfide bridges. sspart(i) is the atom index of the sulfur that atom i is
    ! bonded to across an S-S bridge, or 0 when it has none.
    integer, allocatable :: sspart(:)
-   integer :: nss, nsscap, iss, jss
+   integer :: nss, nsscap, nssfall, maxresat, iss, jss
    double precision :: ssd
    ! A disulfide is 2.03-2.08 Angstrom in a protein. 2.5 leaves room for a
    ! distorted or modestly refined structure while staying far below any
@@ -358,11 +358,20 @@ subroutine mfcc(natomsaved)
     if (i .lt. npmfcc) mfccnat = mfccnat + natres(i+1)
     mfccnatmax = max(mfccnatmax, mfccnat)
   enddo
-  ! +2 for the backbone caps, and room for the disulfide caps: a fragment spans
-  ! three residues and a cap two, so a handful covers any realistic case. The
-  ! capping pass below checks the bound rather than trusting this.
+  ! +2 for the backbone caps.
   mfccnatmax = mfccnatmax + 2
-  if (nss .gt. 0) mfccnatmax = mfccnatmax + 6
+  ! A sub-molecule holding one end of a disulfide carries the partner's whole
+  ! residue, plus the two hydrogens that terminate it where the chain was
+  ! broken. Room is left for several bridges meeting in one sub-molecule, each
+  ! bringing the largest residue in the structure; the extension pass checks
+  ! the bound rather than trusting this.
+  if (nss .gt. 0) then
+    maxresat = 0
+    do i = 1, npmfcc
+      maxresat = max(maxresat, natres(i))
+    enddo
+    mfccnatmax = mfccnatmax + 4*(maxresat + 2)
+  endif
   deallocate(natres)
 
   ! A standalone fragment has to fit in the same arrays.
@@ -876,85 +885,51 @@ subroutine mfcc(natomsaved)
 !
 ! Every fragment, cap and standalone sub-molecule now exists, and each one knows
 ! the global atom range it was cut from. A sulfur inside that range whose bridge
-! partner lies outside it has lost the bond that satisfied its valence, so it
-! gets a hydrogen placed along the direction of the partner it can no longer
-! see. That is exactly what the backbone cuts already do, which is why the
-! capping hydrogen is appended past mfccfinal: like a backbone cap it belongs to
-! the sub-molecule's chemistry but not to the density block harvested from it.
+! partner lies outside it has lost the bond that satisfied its valence.
 !
-! Both halves of a bridge get their own hydrogen when the bridge is cut, so the
-! two fragments are a pair of thiols rather than a pair of radicals. That keeps
-! every sub-molecule closed shell, which is what the cap is for, but on its own
-! it would leave the guess describing a disulfide as two thiols -- the sulfur is
-! in the wrong oxidation state in both. mfcc_ss_blocks below puts the bridge
-! back as an MFCC correction, so these caps are the local valence fix only.
+! It used to be given a hydrogen, which satisfies the valence but not the
+! chemistry: the sub-molecule then describes a thiol, and a disulfide is not two
+! thiols. Instead the partner's whole residue is brought in, so the S-S bond is
+! present and uncut in every sub-molecule that holds either end of it. Nothing
+! in the calculation then cuts a sulfur bond at all -- every remaining cut falls
+! on a backbone N-CA or CA-C bond, exactly where MFCC already cuts.
+!
+! The partner residue is appended past mfccfinal, where the capping hydrogen
+! used to go, so it is environment rather than content: it shapes the sulfur's
+! density but no basis function of it is harvested. The partner's own density
+! still comes from its own fragments, once, so nothing is double counted and no
+! extra concap is needed to cancel it. That is the same role a buffer region
+! plays in divide and conquer.
+!
+! The electron count works out for the same reason the hydrogen did. A cysteine
+! residue is 53 electrons, and the two backbone hydrogens that terminate it add
+! 2, so 55 arrive -- odd, like the single hydrogen it replaces, and pairing with
+! the sulfur that was left unpaired.
 ! ---------------------------------------------------------------------
   nmfcccap = max(npmfcc-1,0)
-  nmfccss  = 0
 
   if (nss .gt. 0) then
     nsscap = 0
-    call mfcc_ss_cap(npmfcc+nxtra, mfccnatmax, mfccatom, mfcccord, mfccatomxiao, &
-          matomstart, matomfinal, number, coord, sspart, nsscap, mfccierr)
+    nssfall = 0
+    call mfcc_ss_extend(npmfcc+nxtra, mfccnatmax, mfccatom, mfcccord, mfccatomxiao, &
+          matomstart, matomfinal, number, coord, atomname, class, sspart, &
+          nsscap, nssfall, mfccierr)
     if (mfccierr .eq. 0) &
-      call mfcc_ss_cap(max(nmfcccap,1), mfccnatmax, mfccatomcap, mfcccordcap, &
-            mfccatomxiaocap, matomstartcap, matomfinalcap, number, coord, sspart, &
-            nsscap, mfccierr)
+      call mfcc_ss_extend(max(nmfcccap,1), mfccnatmax, mfccatomcap, mfcccordcap, &
+            mfccatomxiaocap, matomstartcap, matomfinalcap, number, coord, atomname, &
+            class, sspart, nsscap, nssfall, mfccierr)
     if (mfccierr /= 0) then
-      call PrtErr(iOutFile,'A sub-molecule ran out of room for its disulfide capping hydrogens.')
+      call PrtErr(iOutFile,'A sub-molecule ran out of room for its disulfide partner residue.')
       call quick_exit(iOutFile,1)
     endif
-    write(ioutfile,'(" MFCC capped ",i0," cut disulfide bond(s) with hydrogen")') nsscap
+    write(ioutfile,'(" MFCC kept ",i0," disulfide bond(s) intact by carrying the partner residue")') nsscap
 
-! ---------------------------------------------------------------------
-! Restore the disulfide bonds.
-!
-! The capping above satisfies the valence but not the chemistry. MFCC's own
-! answer to a bond that must not be broken is not to cap it: it moves the cut to
-! a neighbouring single bond, keeps the bond whole inside the sub-molecule, and
-! subtracts what that double counts. For the backbone the cut moves from the
-! peptide C-N to the CA-C bond and the overlap comes back as a concap.
-!
-! The same construction for a disulfide moves the cut from S-S to the two CA-CB
-! bonds. Per bridge:
-!
-!   D += D(CH3-S-S-CH3) - D(CH3-S-H)_i - D(CH3-S-H)_j
-!
-! The first term holds the intact S-S at the real geometry, with each partner
-! truncated to a methyl; the two thiols are exactly what the capped fragments
-! already put there, so they are removed. Both are closed shell: 50 electrons
-! for the disulfide, 26 for each thiol.
-!
-! The thiols are ordinary concaps and go in the cap arrays, which is the whole
-! reason the cap count is now a variable. The disulfide block is the one piece
-! of MFCC whose atoms do not form a single run of global basis functions, so it
-! is kept apart and carries the global span of each half.
-! ---------------------------------------------------------------------
-    call mfcc_alloc_ss(nss, mfccnatmax, mfccierr)
-    if (mfccierr /= 0) then
-      call PrtErr(iOutFile,'Could not allocate the MFCC disulfide correction arrays.')
-      call quick_exit(iOutFile,1)
-    endif
-
-    call mfcc_ss_blocks(number, coord, atomname, class, sspart, mfccnatmax, &
-          npmfcc+nxtra+2*nss, nmfcccap, nmfccss, mfccierr)
-    if (mfccierr /= 0) then
-      call PrtErr(iOutFile,'Could not build the MFCC disulfide correction blocks.')
-      call quick_exit(iOutFile,1)
-    endif
-
-    if (nmfccss .gt. 0) then
-      write(ioutfile,'(" MFCC disulfide correction: ",i0," intact S-S block(s) added, ", &
-            &i0," thiol concap(s) subtracted")') nmfccss, 2*nmfccss
-    endif
-    if (nmfccss .lt. nss) then
-      call PrtWrn(iOutFile,'Some disulfide bridges were left as plain hydrogen caps.')
-      write(ioutfile,'("|          ",i0," of ",i0," bridge(s) could not be turned into an")') &
-            nss-nmfccss, nss
-      write(ioutfile,'("|          intact S-S correction block, because CB or CA was missing")')
-      write(ioutfile,'("|          from the cysteine, or the atoms between CB and SG are not")')
-      write(ioutfile,'("|          that residue''s own hydrogens. Those bridges keep the older")')
-      write(ioutfile,'("|          treatment: both halves capped with hydrogen as thiols.")')
+    if (nssfall .gt. 0) then
+      call PrtWrn(iOutFile,'Some disulfide partners are chain termini and were capped with hydrogen.')
+      write(ioutfile,'("|          ",i0," case(s): the partner residue has no preceding C or")') nssfall
+      write(ioutfile,'("|          following N to cap against, so it cannot be terminated the")')
+      write(ioutfile,'("|          usual way without changing its charge. Those sulfurs keep the")')
+      write(ioutfile,'("|          older treatment and are capped with hydrogen as thiols.")')
       write(ioutfile,'(a)')
     endif
   endif
@@ -1661,56 +1636,131 @@ subroutine mfcc_write_frag_xyz(iunit,collapse,xname)
       enddo
    enddo
 
-   ! Caps: one per peptide junction, plus two thiols per disulfide bridge.
+   ! Caps: one per peptide junction, all distinct. A cap that holds one end of
+   ! a disulfide carries the partner residue too, so its atom count runs past
+   ! the span the title quotes.
    do k = 1, nmfcccap
       write(iunit,'(i8)') mfccatomcap(k)
-      if (k .le. max(npmfcc-1,0)) then
-         write(iunit,'("mfcc cap ",i0,"/",i0," | atoms ",i0," | subtracted")') &
-               k,nmfcccap,mfccatomcap(k)
-      else
-         write(iunit,'("mfcc cap ",i0,"/",i0," | atoms ",i0, &
-               &" | thiol superseded by an intact S-S | subtracted")') &
-               k,nmfcccap,mfccatomcap(k)
-      endif
+      write(iunit,'("mfcc cap ",i0,"/",i0," | atoms ",i0," | subtracted")') &
+            k,nmfcccap,mfccatomcap(k)
       do i = 1, mfccatomcap(k)
          write(iunit,'(a2,3(2x,f14.8))') mfccatomxiaocap(i,k), &
                mfcccordcap(1,i,k),mfcccordcap(2,i,k),mfcccordcap(3,i,k)
       enddo
    enddo
 
-   ! The intact disulfides, one per bridge. These are the only sub-molecules
-   ! whose atoms come from two different residues, and the only ones added
-   ! rather than subtracted alongside the fragments.
-   do k = 1, nmfccss
-      write(iunit,'(i8)') mfccatomss(k)
-      write(iunit,'("mfcc S-S ",i0,"/",i0," | atoms ",i0, &
-            &" | intact disulfide, cut at both CA-CB | added")') &
-            k,nmfccss,mfccatomss(k)
-      do i = 1, mfccatomss(k)
-         write(iunit,'(a2,3(2x,f14.8))') mfccatomxiaoss(i,k), &
-               mfcccordss(1,i,k),mfcccordss(2,i,k),mfcccordss(3,i,k)
-      enddo
-   enddo
-
 end subroutine mfcc_write_frag_xyz
 
 !-----------------------------------------------------------------------!
-! mfcc_ss_cap                                                           !
+! mfcc_res_span                                                         !
 !                                                                       !
-! Append a capping hydrogen to every sub-molecule that holds one end of  !
-! a cut disulfide bond.                                                  !
-!                                                                       !
-! mnat/mcord/msym are a sub-molecule array set (fragments, or caps), and  !
-! gs/gf the global atom range each sub-molecule was cut from. A sulfur in !
-! that range whose partner is outside it has a dangling valence, so a     !
-! hydrogen goes on it, pointing where the partner was.                    !
-!                                                                       !
-! The hydrogen is appended after the existing atoms, which places it past !
-! mfccfinal and therefore outside the basis range the density block is    !
-! harvested from -- the same treatment the backbone caps get.            !
+! First and last atom of the residue that owns atom ip.                 !
 !-----------------------------------------------------------------------!
-subroutine mfcc_ss_cap(nsub, natmax, mnat, mcord, msym, gs, gf, &
-                       natom_g, coord_g, sspart, nadded, ierr)
+subroutine mfcc_res_span(natom_g, class_g, ip, rs, rf)
+  implicit none
+  integer, intent(in) :: natom_g, ip
+  integer, intent(in) :: class_g(natom_g)
+  integer, intent(out) :: rs, rf
+
+  integer :: i, ires
+
+  ires = class_g(ip)
+  rs = ip
+  rf = ip
+  do i = ip-1, 1, -1
+    if (class_g(i) .ne. ires) exit
+    rs = i
+  enddo
+  do i = ip+1, natom_g
+    if (class_g(i) .ne. ires) exit
+    rf = i
+  enddo
+
+end subroutine mfcc_res_span
+
+
+!-----------------------------------------------------------------------!
+! mfcc_res_backbone                                                     !
+!                                                                       !
+! The backbone N and C of the residue spanning rs..rf, and the two atoms!
+! the chain joined them to: the C of the preceding residue and the N of !
+! the following one. Those two are where the residue has to be          !
+! terminated once it is lifted out of the chain. Any of the four coming !
+! back zero means the residue is a chain terminus, which the caller     !
+! handles separately.                                                   !
+!-----------------------------------------------------------------------!
+subroutine mfcc_res_backbone(natom_g, atomname_g, class_g, rs, rf, iN, iC, iCprev, iNnext)
+  implicit none
+  integer, intent(in) :: natom_g, rs, rf
+  character(len=4), intent(in) :: atomname_g(natom_g)
+  integer, intent(in) :: class_g(natom_g)
+  integer, intent(out) :: iN, iC, iCprev, iNnext
+
+  integer :: i, jres
+
+  iN = 0
+  iC = 0
+  iCprev = 0
+  iNnext = 0
+
+  do i = rs, rf
+    if (atomname_g(i) .eq. ' N  ') iN = i
+    if (atomname_g(i) .eq. ' C  ') iC = i
+  enddo
+
+  ! The preceding residue, bounded by its own residue number so the scan
+  ! cannot run back through the whole chain looking for a carbonyl.
+  if (rs .gt. 1) then
+    jres = class_g(rs-1)
+    if (jres .gt. 0) then
+      do i = rs-1, 1, -1
+        if (class_g(i) .ne. jres) exit
+        if (atomname_g(i) .eq. ' C  ') iCprev = i
+      enddo
+    endif
+  endif
+
+  if (rf .lt. natom_g) then
+    jres = class_g(rf+1)
+    if (jres .gt. 0) then
+      do i = rf+1, natom_g
+        if (class_g(i) .ne. jres) exit
+        if (atomname_g(i) .eq. ' N  ') iNnext = i
+      enddo
+    endif
+  endif
+
+end subroutine mfcc_res_backbone
+
+
+!-----------------------------------------------------------------------!
+! mfcc_ss_extend                                                        !
+!                                                                       !
+! Carry the partner residue into every sub-molecule that holds one end  !
+! of a disulfide bridge, so that no sulfur bond is ever cut.            !
+!                                                                       !
+! mnat/mcord/msym are a sub-molecule array set (fragments, or caps), and!
+! gs/gf the global atom range each sub-molecule was cut from. A sulfur  !
+! in that range whose partner lies outside it would otherwise be left   !
+! with a dangling valence and given a hydrogen, which turns a disulfide !
+! into two thiols. Instead the partner's whole residue comes along,     !
+! terminated at its own backbone the way every MFCC cut is terminated.  !
+!                                                                       !
+! The borrowed residue is appended after the existing atoms, past       !
+! mfccfinal, so it lies outside the basis range the density block is    !
+! harvested from. It is environment, not content: it shapes the sulfur's!
+! density without contributing any of its own, and its real density     !
+! still comes from its own fragments. Nothing is double counted and no  !
+! cancelling concap is needed.                                          !
+!                                                                       !
+! Parity is preserved for the same reason the hydrogen preserved it. A  !
+! cysteine residue carries 53 electrons and its two terminating         !
+! hydrogens 2 more, so 55 arrive -- odd, like the one hydrogen it       !
+! replaces, pairing with the sulfur that was left unpaired.             !
+!-----------------------------------------------------------------------!
+subroutine mfcc_ss_extend(nsub, natmax, mnat, mcord, msym, gs, gf, &
+                          natom_g, coord_g, atomname_g, class_g, sspart, &
+                          nadded, nfellback, ierr)
   implicit none
   integer, intent(in) :: nsub, natmax, natom_g
   integer, intent(inout) :: mnat(nsub)
@@ -1718,256 +1768,99 @@ subroutine mfcc_ss_cap(nsub, natmax, mnat, mcord, msym, gs, gf, &
   character(len=2), intent(inout) :: msym(natmax,nsub)
   integer, intent(in) :: gs(nsub), gf(nsub)
   double precision, intent(in) :: coord_g(3,natom_g)
-  integer, intent(in) :: sspart(natom_g)
-  integer, intent(inout) :: nadded, ierr
+  character(len=4), intent(in) :: atomname_g(natom_g)
+  integer, intent(in) :: class_g(natom_g), sspart(natom_g)
+  integer, intent(inout) :: nadded, nfellback, ierr
 
-  integer :: k, ia, ip, nnew
+  character(len=2), external :: mfcc_element
+  integer :: k, ia, ip, rs, rf, iN, iC, iCprev, iNnext, nnew, kk, j, islot
   double precision :: xh, yh, zh
+  logical :: overlaps, useh
 
   do k = 1, nsub
-    ! Unused slots are left at zero; the cap arrays run one short of the
+    ! Unused slots are left at zero; the cap arrays run shorter than the
     ! fragment arrays and both are allocated to the larger size.
     if (gs(k) .lt. 1 .or. gf(k) .lt. gs(k)) cycle
     if (mnat(k) .lt. 1) cycle
 
     do ia = gs(k), gf(k)
       ip = sspart(ia)
-      if (ip .le. 0) cycle                  ! not part of a bridge
-      if (ip .ge. gs(k) .and. ip .le. gf(k)) cycle   ! partner is here too, bond intact
+      if (ip .le. 0) cycle                           ! not part of a bridge
+      if (ip .ge. gs(k) .and. ip .le. gf(k)) cycle   ! partner is here, bond intact
 
-      nnew = mnat(k) + 1
+      call mfcc_res_span(natom_g, class_g, ip, rs, rf)
+      call mfcc_res_backbone(natom_g, atomname_g, class_g, rs, rf, iN, iC, iCprev, iNnext)
+
+      ! Refuse to bring in a residue that the sub-molecule already holds part
+      ! of: appending it would place two atoms at identical coordinates, and a
+      ! duplicated basis function makes the overlap matrix singular. A real
+      ! bridge spans at least a dozen residues so this does not arise, but the
+      ! cost of being wrong here is far higher than the cost of the test.
+      overlaps = (rs .le. gf(k) .and. rf .ge. gs(k))
+
+      useh = overlaps .or. iN .le. 0 .or. iC .le. 0 .or. &
+             iCprev .le. 0 .or. iNnext .le. 0
+
+      if (useh) then
+        ! Chain terminus, or an overlap: terminating the residue properly is
+        ! not possible, so keep the older treatment and cap the sulfur.
+        nnew = mnat(k) + 1
+        if (nnew .gt. natmax) then
+          ierr = 44
+          return
+        endif
+        call Sxyzchange(coord_g(1,ip),coord_g(2,ip),coord_g(3,ip), &
+                        coord_g(1,ia),coord_g(2,ia),coord_g(3,ia), xh,yh,zh)
+        msym(nnew,k) = 'H '
+        mcord(1,nnew,k) = xh
+        mcord(2,nnew,k) = yh
+        mcord(3,nnew,k) = zh
+        mnat(k) = nnew
+        nfellback = nfellback + 1
+        cycle
+      endif
+
+      nnew = mnat(k) + (rf-rs+1) + 2
       if (nnew .gt. natmax) then
         ierr = 44
         return
       endif
-      call Sxyzchange(coord_g(1,ip),coord_g(2,ip),coord_g(3,ip), &
-                      coord_g(1,ia),coord_g(2,ia),coord_g(3,ia), xh,yh,zh)
-      msym(nnew,k) = 'H '
-      mcord(1,nnew,k) = xh
-      mcord(2,nnew,k) = yh
-      mcord(3,nnew,k) = zh
+
+      do kk = rs, rf
+        islot = mnat(k) + (kk-rs+1)
+        msym(islot,k) = mfcc_element(atomname_g(kk))
+        do j = 1, 3
+          mcord(j,islot,k) = coord_g(j,kk)
+        enddo
+      enddo
+
+      ! Terminate the borrowed residue where the chain was broken: a hydrogen
+      ! on N where the preceding carbonyl carbon sat, and one on C where the
+      ! following nitrogen sat. Same construction as the backbone caps.
+      islot = mnat(k) + (rf-rs+1) + 1
+      call Nxyzchange(coord_g(1,iCprev),coord_g(2,iCprev),coord_g(3,iCprev), &
+                      coord_g(1,iN),coord_g(2,iN),coord_g(3,iN), xh,yh,zh)
+      msym(islot,k) = 'H '
+      mcord(1,islot,k) = xh
+      mcord(2,islot,k) = yh
+      mcord(3,islot,k) = zh
+
+      islot = islot + 1
+      call xyzchange(coord_g(1,iNnext),coord_g(2,iNnext),coord_g(3,iNnext), &
+                     coord_g(1,iC),coord_g(2,iC),coord_g(3,iC), xh,yh,zh)
+      msym(islot,k) = 'H '
+      mcord(1,islot,k) = xh
+      mcord(2,islot,k) = yh
+      mcord(3,islot,k) = zh
+
       mnat(k) = nnew
       nadded = nadded + 1
     enddo
   enddo
 
-end subroutine mfcc_ss_cap
+end subroutine mfcc_ss_extend
 
 
-!-----------------------------------------------------------------------!
-! mfcc_ss_half                                                          !
-!                                                                       !
-! Locate the CB and CA of the cysteine that owns the bridging sulfur    !
-! isg, and confirm that CB..SG is one unbroken run of that residue's    !
-! own atoms with nothing but its hydrogens in between.                  !
-!                                                                       !
-! That run is what becomes one half of the disulfide block, and the     !
-! scatter in MFCC_initial_guess maps it onto global basis functions by  !
-! a single offset, so it has to be contiguous. MFCC already reorders    !
-! every hydrogen next to its heavy atom, which makes CB,HB,HB,SG the    !
-! normal case; ok comes back false when a structure does not comply,    !
-! and the caller then leaves that bridge hydrogen capped.               !
-!-----------------------------------------------------------------------!
-subroutine mfcc_ss_half(natom_g, atomname_g, class_g, isg, icb, ica, ok)
-  implicit none
-  integer, intent(in) :: natom_g, isg
-  character(len=4), intent(in) :: atomname_g(natom_g)
-  integer, intent(in) :: class_g(natom_g)
-  integer, intent(out) :: icb, ica
-  logical, intent(out) :: ok
-
-  character(len=2), external :: mfcc_element
-  integer :: i, ires
-
-  ok  = .false.
-  icb = 0
-  ica = 0
-
-  ires = class_g(isg)
-  if (ires .le. 0) return
-
-  do i = 1, natom_g
-    if (class_g(i) .ne. ires) cycle
-    if (atomname_g(i) .eq. ' CB ') icb = i
-    if (atomname_g(i) .eq. ' CA ') ica = i
-  enddo
-
-  if (icb .le. 0 .or. ica .le. 0) return
-  if (icb .ge. isg) return
-
-  do i = icb+1, isg-1
-    if (class_g(i) .ne. ires) return
-    if (mfcc_element(atomname_g(i)) .ne. 'H ') return
-  enddo
-
-  ok = .true.
-
-end subroutine mfcc_ss_half
-
-
-!-----------------------------------------------------------------------!
-! mfcc_ss_blocks                                                        !
-!                                                                       !
-! Build the disulfide correction for every bridge: one intact           !
-! CH3-S-S-CH3 block to add, and the two CH3-S-H concaps it supersedes   !
-! to subtract.                                                          !
-!                                                                       !
-! The S-S block's atoms are laid out as                                  !
-!                                                                       !
-!   [Hcap] [CB_i .. SG_i] [CB_j .. SG_j] [Hcap]                          !
-!                                                                       !
-! so its real atoms are one contiguous run LOCALLY -- which is what     !
-! readbasis needs to report a single local basis range -- while mapping !
-! onto two separate runs globally. Only the global start of each half   !
-! is required to put the density back, and the block between the halves !
-! is the S-S bond density that the hydrogen caps could never provide.   !
-!                                                                       !
-! The capping hydrogens replace CA on each CB, at the C-H distance, the !
-! same substitution the backbone caps make.                             !
-!-----------------------------------------------------------------------!
-subroutine mfcc_ss_blocks(natom_g, coord_g, atomname_g, class_g, sspart, &
-                          natmax, ncapmax, ncap, nssb, ierr)
-  use quick_mfcc_module, only: mfccatomss, mfccchargess, mfcccordss, mfccatomxiaoss, &
-                               mfccstartss, mfccfinalss, &
-                               matomstartss1, matomfinalss1, matomstartss2, matomfinalss2, &
-                               mfccatomcap, mfccchargecap, mfcccordcap, mfccatomxiaocap, &
-                               mfccstartcap, mfccfinalcap, matomstartcap, matomfinalcap
-  implicit none
-  integer, intent(in) :: natom_g, natmax, ncapmax
-  double precision, intent(in) :: coord_g(3,natom_g)
-  character(len=4), intent(in) :: atomname_g(natom_g)
-  integer, intent(in) :: class_g(natom_g), sspart(natom_g)
-  integer, intent(inout) :: ncap, nssb, ierr
-
-  character(len=2), external :: mfcc_element
-  integer :: ia, ja, icb, jcb, ica, jca, k, n1, n2, nloc, kk, j
-  double precision :: xh, yh, zh
-  logical :: oki, okj
-
-  do ia = 1, natom_g
-    ja = sspart(ia)
-    if (ja .le. ia) cycle            ! visit each bridge once, with ia < ja
-
-    call mfcc_ss_half(natom_g, atomname_g, class_g, ia, icb, ica, oki)
-    call mfcc_ss_half(natom_g, atomname_g, class_g, ja, jcb, jca, okj)
-    if (.not. oki .or. .not. okj) cycle   ! caller reports the shortfall
-
-    n1   = ia - icb + 1
-    n2   = ja - jcb + 1
-    nloc = n1 + n2 + 2
-    if (nloc .gt. natmax) then
-      ierr = 44
-      return
-    endif
-    if (ncap + 2 .gt. ncapmax) then
-      ierr = 44
-      return
-    endif
-
-    ! ---- the intact disulfide, added ----
-    nssb = nssb + 1
-    k = nssb
-
-    call xyzchange(coord_g(1,ica),coord_g(2,ica),coord_g(3,ica), &
-                   coord_g(1,icb),coord_g(2,icb),coord_g(3,icb), xh,yh,zh)
-    mfccatomxiaoss(1,k) = 'H '
-    mfcccordss(1,1,k) = xh
-    mfcccordss(2,1,k) = yh
-    mfcccordss(3,1,k) = zh
-
-    do kk = icb, ia
-      mfccatomxiaoss(kk-icb+2,k) = mfcc_element(atomname_g(kk))
-      do j = 1, 3
-        mfcccordss(j,kk-icb+2,k) = coord_g(j,kk)
-      enddo
-    enddo
-
-    do kk = jcb, ja
-      mfccatomxiaoss(kk-jcb+2+n1,k) = mfcc_element(atomname_g(kk))
-      do j = 1, 3
-        mfcccordss(j,kk-jcb+2+n1,k) = coord_g(j,kk)
-      enddo
-    enddo
-
-    call xyzchange(coord_g(1,jca),coord_g(2,jca),coord_g(3,jca), &
-                   coord_g(1,jcb),coord_g(2,jcb),coord_g(3,jcb), xh,yh,zh)
-    mfccatomxiaoss(nloc,k) = 'H '
-    mfcccordss(1,nloc,k) = xh
-    mfcccordss(2,nloc,k) = yh
-    mfcccordss(3,nloc,k) = zh
-
-    mfccatomss(k)   = nloc
-    mfccchargess(k) = 0
-    mfccstartss(k)  = 2
-    mfccfinalss(k)  = 1 + n1 + n2
-    matomstartss1(k) = icb
-    matomfinalss1(k) = ia
-    matomstartss2(k) = jcb
-    matomfinalss2(k) = ja
-
-    ! ---- the two thiols it replaces, subtracted as concaps ----
-    call mfcc_ss_thiol(natom_g, coord_g, atomname_g, natmax, icb, ia, ica, ja, ncap)
-    call mfcc_ss_thiol(natom_g, coord_g, atomname_g, natmax, jcb, ja, jca, ia, ncap)
-  enddo
-
-end subroutine mfcc_ss_blocks
-
-
-!-----------------------------------------------------------------------!
-! mfcc_ss_thiol                                                         !
-!                                                                       !
-! Append one CH3-S-H concap, covering global atoms icb..isg: a capping  !
-! hydrogen on CB where CA was, the run itself, and a capping hydrogen   !
-! on SG where the bridge partner was. This is what a hydrogen capped    !
-! fragment already contributes around that sulfur, so subtracting it    !
-! leaves the intact S-S block as the only description of the bridge.    !
-!-----------------------------------------------------------------------!
-subroutine mfcc_ss_thiol(natom_g, coord_g, atomname_g, natmax, icb, isg, ica, ipart, ncap)
-  use quick_mfcc_module, only: mfccatomcap, mfccchargecap, mfcccordcap, mfccatomxiaocap, &
-                               mfccstartcap, mfccfinalcap, matomstartcap, matomfinalcap
-  implicit none
-  integer, intent(in) :: natom_g, natmax, icb, isg, ica, ipart
-  double precision, intent(in) :: coord_g(3,natom_g)
-  character(len=4), intent(in) :: atomname_g(natom_g)
-  integer, intent(inout) :: ncap
-
-  character(len=2), external :: mfcc_element
-  integer :: k, n, kk, j
-  double precision :: xh, yh, zh
-
-  n = isg - icb + 1
-  ncap = ncap + 1
-  k = ncap
-
-  call xyzchange(coord_g(1,ica),coord_g(2,ica),coord_g(3,ica), &
-                 coord_g(1,icb),coord_g(2,icb),coord_g(3,icb), xh,yh,zh)
-  mfccatomxiaocap(1,k) = 'H '
-  mfcccordcap(1,1,k) = xh
-  mfcccordcap(2,1,k) = yh
-  mfcccordcap(3,1,k) = zh
-
-  do kk = icb, isg
-    mfccatomxiaocap(kk-icb+2,k) = mfcc_element(atomname_g(kk))
-    do j = 1, 3
-      mfcccordcap(j,kk-icb+2,k) = coord_g(j,kk)
-    enddo
-  enddo
-
-  call Sxyzchange(coord_g(1,ipart),coord_g(2,ipart),coord_g(3,ipart), &
-                  coord_g(1,isg),coord_g(2,isg),coord_g(3,isg), xh,yh,zh)
-  mfccatomxiaocap(n+2,k) = 'H '
-  mfcccordcap(1,n+2,k) = xh
-  mfcccordcap(2,n+2,k) = yh
-  mfcccordcap(3,n+2,k) = zh
-
-  mfccatomcap(k)    = n + 2
-  mfccchargecap(k)  = 0
-  mfccstartcap(k)   = 2
-  mfccfinalcap(k)   = n + 1
-  matomstartcap(k)  = icb
-  matomfinalcap(k)  = isg
-
-end subroutine mfcc_ss_thiol
 
 
 subroutine xyzchange(xold,yold,zold,xzero,yzero,zzero, &

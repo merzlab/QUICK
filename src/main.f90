@@ -45,7 +45,7 @@
     use quick_basis_module, only: nbasis
     use quick_files_module, only: write_molden, set_quick_files, print_quick_io_file
     use quick_files_module, only: mfccXyzFileName, mfccRptXyzFileName
-    use quick_mfcc_module, only: npmfcc, nmfccextra, nmfcccap, nmfccss, kxiaoconnect
+    use quick_mfcc_module, only: npmfcc, nmfccextra, nmfcccap, kxiaoconnect
     use quick_molsurface_module, only: generate_MKS_surfaces
 #if defined(GPU) || defined(MPIV_GPU)
     use quick_basis_module, only: quick_basis, aexp, cutprim, dcoeff, itype, &
@@ -161,9 +161,6 @@
                 call PrtAct(ioutfile,"MFCC fragmentation only, stopping here")
                 write(ioutfile,'(" Fragments:",i6,"   caps:",i6,"   standalone:",i6, &
                       &"   contacts kept:",i6)') npmfcc, nmfcccap, nmfccextra, kxiaoconnect
-                if (nmfccss .gt. 0) &
-                      write(ioutfile,'(" Disulfide corrections:",i6,"   (intact S-S blocks added, &
-                      &two thiol concaps subtracted each)")') nmfccss
                 write(ioutfile,'(" Geometries written to ",a)') trim(mfccXyzFileName)
                 if (quick_method%mfccrpt .and. nmfccextra .gt. 0) &
                       write(ioutfile,'(" Repeats collapsed in       ",a)') trim(mfccRptXyzFileName)
