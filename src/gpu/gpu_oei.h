@@ -266,11 +266,26 @@ __global__ void getOEI_kernel() {
     const unsigned int jshell = devSim.Qshell;
     const unsigned int totalatom = devSim.natom + devSim.nextatom;
 
-    for (QUICKULL i = offset; i < jshell * jshell * totalatom; i += totalThreads) {
+    // The work is one item per (shell pair, atom), and all three counts are
+    // 32 bit. Their product is not: trypsin in STO-3G has 4929 shells and 3263
+    // atoms, so the true count is 7.9e10 against a 4.29e9 limit. Computed in 32
+    // bit it wrapped 18 times and left a bound of 1.97e9, which is 2.5% of the
+    // work -- the nuclear attraction was summed over the first 80 atoms and no
+    // others. The operator was then kinetic energy plus a fragment of the
+    // attraction, which is positive definite, so every orbital energy came out
+    // positive and no SCF built on it could converge. Nothing failed loudly.
+    //
+    // The two electron kernels already widen their shell counts the same way
+    // (see gpu_get2e_subs.h); this one did not. The index arithmetic below has
+    // to be widened too, or i / (jshell * jshell) truncates once i passes the
+    // range of int, which it now does.
+    const QUICKULL npair = (QUICKULL) jshell * (QUICKULL) jshell;
+
+    for (QUICKULL i = offset; i < npair * (QUICKULL) totalatom; i += totalThreads) {
         // use the global index to obtain shell pair. Note that here we obtain a couple of indices that helps us to obtain
         // shell number (ii and jj) and quantum numbers (iii, jjj).
-        const unsigned int iatom = (int) i / (jshell * jshell);
-        const unsigned int idx = i - iatom * jshell * jshell;
+        const unsigned int iatom = (unsigned int) (i / npair);
+        const unsigned int idx = (unsigned int) (i - (QUICKULL) iatom * npair);
 
 #if defined(MPIV_GPU)
         if (devSim.mpi_boeicompute[idx] > 0) {

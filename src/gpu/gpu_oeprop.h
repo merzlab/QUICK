@@ -191,7 +191,10 @@ __global__ void getOEPROP_kernel()
     unsigned int jshell = devSim.Qshell;
     unsigned int totalatom = devSim.natom + devSim.nextatom;
     QUICKULL totalpoint = devSim.nextpoint;
-    QUICKULL ncalcs = (QUICKULL) (jshell * jshell * totalpoint);
+    // jshell * jshell is formed before the cast, so it is a 32 bit product
+    // however wide totalpoint is. That holds until about 65000 shells, which a
+    // 44000 atom system reaches. Widen it first, as getOEI_kernel does.
+    QUICKULL ncalcs = (QUICKULL) jshell * (QUICKULL) jshell * totalpoint;
 
     for (QUICKULL i = offset; i < ncalcs; i += totalThreads) {
         // use the global index to obtain shell pair. Note that here we obtain
