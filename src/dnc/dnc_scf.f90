@@ -63,10 +63,10 @@ subroutine electdiisdc(jscf,ierr)
      integer :: IDIIS_Error_Start, IDIIS_Error_End
      double precision :: BIJ,DENSEJI,errormax,OJK,temp
      double precision :: Sum2Mat,rms
-     integer :: I,J,K,L,IERROR,nbasissave,itt,NtempN
+     integer :: I,J,K,L,IERROR,nbasissave,itt,NtempN,itrc,jtrc
 
      double precision :: oldEnergy=0.0d0,E1e ! energy for last iteriation, and 1e-energy
-     double precision :: PRMS,PCHANGE, tmp,Ttmp
+     double precision :: PRMS,PCHANGE, tmp,Ttmp,trdens
 
      double precision :: c_coords(3),c_zeta,c_chg
 
@@ -1012,8 +1012,8 @@ subroutine fermiSCF(efermi,jscf,fermi_ok)
    double precision :: arg, betah, boltz, deltae, denseji, diff, elecs, &
                         emax, emin, etoler, etotal, fermitemp, temp, &
                         temp1, temp2, tempk
-   integer :: i, ii, iblockatom, imax, imin, itemp, itt, j, jblockatom, jj, &
-              jtemp, jtt, jtt2, k, kstart1, kstart2, maxit, niter
+   integer :: i, ii, iblockatom, imax, imin, itemp, itt, ittmax, ittmin, j, &
+              jblockatom, jj, jtemp, jtt, jtt2, k, kstart1, kstart2, maxit, niter
 
    ! Boltzmann constant in eV/Kelvin:
    boltz = 8.617335408d0*0.00001d0/27.2116d0
