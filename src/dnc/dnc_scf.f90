@@ -256,6 +256,48 @@ subroutine electdiisdc(jscf,ierr)
 
    call scf_operatordc(deltaO)
 
+   ! How many electrons does the starting density actually hold?
+   !
+   ! This is the first point at which the question can be asked: the overlap is
+   ! only built by get1e inside the operator build just above, so a trace taken
+   ! any earlier -- in MFCC_initial_guess, say -- sees an overlap of zeros and
+   ! reports nothing. The density here is still the guess, because forming the
+   ! operator does not change it.
+   !
+   ! An MFCC guess is a sum of fragment blocks minus cap blocks that must
+   ! telescope to the whole molecule exactly once. If a block is scattered to
+   ! the wrong offset the trace is the cheapest thing that notices, and it
+   ! separates a misassembled guess from a poor but well formed one. A guess
+   ! that is merely approximate still holds nelec electrons to within a little.
+   if (jscf .eq. 1) then
+      trdens = 0.0d0
+      do itrc=1,nbasis
+         do jtrc=1,nbasis
+            trdens = trdens + quick_qm_struct%dense(jtrc,itrc)*quick_qm_struct%s(jtrc,itrc)
+         enddo
+      enddo
+      ! Reported only when it is wrong, and in debug. This runs inside the SCF,
+      ! which puts anything printed here between the "Begin Energy Calculation"
+      ! and "End Energy calculation" markers -- the window the regression suite
+      ! extracts as a test's energy record. An unconditional line there shifts
+      ! every following line by one and fails every DIVCON energy test on a
+      ! purely cosmetic diff.
+      if (quick_method%debug) &
+            write(ioutfile,'(" Starting density holds ",f16.6," electrons (expected ",i0,")")') &
+            trdens, quick_molspec%nelec
+      if (abs(trdens - dble(quick_molspec%nelec)) .gt. 0.01d0*dble(quick_molspec%nelec)) then
+         call PrtWrn(iOutFile,'The starting density does not hold the right number of electrons.')
+         write(ioutfile,'("|          recovered ",f16.6," against ",i0," expected, ",f9.2," % off.")') &
+               trdens, quick_molspec%nelec, &
+               100.0d0*(trdens-dble(quick_molspec%nelec))/dble(quick_molspec%nelec)
+         write(ioutfile,'("|          Too much density makes the Coulomb term swamp the nuclear")')
+         write(ioutfile,'("|          attraction, which drives every orbital energy positive and")')
+         write(ioutfile,'("|          the energy with it. Suspect how the guess was assembled.")')
+         write(ioutfile,'(a)')
+      endif
+      call flush(ioutfile)
+   endif
+
 !   if (quick_method%QCint) then
 !   if (jscf .eq. 2) then
 !      call Onedivided

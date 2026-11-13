@@ -61,6 +61,11 @@ subroutine MFCC_initial_guess
                                  mfccbasesconi, mfccbasefconi, mfccbasesconj, mfccbasefconj, &
                                  matombasesconi, matombasesconj, &
                                  mfccdens, mfccdenscap, mfccdensconi, mfccdensconj, mfccdenscon
+
+   ! This scope has no implicit none and relies on implicit typing for its loop
+   ! indices; nbad begins with n and so is an integer either way, but say it.
+   integer :: nbad
+
    call PrtAct(ioutfile,"Begin MFCC initial guess")
 
    ! The fragment blocks minus the cap blocks must cover every global basis
@@ -259,6 +264,46 @@ subroutine MFCC_initial_guess
          enddo
       enddo
    enddo
+
+   ! ------------------------------------------------------------------!
+   ! Does the assembled guess actually hold nelec electrons?           !
+   !                                                                   !
+   ! Every block above is scattered with a single offset taken from    !
+   ! matombases/matombasescap, which basis.f90 fills only when one of   !
+   ! its atoms matches matomstart. A block whose global atom range was  !
+   ! never matched keeps an offset of zero, and its density is then     !
+   ! written at the very start of the matrix on top of whatever is      !
+   ! already there, instead of where it belongs. Nothing downstream     !
+   ! notices: the SCF simply starts from a density that is far too      !
+   ! large in one corner, the Coulomb term swamps the nuclear           !
+   ! attraction, every orbital energy comes out positive and the energy !
+   ! is positive too.                                                   !
+   !                                                                   !
+   ! trace(DS) is the one number that catches all of this at once, but  !
+   ! it cannot be taken here: this runs straight after getMol, and the   !
+   ! overlap is not computed until get1e inside the first operator      !
+   ! build, so quick_qm_struct%s is still all zeros. The electron count !
+   ! is therefore reported from the first SCF cycle instead, in         !
+   ! electdiisdc. What CAN be checked here is the structural half.      !
+   !___________________________________________________________________!
+   nbad = 0
+   do ixiao=1,npmfcc+nmfccextra
+      if (matombases(ixiao) .le. 0 .or. matombasef(ixiao) .lt. matombases(ixiao)) nbad = nbad + 1
+   enddo
+   do ixiao=1,nmfcccap
+      if (matombasescap(ixiao) .le. 0 .or. matombasefcap(ixiao) .lt. matombasescap(ixiao)) nbad = nbad + 1
+   enddo
+
+   if (nbad .gt. 0) then
+      call PrtWrn(iOutFile,'Some MFCC blocks have no global basis offset and were scattered at index zero.')
+      write(ioutfile,'("|          ",i6," of ",i6," fragment/cap blocks never had their global")') &
+            nbad, npmfcc+nmfccextra+nmfcccap
+      write(ioutfile,'("|          basis range matched in basis.f90, so their density landed in")')
+      write(ioutfile,'("|          the wrong place. The guess below is not usable.")')
+      write(ioutfile,'(a)')
+   endif
+
+   call flush(ioutfile)
 
 call PrtAct(ioutfile,"Finish MFCC initial guess")
 end subroutine
