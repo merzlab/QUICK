@@ -300,7 +300,7 @@ jobs:
             compiler-install: 'clang-18 gfortran'
             hdf5-install: ''
             hdf5-restart-support: FALSE
-          - os: 'macos-14'
+          - os: 'macos-26'
             compiler-type: 'GNU'
             compiler-version: '15'
             c-compiler: 'gcc'
@@ -309,7 +309,7 @@ jobs:
             compiler-install: 'gcc@15'
             hdf5-install: 'hdf5'
             hdf5-restart-support: TRUE
-          - os: 'macos-14'
+          - os: 'macos-26'
             compiler-type: 'CLANG'
             compiler-version: '20'
             fortran-compiler-version: '15'

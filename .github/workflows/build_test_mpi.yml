@@ -385,7 +385,7 @@ jobs:
             mpi-install: 'openmpi-bin openmpi-common libopenmpi-dev'
             hdf5-install: ''
             hdf5-restart-support: FALSE
-          - os: 'macos-14'
+          - os: 'macos-26'
             compiler-type: 'GNU'
             mpi-type: 'OpenMPI'
             compiler-version: '15'
@@ -396,7 +396,7 @@ jobs:
             mpi-install: 'open-mpi'
             hdf5-install: 'hdf5'
             hdf5-restart-support: TRUE
-          - os: 'macos-14'
+          - os: 'macos-26'
             compiler-type: 'CLANG'
             mpi-type: 'OpenMPI'
             compiler-version: '20'
