@@ -49,9 +49,10 @@
     use quick_molsurface_module, only: generate_MKS_surfaces
 #if defined(GPU) || defined(MPIV_GPU)
     use quick_basis_module, only: quick_basis, aexp, cutprim, dcoeff, itype, &
-            jbasis, jshell, maxcontract, ncontract, nprim, nshell, Ycutoff
+            jbasis, jshell, maxcontract, ncontract, nprim, nshell, Ycutoff, gpu_eri_onthefly
     use quick_molspec_module, only : xyz
     use quick_method_module, only: delete, upload
+    use quick_divcon_module, only: DCConnect
 #endif
     use quick_mpi_module, only: master
 #if defined(MPIV)
@@ -66,6 +67,9 @@
 
     integer :: fail
     logical :: failed = .false.         ! flag to indicates SCF fail or OPT fail
+#if defined(GPU) || defined(MPIV_GPU)
+    logical :: gpuOnTheFly              ! gpu_eri_onthefly(), passed to gpu_upload_onthefly
+#endif
     integer :: ierr                     ! return error info
     integer :: i,j,k
     double precision :: t1_t, t2_t
@@ -237,6 +241,8 @@
 
 #if defined(GPU) || defined(MPIV_GPU)
     if (.not.quick_method%opt) then
+      gpuOnTheFly = gpu_eri_onthefly()
+      call gpu_upload_onthefly(gpuOnTheFly)
       call gpu_upload_basis(nshell, nprim, jshell, jbasis, maxcontract, &
         ncontract, itype, aexp, dcoeff, &
         quick_basis%first_basis_function, quick_basis%last_basis_function, &
@@ -246,6 +252,7 @@
         quick_basis%Qnumber, quick_basis%Qstart, quick_basis%Qfinal, quick_basis%Qsbasis, quick_basis%Qfbasis, &
         quick_basis%gccoeff, quick_basis%cons, quick_basis%gcexpo, quick_basis%KLMN)
       call gpu_upload_cutoff_matrix(Ycutoff, cutPrim)
+      if (quick_method%DIVCON .or. quick_method%DCMP2only) call gpu_upload_dcconnect(DCConnect)
       call gpu_upload_oei(quick_molspec%nExtAtom, quick_molspec%extxyz, quick_molspec%extchg, ierr)
     endif
 #endif

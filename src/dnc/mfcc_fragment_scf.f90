@@ -731,7 +731,8 @@ subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibas
    use quick_calculated_module, only: quick_qm_struct, alloc, init, dealloc
    use quick_basis_module, only: quick_basis, nbasis, cutprim, Ycutoff, normalize_basis, &
                                   nshell, nprim, jshell, jbasis, maxcontract, ncontract, &
-                                  itype, aexp, dcoeff, alloc, dealloc
+                                  itype, aexp, dcoeff, alloc, dealloc, dc_eri_onthefly, &
+                                  gpu_eri_onthefly
    implicit none
 
    integer, intent(in) :: nat, iatstart, iatfinal, icharge
@@ -794,8 +795,15 @@ subroutine mfcc_run_submol(nat,cord,sym,icharge,iatstart,iatfinal,ibasstart,ibas
    ! them in exactly this order.
    call alloc(quick_basis)
    call alloc(quick_qm_struct)
-   cutprim = 0.0d0
-   quick_basis%Xcoeff = 0.0d0
+   ! cutprim/Xcoeff aren't allocated at all when dc_eri_onthefly() -- see
+   ! allocate_basis (quick_basis_module.f90) -- so skip zero-initializing
+   ! them here, same as getMol.f90. Xcoeff is also unallocated for
+   ! gpu_eri_onthefly() (this fragment loop calls getEriPrecomputables/
+   ! schwarzoff below regardless of whether GPU on-the-fly upload is
+   ! wired in for MFCC), but cutprim stays allocated for GPU regardless,
+   ! so the two need separate gates -- same split as getMol.f90.
+   if (.not. dc_eri_onthefly()) cutprim = 0.0d0
+   if (.not. (dc_eri_onthefly() .or. gpu_eri_onthefly())) quick_basis%Xcoeff = 0.0d0
    call init(quick_qm_struct)
    call normalize_basis()
 
@@ -1008,7 +1016,7 @@ end subroutine mfcc_symbol_to_z
 !-------------------------------------------------------
 
 subroutine mfcc_reduce_dens(a,n1,n2,n3)
-   use quick_mpi_module, only: quick_comm, quick_mpi_error
+   use quick_mpi_module, only: quick_comm, quick_mpi_error, mpi_allreduce_sum_dp_chunked
    use mpi
    implicit none
    integer, intent(in) :: n1,n2,n3
@@ -1017,7 +1025,10 @@ subroutine mfcc_reduce_dens(a,n1,n2,n3)
 
    allocate(tmp(n1,n2,n3))
    tmp = a
-   call MPI_ALLREDUCE(tmp,a,n1*n2*n3,mpi_double_precision,MPI_SUM,quick_comm,quick_mpi_error)
+   ! Chunked (see quick_mpi_module.f90): n1*n2*n3 = nfrag*maxbas*maxbas can
+   ! exceed INT32_MAX for very large DnC/MFCC systems.
+   call mpi_allreduce_sum_dp_chunked(tmp(1,1,1), a(1,1,1), &
+         int(n1,kind=8)*int(n2,kind=8)*int(n3,kind=8), quick_comm, quick_mpi_error)
    deallocate(tmp)
 end subroutine mfcc_reduce_dens
 

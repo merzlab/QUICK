@@ -32,6 +32,122 @@
 
 #if !defined(__gpu_get2e_subs_h_)
   #define __gpu_get2e_subs_h_
+
+/*
+ On-the-fly replacement for the expoSum/weightedCenterX/Y/Z (AB/P) lookup tables.
+ Only used when devSim.expoSum == NULL (quick_method%gpuOnTheFly DnC jobs);
+ mirrors the host-side precompute loop in gpu.cu (and CPU's eri_onthefly_pair)
+ exactly, using arrays that are always uploaded (gcexpo, xyz, katom, Ksumtype).
+ */
+__device__ static inline void onthefly_AB_P(const int ISH, const int JSH, const int primI, const int primJ,
+        QUICKDouble &AB, QUICKDouble &Px, QUICKDouble &Py, QUICKDouble &Pz)
+{
+    int kAtomI = devSim.katom[ISH];
+    int kAtomJ = devSim.katom[JSH];
+    int KsumtypeI = devSim.Ksumtype[ISH];
+    int KsumtypeJ = devSim.Ksumtype[JSH];
+
+    QUICKDouble expoI = LOC2(devSim.gcexpo, primI, KsumtypeI - 1, MAXPRIM, devSim.nbasis);
+    QUICKDouble expoJ = LOC2(devSim.gcexpo, primJ, KsumtypeJ - 1, MAXPRIM, devSim.nbasis);
+
+    AB = expoI + expoJ;
+    Px = (LOC2(devSim.xyz, 0, kAtomI - 1, 3, devSim.natom) * expoI
+            + LOC2(devSim.xyz, 0, kAtomJ - 1, 3, devSim.natom) * expoJ) / AB;
+    Py = (LOC2(devSim.xyz, 1, kAtomI - 1, 3, devSim.natom) * expoI
+            + LOC2(devSim.xyz, 1, kAtomJ - 1, 3, devSim.natom) * expoJ) / AB;
+    Pz = (LOC2(devSim.xyz, 2, kAtomI - 1, 3, devSim.natom) * expoI
+            + LOC2(devSim.xyz, 2, kAtomJ - 1, 3, devSim.natom) * expoJ) / AB;
+}
+
+/*
+ On-the-fly replacement for the Xcoeff lookup table. Only used when
+ devSim.Xcoeff == NULL (quick_method%gpuOnTheFly DnC jobs); mirrors the
+ host-side precompute loop in gpu.cu's gpu_upload_basis_ exactly (same
+ primitive-pair prefactor times the per-angular-momentum contraction
+ coefficients), using arrays that are always uploaded (gcexpo, gccoeff,
+ xyz, katom, Ksumtype). angI/angJ are the absolute angular-momentum
+ class indices (the shell-pair's I/J or K/L, not offset by Qstart).
+ */
+__device__ static inline QUICKDouble onthefly_Xcoeff(const int ISH, const int JSH, const int primI, const int primJ,
+        const int angI, const int angJ)
+{
+    int kAtomI = devSim.katom[ISH];
+    int kAtomJ = devSim.katom[JSH];
+    int KsumtypeI = devSim.Ksumtype[ISH];
+    int KsumtypeJ = devSim.Ksumtype[JSH];
+
+    QUICKDouble expoI = LOC2(devSim.gcexpo, primI, KsumtypeI - 1, MAXPRIM, devSim.nbasis);
+    QUICKDouble expoJ = LOC2(devSim.gcexpo, primJ, KsumtypeJ - 1, MAXPRIM, devSim.nbasis);
+
+    QUICKDouble DIJ = 0.0;
+    for (int k = 0; k < 3; k++) {
+        QUICKDouble d = LOC2(devSim.xyz, k, kAtomI - 1, 3, devSim.natom)
+                - LOC2(devSim.xyz, k, kAtomJ - 1, 3, devSim.natom);
+        DIJ += d * d;
+    }
+
+    QUICKDouble X = exp(-expoI * expoJ / (expoI + expoJ) * DIJ) / (expoI + expoJ);
+
+    return X0 * X * LOC2(devSim.gccoeff, primI, KsumtypeI + angI - 1, MAXPRIM, devSim.nbasis)
+            * LOC2(devSim.gccoeff, primJ, KsumtypeJ + angJ - 1, MAXPRIM, devSim.nbasis);
+}
+
+/*
+ Redirects an O-matrix Fock-write (row, col are 0-based global basis
+ indices, matching every existing atomicAdd(&LOC2(devSim.o, row, col, ...))
+ call site) into the compact per-fragment-block buffer instead of the
+ dense (nbasis,nbasis) one, for single-point DnC+DENSDIIS jobs (see 9.14
+ design notes / gpu_upload_fragmap_ in gpu.cu). devSim.use_compact_o is
+ false for every other job, in which case this is byte-identical to the
+ original atomicAdd call it replaces -- zero behavior change outside the
+ gate.
+
+ Rule (proven bit-for-bit against Odivided's own per-fragment loop on a
+ real local DnC+DENSDIIS run before this was written, see inidivcon.f90's
+ GatherCompactO comment): write val into EVERY fragment that contains both
+ row and col (not just one -- fragments' buffer regions overlap, so a
+ given (row,col) pair can legitimately belong to more than one fragment's
+ own block, and each needs the same running total). A pair with no common
+ fragment is a cross-fragment exchange write that Odivided's own slicing
+ already discards -- dropped here too, matching existing behavior exactly
+ (this is not a new approximation, just not re-deriving a value nothing
+ downstream reads).
+
+ Writes BOTH (lr,lc) and (lc,lr) within each matching fragment's own block
+ (skipping the duplicate when lr==lc) so the compact buffer is already
+ symmetric on download -- deliberately not relying on whichever triangle
+ convention happens to hold for row/col at each of this file's ~34 call
+ sites, which is not uniform and not worth re-deriving per site.
+ */
+__device__ static inline void FOCK_ATOMIC_ADD_O(const int row, const int col, const QUICKDouble val)
+{
+    if (!devSim.use_compact_o) {
+        atomicAdd(&LOC2(devSim.o, row, col, devSim.nbasis, devSim.nbasis), val);
+        return;
+    }
+
+    int nfr = devSim.fragBasisCount[row];
+    int nfc = devSim.fragBasisCount[col];
+
+    for (int kr = 0; kr < nfr; kr++) {
+        int fr = LOC2(devSim.fragBasisList, row, kr, devSim.nbasis, devSim.fragMaxOverlap);
+        for (int kc = 0; kc < nfc; kc++) {
+            int fc = LOC2(devSim.fragBasisList, col, kc, devSim.nbasis, devSim.fragMaxOverlap);
+            if (fr == fc) {
+                int lr = LOC2(devSim.fragBasisLocalIdx, row, kr, devSim.nbasis, devSim.fragMaxOverlap) - 1;
+                int lc = LOC2(devSim.fragBasisLocalIdx, col, kc, devSim.nbasis, devSim.fragMaxOverlap) - 1;
+                int nb = devSim.fragNbasis[fr - 1];
+                int base = devSim.fragOffset[fr - 1];
+
+                atomicAdd(&devSim.oCompact[base + lc * nb + lr], val);
+                if (lr != lc) {
+                    atomicAdd(&devSim.oCompact[base + lr * nb + lc], val);
+                }
+            }
+        }
+    }
+}
+
   #if !defined(OSHELL)
 __device__ static inline bool call_iclass(const int I, const int J, const int K, const int L,
         const int II, const int JJ, const int KK, const int LL)
@@ -192,19 +308,29 @@ __device__ static inline void iclass_spdf10
         int ii_start = devSim.prim_start[II];
         int jj_start = devSim.prim_start[JJ];
         
-        QUICKDouble AB = LOC2(devSim.expoSum, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
-        QUICKDouble Px = LOC2(devSim.weightedCenterX, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
-        QUICKDouble Py = LOC2(devSim.weightedCenterY, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
-        QUICKDouble Pz = LOC2(devSim.weightedCenterZ, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+        QUICKDouble AB, Px, Py, Pz;
+        if (devSim.expoSum != NULL) {
+            AB = LOC2(devSim.expoSum, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+            Px = LOC2(devSim.weightedCenterX, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+            Py = LOC2(devSim.weightedCenterY, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+            Pz = LOC2(devSim.weightedCenterZ, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+        } else {
+            onthefly_AB_P(II, JJ, III, JJJ, AB, Px, Py, Pz);
+        }
         
         /*
          X1 is the contracted coeffecient, which is pre-calcuated in CPU stage as well.
          cutoffprim is used to cut too small prim gaussian function when bring density matrix into consideration.
          */
         QUICKDouble cutoffPrim = DNMax * LOC2(devSim.cutPrim, kStartI + III, kStartJ + JJJ, devSim.jbasis, devSim.jbasis);
-        QUICKDouble X1 = LOC4(devSim.Xcoeff, kStartI + III, kStartJ + JJJ, I - devSim.Qstart[II], J - devSim.Qstart[JJ],
-                devSim.jbasis, devSim.jbasis, 2, 2);
-        
+        QUICKDouble X1;
+        if (devSim.Xcoeff != NULL) {
+            X1 = LOC4(devSim.Xcoeff, kStartI + III, kStartJ + JJJ, I - devSim.Qstart[II], J - devSim.Qstart[JJ],
+                    devSim.jbasis, devSim.jbasis, 2, 2);
+        } else {
+            X1 = onthefly_Xcoeff(II, JJ, III, JJJ, I, J);
+        }
+
         for (int j = 0; j < kPrimK * kPrimL; j++) {
             int LLL = (int) (j / kPrimK);
             int KKK = (int) (j - kPrimK * LLL);
@@ -225,20 +351,33 @@ __device__ static inline void iclass_spdf10
                  */
                 int kk_start = devSim.prim_start[KK];
                 int ll_start = devSim.prim_start[LL];
-                QUICKDouble CD = LOC2(devSim.expoSum, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                QUICKDouble CD, Qx, Qy, Qz;
+                if (devSim.expoSum != NULL) {
+                    CD = LOC2(devSim.expoSum, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                    Qx = LOC2(devSim.weightedCenterX, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                    Qy = LOC2(devSim.weightedCenterY, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                    Qz = LOC2(devSim.weightedCenterZ, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                } else {
+                    onthefly_AB_P(KK, LL, KKK, LLL, CD, Qx, Qy, Qz);
+                }
                 QUICKDouble ABCD = 1.0 / (AB + CD);
                 
                 /*
                  X2 is the multiplication of four indices normalized coeffecient
                  */
+                QUICKDouble X2;
+                if (devSim.Xcoeff != NULL) {
 #if defined(USE_TEXTURE) && defined(USE_TEXTURE_XCOEFF)
-                int2 XcoeffInt2 = tex1Dfetch(tex_Xcoeff, L - devSim.Qstart[LL] +
-                        (K - devSim.Qstart[KK] + ((kStartL + LLL) + (kStartK + KKK) * devSim.jbasis) * 2) * 2);
-                QUICKDouble X2 = sqrt(ABCD) * X1 * __hiloint2double(XcoeffInt2.y, XcoeffInt2.x);
+                    int2 XcoeffInt2 = tex1Dfetch(tex_Xcoeff, L - devSim.Qstart[LL] +
+                            (K - devSim.Qstart[KK] + ((kStartL + LLL) + (kStartK + KKK) * devSim.jbasis) * 2) * 2);
+                    X2 = sqrt(ABCD) * X1 * __hiloint2double(XcoeffInt2.y, XcoeffInt2.x);
 #else
-                QUICKDouble X2 = sqrt(ABCD) * X1 * LOC4(devSim.Xcoeff, kStartK + KKK, kStartL + LLL,
-                        K - devSim.Qstart[KK], L - devSim.Qstart[LL], devSim.jbasis, devSim.jbasis, 2, 2);
-#endif                
+                    X2 = sqrt(ABCD) * X1 * LOC4(devSim.Xcoeff, kStartK + KKK, kStartL + LLL,
+                            K - devSim.Qstart[KK], L - devSim.Qstart[LL], devSim.jbasis, devSim.jbasis, 2, 2);
+#endif
+                } else {
+                    X2 = sqrt(ABCD) * X1 * onthefly_Xcoeff(KK, LL, KKK, LLL, K, L);
+                }
 
                 /*
                  Q' is the weighting center of K and L
@@ -259,10 +398,6 @@ __device__ static inline void iclass_spdf10
                  ->  -> 2
                  T = ROU * | P - Q|
                  */
-                QUICKDouble Qx = LOC2(devSim.weightedCenterX, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
-                QUICKDouble Qy = LOC2(devSim.weightedCenterY, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
-                QUICKDouble Qz = LOC2(devSim.weightedCenterZ, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
-                
                 FmT(I + J + K + L, AB * CD * ABCD * (SQR(Px - Qx) + SQR(Py - Qy) + SQR(Pz - Qz)),
                         YVerticalTemp);
 
@@ -425,7 +560,7 @@ __device__ static inline void iclass_spdf10
 #  if defined(USE_LEGACY_ATOMICS)
                                 GPUATOMICADD(&LOC2(devSim.oULL, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
 #  else
-                                atomicAdd(&LOC2(devSim.o, LLL - 1, KKK - 1, devSim.nbasis, devSim.nbasis), temp);
+                                FOCK_ATOMIC_ADD_O(LLL - 1, KKK - 1, temp);
 #  endif
 #if defined(OSHELL)
 #  if defined(USE_LEGACY_ATOMICS)
@@ -461,7 +596,7 @@ __device__ static inline void iclass_spdf10
                                 GPUATOMICADD(&LOC2(devSim.oULL, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
                                 GPUATOMICADD(&LOC2(devSim.obULL, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp2, OSCALE);
 #  else
-                                atomicAdd(&LOC2(devSim.o, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp);
+                                FOCK_ATOMIC_ADD_O(LLL - 1, III - 1, temp);
                                 atomicAdd(&LOC2(devSim.ob, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp2);
 #  endif
 #else
@@ -469,7 +604,7 @@ __device__ static inline void iclass_spdf10
 #  if defined(USE_LEGACY_ATOMICS)
                                 GPUATOMICADD(&LOC2(devSim.oULL, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
 #  else
-                                atomicAdd(&LOC2(devSim.o, LLL - 1, III - 1, devSim.nbasis, devSim.nbasis), temp);
+                                FOCK_ATOMIC_ADD_O(LLL - 1, III - 1, temp);
 #  endif
 #endif
                             }
@@ -509,7 +644,7 @@ __device__ static inline void iclass_spdf10
 #  if defined(USE_LEGACY_ATOMICS)
                                 GPUATOMICADD(&LOC2(devSim.oULL, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
 #  else
-                                atomicAdd(&LOC2(devSim.o, MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, devSim.nbasis, devSim.nbasis), temp);
+                                FOCK_ATOMIC_ADD_O(MAX(JJJ, LLL) - 1, MIN(JJJ, LLL) - 1, temp);
 #  endif
 #if defined(OSHELL)
 #  if defined(USE_LEGACY_ATOMICS)
@@ -524,7 +659,7 @@ __device__ static inline void iclass_spdf10
 #  if defined(USE_LEGACY_ATOMICS)
                                     GPUATOMICADD(&LOC2(devSim.oULL, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis), temp, OSCALE);
 #  else
-                                    atomicAdd(&LOC2(devSim.o, LLL - 1, JJJ - 1, devSim.nbasis, devSim.nbasis), temp);
+                                    FOCK_ATOMIC_ADD_O(LLL - 1, JJJ - 1, temp);
 #  endif
 #if defined(OSHELL)
 #  if defined(USE_LEGACY_ATOMICS)
@@ -544,9 +679,9 @@ __device__ static inline void iclass_spdf10
                 GPUATOMICADD(&LOC2(devSim.oULL, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, devSim.nbasis, devSim.nbasis), o_JK_MM, OSCALE);
                 GPUATOMICADD(&LOC2(devSim.oULL, JJJ - 1, KKK - 1, devSim.nbasis, devSim.nbasis), o_JK, OSCALE);
 #  else
-                atomicAdd(&LOC2(devSim.o, KKK - 1, III - 1, devSim.nbasis, devSim.nbasis), o_KI);
-                atomicAdd(&LOC2(devSim.o, MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, devSim.nbasis, devSim.nbasis), o_JK_MM);
-                atomicAdd(&LOC2(devSim.o, JJJ - 1, KKK - 1, devSim.nbasis, devSim.nbasis), o_JK);
+                FOCK_ATOMIC_ADD_O(KKK - 1, III - 1, o_KI);
+                FOCK_ATOMIC_ADD_O(MAX(JJJ, KKK) - 1, MIN(JJJ, KKK) - 1, o_JK_MM);
+                FOCK_ATOMIC_ADD_O(JJJ - 1, KKK - 1, o_JK);
 #  endif
 #if defined(OSHELL)
 #  if defined(USE_LEGACY_ATOMICS)
@@ -564,7 +699,7 @@ __device__ static inline void iclass_spdf10
 #  if defined(USE_LEGACY_ATOMICS)
             GPUATOMICADD(&LOC2(devSim.oULL, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), o_JI, OSCALE);
 #  else
-            atomicAdd(&LOC2(devSim.o, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), o_JI);
+            FOCK_ATOMIC_ADD_O(JJJ - 1, III - 1, o_JI);
 #  endif
 #if defined(OSHELL)
 #  if defined(USE_LEGACY_ATOMICS)
@@ -900,6 +1035,27 @@ __global__ void __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_sp
                     MAX(MAX(LOC2(devSim.cutMatrix, ii, ll, nshell, nshell), LOC2(devSim.cutMatrix, ii, kk, nshell, nshell)),
                         MAX(LOC2(devSim.cutMatrix, jj, kk, nshell, nshell), LOC2(devSim.cutMatrix, jj, ll, nshell, nshell))));
 #endif
+
+            // DnC fragment-connectivity screening -- CUDA port of eri.fh's
+            // getCshellEriDC/getOshellEriDC 6-way dcconnect OR gate. Each
+            // DNMax arm is zeroed unless its *complementary* shell pair is
+            // fragment-connected (same mapping as the CPU gate: dcconnect(II,JJ)
+            // gates the cutMatrix(KK,LL) arm, dcconnect(KK,LL) gates cutMatrix(II,JJ),
+            // dcconnect(II,KK)<->cutMatrix(JJ,LL), dcconnect(JJ,LL)<->cutMatrix(II,KK),
+            // dcconnect(II,LL)<->cutMatrix(JJ,KK), dcconnect(JJ,KK)<->cutMatrix(II,LL)),
+            // mathematically equivalent to the CPU's 6-way OR of per-arm checks.
+            // devSim.dcConnect is NULL for non-DnC jobs, so this is a no-op then
+            // (today's GPU-DnC behavior, unchanged) -- it is only non-NULL when
+            // gpu_upload_dcconnect has uploaded it for a DIVCON/DCMP2only job.
+            if (devSim.dcConnect != NULL) {
+                DNMax = MAX(
+                        MAX(4.0 * LOC2(devSim.cutMatrix, ii, jj, nshell, nshell) * LOC2(devSim.dcConnect, kk, ll, nshell, nshell),
+                            4.0 * LOC2(devSim.cutMatrix, kk, ll, nshell, nshell) * LOC2(devSim.dcConnect, ii, jj, nshell, nshell)),
+                        MAX(MAX(LOC2(devSim.cutMatrix, ii, ll, nshell, nshell) * LOC2(devSim.dcConnect, jj, kk, nshell, nshell),
+                                LOC2(devSim.cutMatrix, ii, kk, nshell, nshell) * LOC2(devSim.dcConnect, jj, ll, nshell, nshell)),
+                            MAX(LOC2(devSim.cutMatrix, jj, kk, nshell, nshell) * LOC2(devSim.dcConnect, ii, ll, nshell, nshell),
+                                LOC2(devSim.cutMatrix, jj, ll, nshell, nshell) * LOC2(devSim.dcConnect, ii, kk, nshell, nshell))));
+            }
 
 #if defined(USE_TEXTURE) && defined(USE_TEXTURE_YCUTOFF)
             tmpInt2Val = tex1Dfetch(tex_YCutoff, kk + ll * nshell);
@@ -1265,19 +1421,29 @@ __device__ static inline void iclass_AOInt_spdf10
         int ii_start = devSim.prim_start[II];
         int jj_start = devSim.prim_start[JJ];
         
-        QUICKDouble AB = LOC2(devSim.expoSum, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
-        QUICKDouble Px = LOC2(devSim.weightedCenterX, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
-        QUICKDouble Py = LOC2(devSim.weightedCenterY, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
-        QUICKDouble Pz = LOC2(devSim.weightedCenterZ, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+        QUICKDouble AB, Px, Py, Pz;
+        if (devSim.expoSum != NULL) {
+            AB = LOC2(devSim.expoSum, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+            Px = LOC2(devSim.weightedCenterX, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+            Py = LOC2(devSim.weightedCenterY, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+            Pz = LOC2(devSim.weightedCenterZ, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+        } else {
+            onthefly_AB_P(II, JJ, III, JJJ, AB, Px, Py, Pz);
+        }
         
         /*
          X1 is the contracted coeffecient, which is pre-calcuated in CPU stage as well.
          cutoffprim is used to cut too small prim gaussian function when bring density matrix into consideration.
          */
         QUICKDouble cutoffPrim = DNMax * LOC2(devSim.cutPrim, kStartI + III, kStartJ + JJJ, devSim.jbasis, devSim.jbasis);
-        QUICKDouble X1 = LOC4(devSim.Xcoeff, kStartI + III, kStartJ + JJJ,
-                I - devSim.Qstart[II], J - devSim.Qstart[JJ], devSim.jbasis, devSim.jbasis, 2, 2);
-        
+        QUICKDouble X1;
+        if (devSim.Xcoeff != NULL) {
+            X1 = LOC4(devSim.Xcoeff, kStartI + III, kStartJ + JJJ,
+                    I - devSim.Qstart[II], J - devSim.Qstart[JJ], devSim.jbasis, devSim.jbasis, 2, 2);
+        } else {
+            X1 = onthefly_Xcoeff(II, JJ, III, JJJ, I, J);
+        }
+
         for (int j = 0; j < kPrimK * kPrimL; j++) {
             int LLL = (int) j / kPrimK;
             int KKK = (int) j - kPrimK * LLL;
@@ -1299,15 +1465,28 @@ __device__ static inline void iclass_AOInt_spdf10
                  */
                 int kk_start = devSim.prim_start[KK];
                 int ll_start = devSim.prim_start[LL];
-                QUICKDouble CD = LOC2(devSim.expoSum, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                QUICKDouble CD, Qx, Qy, Qz;
+                if (devSim.expoSum != NULL) {
+                    CD = LOC2(devSim.expoSum, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                    Qx = LOC2(devSim.weightedCenterX, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                    Qy = LOC2(devSim.weightedCenterY, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                    Qz = LOC2(devSim.weightedCenterZ, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
+                } else {
+                    onthefly_AB_P(KK, LL, KKK, LLL, CD, Qx, Qy, Qz);
+                }
                 QUICKDouble ABCD = 1.0 / (AB + CD);
                 
                 /*
                  X2 is the multiplication of four indices normalized coeffecient
                  */
-                QUICKDouble X2 = sqrt(ABCD) * X1 * LOC4(devSim.Xcoeff, kStartK + KKK, kStartL + LLL,
-                        K - devSim.Qstart[KK], L - devSim.Qstart[LL], devSim.jbasis, devSim.jbasis, 2, 2);
-                
+                QUICKDouble X2;
+                if (devSim.Xcoeff != NULL) {
+                    X2 = sqrt(ABCD) * X1 * LOC4(devSim.Xcoeff, kStartK + KKK, kStartL + LLL,
+                            K - devSim.Qstart[KK], L - devSim.Qstart[LL], devSim.jbasis, devSim.jbasis, 2, 2);
+                } else {
+                    X2 = sqrt(ABCD) * X1 * onthefly_Xcoeff(KK, LL, KKK, LLL, K, L);
+                }
+
                 /*
                  Q' is the weighting center of K and L
                  ```````````````````````````--->           --->
@@ -1327,10 +1506,6 @@ __device__ static inline void iclass_AOInt_spdf10
                  ```````````->  -> 2
                  T = ROU * | P - Q|
                  */
-                QUICKDouble Qx = LOC2(devSim.weightedCenterX, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
-                QUICKDouble Qy = LOC2(devSim.weightedCenterY, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
-                QUICKDouble Qz = LOC2(devSim.weightedCenterZ, kk_start + KKK, ll_start + LLL, devSim.prim_total, devSim.prim_total);
-                
                 FmT(I + J + K + L, AB * CD * ABCD * (SQR(Px - Qx) + SQR(Py - Qy) + SQR(Pz - Qz)),
                         YVerticalTemp);
 

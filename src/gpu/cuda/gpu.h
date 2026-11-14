@@ -28,6 +28,8 @@ extern "C" void gpu_upload_atom_and_chg_(int *, QUICKDouble *);
 extern "C" void gpu_upload_cutoff_(QUICKDouble *, QUICKDouble *, QUICKDouble *,
         QUICKDouble *, QUICKDouble *);
 extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble *, QUICKDouble *);
+extern "C" void gpu_upload_dcconnect_(int *);
+extern "C" void gpu_upload_onthefly_(bool *);
 extern "C" void gpu_upload_energy_(QUICKDouble *);
 extern "C" void gpu_upload_calculated_(QUICKDouble *, QUICKDouble *, QUICKDouble *, QUICKDouble *);
 extern "C" void gpu_upload_beta_density_matrix_(QUICKDouble *);
@@ -105,7 +107,7 @@ void upload_sim_to_constant_lri(_gpu_type);
 void upload_para_to_const();
 
 void bind_eri_texture(_gpu_type);
-void unbind_eri_texture();
+void unbind_eri_texture(_gpu_type);
 
 
 #endif

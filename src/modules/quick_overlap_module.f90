@@ -178,6 +178,7 @@ subroutine fullx
    use quick_method_module, only: quick_method
    use quick_files_module, only: ioutfile
    use quick_molspec_module, only: xyz
+   use quick_mpi_module, only: master
 
    implicit none
 
@@ -231,6 +232,60 @@ subroutine fullx
    timer_cumer%T1eS = timer_cumer%T1eS + timer_end%T1eS - timer_begin%T1eS
 
    call copySym(quick_qm_struct%s, nbasis)
+
+   ! Divide-and-conquer builds its own per-fragment X from per-fragment S
+   ! submatrices (DivideS/DivideX in inidivcon.f90, each diagonalizing only
+   ! a small nbasisdc(itt)-sized local block) and never reads the
+   ! whole-system quick_qm_struct%x this subroutine would otherwise build
+   ! below. Confirmed by grep: the only OTHER reader of quick_qm_struct%x
+   ! is the main DIIS block in dnc_scf.f90/dnc_uscf.f90, itself gated off
+   ! only when quick_method%densdiis is set. Diagonalizing the full S here
+   ! is also what was overflowing GPU memory at protein scale (cudaMalloc
+   ! for a dense nbasis x nbasis matrix -- confirmed via compute-sanitizer:
+   ! cuda_diag_ <- fullx <- getenergy_, cudaErrorMemoryAllocation). Skip
+   ! straight to allocating (zeroed, unused) x/co/vec/oldvec/E and return.
+   !
+   ! Deliberately scoped tight, not just "any DivCon job":
+   !  - densdiis required (not just DivCon): without it, dnc_scf.f90's main
+   !    DIIS block is NOT gated off and would read this zeroed %x instead of
+   !    a real orthogonalization matrix. The local DnC regression tests
+   !    (gly6/ethane/c2h5rad) all run plain DIIS, not densdiis, and still
+   !    matched the saved reference energies with this skip active -- but
+   !    that is because DIIS only accelerates convergence to the same fixed
+   !    point, which tiny/easy molecules reach regardless of whether the
+   !    error-vector metric is corrupted. That is not evidence this is safe
+   !    for plain DIIS in general, only that it is untested and should not
+   !    be relied on, so plain-DIIS DnC jobs are deliberately excluded here.
+   !  - dcmp2only, MP2, grad, opt, and freq excluded: this only covers a
+   !    plain single-point DnC energy. DC-MP2 needs the canonical-SCF-style
+   !    quantities fullX normally builds; gradient/optimization/frequency
+   !    jobs call getEnergy repeatedly and/or need derivative quantities
+   !    this path has not been checked against.
+   !
+   ! NBSuse is forced to nbasis here rather than detected from Sminhalf, so
+   ! a near-linear-dependent DnC overlap can no longer be detected -- but
+   ! getEnergy.f90 already refuses any DnC job where NBSuse/=nbasis before
+   ! this subroutine would even have had a chance to report it, so this
+   ! does not relax that check, it only removes the detection that used to
+   ! back it for DnC jobs specifically.
+   if (quick_method%DivCon .and. quick_method%densdiis .and. &
+       .not.quick_method%dcmp2only .and. .not.quick_method%MP2 .and. &
+       .not.quick_method%grad .and. .not.quick_method%opt .and. &
+       .not.quick_method%freq) then
+      NBSuse = nbasis
+      quick_qm_struct%NBSuse => nbasis
+      call allocate_quick_qm_struct_fullx(quick_qm_struct)
+      call deallocfullx(quick_scratch)
+      if (master) then
+         write(ioutfile,'(a)')
+         write(ioutfile,'(" @ DEBUG [DnC+DENSDIIS, single-point]: fullX whole-system diagonalization &
+            &SKIPPED (per-fragment divideX used instead, see inidivcon.f90)")')
+         write(ioutfile,'("   nbasis=",i0,"; a dense (nbasis,nbasis) diagonalization workspace here &
+            &would have needed ~",f10.3," GB")') nbasis, dble(nbasis)*dble(nbasis)*8.0d0/1024.0d0**3
+         call flush(ioutfile)
+      endif
+      return
+   endif
 
    ! copy s matrix to scratch
    call copyDMat(quick_qm_struct%s, quick_scratch%hold, nbasis)

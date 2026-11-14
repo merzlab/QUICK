@@ -268,7 +268,8 @@
                                      DCBuffer2n, DCSubn, nBasisDC, nElecDCSub, DCOverlap, &
                                      DCConnect, kShellS, kShellF, DCLogic, invDCOverlap, np, &
                                      NNMax, npsaved, mpi_dc_fragn, mpi_dc_frag, mpi_dc_nbasis
-     use quick_mpi_module, only: master, quick_mpi_error, quick_comm_size, quick_comm
+     use quick_mpi_module, only: master, quick_mpi_error, quick_comm_size, quick_comm, &
+                                  mpi_bcast_int_chunked, mpi_bcast_dp_chunked
      use mpi
 
      implicit none
@@ -277,7 +278,12 @@
     
     call MPI_BCAST(kshells,natomt,mpi_integer,0,quick_comm,quick_mpi_error)
     call MPI_BCAST(kshellf,natomt,mpi_integer,0,quick_comm,quick_mpi_error)
-    call MPI_BCAST(dcconnect,jshell*jshell,mpi_integer,0,quick_comm,quick_mpi_error)
+    ! Chunked (see quick_mpi_module.f90): jshell^2 can exceed INT32_MAX for
+    ! very large systems, and widening the Fortran count alone would not
+    ! help since several MPI libraries' classic Fortran binding truncates
+    ! the count to a 4-byte C int regardless.
+    call mpi_bcast_int_chunked(dcconnect(1,1), int(jshell,kind=8)*int(jshell,kind=8), &
+          0, quick_comm, quick_mpi_error)
     
     call MPI_BCAST(np,1,mpi_integer,0,quick_comm,quick_mpi_error)
     call MPI_BCAST(npsaved,1,mpi_integer,0,quick_comm,quick_mpi_error)
@@ -302,13 +308,18 @@
     ! is np, not npsaved (unlike every other array broadcast above, which is
     ! sized by npsaved because it's allocated before elimination). Using
     ! npsaved here would broadcast past the end of the allocated array.
-    call MPI_BCAST(dclogic,np*maxval(dcsubn(1:np))*maxval(dcsubn(1:np)), &
-          mpi_integer,0,quick_comm,quick_mpi_error)
+    call mpi_bcast_int_chunked(dclogic(1,1,1), &
+          int(np,kind=8)*int(maxval(dcsubn(1:np)),kind=8)*int(maxval(dcsubn(1:np)),kind=8), &
+          0, quick_comm, quick_mpi_error)
 
     call MPI_BCAST(nbasisdc,npsaved,mpi_integer,0,quick_comm,quick_mpi_error)
     call MPI_BCAST(nelecdcsub,npsaved,mpi_integer,0,quick_comm,quick_mpi_error)
-    call MPI_BCAST(invdcoverlap,natomt*natomt,mpi_double_precision,0,quick_comm,quick_mpi_error)
-    call MPI_BCAST(dcoverlap,natomt*natomt,mpi_integer,0,quick_comm,quick_mpi_error)
+    ! Chunked (see quick_mpi_module.f90): natomt^2 can exceed INT32_MAX for
+    ! very large systems.
+    call mpi_bcast_dp_chunked(invdcoverlap(1,1), int(natomt,kind=8)*int(natomt,kind=8), &
+          0, quick_comm, quick_mpi_error)
+    call mpi_bcast_int_chunked(dcoverlap(1,1), int(natomt,kind=8)*int(natomt,kind=8), &
+          0, quick_comm, quick_mpi_error)
     
     !-------------------MPI/MASTER ------------------------------------
     ! Distrubute fragment to nodes for calculation

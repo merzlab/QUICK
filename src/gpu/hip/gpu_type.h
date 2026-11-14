@@ -337,6 +337,12 @@ struct gpu_simulation_type {
     QUICKDouble *cutMatrix;
     QUICKDouble *YCutoff;
     QUICKDouble *cutPrim;
+    // Always NULL on HIP for now: gpu_get2e_subs.h (shared with CUDA) checks
+    // this to gate DnC fragment-connectivity screening, which is CUDA-only
+    // so far -- see gpu_upload_dcconnect_ in cuda/gpu.cu. Kept NULL here so
+    // the shared kernel body still compiles and HIP's GPU-DnC behavior is
+    // unchanged (same full/non-DnC screening as before this field existed).
+    int *dcConnect;
     QUICKDouble integralCutoff;
     QUICKDouble coreIntegralCutoff;
     QUICKDouble primLimit;

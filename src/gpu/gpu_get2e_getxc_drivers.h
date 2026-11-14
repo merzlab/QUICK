@@ -66,6 +66,14 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
     }
 #  endif
 #else
+    // O-compaction (see 9.14): gated to DnC+DENSDIIS+single-point, closed-shell
+    // only (use_compact_o is never set true for an OSHELL build). In that case
+    // gpu->gpu_calculated->o was never allocated (NULL) -- the dense symmetrize
+    // and DownloadSum(o) below do not apply, since FOCK_ATOMIC_ADD_O already
+    // writes oCompact symmetrically on-device. Just download the raw compact
+    // buffer here; Fortran retrieves it via gpu_download_compact_o and folds it
+    // into quick_qm_struct%o via GatherCompactO (dnc_scf_operator.f90).
+    if (!gpu->gpu_sim.use_compact_o) {
     gpu->gpu_calculated->o->Download();
     gpuMemsetAsync(gpu->gpu_calculated->o->_devData, 0, sizeof(QUICKDouble) * gpu->nbasis * gpu->nbasis, 0);
 
@@ -74,6 +82,9 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
             LOC2(gpu->gpu_calculated->o->_hostData, i, j, gpu->nbasis, gpu->nbasis)
                 = LOC2(gpu->gpu_calculated->o->_hostData, j, i, gpu->nbasis, gpu->nbasis);
         }
+    }
+    } else {
+        gpu->gpu_calculated->oCompact->Download();
     }
 #  if defined(OSHELL)
     gpu->gpu_calculated->ob->Download();
@@ -88,7 +99,9 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
 #  endif
 #endif
 
-    gpu->gpu_calculated->o->DownloadSum(o);
+    if (!gpu->gpu_sim.use_compact_o) {
+        gpu->gpu_calculated->o->DownloadSum(o);
+    }
 #if defined(OSHELL)
     gpu->gpu_calculated->ob->DownloadSum(ob);
 #endif
@@ -97,6 +110,8 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
 
     if (gpu->gpu_sim.method == HF) {
         delete gpu->gpu_calculated->o;
+        delete gpu->gpu_calculated->oCompact;
+        gpu->gpu_calculated->oCompact = NULL;
         delete gpu->gpu_calculated->dense;
 #if defined(USE_LEGACY_ATOMICS)
         delete gpu->gpu_calculated->oULL;

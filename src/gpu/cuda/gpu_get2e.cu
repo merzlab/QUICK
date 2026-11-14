@@ -630,7 +630,7 @@ void get2e(_gpu_type gpu)
 #endif 
 
 #ifdef USE_TEXTURE
-    unbind_eri_texture();
+    unbind_eri_texture(gpu);
 #endif
 
 //    nvtxRangePop();
@@ -677,7 +677,7 @@ void get_oshell_eri(_gpu_type gpu)
 #endif
 
 #ifdef USE_TEXTURE
-    unbind_eri_texture();
+    unbind_eri_texture(gpu);
 #endif
 
 //    nvtxRangePop();
@@ -1087,12 +1087,18 @@ void bind_eri_texture(_gpu_type gpu) {
     cudaBindTexture(NULL, tex_YCutoff, gpu->gpu_sim.YCutoff, sizeof(QUICKDouble) * gpu->nshell * gpu->nshell);
 #endif
 #ifdef USE_TEXTURE_XCOEFF
-    cudaBindTexture(NULL, tex_Xcoeff, gpu->gpu_sim.Xcoeff, sizeof(QUICKDouble) * 4 * gpu->jbasis * gpu->jbasis);
+    // gpu->gpu_sim.Xcoeff is NULL for GPUONTHEFLY DnC jobs (see
+    // gpu_upload_basis_) -- the kernels already fall back to on-the-fly
+    // recompute in that case (devSim.Xcoeff == NULL check in
+    // gpu_get2e_subs.h), so skip binding a texture to a NULL pointer.
+    if (gpu->gpu_sim.Xcoeff != NULL) {
+        cudaBindTexture(NULL, tex_Xcoeff, gpu->gpu_sim.Xcoeff, sizeof(QUICKDouble) * 4 * gpu->jbasis * gpu->jbasis);
+    }
 #endif
 }
 
 
-void unbind_eri_texture() {
+void unbind_eri_texture(_gpu_type gpu) {
 #ifdef USE_TEXTURE_CUTMATRIX
     cudaUnbindTexture(tex_cutMatrix);
 #endif
@@ -1100,6 +1106,10 @@ void unbind_eri_texture() {
     cudaUnbindTexture(tex_YCutoff);
 #endif
 #ifdef USE_TEXTURE_XCOEFF
-    cudaUnbindTexture(tex_Xcoeff);    
+    // Mirrors the NULL guard in bind_eri_texture: nothing was bound this
+    // round for a GPUONTHEFLY DnC job, so don't unbind it.
+    if (gpu->gpu_sim.Xcoeff != NULL) {
+        cudaUnbindTexture(tex_Xcoeff);
+    }
 #endif
 }

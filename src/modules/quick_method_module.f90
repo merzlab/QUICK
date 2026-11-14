@@ -92,6 +92,7 @@ module quick_method_module
         logical :: FMM = .false.       ! Fast Multipole
         logical :: DIVCON = .false.    ! Div&Con
         logical :: DCMP2only = .false. ! Canonical HF and Div&Con for MP2 only
+        logical :: gpuOnTheFly = .false. ! GPU on-the-fly AB/P/Xcoeff recompute for DnC (see quick_basis_module's gpu_eri_onthefly); opt-in, DnC-only
         integer :: ifragbasis = 1      ! =2.residue basis,=1.atom basis(DEFUALT),=3 non-h atom basis
 
         ! this part is Div&Con options
@@ -293,6 +294,7 @@ module quick_method_module
             call MPI_BCAST(self%SAD,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%FMM,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%DIVCON,1,mpi_logical,0,quick_comm,quick_mpi_error)
+            call MPI_BCAST(self%gpuOnTheFly,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%MFCC,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%fragxyz,1,mpi_logical,0,quick_comm,quick_mpi_error)
             call MPI_BCAST(self%mfccpure,1,mpi_logical,0,quick_comm,quick_mpi_error)
@@ -570,6 +572,7 @@ module quick_method_module
                 else
                     write(io,'(" = DIV AND CON ON ATOM BASIS (BY DEFAULT)")')
                 endif
+                if (self%gpuOnTheFly) write(io,'(" GPU ON-THE-FLY AB/P/XCOEFF RECOMPUTE ENABLED")')
             endif
 
             if (self%DCMP2only) then
@@ -815,6 +818,8 @@ module quick_method_module
             if (found_keyword(keyWD,'FORCE'))      self%grad=.true.
 
             if (found_keyword(keyWD,'NODIRECT'))      self%NODIRECT=.true.
+
+            if (found_keyword(keyWD,'GPUONTHEFLY')) self%gpuOnTheFly=.true.
 
             if (found_keyword(keywd,'DIVCON')) then
                 self%divcon = .true.

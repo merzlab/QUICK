@@ -21,9 +21,14 @@
      use quick_cutoff_module, only: cshell_density_cutoff
      use quick_eri_cshell_module, only: getCshellEriDC, getCshellEriEnergy
      use quick_oei_module, only:get1eEnergy,get1e
+     use quick_files_module, only: iOutfile
+     use quick_mpi_module, only: master
+#if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
+     use quick_divcon_module, only: GPUUseCompactO, GPUCompactOBuf, GPUFragOffset
+#endif
 
 #if defined(MPIV)
-     use quick_mpi_module, only: bMPI, master, quick_comm, quick_comm_rank, quick_mpi_error
+     use quick_mpi_module, only: bMPI, quick_comm, quick_comm_rank, quick_mpi_error
      use mpi
 #endif
 
@@ -75,6 +80,17 @@
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
      if (quick_method%bGPU) then
 
+        if (quick_method%DivCon .and. quick_method%densdiis .and. &
+            .not.quick_method%dcmp2only .and. .not.quick_method%MP2 .and. &
+            .not.quick_method%grad .and. .not.quick_method%opt .and. &
+            .not.quick_method%freq .and. master) then
+           write(iOutfile,'(" @ DEBUG [DnC+DENSDIIS, single-point]: uploading dense O+P(density) to &
+              &GPU this iteration, nbasis=",i0,", ~",f10.3," GB each (~",f10.3," GB combined)")') &
+              nbasis, dble(nbasis)*dble(nbasis)*8.0d0/1024.0d0**3, &
+              2.0d0*dble(nbasis)*dble(nbasis)*8.0d0/1024.0d0**3
+           call flush(iOutfile)
+        endif
+
         call gpu_upload_calculated(quick_qm_struct%o,quick_qm_struct%co, &
         quick_qm_struct%vec,quick_qm_struct%dense)
         call gpu_upload_cutoff(cutmatrix,quick_method%integralCutoff,quick_method%primLimit,quick_method%DMCutoff, &
@@ -111,6 +127,21 @@
 #if defined CUDA || defined CUDA_MPIV || defined HIP || defined HIP_MPIV
         if (quick_method%bGPU) then
            call gpu_get_cshell_eri(deltaO, quick_qm_struct%o)
+
+           ! O-compaction (9.14): when active, gpu_get_cshell_eri just
+           ! downloaded the compact per-fragment-block O buffer on the C++
+           ! side (gpu->gpu_calculated->oCompact) instead of folding a dense
+           ! O into quick_qm_struct%o. Retrieve it and scatter+fold it in
+           ! here. GPUUseCompactO reflects the actual per-build outcome
+           ! (inidivcon.f90), not just the upload request, so this is a
+           ! no-op dense-O build/open-shell/legacy-atomics.
+           if (quick_method%DivCon .and. quick_method%densdiis .and. &
+               .not.quick_method%dcmp2only .and. .not.quick_method%MP2 .and. &
+               .not.quick_method%grad .and. .not.quick_method%opt .and. &
+               .not.quick_method%freq .and. GPUUseCompactO) then
+              call gpu_download_compact_o(GPUCompactOBuf)
+              call GatherCompactO(GPUCompactOBuf, GPUFragOffset)
+           endif
         else
 #endif
   !  Schwartz cutoff is implemented here. (ab|cd)**2<=(ab|ab)*(cd|cd)

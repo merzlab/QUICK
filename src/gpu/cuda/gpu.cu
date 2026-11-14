@@ -567,6 +567,7 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu->gpu_calculated->nbasis = *nbasis;
     gpu->gpu_calculated->o = NULL;
     gpu->gpu_calculated->ob = NULL;
+    gpu->gpu_calculated->oCompact = NULL;
     gpu->gpu_calculated->dense = NULL;
     gpu->gpu_calculated->denseb = NULL;
 #if defined(USE_LEGACY_ATOMICS)
@@ -636,6 +637,25 @@ extern "C" void gpu_setup_(int* natom, int* nbasis, int* nElec, int* imult, int*
     gpu->gpu_cutoff->cutMatrix = NULL;
     gpu->gpu_cutoff->YCutoff = NULL;
     gpu->gpu_cutoff->cutPrim = NULL;
+    gpu->gpu_cutoff->dcConnect = NULL;
+    gpu->gpu_sim.dcConnect = NULL; // only non-NULL for DnC jobs; set by gpu_upload_dcconnect_
+    gpu->gpu_cutoff->fragBasisCount = NULL;
+    gpu->gpu_cutoff->fragBasisList = NULL;
+    gpu->gpu_cutoff->fragBasisLocalIdx = NULL;
+    gpu->gpu_cutoff->fragOffset = NULL;
+    gpu->gpu_cutoff->fragNbasis = NULL;
+    gpu->gpu_sim.use_compact_o = false; // only true for single-point DnC+DENSDIIS jobs;
+                                         // set by gpu_upload_fragmap_
+    gpu->gpu_sim.oCompact = NULL;
+    gpu->gpu_sim.fragBasisCount = NULL;
+    gpu->gpu_sim.fragBasisList = NULL;
+    gpu->gpu_sim.fragBasisLocalIdx = NULL;
+    gpu->gpu_sim.fragOffset = NULL;
+    gpu->gpu_sim.fragNbasis = NULL;
+    gpu->gpu_sim.fragMaxOverlap = 0;
+    gpu->gpu_sim.fragNp = 0;
+    gpu->gpu_sim.fragOCompactSize = 0;
+    gpu->onTheFly = false; // only true for DnC jobs; set by gpu_upload_onthefly_
     gpu->gpu_cutoff->integralCutoff = 0.0;
     gpu->gpu_cutoff->coreIntegralCutoff = 0.0;
     gpu->gpu_cutoff->primLimit = 0.0;
@@ -1496,10 +1516,176 @@ extern "C" void gpu_upload_cutoff_matrix_(QUICKDouble* YCutoff,QUICKDouble* cutP
 
 
 //-----------------------------------------------
+//  upload DnC fragment-connectivity flags (jshell x jshell), mirroring
+//  gpu_upload_cutoff_matrix_. Only called for DnC jobs; devSim.dcConnect
+//  stays NULL otherwise, which the 2e-integral kernels use to tell a DnC
+//  job from a plain one. CUDA only for now -- HIP mirror deferred.
+//-----------------------------------------------
+extern "C" void gpu_upload_dcconnect_(int* dcConnect)
+{
+    PRINTDEBUG("BEGIN TO UPLOAD DCCONNECT");
+
+    gpu->gpu_cutoff->dcConnect = new gpu_buffer_type<int>(dcConnect, gpu->nshell, gpu->nshell);
+    gpu->gpu_cutoff->dcConnect->Upload( );
+
+    gpu->gpu_sim.dcConnect = gpu->gpu_cutoff->dcConnect->_devData;
+
+    PRINTDEBUG("COMPLETE UPLOADING DCCONNECT");
+}
+
+
+//-----------------------------------------------
+//  upload the basis-index -> fragment-membership map (mirrors the host-side
+//  BuildBasisFragMap, inidivcon.f90) plus the per-fragment offset table into
+//  the compact O buffer. Only called for single-point DnC+DENSDIIS jobs
+//  (same gate as gpu_upload_dcconnect_'s caller); sets devSim.use_compact_o
+//  so gpu_upload_calculated_ and the 2e-integral kernel's Fock writes
+//  (FOCK_ATOMIC_ADD_O, gpu_get2e_subs.h) redirect O into a compact
+//  per-fragment-block buffer instead of a dense (nbasis,nbasis) one.
+//
+//  P/dense is NOT touched by this -- it stays dense. Coulomb terms read
+//  density at pairs that are not guaranteed same-fragment (confirmed by
+//  direct inspection of the kernel's DENSE* reads), so a compact
+//  per-fragment-block P cannot serve every read a correct Coulomb term
+//  needs. Only O's write target is compacted here.
+//
+//  fragOffset is a 0-based prefix sum of length np+1 (fragOffset[0]=0,
+//  fragOffset[itt] = fragOffset[itt-1] + nbasisdc(itt)^2); fragOffset[np]
+//  is therefore the total compact buffer size in elements.
+//-----------------------------------------------
+extern "C" void gpu_upload_fragmap_(int* p_nbasis, int* p_np, int* p_maxOverlap,
+        int* fragBasisCount, int* fragBasisList, int* fragBasisLocalIdx, int* fragOffset,
+        int* fragNbasis)
+{
+    PRINTDEBUG("BEGIN TO UPLOAD FRAGMENT MAP");
+
+    int nbasis = *p_nbasis;
+    int np = *p_np;
+    int maxOverlap = *p_maxOverlap;
+    int totalCompact = fragOffset[np];
+
+#if defined(USE_LEGACY_ATOMICS) || defined(OSHELL)
+    // FOCK_ATOMIC_ADD_O (gpu_get2e_subs.h) only replaced the closed-shell,
+    // native-fp64-atomics O write sites -- on a build that instead uses the
+    // legacy fixed-point oULL atomics (pre-native-fp64-atomicAdd GPUs) or is
+    // compiled for open-shell, those write sites still target devSim.o/oULL
+    // directly and would never populate oCompact. Stay on the safe, dense-O
+    // path on those builds rather than silently gathering an all-zero O.
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: compact-O unsupported on this "
+            "build (USE_LEGACY_ATOMICS and/or OSHELL) -- falling back to dense O\n");
+    fflush(stderr);
+    gpu->gpu_sim.use_compact_o = false;
+    return;
+#endif
+
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: nbasis=%d, np=%d, maxOverlap=%d, "
+            "compact O buffer = %d elements (~%.3f GB) vs dense (nbasis,nbasis) ~%.3f GB\n",
+            nbasis, np, maxOverlap, totalCompact,
+            (double) totalCompact * sizeof(QUICKDouble) / (1024.0*1024.0*1024.0),
+            (double) nbasis * (double) nbasis * sizeof(QUICKDouble) / (1024.0*1024.0*1024.0));
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: ptrs gpu=%p gpu_cutoff=%p fragBasisCount(f90)=%p "
+            "fragBasisList(f90)=%p fragBasisLocalIdx(f90)=%p fragOffset(f90)=%p fragNbasis(f90)=%p\n",
+            (void*) gpu, (void*) (gpu ? gpu->gpu_cutoff : NULL), (void*) fragBasisCount,
+            (void*) fragBasisList, (void*) fragBasisLocalIdx, (void*) fragOffset, (void*) fragNbasis);
+    fflush(stderr);
+
+    gpu->gpu_cutoff->fragBasisCount = new gpu_buffer_type<int>(fragBasisCount, nbasis);
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragBasisCount allocated (host copy done)\n"); fflush(stderr);
+    gpu->gpu_cutoff->fragBasisCount->Upload();
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragBasisCount uploaded to device\n"); fflush(stderr);
+    gpu->gpu_sim.fragBasisCount = gpu->gpu_cutoff->fragBasisCount->_devData;
+
+    gpu->gpu_cutoff->fragBasisList = new gpu_buffer_type<int>(fragBasisList, nbasis, maxOverlap);
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragBasisList allocated (host copy done)\n"); fflush(stderr);
+    gpu->gpu_cutoff->fragBasisList->Upload();
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragBasisList uploaded to device\n"); fflush(stderr);
+    gpu->gpu_sim.fragBasisList = gpu->gpu_cutoff->fragBasisList->_devData;
+
+    gpu->gpu_cutoff->fragBasisLocalIdx = new gpu_buffer_type<int>(fragBasisLocalIdx, nbasis, maxOverlap);
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragBasisLocalIdx allocated (host copy done)\n"); fflush(stderr);
+    gpu->gpu_cutoff->fragBasisLocalIdx->Upload();
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragBasisLocalIdx uploaded to device\n"); fflush(stderr);
+    gpu->gpu_sim.fragBasisLocalIdx = gpu->gpu_cutoff->fragBasisLocalIdx->_devData;
+
+    gpu->gpu_cutoff->fragOffset = new gpu_buffer_type<int>(fragOffset, np + 1);
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragOffset allocated (host copy done)\n"); fflush(stderr);
+    gpu->gpu_cutoff->fragOffset->Upload();
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragOffset uploaded to device\n"); fflush(stderr);
+    gpu->gpu_sim.fragOffset = gpu->gpu_cutoff->fragOffset->_devData;
+
+    gpu->gpu_cutoff->fragNbasis = new gpu_buffer_type<int>(fragNbasis, np);
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragNbasis allocated (host copy done)\n"); fflush(stderr);
+    gpu->gpu_cutoff->fragNbasis->Upload();
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: fragNbasis uploaded to device\n"); fflush(stderr);
+    gpu->gpu_sim.fragNbasis = gpu->gpu_cutoff->fragNbasis->_devData;
+
+    gpu->gpu_sim.fragMaxOverlap = maxOverlap;
+    gpu->gpu_sim.fragNp = np;
+    gpu->gpu_sim.fragOCompactSize = totalCompact;
+    gpu->gpu_sim.use_compact_o = true;
+
+    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: done, use_compact_o=true\n"); fflush(stderr);
+    PRINTDEBUG("COMPLETE UPLOADING FRAGMENT MAP");
+}
+
+
+//-----------------------------------------------
+//  Copy the compact per-fragment-block O buffer's already-downloaded host
+//  data (gpu_get_cshell_eri_ calls oCompact->Download() before returning)
+//  out to a Fortran array of length gpu->gpu_sim.fragOCompactSize. Only
+//  meaningful when use_compact_o is true; GatherCompactO (inidivcon.f90)
+//  scatters the result into quick_qm_struct%o. See 9.14.
+//-----------------------------------------------
+extern "C" void gpu_download_compact_o_(QUICKDouble* compactO)
+{
+    PRINTDEBUG("BEGIN TO DOWNLOAD COMPACT O");
+    memcpy(compactO, gpu->gpu_calculated->oCompact->_hostData,
+            sizeof(QUICKDouble) * gpu->gpu_sim.fragOCompactSize);
+    PRINTDEBUG("COMPLETE DOWNLOADING COMPACT O");
+}
+
+
+//-----------------------------------------------
+//  Report whether compact-O ended up active after the most recent
+//  gpu_upload_fragmap_ call (it can be forced false there on a build that
+//  does not support it -- see USE_LEGACY_ATOMICS/OSHELL guard above).
+//  inidivcon.f90 calls this once per geometry to decide whether
+//  dnc_scf_operator.f90 should call gpu_download_compact_o/GatherCompactO
+//  each SCF iteration, or rely on the ordinary dense-O path instead.
+//-----------------------------------------------
+extern "C" void gpu_get_use_compact_o_(bool* flag)
+{
+    *flag = gpu->gpu_sim.use_compact_o;
+}
+
+
+//-----------------------------------------------
+//  set the GPU on-the-fly AB/P recompute flag (quick_method%gpuOnTheFly).
+//  Must be called before gpu_upload_basis_, which reads gpu->onTheFly to
+//  decide whether to allocate/build/upload the dense expoSum/
+//  weightedCenterX/Y/Z tables. Only called from the DnC path; every other
+//  caller of gpu_upload_basis never calls this, so gpu->onTheFly stays at
+//  its gpu_setup_ default of false and behavior is unchanged for them.
+//-----------------------------------------------
+extern "C" void gpu_upload_onthefly_(bool* onTheFly)
+{
+    PRINTDEBUG("BEGIN TO UPLOAD ONTHEFLY FLAG");
+    gpu->onTheFly = (*onTheFly != 0);
+    PRINTDEBUG("COMPLETE UPLOADING ONTHEFLY FLAG");
+}
+
+
+//-----------------------------------------------
 //  upload information for OEI calculation
 //-----------------------------------------------
 extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble* extchg, int *ierr)
 {
+    // Consumes and resets the one-shot onTheFly flag that
+    // gpu_upload_basis_ (called immediately before this function at every
+    // call site) also reads but deliberately leaves armed, since this
+    // function's own Xcoeff_oei table needs it too.
+    bool onTheFly = gpu->onTheFly;
+    gpu->onTheFly = false;
 
     // store coordinates and charges for oei calculation
     gpu->nextatom = *nextatom;
@@ -1526,49 +1712,55 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
     gpu->gpu_sim.allxyz = gpu->allxyz->_devData;
     gpu->gpu_sim.allchg = gpu->allchg->_devData;
 
-    // precompute the product of overlap prefactor and contraction coefficients and store
-    gpu->gpu_basis->Xcoeff_oei = new gpu_buffer_type<QUICKDouble>(2 * gpu->jbasis, 2 * gpu->jbasis);
+    // precompute the product of overlap prefactor and contraction coefficients and store.
+    // Same (2*jbasis)^2 scale and same OOM risk as Xcoeff above -- skip
+    // entirely when onTheFly and leave NULL; gpu_oei.h recomputes this
+    // product on the fly per primitive pair instead (devSim.Xcoeff_oei ==
+    // NULL is the kernel-side flag).
+    if (!onTheFly) {
+        gpu->gpu_basis->Xcoeff_oei = new gpu_buffer_type<QUICKDouble>(2 * gpu->jbasis, 2 * gpu->jbasis);
 
-    for (int i = 0; i < gpu->jshell; i++) {
-        for (int j = 0; j < gpu->jshell; j++) {
-            int kAtomI = gpu->gpu_basis->katom->_hostData[i];
-            int kAtomJ = gpu->gpu_basis->katom->_hostData[j];
-            int KsumtypeI = gpu->gpu_basis->Ksumtype->_hostData[i];
-            int KsumtypeJ = gpu->gpu_basis->Ksumtype->_hostData[j];
-            int kstartI = gpu->gpu_basis->kstart->_hostData[i];
-            int kstartJ = gpu->gpu_basis->kstart->_hostData[j];
+        for (int i = 0; i < gpu->jshell; i++) {
+            for (int j = 0; j < gpu->jshell; j++) {
+                int kAtomI = gpu->gpu_basis->katom->_hostData[i];
+                int kAtomJ = gpu->gpu_basis->katom->_hostData[j];
+                int KsumtypeI = gpu->gpu_basis->Ksumtype->_hostData[i];
+                int KsumtypeJ = gpu->gpu_basis->Ksumtype->_hostData[j];
+                int kstartI = gpu->gpu_basis->kstart->_hostData[i];
+                int kstartJ = gpu->gpu_basis->kstart->_hostData[j];
 
-            QUICKDouble DIJ = 0.0;
-            for (int k = 0; k < 3; k++) {
-                DIJ += SQR(LOC2(gpu->xyz->_hostData, k, kAtomI - 1, 3, gpu->natom)
-                        - LOC2(gpu->xyz->_hostData, k, kAtomJ - 1, 3, gpu->natom));
-            }
+                QUICKDouble DIJ = 0.0;
+                for (int k = 0; k < 3; k++) {
+                    DIJ += SQR(LOC2(gpu->xyz->_hostData, k, kAtomI - 1, 3, gpu->natom)
+                            - LOC2(gpu->xyz->_hostData, k, kAtomJ - 1, 3, gpu->natom));
+                }
 
-            for (int ii = 0; ii < gpu->gpu_basis->kprim->_hostData[i]; ii++) {
-                for (int jj = 0; jj < gpu->gpu_basis->kprim->_hostData[j]; jj++) {
-                    QUICKDouble II = LOC2(gpu->gpu_basis->gcexpo->_hostData, ii, KsumtypeI - 1, MAXPRIM, gpu->nbasis);
-                    QUICKDouble JJ = LOC2(gpu->gpu_basis->gcexpo->_hostData, jj, KsumtypeJ - 1, MAXPRIM, gpu->nbasis);
+                for (int ii = 0; ii < gpu->gpu_basis->kprim->_hostData[i]; ii++) {
+                    for (int jj = 0; jj < gpu->gpu_basis->kprim->_hostData[j]; jj++) {
+                        QUICKDouble II = LOC2(gpu->gpu_basis->gcexpo->_hostData, ii, KsumtypeI - 1, MAXPRIM, gpu->nbasis);
+                        QUICKDouble JJ = LOC2(gpu->gpu_basis->gcexpo->_hostData, jj, KsumtypeJ - 1, MAXPRIM, gpu->nbasis);
 
-                    QUICKDouble X = 2.0 * PI_TO_3HALF * sqrt((II + JJ) / PI)
-                        * pow((II + JJ), -1.5) * exp((-II * JJ * DIJ) / (II + JJ));
+                        QUICKDouble X = 2.0 * PI_TO_3HALF * sqrt((II + JJ) / PI)
+                            * pow((II + JJ), -1.5) * exp((-II * JJ * DIJ) / (II + JJ));
 
-                    for (int itemp = gpu->gpu_basis->Qstart->_hostData[i]; itemp <= gpu->gpu_basis->Qfinal->_hostData[i]; itemp++) {
-                        for (int itemp2 = gpu->gpu_basis->Qstart->_hostData[j]; itemp2 <= gpu->gpu_basis->Qfinal->_hostData[j]; itemp2++) {
-                            LOC4(gpu->gpu_basis->Xcoeff_oei->_hostData, kstartI + ii - 1, kstartJ + jj - 1,
-                                    itemp-gpu->gpu_basis->Qstart->_hostData[i],
-                                    itemp2-gpu->gpu_basis->Qstart->_hostData[j],
-                                    gpu->jbasis, gpu->jbasis, 2, 2)
-                                = X * LOC2(gpu->gpu_basis->gccoeff->_hostData, ii, KsumtypeI + itemp - 1, MAXPRIM, gpu->nbasis)
-                                * LOC2(gpu->gpu_basis->gccoeff->_hostData, jj, KsumtypeJ + itemp2 - 1, MAXPRIM, gpu->nbasis);
+                        for (int itemp = gpu->gpu_basis->Qstart->_hostData[i]; itemp <= gpu->gpu_basis->Qfinal->_hostData[i]; itemp++) {
+                            for (int itemp2 = gpu->gpu_basis->Qstart->_hostData[j]; itemp2 <= gpu->gpu_basis->Qfinal->_hostData[j]; itemp2++) {
+                                LOC4(gpu->gpu_basis->Xcoeff_oei->_hostData, kstartI + ii - 1, kstartJ + jj - 1,
+                                        itemp-gpu->gpu_basis->Qstart->_hostData[i],
+                                        itemp2-gpu->gpu_basis->Qstart->_hostData[j],
+                                        gpu->jbasis, gpu->jbasis, 2, 2)
+                                    = X * LOC2(gpu->gpu_basis->gccoeff->_hostData, ii, KsumtypeI + itemp - 1, MAXPRIM, gpu->nbasis)
+                                    * LOC2(gpu->gpu_basis->gccoeff->_hostData, jj, KsumtypeJ + itemp2 - 1, MAXPRIM, gpu->nbasis);
+                            }
                         }
                     }
                 }
             }
         }
-    }
 
-    gpu->gpu_basis->Xcoeff_oei->Upload();
-    gpu->gpu_sim.Xcoeff_oei = gpu->gpu_basis->Xcoeff_oei->_devData;
+        gpu->gpu_basis->Xcoeff_oei->Upload();
+    }
+    gpu->gpu_sim.Xcoeff_oei = onTheFly ? NULL : gpu->gpu_basis->Xcoeff_oei->_devData;
 
     // allocate array for sorted shell pair info
     gpu->gpu_cutoff->sorted_OEICutoffIJ = new gpu_buffer_type<int2>(gpu->gpu_basis->Qshell * gpu->gpu_basis->Qshell);
@@ -1655,7 +1847,9 @@ extern "C" void gpu_upload_oei_(int* nextatom, QUICKDouble* extxyz, QUICKDouble*
         }
      */
     gpu->gpu_cutoff->sorted_OEICutoffIJ->DeleteCPU();
-    gpu->gpu_basis->Xcoeff_oei->DeleteCPU();
+    if (!onTheFly) {
+        gpu->gpu_basis->Xcoeff_oei->DeleteCPU();
+    }
     gpu->gpu_basis->kstart->DeleteCPU();
     gpu->gpu_basis->katom->DeleteCPU();
     gpu->gpu_basis->Ksumtype->DeleteCPU();
@@ -1707,19 +1901,43 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
 
     PRINTDEBUG("BEGIN TO UPLOAD O MATRIX");
 
-    gpu->gpu_calculated->o = new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
-    gpu->gpu_calculated->dense = new gpu_buffer_type<QUICKDouble>(dense, gpu->nbasis, gpu->nbasis);
+    double dense_gb = (double) gpu->nbasis * (double) gpu->nbasis * sizeof(QUICKDouble) / (1024.0*1024.0*1024.0);
+
+    if (gpu->gpu_sim.use_compact_o) {
+        // Single-point DnC+DENSDIIS job (see gpu_upload_fragmap_): O goes
+        // into a compact per-fragment-block buffer instead of a dense
+        // (nbasis,nbasis) one. P/dense is UNCHANGED below -- stays dense,
+        // since Coulomb terms read cross-fragment density pairs a compact
+        // per-fragment buffer cannot serve.
+        int totalCompact = gpu->gpu_sim.fragOCompactSize;
+        double compact_gb = (double) totalCompact * sizeof(QUICKDouble) / (1024.0*1024.0*1024.0);
+        fprintf(stderr, "[DEBUG] gpu_upload_calculated_: nbasis=%d, COMPACT O buffer ~%.3f GB "
+                "(%d elements, vs dense ~%.3f GB) + dense P ~%.3f GB (~%.3f GB combined)\n",
+                gpu->nbasis, compact_gb, totalCompact, dense_gb, dense_gb, compact_gb + dense_gb);
+        fflush(stderr);
+
+        gpu->gpu_calculated->oCompact = new gpu_buffer_type<QUICKDouble>(totalCompact);
+        gpu->gpu_calculated->oCompact->Upload();
+        gpu->gpu_sim.oCompact = gpu->gpu_calculated->oCompact->_devData;
+    } else {
+        fprintf(stderr, "[DEBUG] gpu_upload_calculated_: nbasis=%d, allocating O + dense(P) GPU buffers, "
+                "~%.3f GB each (~%.3f GB combined)\n", gpu->nbasis, dense_gb, 2.0*dense_gb);
+        fflush(stderr);
+
+        gpu->gpu_calculated->o = new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
 #if defined(USE_LEGACY_ATOMICS)
-    gpu->gpu_calculated->o->DeleteGPU();
-    gpu->gpu_calculated->oULL = new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
-    gpu->gpu_calculated->oULL->Upload();
-    gpu->gpu_sim.oULL = gpu->gpu_calculated->oULL->_devData;
+        gpu->gpu_calculated->o->DeleteGPU();
+        gpu->gpu_calculated->oULL = new gpu_buffer_type<QUICKULL>(gpu->nbasis, gpu->nbasis);
+        gpu->gpu_calculated->oULL->Upload();
+        gpu->gpu_sim.oULL = gpu->gpu_calculated->oULL->_devData;
 #else
-    gpu->gpu_calculated->o->Upload();
-    gpu->gpu_sim.o = gpu->gpu_calculated->o->_devData;
+        gpu->gpu_calculated->o->Upload();
+        gpu->gpu_sim.o = gpu->gpu_calculated->o->_devData;
 #endif
+    }
 
+    gpu->gpu_calculated->dense = new gpu_buffer_type<QUICKDouble>(dense, gpu->nbasis, gpu->nbasis);
     gpu->gpu_calculated->dense->Upload();
     gpu->gpu_sim.dense = gpu->gpu_calculated->dense->_devData;
 
@@ -1744,6 +1962,13 @@ extern "C" void gpu_upload_calculated_beta_(QUICKDouble* ob, QUICKDouble* denseb
 #endif
 
     PRINTDEBUG("BEGIN TO UPLOAD BETA O MATRIX");
+
+    {
+        double buf_gb = (double) gpu->nbasis * (double) gpu->nbasis * sizeof(QUICKDouble) / (1024.0*1024.0*1024.0);
+        fprintf(stderr, "[DEBUG] gpu_upload_calculated_beta_: nbasis=%d, allocating Ob GPU buffer, "
+                "~%.3f GB\n", gpu->nbasis, buf_gb);
+        fflush(stderr);
+    }
 
     gpu->gpu_calculated->ob = new gpu_buffer_type<QUICKDouble>(gpu->nbasis, gpu->nbasis);
 
@@ -1797,6 +2022,20 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
         int* Qnumber, int* Qstart, int* Qfinal,int* Qsbasis, int* Qfbasis,
         QUICKDouble* gccoeff, QUICKDouble* cons, QUICKDouble* gcexpo, int* KLMN)
 {
+    // Set only by gpu_upload_onthefly_() (DnC-only, opt-in), which must be
+    // called immediately before this function if the caller wants it.
+    // Consumed once and reset here so every other caller of
+    // gpu_upload_basis -- including ones that never call
+    // gpu_upload_onthefly_ at all, and ones that call gpu_upload_basis
+    // again later without re-pairing it (e.g. per-fragment MFCC uploads)
+    // -- is safe by construction and keeps today's dense-table behavior.
+    // Read but do NOT reset gpu->onTheFly here: gpu_upload_oei_ always runs
+    // immediately after this function at every call site (main.f90,
+    // mfcc_fragment_scf.f90, quick_api_module.f90, quick_optimizer_module.f90,
+    // dlfind_main_driver.f90) and also needs this flag for its own
+    // Xcoeff_oei table, so the one-shot consume/reset is deferred to the
+    // end of gpu_upload_oei_ instead.
+    bool onTheFly = gpu->onTheFly;
 #if defined(DEBUG)
     GPU_TIMER_CREATE();
     GPU_TIMER_START();
@@ -1880,11 +2119,22 @@ extern "C" void gpu_upload_basis_(int* nshell, int* nprim, int* jshell, int* jba
     int prim_total = gpu->gpu_basis->prim_total;
     gpu->gpu_sim.prim_total = gpu->gpu_basis->prim_total;
 
-    gpu->gpu_basis->Xcoeff                      =   new gpu_buffer_type<QUICKDouble>(2*gpu->jbasis, 2*gpu->jbasis);
-    gpu->gpu_basis->expoSum                     =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
-    gpu->gpu_basis->weightedCenterX             =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
-    gpu->gpu_basis->weightedCenterY             =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
-    gpu->gpu_basis->weightedCenterZ             =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
+    // Xcoeff is (2*jbasis)^2 -- at T4-Lysozyme whole-system scale
+    // (jbasis~60,678) this is ~118GB on its own, which is what caused the
+    // cudaMalloc failure OOM crash (observed on both GPU-serial and
+    // GPU+MPI T4-Lysozyme runs). When onTheFly is set, skip allocating/
+    // building/uploading it and leave it NULL; gpu_get2e_subs.h recomputes
+    // the coefficient/overlap-prefactor product on the fly per primitive
+    // pair instead (devSim.Xcoeff == NULL is the kernel-side flag),
+    // mirroring this same host-side formula. Same treatment as
+    // expoSum/weightedCenterX/Y/Z below.
+    if (!onTheFly) {
+        gpu->gpu_basis->Xcoeff                  =   new gpu_buffer_type<QUICKDouble>(2*gpu->jbasis, 2*gpu->jbasis);
+        gpu->gpu_basis->expoSum                 =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
+        gpu->gpu_basis->weightedCenterX         =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
+        gpu->gpu_basis->weightedCenterY         =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
+        gpu->gpu_basis->weightedCenterZ         =   new gpu_buffer_type<QUICKDouble>(prim_total, prim_total);
+    }
 
     /*
        After uploading basis set information, we want to do some more things on CPU so that will accelarate GPU.
@@ -2007,29 +2257,33 @@ move p orbital to the end of the sequence. so the Qshell stands for the length o
                     int ii_start = gpu->gpu_basis->prim_start->_hostData[i];
                     int jj_start = gpu->gpu_basis->prim_start->_hostData[j];
 
-                    //expoSum(i,j) = expo(i)+expo(j)
-                    LOC2(gpu->gpu_basis->expoSum->_hostData, ii_start+ii, jj_start+jj, prim_total, prim_total) = II + JJ;
+                    if (!onTheFly) {
+                        //expoSum(i,j) = expo(i)+expo(j)
+                        LOC2(gpu->gpu_basis->expoSum->_hostData, ii_start+ii, jj_start+jj, prim_total, prim_total) = II + JJ;
 
 
-                    //        ------------->                 ->          ->
-                    //        weightedCenter(i,j) = (expo(i)*i + expo(j)*j)/(expo(i)+expo(j))
-                    LOC2(gpu->gpu_basis->weightedCenterX->_hostData, ii_start+ii, jj_start+jj, prim_total, prim_total) = \
-                                                                                                                         (LOC2(gpu->xyz->_hostData, 0, kAtomI-1, 3, gpu->natom) * II + LOC2(gpu->xyz->_hostData, 0, kAtomJ-1, 3, gpu->natom)*JJ)/(II+JJ);
-                    LOC2(gpu->gpu_basis->weightedCenterY->_hostData, ii_start+ii, jj_start+jj, prim_total, prim_total) = \
-                                                                                                                         (LOC2(gpu->xyz->_hostData, 1, kAtomI-1, 3, gpu->natom) * II + LOC2(gpu->xyz->_hostData, 1, kAtomJ-1, 3, gpu->natom)*JJ)/(II+JJ);
-                    LOC2(gpu->gpu_basis->weightedCenterZ->_hostData, ii_start+ii, jj_start+jj, prim_total, prim_total) = \
-                                                                                                                         (LOC2(gpu->xyz->_hostData, 2, kAtomI-1, 3, gpu->natom) * II + LOC2(gpu->xyz->_hostData, 2, kAtomJ-1, 3, gpu->natom)*JJ)/(II+JJ);
+                        //        ------------->                 ->          ->
+                        //        weightedCenter(i,j) = (expo(i)*i + expo(j)*j)/(expo(i)+expo(j))
+                        LOC2(gpu->gpu_basis->weightedCenterX->_hostData, ii_start+ii, jj_start+jj, prim_total, prim_total) = \
+                                                                                                                             (LOC2(gpu->xyz->_hostData, 0, kAtomI-1, 3, gpu->natom) * II + LOC2(gpu->xyz->_hostData, 0, kAtomJ-1, 3, gpu->natom)*JJ)/(II+JJ);
+                        LOC2(gpu->gpu_basis->weightedCenterY->_hostData, ii_start+ii, jj_start+jj, prim_total, prim_total) = \
+                                                                                                                             (LOC2(gpu->xyz->_hostData, 1, kAtomI-1, 3, gpu->natom) * II + LOC2(gpu->xyz->_hostData, 1, kAtomJ-1, 3, gpu->natom)*JJ)/(II+JJ);
+                        LOC2(gpu->gpu_basis->weightedCenterZ->_hostData, ii_start+ii, jj_start+jj, prim_total, prim_total) = \
+                                                                                                                             (LOC2(gpu->xyz->_hostData, 2, kAtomI-1, 3, gpu->natom) * II + LOC2(gpu->xyz->_hostData, 2, kAtomJ-1, 3, gpu->natom)*JJ)/(II+JJ);
+                    }
 
 
-                    // Xcoeff = exp(-II*JJ/(II+JJ) * DIJ) / (II+JJ) * coeff(i) * coeff(j) * X0
-                    QUICKDouble X = exp(-II*JJ/(II+JJ)*DIJ)/(II+JJ);
+                    if (!onTheFly) {
+                        // Xcoeff = exp(-II*JJ/(II+JJ) * DIJ) / (II+JJ) * coeff(i) * coeff(j) * X0
+                        QUICKDouble X = exp(-II*JJ/(II+JJ)*DIJ)/(II+JJ);
 
-                    for (int itemp = gpu->gpu_basis->Qstart->_hostData[i]; itemp <= gpu->gpu_basis->Qfinal->_hostData[i]; itemp++) {
-                        for (int itemp2 = gpu->gpu_basis->Qstart->_hostData[j]; itemp2 <= gpu->gpu_basis->Qfinal->_hostData[j]; itemp2++) {
-                            LOC4(gpu->gpu_basis->Xcoeff->_hostData, kstartI+ii-1, kstartJ+jj-1, \
-                                    itemp-gpu->gpu_basis->Qstart->_hostData[i], itemp2-gpu->gpu_basis->Qstart->_hostData[j], gpu->jbasis, gpu->jbasis, 2, 2)
-                                = X0 * X * LOC2(gpu->gpu_basis->gccoeff->_hostData, ii, KsumtypeI+itemp-1, MAXPRIM, gpu->nbasis) \
-                                * LOC2(gpu->gpu_basis->gccoeff->_hostData, jj, KsumtypeJ+itemp2-1, MAXPRIM, gpu->nbasis);
+                        for (int itemp = gpu->gpu_basis->Qstart->_hostData[i]; itemp <= gpu->gpu_basis->Qfinal->_hostData[i]; itemp++) {
+                            for (int itemp2 = gpu->gpu_basis->Qstart->_hostData[j]; itemp2 <= gpu->gpu_basis->Qfinal->_hostData[j]; itemp2++) {
+                                LOC4(gpu->gpu_basis->Xcoeff->_hostData, kstartI+ii-1, kstartJ+jj-1, \
+                                        itemp-gpu->gpu_basis->Qstart->_hostData[i], itemp2-gpu->gpu_basis->Qstart->_hostData[j], gpu->jbasis, gpu->jbasis, 2, 2)
+                                    = X0 * X * LOC2(gpu->gpu_basis->gccoeff->_hostData, ii, KsumtypeI+itemp-1, MAXPRIM, gpu->nbasis) \
+                                    * LOC2(gpu->gpu_basis->gccoeff->_hostData, jj, KsumtypeJ+itemp2-1, MAXPRIM, gpu->nbasis);
+                            }
                         }
                     }
                 }
@@ -2054,25 +2308,29 @@ move p orbital to the end of the sequence. so the Qshell stands for the length o
     gpu->gpu_basis->Qfbasis->Upload();
     gpu->gpu_basis->gccoeff->Upload();
     gpu->gpu_basis->cons->Upload();
-    gpu->gpu_basis->Xcoeff->Upload();
     gpu->gpu_basis->gcexpo->Upload();
     gpu->gpu_basis->KLMN->Upload();
     gpu->gpu_basis->prim_start->Upload();
-    gpu->gpu_basis->Xcoeff->Upload();
-    gpu->gpu_basis->expoSum->Upload();
-    gpu->gpu_basis->weightedCenterX->Upload();
-    gpu->gpu_basis->weightedCenterY->Upload();
-    gpu->gpu_basis->weightedCenterZ->Upload();
+    if (!onTheFly) {
+        gpu->gpu_basis->Xcoeff->Upload();
+        gpu->gpu_basis->expoSum->Upload();
+        gpu->gpu_basis->weightedCenterX->Upload();
+        gpu->gpu_basis->weightedCenterY->Upload();
+        gpu->gpu_basis->weightedCenterZ->Upload();
+    }
     gpu->gpu_basis->sorted_Q->Upload();
     gpu->gpu_basis->sorted_Qnumber->Upload();
 
-    gpu->gpu_sim.expoSum                      =   gpu->gpu_basis->expoSum->_devData;
-    gpu->gpu_sim.weightedCenterX              =   gpu->gpu_basis->weightedCenterX->_devData;
-    gpu->gpu_sim.weightedCenterY              =   gpu->gpu_basis->weightedCenterY->_devData;
-    gpu->gpu_sim.weightedCenterZ              =   gpu->gpu_basis->weightedCenterZ->_devData;
+    // NULL for onTheFly jobs -- devSim.expoSum/Xcoeff == NULL is the
+    // kernel-side flag that gpu_get2e_subs.h/gpu_oei.h check to switch to
+    // on-the-fly recompute instead of reading these arrays.
+    gpu->gpu_sim.expoSum                      =   onTheFly ? NULL : gpu->gpu_basis->expoSum->_devData;
+    gpu->gpu_sim.weightedCenterX              =   onTheFly ? NULL : gpu->gpu_basis->weightedCenterX->_devData;
+    gpu->gpu_sim.weightedCenterY              =   onTheFly ? NULL : gpu->gpu_basis->weightedCenterY->_devData;
+    gpu->gpu_sim.weightedCenterZ              =   onTheFly ? NULL : gpu->gpu_basis->weightedCenterZ->_devData;
     gpu->gpu_sim.sorted_Q                     =   gpu->gpu_basis->sorted_Q->_devData;
     gpu->gpu_sim.sorted_Qnumber               =   gpu->gpu_basis->sorted_Qnumber->_devData;
-    gpu->gpu_sim.Xcoeff                       =   gpu->gpu_basis->Xcoeff->_devData;
+    gpu->gpu_sim.Xcoeff                       =   onTheFly ? NULL : gpu->gpu_basis->Xcoeff->_devData;
     gpu->gpu_sim.ncontract                    =   gpu->gpu_basis->ncontract->_devData;
     gpu->gpu_sim.dcoeff                       =   gpu->gpu_basis->dcoeff->_devData;
     gpu->gpu_sim.aexp                         =   gpu->gpu_basis->aexp->_devData;
@@ -2101,11 +2359,13 @@ move p orbital to the end of the sequence. so the Qshell stands for the length o
     gpu->gpu_sim.gcexpo                       =   gpu->gpu_basis->gcexpo->_devData;
     gpu->gpu_sim.KLMN                         =   gpu->gpu_basis->KLMN->_devData;
 
-    gpu->gpu_basis->expoSum->DeleteCPU();
-    gpu->gpu_basis->weightedCenterX->DeleteCPU();
-    gpu->gpu_basis->weightedCenterY->DeleteCPU();
-    gpu->gpu_basis->weightedCenterZ->DeleteCPU();
-    gpu->gpu_basis->Xcoeff->DeleteCPU();
+    if (!onTheFly) {
+        gpu->gpu_basis->Xcoeff->DeleteCPU();
+        gpu->gpu_basis->expoSum->DeleteCPU();
+        gpu->gpu_basis->weightedCenterX->DeleteCPU();
+        gpu->gpu_basis->weightedCenterY->DeleteCPU();
+        gpu->gpu_basis->weightedCenterZ->DeleteCPU();
+    }
 
     gpu->gpu_basis->ncontract->DeleteCPU();
     //    gpu->gpu_basis->dcoeff->DeleteCPU();
@@ -2925,6 +3185,14 @@ extern "C" void gpu_cleanup_()
     SAFE_DELETE(gpu->gpu_cutoff->sorted_YCutoffIJ);
     SAFE_DELETE(gpu->gpu_cutoff->YCutoff);
     SAFE_DELETE(gpu->gpu_cutoff->cutPrim);
+    SAFE_DELETE(gpu->gpu_cutoff->dcConnect);
+    SAFE_DELETE(gpu->gpu_cutoff->fragBasisCount);
+    SAFE_DELETE(gpu->gpu_cutoff->fragBasisList);
+    SAFE_DELETE(gpu->gpu_cutoff->fragBasisLocalIdx);
+    SAFE_DELETE(gpu->gpu_cutoff->fragOffset);
+    SAFE_DELETE(gpu->gpu_cutoff->fragNbasis);
+    SAFE_DELETE(gpu->gpu_calculated->oCompact);
+    gpu->gpu_sim.use_compact_o = false;
 
     SAFE_DELETE(gpu->allxyz);
     SAFE_DELETE(gpu->allchg);
@@ -2983,6 +3251,14 @@ extern "C" void gpu_cleanup_fragment_()
     SAFE_DELETE(gpu->gpu_cutoff->sorted_YCutoffIJ);
     SAFE_DELETE(gpu->gpu_cutoff->YCutoff);
     SAFE_DELETE(gpu->gpu_cutoff->cutPrim);
+    SAFE_DELETE(gpu->gpu_cutoff->dcConnect);
+    SAFE_DELETE(gpu->gpu_cutoff->fragBasisCount);
+    SAFE_DELETE(gpu->gpu_cutoff->fragBasisList);
+    SAFE_DELETE(gpu->gpu_cutoff->fragBasisLocalIdx);
+    SAFE_DELETE(gpu->gpu_cutoff->fragOffset);
+    SAFE_DELETE(gpu->gpu_cutoff->fragNbasis);
+    SAFE_DELETE(gpu->gpu_calculated->oCompact);
+    gpu->gpu_sim.use_compact_o = false;
 
     SAFE_DELETE(gpu->allxyz);
     SAFE_DELETE(gpu->allchg);
@@ -3233,6 +3509,7 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
     delete gpu->gpu_cutoff->sorted_YCutoffIJ;
     delete gpu->gpu_cutoff->YCutoff;
     delete gpu->gpu_cutoff->cutPrim;
+    delete gpu->gpu_cutoff->dcConnect;
 #if defined(USE_LEGACY_ATOMICS)
     delete gpu->gpu_calculated->oULL;
 #endif    

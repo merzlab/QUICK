@@ -23,6 +23,66 @@
 #define FMT_NAME FmT
 #include "gpu_fmt.h"
 
+/*
+ On-the-fly replacement for the expoSum/weightedCenterX/Y/Z (Zeta/P) lookup
+ tables. Only used when devSim.expoSum == NULL (quick_method%gpuOnTheFly
+ DnC jobs); mirrors the host-side precompute loop in gpu.cu (and the
+ identically-named helper in gpu_get2e_subs.h) exactly, using arrays that
+ are always uploaded (gcexpo, xyz, katom, Ksumtype). Duplicated here
+ (rather than shared) because this file is compiled into a separate
+ translation unit (gpu_oei.cu) from gpu_get2e_subs.h's (gpu_get2e.cu).
+ */
+__device__ static inline void onthefly_AB_P(const int ISH, const int JSH, const int primI, const int primJ,
+        QUICKDouble &AB, QUICKDouble &Px, QUICKDouble &Py, QUICKDouble &Pz)
+{
+    int kAtomI = devSim.katom[ISH];
+    int kAtomJ = devSim.katom[JSH];
+    int KsumtypeI = devSim.Ksumtype[ISH];
+    int KsumtypeJ = devSim.Ksumtype[JSH];
+
+    QUICKDouble expoI = LOC2(devSim.gcexpo, primI, KsumtypeI - 1, MAXPRIM, devSim.nbasis);
+    QUICKDouble expoJ = LOC2(devSim.gcexpo, primJ, KsumtypeJ - 1, MAXPRIM, devSim.nbasis);
+
+    AB = expoI + expoJ;
+    Px = (LOC2(devSim.xyz, 0, kAtomI - 1, 3, devSim.natom) * expoI
+            + LOC2(devSim.xyz, 0, kAtomJ - 1, 3, devSim.natom) * expoJ) / AB;
+    Py = (LOC2(devSim.xyz, 1, kAtomI - 1, 3, devSim.natom) * expoI
+            + LOC2(devSim.xyz, 1, kAtomJ - 1, 3, devSim.natom) * expoJ) / AB;
+    Pz = (LOC2(devSim.xyz, 2, kAtomI - 1, 3, devSim.natom) * expoI
+            + LOC2(devSim.xyz, 2, kAtomJ - 1, 3, devSim.natom) * expoJ) / AB;
+}
+
+/*
+ On-the-fly replacement for the Xcoeff_oei lookup table. Only used when
+ devSim.Xcoeff_oei == NULL (quick_method%gpuOnTheFly DnC jobs); mirrors
+ the host-side precompute loop in gpu.cu's gpu_upload_oei_ exactly.
+ angI/angJ are the absolute angular-momentum class indices (I/J, not
+ offset by Qstart).
+ */
+__device__ static inline QUICKDouble onthefly_Xcoeff_oei(const int ISH, const int JSH, const int primI, const int primJ,
+        const int angI, const int angJ)
+{
+    int kAtomI = devSim.katom[ISH];
+    int kAtomJ = devSim.katom[JSH];
+    int KsumtypeI = devSim.Ksumtype[ISH];
+    int KsumtypeJ = devSim.Ksumtype[JSH];
+
+    QUICKDouble expoI = LOC2(devSim.gcexpo, primI, KsumtypeI - 1, MAXPRIM, devSim.nbasis);
+    QUICKDouble expoJ = LOC2(devSim.gcexpo, primJ, KsumtypeJ - 1, MAXPRIM, devSim.nbasis);
+
+    QUICKDouble DIJ = 0.0;
+    for (int k = 0; k < 3; k++) {
+        QUICKDouble d = LOC2(devSim.xyz, k, kAtomI - 1, 3, devSim.natom)
+                - LOC2(devSim.xyz, k, kAtomJ - 1, 3, devSim.natom);
+        DIJ += d * d;
+    }
+
+    QUICKDouble X = 2.0 * PI_TO_3HALF * sqrt((expoI + expoJ) / PI)
+            * pow((expoI + expoJ), -1.5) * exp((-expoI * expoJ * DIJ) / (expoI + expoJ));
+
+    return X * LOC2(devSim.gccoeff, primI, KsumtypeI + angI - 1, MAXPRIM, devSim.nbasis)
+            * LOC2(devSim.gccoeff, primJ, KsumtypeJ + angJ - 1, MAXPRIM, devSim.nbasis);
+}
 
 __device__ static inline void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ,
         unsigned int iatom, unsigned int totalatom, QUICKDouble * const YVerticalTemp,
@@ -89,14 +149,24 @@ __device__ static inline void iclass_oei(unsigned int I, unsigned int J, unsigne
            expo(I) + expo(J)
            Those two are pre-calculated in CPU stage.
         */
-        const QUICKDouble Zeta = LOC2(devSim.expoSum, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
-        const QUICKDouble Px = LOC2(devSim.weightedCenterX, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
-        const QUICKDouble Py = LOC2(devSim.weightedCenterY, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
-        const QUICKDouble Pz = LOC2(devSim.weightedCenterZ, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+        QUICKDouble Zeta, Px, Py, Pz;
+        if (devSim.expoSum != NULL) {
+            Zeta = LOC2(devSim.expoSum, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+            Px = LOC2(devSim.weightedCenterX, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+            Py = LOC2(devSim.weightedCenterY, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+            Pz = LOC2(devSim.weightedCenterZ, ii_start + III, jj_start + JJJ, devSim.prim_total, devSim.prim_total);
+        } else {
+            onthefly_AB_P(II, JJ, III, JJJ, Zeta, Px, Py, Pz);
+        }
 
         // get Xcoeff, which is a product of overlap prefactor and contraction coefficients
-        const QUICKDouble Xcoeff_oei = LOC4(devSim.Xcoeff_oei, kStartI + III, kStartJ + JJJ,
-                I - devSim.Qstart[II], J - devSim.Qstart[JJ], devSim.jbasis, devSim.jbasis, 2, 2);
+        QUICKDouble Xcoeff_oei;
+        if (devSim.Xcoeff_oei != NULL) {
+            Xcoeff_oei = LOC4(devSim.Xcoeff_oei, kStartI + III, kStartJ + JJJ,
+                    I - devSim.Qstart[II], J - devSim.Qstart[JJ], devSim.jbasis, devSim.jbasis, 2, 2);
+        } else {
+            Xcoeff_oei = onthefly_Xcoeff_oei(II, JJ, III, JJJ, I, J);
+        }
 
         if (abs(Xcoeff_oei) > devSim.coreIntegralCutoff) {
             const QUICKDouble Cx = LOC2(devSim.allxyz, 0, iatom, 3, totalatom);

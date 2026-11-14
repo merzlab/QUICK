@@ -313,12 +313,141 @@ contains
 
       type (quick_basis_type) :: self
 
+      ! Apri/Kpri/cutprim/Ppri/Xcoeff are jbasis^2-scale (jbasis^2*16 for
+      ! Xcoeff) -- a hard memory wall for large DnC systems (e.g. ~604GB
+      ! combined for T4-Lysozyme, jbasis~60,678). When dc_eri_onthefly()
+      ! is true, these per-primitive-pair quantities are instead computed
+      ! on demand inside cshell/oshell and iclass_cshell/iclass_oshell
+      ! (eri.fh) rather than precomputed into a dense table, so skip the
+      ! allocation entirely.
+      !
+      ! cutprim is kept separate: GPU jobs always need it (main.f90's
+      ! gpu_upload_cutoff_matrix uploads it as a dense jbasis*jbasis
+      ! buffer, read directly by the GPU kernels' DNMax screening), even
+      ! when gpu_eri_onthefly() skips Apri/Kpri/Ppri/Xcoeff below -- those
+      ! four really are unread on GPU (dnc_scf_operator/dnc_uscf_operator
+      ! dispatch to gpu_get_cshell_eri/gpu_get_oshell_eri instead of the
+      ! Fortran cshell/oshell/iclass_* loops when bGPU is true). So
+      ! cutprim's own allocation stays gated by dc_eri_onthefly() alone.
+      if (.not. dc_eri_onthefly()) then
+         if(.not. allocated(cutprim)) allocate(cutprim(jbasis,jbasis))
+      endif
+
+      if (dc_eri_onthefly() .or. gpu_eri_onthefly()) return
+
       if(.not. allocated(Apri)) allocate(Apri(jbasis,jbasis))
       if(.not. allocated(Kpri)) allocate(Kpri(jbasis,jbasis))
-      if(.not. allocated(cutprim)) allocate(cutprim(jbasis,jbasis))
       if(.not. allocated(Ppri)) allocate(Ppri(3,jbasis,jbasis))
       if(.not. allocated(self%Xcoeff)) allocate(self%Xcoeff(jbasis,jbasis,0:3,0:3))
    end subroutine
+
+
+   ! TRUE when the on-the-fly ERI precompute path should replace the dense
+   ! Apri/Kpri/cutprim/Ppri/Xcoeff table. Narrowly scoped to the one code
+   ! path that's regression-tested with the table skipped: CPU (not GPU),
+   ! DIVCON (DnC) energy jobs, excluding MP2 and gradient jobs -- those
+   ! still go through calMP2.f90/eri_grad.fh, which read the dense table
+   ! directly and are unchanged, so onthefly must stay off for them.
+   !
+   ! GPU is excluded on purpose, not just out of caution: main.f90 (and
+   ! quick_api_module.f90/quick_optimizer_module.f90/
+   ! dlfind_main_driver.f90/mfcc_fragment_scf.f90) unconditionally call
+   ! gpu_upload_cutoff_matrix(Ycutoff, cutPrim) for every non-opt GPU job,
+   ! and gpu.cu's gpu_upload_cutoff_matrix_ reads cutPrim directly as a
+   ! dense jbasis*jbasis buffer -- so skipping cutprim's allocation would
+   ! make that upload read unallocated memory. (dnc_scf_operator.f90/
+   ! dnc_uscf_operator.f90 do dispatch to gpu_get_cshell_eri/
+   ! gpu_get_oshell_eri -- pure device code with its own independent
+   ! Apri/Kpri/Ppri/Xcoeff copies in gpu_type.h -- instead of the Fortran
+   ! cshell/oshell/iclass_* loops when bGPU is true, so THOSE four arrays
+   ! really are unread on GPU; cutprim alone is not, because of the
+   ! upload call above.) Making GPU DnC skip the table too needs that
+   ! upload call guarded (or cutprim kept allocated+computed just for GPU
+   ! jobs), on top of the separate, much larger GPU memory wall in
+   ! gpu.cu's gpu_upload_basis (its own whole-system expoSum/
+   ! weightedCenterX-Z/Xcoeff precompute, unconditional, uploaded to
+   ! device VRAM) -- neither touched here. See memory:
+   ! quick-dnc-eri-memory-wall-t4-lysozyme.
+   logical function dc_eri_onthefly()
+      use quick_method_module, only: quick_method
+      implicit none
+
+      dc_eri_onthefly = quick_method%DIVCON .and. (.not. quick_method%MP2) &
+            .and. (.not. quick_method%DCMP2only) .and. (.not. quick_method%grad)
+#if defined(GPU) || defined(MPIV_GPU)
+      dc_eri_onthefly = dc_eri_onthefly .and. (.not. quick_method%bGPU)
+#endif
+   end function dc_eri_onthefly
+
+
+   ! GPU counterpart of dc_eri_onthefly(), gating the separate GPU memory-wall
+   ! fix: gpu_upload_basis's expoSum/weightedCenterX/Y/Z arrays (prim_total^2
+   ! each -- tens of GB at T4-Lysozyme scale, the dominant GPU-DnC memory
+   ! cost, far bigger than Xcoeff's jbasis^2 scale which stays a dense table
+   ! regardless). Unlike dc_eri_onthefly(), this is NOT automatic for every
+   ! DIVCON+GPU job -- it additionally requires the explicit gpuOnTheFly
+   ! keyword, so no existing GPU workflow (DnC or otherwise) changes behavior
+   ! unless a user opts in. Also excludes ext_grid/esp_charge: compute_oeprop
+   ! (gpu_oeprop.h) reads the dense table too and isn't being converted here.
+   logical function gpu_eri_onthefly()
+      use quick_method_module, only: quick_method
+      implicit none
+
+      gpu_eri_onthefly = quick_method%DIVCON .and. quick_method%gpuOnTheFly &
+            .and. (.not. quick_method%MP2) .and. (.not. quick_method%DCMP2only) &
+            .and. (.not. quick_method%grad) .and. (.not. quick_method%ext_grid) &
+            .and. (.not. quick_method%esp_charge)
+   end function gpu_eri_onthefly
+
+
+   ! On-the-fly equivalents of Apri/Ppri and Xcoeff, used in place of the
+   ! dense jbasis^2 table lookups -- inside cshell/oshell and
+   ! iclass_cshell/iclass_oshell (src/modules/include/eri.fh), and inside
+   ! schwarzoff/shellcutoff/classcutoff (quick_cutoff_module.f90) -- when
+   ! dc_eri_onthefly() is true. Reproduce the exact per-pair math of
+   ! get_eri_precomputables (eri.fh) one primitive pair at a time instead
+   ! of precomputing the whole table.
+   subroutine eri_onthefly_pair(ics,ips,jcs,jps,AB,P)
+      use quick_molspec_module, only: xyz
+      implicit none
+
+      integer, intent(in) :: ics,ips,jcs,jps
+      double precision, intent(out) :: AB, P(3)
+
+      double precision :: AA,BB
+      integer :: i
+
+      AA = quick_basis%gcexpo(ips,quick_basis%ksumtype(ics))
+      BB = quick_basis%gcexpo(jps,quick_basis%ksumtype(jcs))
+      AB = AA+BB
+
+      do i=1,3
+         P(i) = (xyz(i,quick_basis%katom(ics))*AA + xyz(i,quick_basis%katom(jcs))*BB)/AB
+      enddo
+   end subroutine eri_onthefly_pair
+
+
+   double precision function eri_onthefly_xcoeff(ics,ips,jcs,jps,itemp,itemp2)
+      use quick_molspec_module, only: xyz
+      implicit none
+
+      integer, intent(in) :: ics,ips,jcs,jps,itemp,itemp2
+
+      double precision :: AA,BB,DAB,Kpri_val
+
+      AA = quick_basis%gcexpo(ips,quick_basis%ksumtype(ics))
+      BB = quick_basis%gcexpo(jps,quick_basis%ksumtype(jcs))
+
+      DAB = dsqrt((xyz(1,quick_basis%katom(ics))-xyz(1,quick_basis%katom(jcs)))**2 + &
+                  (xyz(2,quick_basis%katom(ics))-xyz(2,quick_basis%katom(jcs)))**2 + &
+                  (xyz(3,quick_basis%katom(ics))-xyz(3,quick_basis%katom(jcs)))**2 )
+
+      Kpri_val = dexp(-AA*BB/(AA+BB)*(DAB**2))/(AA+BB)
+
+      eri_onthefly_xcoeff = Kpri_val * &
+            quick_basis%gccoeff(ips,quick_basis%ksumtype(ics)+itemp) * &
+            quick_basis%gccoeff(jps,quick_basis%ksumtype(jcs)+itemp2)
+   end function eri_onthefly_xcoeff
 
 
    ! following arrays are only required for host version of xc, allocate and
