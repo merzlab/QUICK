@@ -1925,6 +1925,27 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
                 gpu->nbasis, compact_gb, totalCompact, dense_gb, dense_gb, compact_gb + dense_gb);
         fflush(stderr);
 
+        // The dense O buffer is deliberately NOT allocated on this path, so
+        // say so explicitly instead of leaving behind whatever the previous
+        // caller left in the pointer. That matters because this job has just
+        // run one small SCF per MFCC fragment/cap, every one of them through
+        // the dense branch below, and every one of them ended in
+        // gpu_get_cshell_eri_ (gpu_get2e_getxc_drivers.h) with a bare
+        // `delete gpu->gpu_calculated->o` that frees the buffer without
+        // clearing the pointer. Left stale, the identical delete at the end
+        // of THIS job's first two-electron call frees it a second time and
+        // corrupts the host heap -- which is how trypsin segfaulted, one
+        // call after the message above was printed.
+        //
+        // Clearing gpu_sim.o as well is deliberate: in compact mode every O
+        // write site is supposed to be behind use_compact_o, so if one is
+        // ever missed it should fault on a null device pointer at the real
+        // site rather than silently scribble through a leftover fragment
+        // buffer. That silent-scribble failure mode is what made the
+        // original one-electron bug so expensive to find.
+        gpu->gpu_calculated->o = NULL;
+        gpu->gpu_sim.o = NULL;
+
         gpu->gpu_calculated->oCompact = new gpu_buffer_type<QUICKDouble>(totalCompact);
         gpu->gpu_calculated->oCompact->Upload();
         gpu->gpu_sim.oCompact = gpu->gpu_calculated->oCompact->_devData;

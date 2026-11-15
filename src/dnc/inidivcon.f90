@@ -1051,10 +1051,19 @@ subroutine inidivcon(natomsaved)
   ! DnC+DENSDIIS energy path that rewrite targets, so building it outside
   ! that scope would just be dead work on every other DnC job (DC-MP2,
   ! gradient, optimization, frequency, plain DIIS).
+  !
+  ! DFT is excluded as well, and that exclusion is load-bearing rather than
+  ! an efficiency choice: gpu_get_cshell_xc_ (gpu_get2e_getxc_drivers.h)
+  ! downloads, symmetrizes and DownloadSums gpu->gpu_calculated->o with no
+  ! use_compact_o guard anywhere in it, so the XC driver would dereference
+  ! the dense O buffer that compact mode never allocates. Gating here rather
+  ! than in gpu_upload_fragmap_ because quick_method%DFT is unambiguous at
+  ! this point, whereas gpu_sim.method depends on gpu_upload_method having
+  ! run first. Lift this once the XC driver learns the compact layout.
   if (quick_method%DivCon .and. quick_method%densdiis .and. &
       .not.quick_method%dcmp2only .and. .not.quick_method%MP2 .and. &
       .not.quick_method%grad .and. .not.quick_method%opt .and. &
-      .not.quick_method%freq) then
+      .not.quick_method%freq .and. .not.quick_method%DFT) then
      call BuildBasisFragMap
      if (master) then
         write(iOutfile,'(a)')
