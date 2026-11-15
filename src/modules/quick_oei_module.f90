@@ -73,6 +73,11 @@ subroutine get1e(deltaO)
    use quick_calculated_module, only: quick_qm_struct
    use quick_method_module, only: quick_method
    use quick_files_module, only: iOutFile
+#if defined(GPU) || defined(MPIV_GPU)
+   ! For the compact per-fragment operator gather below. quick_divcon_module
+   ! has no use statements of its own, so this introduces no cycle.
+   use quick_divcon_module, only: GPUUseCompactO, GPUCompactOBuf, GPUFragOffset
+#endif
 #ifdef CEW
    use quick_cew_module, only : quick_cew, quick_cew_prescf
 #endif
@@ -127,6 +132,23 @@ subroutine get1e(deltaO)
 #if defined(GPU)
          if(.not. quick_method%hasF) then
            call gpu_get_oei(quick_qm_struct%o)
+
+           ! With the compact per-fragment operator, gpu_get_oei leaves the
+           ! attraction term in that buffer instead of folding it into o: a
+           ! basis pair shared by several fragments sits in each of their
+           ! blocks with the same value, so it has to be read back by
+           ! assignment rather than summed, which is what GatherCompactO does.
+           !
+           ! This has to happen here and not in the caller. The lines just
+           ! below cache o as oneElecO, and every later SCF cycle restores
+           ! Hcore from that cache rather than recomputing it, so an attraction
+           ! term gathered any later would be missing from the operator for the
+           ! whole run -- silently, since the result is simply a Fock matrix
+           ! with no nuclear attraction.
+           if (GPUUseCompactO) then
+              call gpu_download_compact_o(GPUCompactOBuf)
+              call GatherCompactO(GPUCompactOBuf, GPUFragOffset)
+           endif
          else
 
            do IIsh=1,jshell

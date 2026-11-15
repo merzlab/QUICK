@@ -84,6 +84,59 @@ __device__ static inline QUICKDouble onthefly_Xcoeff_oei(const int ISH, const in
             * LOC2(devSim.gccoeff, primJ, KsumtypeJ + angJ - 1, MAXPRIM, devSim.nbasis);
 }
 
+#if !defined(USE_LEGACY_ATOMICS)
+/*
+ Write one operator element, honouring the compact per-fragment O layout.
+
+ This is FOCK_ATOMIC_ADD_O from gpu_get2e_subs.h. It is duplicated rather than
+ shared for the same reason the on-the-fly helpers above are: this file is
+ compiled into gpu_oei.cu, a different translation unit from gpu_get2e.cu. Keep
+ the two in step.
+
+ The one-electron term needs this as much as the two-electron term does. When
+ only the latter was compacted, the one-electron kernel went on writing
+ devSim.o, which the compact path never allocates -- so it wrote through a
+ pointer left over from the last MFCC fragment, sized for that fragment rather
+ than the molecule. On trypsin that was a segfault. Had the stale buffer been
+ large enough it would instead have been silent: Hcore would simply never have
+ reached the compact operator, leaving a Fock matrix with no nuclear attraction,
+ positive definite, with no bound orbitals and no sign anything was wrong.
+
+ Note that in the compact layout this writes BOTH triangles of the block, so
+ the caller must not symmetrise afterwards; the dense path writes one triangle
+ and is symmetrised on the host.
+ */
+__device__ static inline void OEI_ATOMIC_ADD_O(const int row, const int col, const QUICKDouble val)
+{
+    if (!devSim.use_compact_o) {
+        atomicAdd(&LOC2(devSim.o, row, col, devSim.nbasis, devSim.nbasis), val);
+        return;
+    }
+
+    int nfr = devSim.fragBasisCount[row];
+    int nfc = devSim.fragBasisCount[col];
+
+    for (int kr = 0; kr < nfr; kr++) {
+        int fr = LOC2(devSim.fragBasisList, row, kr, devSim.nbasis, devSim.fragMaxOverlap);
+        for (int kc = 0; kc < nfc; kc++) {
+            int fc = LOC2(devSim.fragBasisList, col, kc, devSim.nbasis, devSim.fragMaxOverlap);
+            if (fr == fc) {
+                int lr = LOC2(devSim.fragBasisLocalIdx, row, kr, devSim.nbasis, devSim.fragMaxOverlap) - 1;
+                int lc = LOC2(devSim.fragBasisLocalIdx, col, kc, devSim.nbasis, devSim.fragMaxOverlap) - 1;
+                int nb = devSim.fragNbasis[fr - 1];
+                int base = devSim.fragOffset[fr - 1];
+
+                atomicAdd(&devSim.oCompact[base + lc * nb + lr], val);
+                if (lr != lc) {
+                    atomicAdd(&devSim.oCompact[base + lr * nb + lc], val);
+                }
+            }
+        }
+    }
+}
+#endif
+
+
 __device__ static inline void iclass_oei(unsigned int I, unsigned int J, unsigned int II, unsigned int JJ,
         unsigned int iatom, unsigned int totalatom, QUICKDouble * const YVerticalTemp,
         QUICKDouble * const store, QUICKDouble * const store2) {
@@ -249,9 +302,11 @@ __device__ static inline void iclass_oei(unsigned int I, unsigned int J, unsigne
 
             // Now add the contribution into Fock matrix.
 #if defined(USE_LEGACY_ATOMICS)
+            // compact-O is refused on legacy-atomics builds (gpu_upload_fragmap_),
+            // so this write site stays dense.
             GPUATOMICADD(&LOC2(devSim.oULL, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), Y, OSCALE);
 #else
-            atomicAdd(&LOC2(devSim.o, JJJ - 1, III - 1, devSim.nbasis, devSim.nbasis), Y);
+            OEI_ATOMIC_ADD_O(JJJ - 1, III - 1, Y);
 #endif
 
             //printf("addint_oei: %d %d %f %f %f \n", III, JJJ, devSim.cons[III-1], devSim.cons[JJJ-1], LOCSTORE(store2, i-1, j-1, STOREDIM, STOREDIM));

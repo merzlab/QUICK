@@ -1578,40 +1578,14 @@ extern "C" void gpu_upload_fragmap_(int* p_nbasis, int* p_np, int* p_maxOverlap,
     return;
 #endif
 
-    // The same reasoning as the guard above, for the one-electron term.
-    //
-    // FOCK_ATOMIC_ADD_O replaced the two-electron O write sites, but the
-    // one-electron kernel still writes the dense buffer directly:
-    //
-    //     gpu_oei.h:254   atomicAdd(&LOC2(devSim.o, ..., devSim.nbasis, ...))
-    //
-    // and in compact mode gpu_upload_calculated_ allocates oCompact ONLY, so
-    // neither gpu_calculated->o nor gpu_sim.o is allocated or set. Both are
-    // left pointing at the last MFCC fragment's buffer, which is sized for
-    // that fragment and not for the whole molecule. getOEI_kernel then
-    // atomicAdds past the end of it on the device, and gpu_get_oei_ downloads
-    // and symmetrises past the end of it on the host, which is the SIGSEGV
-    // seen on trypsin (3263 atoms, nbasis 9927, fragment nbasis 1218).
-    //
-    // Worth stating plainly: the crash is the lesser problem. Had the buffers
-    // happened to be large enough, Hcore would simply never have reached the
-    // compact O and the run would have continued with an operator missing its
-    // nuclear attraction -- a positive definite Fock matrix with no bound
-    // orbitals, which is precisely the failure that the GPU one-electron
-    // integer overflow produced earlier. Silence, not a crash, is the risk.
-    //
-    // So compact-O stays off until the one-electron path writes through
-    // FOCK_ATOMIC_ADD_O as well. Nothing is lost meanwhile: on trypsin the
-    // compact buffer is 0.739 GB against 0.734 GB dense, because the divide
-    // and conquer subsystems overlap enough that the sum of nbasisdc^2
-    // exceeds nbasis^2. Compacting cost memory here rather than saving it.
-    fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: compact-O disabled -- the one-electron "
-            "kernel still targets dense devSim.o, which this path does not allocate "
-            "(compact %d elements vs dense %lld)\n",
-            totalCompact, (long long) nbasis * (long long) nbasis);
-    fflush(stderr);
-    gpu->gpu_sim.use_compact_o = false;
-    return;
+    // The one-electron term reaches the compact buffer too, as of
+    // OEI_ATOMIC_ADD_O in gpu_oei.h. Before that it wrote devSim.o directly,
+    // which this path never allocates, so it went through a pointer left over
+    // from the last MFCC fragment -- sized for that fragment rather than the
+    // molecule. On trypsin that segfaulted; had the stale buffer been large
+    // enough it would have been worse, because Hcore would simply never have
+    // reached the operator and the run would have continued with no nuclear
+    // attraction at all.
 
     fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: nbasis=%d, np=%d, maxOverlap=%d, "
             "compact O buffer = %d elements (~%.3f GB) vs dense (nbasis,nbasis) ~%.3f GB\n",

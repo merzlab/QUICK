@@ -379,6 +379,40 @@ extern "C" void gpu_get_oei_(QUICKDouble* o)
 
     getOEI(gpu);
 
+    if (gpu->gpu_sim.use_compact_o) {
+        // OEI_ATOMIC_ADD_O put Hcore's attraction term into the compact
+        // per-fragment buffer rather than a dense (nbasis,nbasis) one, which
+        // the compact path does not allocate.
+        //
+        // It still has to reach the caller's dense o. get1e caches that array
+        // as oneElecO the moment this returns, and every later SCF cycle
+        // restores Hcore from the cache rather than recomputing it, so an
+        // attraction term left behind on the device would be missing from the
+        // operator for the whole run.
+        //
+        // The device buffer is zeroed afterwards for the same reason the dense
+        // branch below zeroes devData: the two-electron kernel accumulates
+        // into this same buffer next, and would otherwise add on top of Hcore
+        // and have it gathered a second time.
+        //
+        // The kernel wrote both triangles of each block, so nothing is
+        // symmetrised here.
+        //
+        // The gather itself is left to GatherCompactO on the Fortran side,
+        // which get1e calls straight after this returns. That is not laziness:
+        // a basis pair shared by several fragments is written to every one of
+        // their blocks with the SAME value, so the blocks must be read back by
+        // assignment and not by summation, or every shared element is counted
+        // once per fragment that holds it. GatherCompactO already does exactly
+        // that, and is the routine the two-electron path has been using.
+        gpu->gpu_calculated->oCompact->Download();
+
+        gpuMemsetAsync(gpu->gpu_calculated->oCompact->_devData, 0,
+                sizeof(QUICKDouble) * (size_t) gpu->gpu_sim.fragOCompactSize, 0);
+
+        return;
+    }
+
 #if defined(USE_LEGACY_ATOMICS)
     gpu->gpu_calculated->oULL->Download();
     gpuMemsetAsync(gpu->gpu_calculated->oULL->_devData, 0, sizeof(QUICKULL) * gpu->nbasis * gpu->nbasis, 0);
