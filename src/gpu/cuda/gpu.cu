@@ -4,6 +4,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string>
 #include <ctime>
 #include <time.h>
@@ -883,9 +884,11 @@ extern "C" void gpu_upload_cutoff_(QUICKDouble* cutMatrix, QUICKDouble* integral
     gpu->gpu_cutoff->primLimit = *primLimit;
     gpu->gpu_cutoff->DMCutoff = *DMCutoff;
 
+    COMPACT_O_TRACE("gpu_upload_cutoff_: about to allocate cutMatrix");
     gpu->gpu_cutoff->cutMatrix = new gpu_buffer_type<QUICKDouble>(cutMatrix, gpu->nshell, gpu->nshell);
     gpu->gpu_cutoff->cutMatrix->Upload( );
     gpu->gpu_cutoff->cutMatrix->DeleteCPU( );
+    COMPACT_O_TRACE("gpu_upload_cutoff_: cutMatrix uploaded");
 
     gpu->gpu_sim.cutMatrix = gpu->gpu_cutoff->cutMatrix->_devData;
     gpu->gpu_sim.integralCutoff = gpu->gpu_cutoff->integralCutoff;
@@ -1578,6 +1581,25 @@ extern "C" void gpu_upload_fragmap_(int* p_nbasis, int* p_np, int* p_maxOverlap,
     return;
 #endif
 
+    // Escape hatch for separating compact-O from everything else that landed
+    // alongside it. The surrounding DnC work -- the dcConnect upload, the
+    // on-the-fly AB/P recompute, the fullX skip -- has never run on a system
+    // this size either, so "does it still crash with compact-O off?" is the
+    // first question worth answering, and it should not cost a rebuild to ask.
+    // QUICK_COMPACT_O=0 keeps the fragment map (cheap integer bookkeeping) but
+    // leaves O dense, which is the configuration the last known-good trypsin
+    // run used.
+    {
+        const char* compact_env = getenv("QUICK_COMPACT_O");
+        if (compact_env != NULL && compact_env[0] == '0') {
+            fprintf(stderr, "[DEBUG] gpu_upload_fragmap_: compact-O disabled by "
+                    "QUICK_COMPACT_O=0 -- falling back to dense O\n");
+            fflush(stderr);
+            gpu->gpu_sim.use_compact_o = false;
+            return;
+        }
+    }
+
     // The one-electron term reaches the compact buffer too, as of
     // OEI_ATOMIC_ADD_O in gpu_oei.h. Before that it wrote devSim.o directly,
     // which this path never allocates, so it went through a pointer left over
@@ -1648,8 +1670,18 @@ extern "C" void gpu_upload_fragmap_(int* p_nbasis, int* p_np, int* p_maxOverlap,
 extern "C" void gpu_download_compact_o_(QUICKDouble* compactO)
 {
     PRINTDEBUG("BEGIN TO DOWNLOAD COMPACT O");
+    COMPACT_O_TRACE("gpu_download_compact_o_: entry");
+    if (gpu->gpu_calculated->oCompact == NULL) {
+        // Would otherwise be a null dereference inside memcpy, reported as a
+        // bare SIGSEGV with no indication of which buffer was missing.
+        fprintf(stderr, "[ERROR] gpu_download_compact_o_: oCompact is NULL -- "
+                "the compact buffer was freed or never allocated before this call\n");
+        fflush(stderr);
+        return;
+    }
     memcpy(compactO, gpu->gpu_calculated->oCompact->_hostData,
             sizeof(QUICKDouble) * gpu->gpu_sim.fragOCompactSize);
+    COMPACT_O_TRACE("gpu_download_compact_o_: memcpy done");
     PRINTDEBUG("COMPLETE DOWNLOADING COMPACT O");
 }
 
@@ -1946,8 +1978,11 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
         gpu->gpu_calculated->o = NULL;
         gpu->gpu_sim.o = NULL;
 
+        COMPACT_O_TRACE("gpu_upload_calculated_: about to allocate oCompact");
         gpu->gpu_calculated->oCompact = new gpu_buffer_type<QUICKDouble>(totalCompact);
+        COMPACT_O_TRACE("gpu_upload_calculated_: oCompact allocated");
         gpu->gpu_calculated->oCompact->Upload();
+        COMPACT_O_TRACE("gpu_upload_calculated_: oCompact uploaded");
         gpu->gpu_sim.oCompact = gpu->gpu_calculated->oCompact->_devData;
     } else {
         fprintf(stderr, "[DEBUG] gpu_upload_calculated_: nbasis=%d, allocating O + dense(P) GPU buffers, "
@@ -1967,9 +2002,11 @@ extern "C" void gpu_upload_calculated_(QUICKDouble* o, QUICKDouble* co, QUICKDou
 #endif
     }
 
+    COMPACT_O_TRACE("gpu_upload_calculated_: about to allocate dense P");
     gpu->gpu_calculated->dense = new gpu_buffer_type<QUICKDouble>(dense, gpu->nbasis, gpu->nbasis);
     gpu->gpu_calculated->dense->Upload();
     gpu->gpu_sim.dense = gpu->gpu_calculated->dense->_devData;
+    COMPACT_O_TRACE("gpu_upload_calculated_: dense P uploaded, returning");
 
 #if defined(DEBUG)
     GPU_TIMER_STOP();

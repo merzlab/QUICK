@@ -1683,6 +1683,7 @@ subroutine GatherCompactO(compactO, fragOffsetArr)
   use quick_divcon_module, only: np, dcsubn, dcsub, nBasisDC
   use quick_basis_module, only: quick_basis, nbasis
   use quick_calculated_module, only: quick_qm_struct
+  use iso_fortran_env, only: error_unit
   implicit none
 
   double precision, intent(in) :: compactO(*)
@@ -1691,8 +1692,19 @@ subroutine GatherCompactO(compactO, fragOffsetArr)
   integer :: itt, nb, base, jxiao, jtemp2, jxiao2, j, j2, itemp, kstart1, kstart2, li, lj
   double precision, allocatable :: oDelta(:,:)
 
+  ! Part of the compact-O crash trace (see COMPACT_O_TRACE in gpu_common.h).
+  ! On stderr rather than iOutfile deliberately: it keeps these lines out of
+  ! the energy block that runtest extracts from the .out file, which a plain
+  ! print inside this window has broken twice before. This routine is only
+  ! reached when compact-O is active, so no extra gate is needed.
+  write(error_unit,'(a,i0,a,i0)') '[COMPACT-O TRACE] GatherCompactO: entry, np=', np, &
+     ' nbasis=', nbasis
+  flush(error_unit)
+
   allocate(oDelta(nbasis,nbasis))
   oDelta = 0.0d0
+  write(error_unit,'(a)') '[COMPACT-O TRACE] GatherCompactO: oDelta allocated and zeroed'
+  flush(error_unit)
 
   do itt = 1, np
      nb = nBasisDC(itt)
@@ -1718,6 +1730,12 @@ subroutine GatherCompactO(compactO, fragOffsetArr)
      enddo
   enddo
 
+  write(error_unit,'(a)') '[COMPACT-O TRACE] GatherCompactO: scatter loop done'
+  flush(error_unit)
+
   quick_qm_struct%o = quick_qm_struct%o + oDelta
   deallocate(oDelta)
+
+  write(error_unit,'(a)') '[COMPACT-O TRACE] GatherCompactO: folded into o, returning'
+  flush(error_unit)
 end subroutine GatherCompactO

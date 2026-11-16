@@ -49,6 +49,30 @@ static FILE *debugFile = NULL;
 #define LOC2(A,i1,i2,d1,d2) (A[(i2) * (d1) + (i1)])
 #define LOC3(A,i1,i2,i3,d1,d2,d3) (A[((i1) * (d2) + (i2)) * (d3) + (i3)])
 #define LOC4(A,i1,i2,i3,i4,d1,d2,d3,d4) (A[(((i1) * (d2) + (i2)) * (d3) + i3) * (d4) + (i4)])
+
+/* Crash-localisation trace for the compact per-fragment O path (9.14).
+ *
+ * The compact-O bring-up has now produced three segfaults whose last line of
+ * output was the same gpu_upload_calculated_ message, because nothing between
+ * that message and the end of the first two-electron call prints anything --
+ * a silent stretch covering the compact allocation, the cutoff upload, the
+ * one-electron kernel, two host gathers and the two-electron kernel. This
+ * narrows that stretch to a single statement.
+ *
+ * Fires only while use_compact_o is actually true, so it costs nothing on any
+ * other job: every regression test, every non-DnC run and every dense-O DnC
+ * run leaves it silent. Goes to stderr, flushed, so the last line survives an
+ * abnormal termination and stays out of the .out file that runtest parses.
+ *
+ * Remove once the compact path is known good.
+ */
+#define COMPACT_O_TRACE(msg) \
+    do { \
+        if (gpu != NULL && gpu->gpu_sim.use_compact_o) { \
+            fprintf(stderr, "[COMPACT-O TRACE] %s  (%s:%d)\n", (msg), __FILE__, __LINE__); \
+            fflush(stderr); \
+        } \
+    } while (0)
 // used in OEI and ERI code, auto-generated code
 #define LOCSTORE(A,i1,i2,d1,d2) (A[((i2) * (d1) + (i1)) * gridDim.x * blockDim.x])
 // used in ERI code

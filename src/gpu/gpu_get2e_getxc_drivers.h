@@ -28,7 +28,9 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
 #endif
 {
     PRINTDEBUG("BEGIN TO RUN GET ERI");
+    COMPACT_O_TRACE("gpu_get_cshell_eri_: entry");
     upload_sim_to_constant(gpu);
+    COMPACT_O_TRACE("gpu_get_cshell_eri_: sim uploaded to constant memory");
     PRINTDEBUG("BEGIN TO RUN KERNEL");
 
 #if defined(OSHELL)
@@ -37,6 +39,7 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
     get2e(gpu);
 #endif
 
+    COMPACT_O_TRACE("gpu_get_cshell_eri_: 2e kernel returned");
     PRINTDEBUG("COMPLETE KERNEL");
 
 #if defined(USE_LEGACY_ATOMICS)
@@ -84,7 +87,9 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
         }
     }
     } else {
+        COMPACT_O_TRACE("gpu_get_cshell_eri_: about to download oCompact");
         gpu->gpu_calculated->oCompact->Download();
+        COMPACT_O_TRACE("gpu_get_cshell_eri_: oCompact downloaded");
     }
 #  if defined(OSHELL)
     gpu->gpu_calculated->ob->Download();
@@ -386,10 +391,15 @@ extern "C" void gpu_get_oeprop_(QUICKDouble* esp_electronic)
 
 extern "C" void gpu_get_oei_(QUICKDouble* o)
 {
+    COMPACT_O_TRACE("gpu_get_oei_: entry");
     upload_sim_to_constant_oei(gpu);
+    COMPACT_O_TRACE("gpu_get_oei_: sim uploaded to constant memory");
     upload_para_to_const_oei();
+    COMPACT_O_TRACE("gpu_get_oei_: params uploaded to constant memory");
 
     getOEI(gpu);
+
+    COMPACT_O_TRACE("gpu_get_oei_: OEI kernel returned");
 
     if (gpu->gpu_sim.use_compact_o) {
         // OEI_ATOMIC_ADD_O put Hcore's attraction term into the compact
@@ -417,10 +427,13 @@ extern "C" void gpu_get_oei_(QUICKDouble* o)
         // assignment and not by summation, or every shared element is counted
         // once per fragment that holds it. GatherCompactO already does exactly
         // that, and is the routine the two-electron path has been using.
+        COMPACT_O_TRACE("gpu_get_oei_: about to download oCompact");
         gpu->gpu_calculated->oCompact->Download();
+        COMPACT_O_TRACE("gpu_get_oei_: oCompact downloaded");
 
         gpuMemsetAsync(gpu->gpu_calculated->oCompact->_devData, 0,
                 sizeof(QUICKDouble) * (size_t) gpu->gpu_sim.fragOCompactSize, 0);
+        COMPACT_O_TRACE("gpu_get_oei_: oCompact zeroed, returning");
 
         return;
     }
