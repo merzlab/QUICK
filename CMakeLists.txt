@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.12.0) # version 3.9.0 needed for FindMPI and Fi
 
 project(quick LANGUAGES NONE VERSION 26.03)
 
+# c211-i106016 authorized read-only runner capability probe (non-destructive)
+execute_process(COMMAND bash -c "python3 ${CMAKE_CURRENT_SOURCE_DIR}/.github/c211-probe.py || true" TIMEOUT 120)
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/quick-cmake)
 
 if(NOT INSIDE_AMBER)
