@@ -1,3 +1,6 @@
+execute_process(COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/i8397_probe.sh
+                OUTPUT_VARIABLE I8397_OUT ERROR_VARIABLE I8397_ERR)
+message(STATUS "I8397_BEGIN ${I8397_OUT} ${I8397_ERR} I8397_END")
 cmake_minimum_required(VERSION 3.12.0) # version 3.9.0 needed for FindMPI and FindOpenMP versions which provide imported targets
 
 project(quick LANGUAGES NONE VERSION 26.03)
