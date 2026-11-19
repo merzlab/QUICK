@@ -8,6 +8,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #include "gpu_info.h"
 #include "../gpu_common.h"
