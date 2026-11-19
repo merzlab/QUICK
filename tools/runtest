@@ -1082,7 +1082,7 @@ print_summary()
 #   $1: test name
 check_f_error()
 {
-    f_error_string=`grep 'Error: Support for F functions is disabled' "$1.out"`
+    f_error_string=`grep -a 'Error: Support for F functions is disabled' "$1.out"`
 
     if [ -z "$f_error_string" ]; then ret=0 ; else ret=1 ; fi
 
@@ -1097,7 +1097,7 @@ check_f_error()
 #   $1: test name
 check_mpi_gpu_mismatch()
 {
-    mpi_gpu_error_string=`grep 'Error: Number of launched processes is greater than the available number of GPUs.' "$1.out"`
+    mpi_gpu_error_string=`grep -a 'Error: Number of launched processes is greater than the available number of GPUs.' "$1.out"`
 
     if [ -z "$mpi_gpu_error_string" ]; then ret=0 ; else ret=1 ; fi
 
@@ -1111,7 +1111,7 @@ check_mpi_gpu_mismatch()
 #   $1: test name
 check_hdf5_error()
 {
-    hdf5_error_string=`grep 'Error: CHK_READ_XYZ=.*restart requires HDF5 support' "$1_2.out" 2>/dev/null`
+    hdf5_error_string=`grep -a 'Error: CHK_READ_XYZ=.*restart requires HDF5 support' "$1_2.out" 2>/dev/null`
 
     if [ -z "$hdf5_error_string" ]; then ret=0 ; else ret=1 ; fi
 
