@@ -398,13 +398,13 @@ if(HIP)
 
         if("${QUICK_USER_ARCH}" STREQUAL "gfx90a")
             message(STATUS "Configuring QUICK for gfx90a")
-            list(APPEND AMD_HIP_FLAGS -DAMD_ARCH_GFX90a)
+            list(APPEND AMD_HIP_FLAGS -DAMD_ARCH_GFX90a -munsafe-fp-atomics)
             set(FOUND "TRUE")
         endif()
 
         if("${QUICK_USER_ARCH}" STREQUAL "gfx942")
             message(STATUS "Configuring QUICK for gfx942")
-            list(APPEND AMD_HIP_FLAGS -DAMD_ARCH_GFX90a)
+            list(APPEND AMD_HIP_FLAGS -DAMD_ARCH_GFX90a -munsafe-fp-atomics)
             set(FOUND "TRUE")
         endif()
 
