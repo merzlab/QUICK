@@ -140,6 +140,7 @@
                .not.quick_method%grad .and. .not.quick_method%opt .and. &
                .not.quick_method%freq .and. GPUUseCompactO) then
               call gpu_download_compact_o(GPUCompactOBuf)
+              call gpu_release_compact_o()
               call GatherCompactO(GPUCompactOBuf, GPUFragOffset)
            endif
         else
