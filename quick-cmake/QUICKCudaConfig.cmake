@@ -470,6 +470,19 @@ if(HIP)
         message(FATAL_ERROR)
     endif()
 
+    #  the AMDGPU backend can pick the return address s[30:31] as the scratch
+    #  pair for long branches in a large device function that is not a kernel
+    #  (ERint_vertical_spd, ERint_grad_vertical_spd), so the function returns
+    #  into its own body and the SPD ERI kernels hang or fault.
+    #  Route long branches through the register scavenger instead. The link
+    #  flag covers device code generated at the -fgpu-rdc link (libxc).
+    #  https://github.com/llvm/llvm-project/issues/224205
+    #  (seen with AMD clang 24 in ROCm 10.1; drop once fixed in supported ROCm)
+    if (${HIP_VERSION} VERSION_GREATER_EQUAL 6.2.1)
+        list(APPEND AMD_HIP_FLAGS -mllvm -amdgpu-long-branch-factor=0)
+        list(APPEND GPU_LD_FLAGS "SHELL:-mllvm -amdgpu-long-branch-factor=0")
+    endif()
+
     list(APPEND CUDA_NVCC_FLAGS ${AMD_HIP_FLAGS})
 
     if(QUICK_DEBUG_HIP_ASAN)
