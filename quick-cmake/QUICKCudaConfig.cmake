@@ -398,18 +398,24 @@ if(HIP)
 
         if("${QUICK_USER_ARCH}" STREQUAL "gfx90a")
             message(STATUS "Configuring QUICK for gfx90a")
-            list(APPEND AMD_HIP_FLAGS -DAMD_ARCH_GFX90a)
+            list(APPEND AMD_HIP_FLAGS -DAMD_ARCH_GFX90a -munsafe-fp-atomics)
             set(FOUND "TRUE")
         endif()
 
         if("${QUICK_USER_ARCH}" STREQUAL "gfx942")
             message(STATUS "Configuring QUICK for gfx942")
-            list(APPEND AMD_HIP_FLAGS -DAMD_ARCH_GFX90a)
+            list(APPEND AMD_HIP_FLAGS -DAMD_ARCH_GFX90a -munsafe-fp-atomics)
+            set(FOUND "TRUE")
+        endif()
+
+        if("${QUICK_USER_ARCH}" STREQUAL "gfx1100")
+            message(STATUS "Configuring QUICK for gfx1100")
+            list(APPEND AMD_HIP_FLAGS -DUSE_LEGACY_ATOMICS)
             set(FOUND "TRUE")
         endif()
 
         if (NOT ${FOUND})
-            message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH. Possible values are gfx908, gfx90a, gfx942.")
+            message(FATAL_ERROR "Invalid value for QUICK_USER_ARCH. Possible values are gfx908, gfx90a, gfx942, gfx1100.")
         endif()
     else()
         set(QUICK_USER_ARCH "gfx908")
@@ -430,6 +436,18 @@ if(HIP)
 
     string(REPLACE "\n" ";" HIPCC_VERSION_OUTPUT ${HIPCC_VERSION_OUTPUT})
     string(REGEX MATCH "rocm-([0-9]+).([0-9]+).([0-9]+)" _ "${HIPCC_VERSION_OUTPUT}")
+    if("${CMAKE_MATCH_1}" STREQUAL "")
+        # ROCm installed outside a versioned rocm-X.Y.Z directory (e.g. the pip SDK)
+        set(ROCM_VERSION_HEADER "${HIP_TOOLKIT_ROOT_DIR}/include/rocm-core/rocm_version.h")
+        if(EXISTS "${ROCM_VERSION_HEADER}")
+            file(STRINGS "${ROCM_VERSION_HEADER}" ROCM_VERSION_DEFINES REGEX "#define ROCM_VERSION_(MAJOR|MINOR|PATCH) ")
+            string(REGEX MATCH "MAJOR +([0-9]+);.*MINOR +([0-9]+);.*PATCH +([0-9]+)" _ "${ROCM_VERSION_DEFINES}")
+        else()
+            # the third field of the HIP version is a build number, not the ROCm patch release
+            string(REGEX MATCH "HIP version: ([0-9]+)\\.([0-9]+)" _ "${HIPCC_VERSION_OUTPUT}")
+            set(CMAKE_MATCH_3 0)
+        endif()
+    endif()
     set(HIP_VERSION_MAJOR ${CMAKE_MATCH_1})
     set(HIP_VERSION_MINOR ${CMAKE_MATCH_2})
     set(HIP_VERSION_PATCH ${CMAKE_MATCH_3})
@@ -450,6 +468,19 @@ if(HIP)
         message("************************************************************")
         message(STATUS "")
         message(FATAL_ERROR)
+    endif()
+
+    #  the AMDGPU backend can pick the return address s[30:31] as the scratch
+    #  pair for long branches in a large device function that is not a kernel
+    #  (ERint_vertical_spd, ERint_grad_vertical_spd), so the function returns
+    #  into its own body and the SPD ERI kernels hang or fault.
+    #  Route long branches through the register scavenger instead. The link
+    #  flag covers device code generated at the -fgpu-rdc link (libxc).
+    #  https://github.com/llvm/llvm-project/issues/224205
+    #  (seen with AMD clang 24 in ROCm 10.1; drop once fixed in supported ROCm)
+    if (${HIP_VERSION} VERSION_GREATER_EQUAL 6.2.1)
+        list(APPEND AMD_HIP_FLAGS -mllvm -amdgpu-long-branch-factor=0)
+        list(APPEND GPU_LD_FLAGS "SHELL:-mllvm -amdgpu-long-branch-factor=0")
     endif()
 
     list(APPEND CUDA_NVCC_FLAGS ${AMD_HIP_FLAGS})
