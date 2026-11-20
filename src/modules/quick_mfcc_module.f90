@@ -47,8 +47,8 @@ module quick_mfcc_module
     logical :: mfcc_reordered = .false.
     integer, allocatable :: mfcc_perm(:)
     double precision, allocatable :: mfcccord(:,:,:)
-    integer ::Ftmp(300)
-    character(len=100)::linetmp
+    integer ::Ftmp(500)
+    character(len=500)::linetmp
     character(len=2), allocatable :: mfccatomxiao(:,:)
     integer, allocatable :: mfccstart(:), mfccfinal(:), mfccbases(:), mfccbasef(:)
     integer, allocatable :: matomstart(:), matomfinal(:), matombases(:), matombasef(:)

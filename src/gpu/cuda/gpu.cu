@@ -1686,6 +1686,14 @@ extern "C" void gpu_download_compact_o_(QUICKDouble* compactO)
 }
 
 
+// Release after the two-electron copy, not the earlier one-electron copy.
+extern "C" void gpu_release_compact_o_()
+{
+    SAFE_DELETE(gpu->gpu_calculated->oCompact);
+    gpu->gpu_sim.oCompact = NULL;
+}
+
+
 //-----------------------------------------------
 //  Report whether compact-O ended up active after the most recent
 //  gpu_upload_fragmap_ call (it can be forced false there on a build that

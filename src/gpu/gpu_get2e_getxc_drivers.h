@@ -116,15 +116,14 @@ extern "C" void gpu_get_cshell_eri_(bool *deltaO, QUICKDouble* o)
     if (gpu->gpu_sim.method == HF) {
         // o is only conditionally owned now (gpu_upload_calculated_ allocates
         // it on the dense path but not the compact one), so it has to be
-        // cleared here exactly like oCompact below. Deleting without clearing
+        // cleared here. Deleting without clearing
         // was safe only while every SCF cycle re-allocated it; with compact-O
         // active it leaves a dangling pointer that the next delete frees a
         // second time.
         delete gpu->gpu_calculated->o;
         gpu->gpu_calculated->o = NULL;
         gpu->gpu_sim.o = NULL;
-        delete gpu->gpu_calculated->oCompact;
-        gpu->gpu_calculated->oCompact = NULL;
+        // Keep oCompact alive for Fortran's subsequent gpu_download_compact_o call.
         delete gpu->gpu_calculated->dense;
 #if defined(USE_LEGACY_ATOMICS)
         delete gpu->gpu_calculated->oULL;
