@@ -1326,7 +1326,7 @@ end do
       call cuest_get_grid_der(quick_qm_struct%co, wVrecip_save, gradhold_atom, gradhold_grid)
 
       ! accumulate into gradient so we can use gradhold_atom again
-      quick_qm_struct%gradient = quick_qm_struct%gradient + 0.5d0*gradhold_atom
+      quick_qm_struct%gradient = quick_qm_struct%gradient + gradhold_atom
 
       ! gradhold_grid_Q = w_Q[(nabla rho_Q)(V_Q) + (rho_Q)(nabla V_Q)]
       do i = 1, npoint
@@ -1342,7 +1342,7 @@ end do
       ! overwrite Vrecip_save with energy density = ((rho_P)(Vrecip_P))_P
       Vrecip_save = rho*Vrecip_save
       call cuest_get_grid_point_der(Vrecip_save, gradhold_grid, gradhold_atom)
-      quick_qm_struct%gradient = quick_qm_struct%gradient + 0.5d0*gradhold_atom
+      quick_qm_struct%gradient = quick_qm_struct%gradient + gradhold_atom
 
       deallocate(rho)
       deallocate(gradhold_grid)
