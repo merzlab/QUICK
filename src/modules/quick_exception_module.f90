@@ -152,7 +152,17 @@ contains
     case(42)
       msg='Number of launched processes is greater than the available number of GPUs. Please &
               &relaunch with lower number of processes.'
-
+    
+    case(43)
+      msg='Invalid EML_ANG value. Valid Lebedev sizes are: 6, 14, 26, 38, 50, 74, 86, 110, &
+              &146, 170, 194, 230, 266, 302, 350, 434, 590, 770, 974, 1202, 1454, 1730, &
+              &2030, 2354, 2702'
+    
+    case(44)
+      msg = 'Conflict between EML_RAD/EML_ANG and standard grid selection.'
+  
+    case(45)
+      msg = 'Invalid EML_RAD value'
     case default
       msg='Unknown error.'
 
