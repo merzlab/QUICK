@@ -57,6 +57,7 @@
     use quick_mpi_module, only: master
 #if defined(MPIV)
     use quick_mpi_module, only: bMPI, print_quick_mpi
+    use quick_molspec_module, only: broadcast
 #  if defined(MPIV_GPU)
     use quick_mpi_module, only: mpi_world_rank, quick_comm, quick_comm_rank, &
             quick_comm_size, mgpu_id, mgpu_ids
@@ -121,6 +122,26 @@
     !allocate essential variables
     call alloc(quick_molspec, quick_method%readxyz, ierr)
     !if (quick_method%MFCC) call allocate_MFCC()
+
+    ! read_Job_and_Atom's molecule read (read_quick_molspec) runs master-only,
+    ! and nothing ever broadcast its results -- iAtomType/atom_type_sym/
+    ! iattype/chg all stayed at their init_quick_molspec defaults (iAtomType=0)
+    ! on every other rank for the whole job. Invisible for a normal SCF, which
+    ! only ever consumes the SAD density master already broadcasts downstream,
+    ! but MFCC's per-fragment SAD guess (mfcc_sad_fragment_density) runs fully
+    ! self-contained per rank under MPI_COMM_SELF with no further broadcast,
+    ! so a non-master rank could never match an atom to the (empty) atom-type
+    ! table there and silently fell back to a flat-diagonal guess --
+    ! convergence-killing for a hard fragment (root cause of an MPI-only
+    ! "ierr=44 SCF did not converge" in mfcc_run_submol, traced via the
+    ! MFCC-SAD/SADGUESS-ENTRY diagnostics in mfcc_fragment_scf.f90 and
+    ! quick_sad_guess_module.f90). Placed after alloc(quick_molspec,...) above
+    ! so self%iattype/self%chg are already allocated on every rank -- any
+    ! earlier and broadcast_quick_molspec's MPI_BCAST into them would be
+    ! writing into unallocated arrays on non-master ranks.
+#if defined(MPIV)
+    if (bMPI) call broadcast(quick_molspec,ierr)
+#endif
    
     RECORD_TIME(timer_end%TInitialize)
     timer_cumer%TInitialize = timer_cumer%TInitialize + timer_end%TInitialize - timer_begin%TInitialize

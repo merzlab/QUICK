@@ -999,7 +999,6 @@ __global__ void __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_sp
 #if defined(int_spd)
             if (!(iii < 2 && jjj < 2 && kkk < 2 && lll < 2)) {
 #endif
-            
             int jj = devSim.sorted_Q[JJ];
             int ll = devSim.sorted_Q[LL];
             int nshell = devSim.nshell;
@@ -1072,7 +1071,7 @@ __global__ void __launch_bounds__(SM_2X_2E_THREADS_PER_BLOCK, 1) get2e_kernel_sp
                     > devSim.integralCutoff
                 && (LOC2(devSim.YCutoff, kk, ll, nshell, nshell) * LOC2(devSim.YCutoff, ii, jj, nshell, nshell) * DNMax)
                     > devSim.integralCutoff) {
-#endif                
+#endif
 #if defined(OSHELL)
   #if defined(int_sp)
                 iclass_oshell_sp(iii, jjj, kkk, lll, ii, jj, kk, ll, DNMax,

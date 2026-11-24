@@ -265,6 +265,17 @@ subroutine get1e(deltaO)
 #if defined(MPIV_GPU)
       if(.not. quick_method%hasF) then
         call gpu_get_oei(quick_qm_struct%o)
+
+        ! Same as the serial branch above: with the compact per-fragment
+        ! operator, gpu_get_oei leaves the attraction term in oCompact
+        ! instead of folding it into o, so it has to be gathered back
+        ! explicitly. This call was missing from this MPI-specific branch,
+        ! which left quick_qm_struct%o kinetic-only (no nuclear attraction)
+        ! for every MPI+GPU+compact-O run.
+        if (GPUUseCompactO) then
+           call gpu_download_compact_o(GPUCompactOBuf)
+           call GatherCompactO(GPUCompactOBuf, GPUFragOffset)
+        endif
       else
         do i=1,mpi_jshelln(quick_comm_rank)
            IIsh=mpi_jshell(quick_comm_rank,i)

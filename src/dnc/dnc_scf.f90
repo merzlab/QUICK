@@ -166,8 +166,18 @@ subroutine electdiisdc(jscf,ierr)
 
 #ifdef MPIV
      if (bMPI) then
-  !      call
-  !      MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
+        ! dnc_scf_operator.f90's MPI_REDUCE of quick_qm_struct%o lands the
+        ! fully-summed operator on master only (MPI_REDUCE, not Allreduce);
+        ! every other rank is left holding its own local, partial
+        ! contribution. dense/co/E and the cutoffs below are all rebroadcast
+        ! to resync non-master ranks, but o itself was not -- this call was
+        ! commented out since src/dnc/dncscf.f90 was first split into its
+        ! own file (commit 78dcdd6c, 2021), carried forward unchanged through
+        ! every rebase since. Restoring it keeps every rank's operator
+        ! consistent for the rest of the cycle (per-fragment diagonalization
+        ! included), instead of non-master ranks working from a stale,
+        ! un-reduced o.
+        call MPI_BCAST(quick_qm_struct%o,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
         call MPI_BCAST(quick_qm_struct%dense,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
         call MPI_BCAST(quick_qm_struct%co,nbasis*nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
         call MPI_BCAST(quick_qm_struct%E,nbasis,mpi_double_precision,0,quick_comm,quick_mpi_error)
