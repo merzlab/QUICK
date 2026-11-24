@@ -118,7 +118,7 @@ contains
         enddo
      enddo
   
-     call getEnergy(.false.,ierr)
+!     call getEnergy(.false.,ierr)
   
      if (quick_method%analgrad) then
 #ifdef OSHELL
