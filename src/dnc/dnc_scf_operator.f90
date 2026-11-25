@@ -62,11 +62,33 @@
         quick_qm_struct%denseSave(:,:) = quick_qm_struct%dense(:,:)
         quick_qm_struct%dense=quick_qm_struct%dense-quick_qm_struct%denseOld
 
+        ! FIX: restore oSave on master only under MPI. quick_qm_struct%o was
+        ! already zeroed above (every rank); each rank then accumulates only
+        ! its own partial slice of the fresh two-electron contributions
+        ! (get1e/gpu_get_cshell_eri below), and the MPI_REDUCE(SUM) further
+        ! down sums every rank's O together. Restoring the complete oSave on
+        ! EVERY rank here (as a non-MPI build correctly does, since it has
+        ! only one rank) made that reduce sum nranks copies of oSave instead
+        ! of one -- the operator (and total energy) was growing by ~nranks
+        ! every cycle once this deltaO path activates (jscf>=ncyc, default
+        ! cycle 3), which is exactly the ~4x-per-cycle blowup measured on a
+        ! 4-rank job. Restoring it on master only, and leaving non-master
+        ! ranks at the zero set above, makes the reduce sum oSave exactly
+        ! once (from master) plus every rank's own fresh partial delta --
+        ! matching the non-MPI/single-rank result.
+#if defined(MPIV)
+        if (bMPI .and. .not.master) then
+           ! leave quick_qm_struct%o at the zero set above
+        else
+#endif
         if(quick_method%dft) then
           quick_qm_struct%o = quick_qm_struct%oSave-quick_qm_struct%oxc
         else
           quick_qm_struct%o(:,:) = quick_qm_struct%oSave(:,:)
         endif
+#if defined(MPIV)
+        endif
+#endif
      endif
 
   !  Delta density matrix cutoff
@@ -103,7 +125,7 @@
 
      if(quick_method%printEnergy) call get1eEnergy(deltaO)
 
-!write(*,*) "1e energy:", quick_qm_struct%Eel 
+!write(*,*) "1e energy:", quick_qm_struct%Eel
 
 !     if (quick_method%nodirect) then
 !#ifdef CUDA
@@ -226,8 +248,6 @@
         timer_cumer%TEx=timer_cumer%TEx+timer_end%TEx-timer_begin%TEx
      endif
 
-     quick_qm_struct%oSave(:,:) = quick_qm_struct%o(:,:)
-
 #ifdef MPIV
   !  MPI reduction operations
 
@@ -255,10 +275,32 @@
        quick_qm_struct%Eel    = Eelsum
      endif
 
+     ! FIX: broadcast the fully-combined operator to every rank. Without
+     ! this, only master ever holds the true, complete Fock matrix after
+     ! the reduce above -- non-master ranks keep just their own GPU/MPI
+     ! partition slice. oSave (saved below) is used by the deltaO
+     ! acceleration path to restore O at the top of the *next* cycle
+     ! (quick_qm_struct%o(:,:) = quick_qm_struct%oSave(:,:) above), which
+     ! only gives the correct result if oSave holds the complete previous
+     ! Fock matrix on every rank -- exactly as it naturally does on a
+     ! single-GPU/non-MPI build. Without the broadcast, every rank's oSave
+     ! held only that rank's own small partial slice, so the next cycle's
+     ! deltaO restore + fresh per-rank delta build effectively double-counted
+     ! each rank's own contribution once reduced, which is the root cause of
+     ! the ~2x operator-trace divergence between GPU+MPI DnC and single-GPU.
+     call MPI_BCAST(quick_qm_struct%o, nbasis*nbasis, mpi_double_precision, 0, quick_comm, quick_mpi_error)
+
      RECORD_TIME(timer_end%TEred)
      timer_cumer%TEred=timer_cumer%TEred+timer_end%TEred-timer_begin%TEred
 
 #endif
+
+     ! Save the fully-combined operator for the deltaO acceleration path's
+     ! restore at the top of the next cycle. On an MPI build this is now
+     ! the broadcast value above (correct on every rank); on a non-MPI
+     ! build quick_qm_struct%o is already the complete Fock matrix, so this
+     ! is unchanged from before.
+     quick_qm_struct%oSave(:,:) = quick_qm_struct%o(:,:)
 
   return
 

@@ -64,13 +64,32 @@
         quick_qm_struct%dense=quick_qm_struct%dense-quick_qm_struct%denseOld
         quick_qm_struct%denseb=quick_qm_struct%denseb-quick_qm_struct%densebOld
 
-        if(quick_method%dft)then 
+        ! FIX: restore oSave/obSave on master only under MPI, same bug and
+        ! same fix as scf_operatordc (dnc_scf_operator.f90). quick_qm_struct%o
+        ! and %ob were already zeroed above (every rank); each rank then
+        ! accumulates only its own partial slice of the fresh two-electron
+        ! contributions, and the MPI_REDUCE(SUM) further down sums every
+        ! rank's o/ob together. Restoring the complete oSave/obSave on EVERY
+        ! rank here made that reduce sum nranks copies of them instead of
+        ! one, growing the operator (and total energy) by ~nranks every
+        ! cycle once this deltaO path activates (jscf>=ncyc, default cycle
+        ! 3) -- confirmed on ene_c2h5rad_uhf_631gss_divcon_atom, the one UHF
+        ! test among the 4 that kept failing after the RHF-only fix.
+#if defined(MPIV)
+        if (bMPI .and. .not.master) then
+           ! leave quick_qm_struct%o/%ob at the zero set above
+        else
+#endif
+        if(quick_method%dft)then
           quick_qm_struct%o=quick_qm_struct%oSave-quick_qm_struct%oxc
           quick_qm_struct%ob=quick_qm_struct%obSave-quick_qm_struct%obxc
         else
           quick_qm_struct%o(:,:) = quick_qm_struct%oSave(:,:)
           quick_qm_struct%ob(:,:) = quick_qm_struct%obSave(:,:)
         endif
+#if defined(MPIV)
+        endif
+#endif
      endif
 
      call oshell_density_cutoff
@@ -217,9 +236,6 @@
         timer_cumer%TEx=timer_cumer%TEx+timer_end%TEx-timer_begin%TEx
      endif
 
-     quick_qm_struct%oSave(:,:) = quick_qm_struct%o(:,:)
-     quick_qm_struct%obSave(:,:) = quick_qm_struct%ob(:,:)
-
 #ifdef MPIV
   !  MPI reduction operations
   
@@ -251,12 +267,27 @@
        quick_qm_struct%ob(:,:) = quick_scratch%obsum(:,:)
        quick_qm_struct%Eel     = Eelsum
      endif
-  
+
+     ! FIX: broadcast the fully-combined alpha/beta operators to every rank
+     ! -- see the matching fix in dnc_scf_operator.f90 (scf_operatordc) for
+     ! the full explanation. Without this, oSave/obSave (saved below) only
+     ! ever held each rank's own partial GPU/MPI partition slice instead of
+     ! the complete previous Fock matrices, breaking the deltaO
+     ! acceleration restore at the top of the next cycle.
+     call MPI_BCAST(quick_qm_struct%o, nbasis*nbasis, mpi_double_precision, 0, quick_comm, quick_mpi_error)
+     call MPI_BCAST(quick_qm_struct%ob, nbasis*nbasis, mpi_double_precision, 0, quick_comm, quick_mpi_error)
+
      RECORD_TIME(timer_end%TEred)
      timer_cumer%TEred=timer_cumer%TEred+timer_end%TEred-timer_begin%TEred
-  
+
 #endif
-  
+
+     ! Save the fully-combined operators for the deltaO acceleration path's
+     ! restore at the top of the next cycle (see dnc_scf_operator.f90 for
+     ! the full explanation).
+     quick_qm_struct%oSave(:,:) = quick_qm_struct%o(:,:)
+     quick_qm_struct%obSave(:,:) = quick_qm_struct%ob(:,:)
+
     return
   
   end subroutine uscf_operatordc
