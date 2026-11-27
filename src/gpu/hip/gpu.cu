@@ -5,6 +5,13 @@
 
 #include <stdio.h>
 #include <string>
+// NOTE: keep C++ standard library includes above the QUICK headers below.
+// "gpu.h" (and "gpu_libxc.h") pull in libxc's util.h, which defines lowercase
+// min/max function-like macros; those clobber std::min/std::max inside
+// libstdc++ headers, and <vector> then fails to parse. mgpu.h needs
+// std::vector, hence <vector> is pulled in up here while the macros are not
+// yet defined. Same convention as gpu_get2e_grad_ffff.cu.
+#include <vector>
 #include <ctime>
 #include <time.h>
 
