@@ -24,7 +24,11 @@
 
 #include "string.h"
 
-#include <vector>
+// This header uses std::vector, but deliberately does NOT include <vector>:
+// it is always included from gpu.cu *after* gpu.h, which pulls in libxc's
+// util.h and its lowercase min/max macros. Those clobber std::max inside
+// libstdc++'s <vector>, which then fails to parse. gpu.cu includes <vector>
+// up front, before that macro pollution, so it is already available here.
 
 
 //-----------------------------------------------

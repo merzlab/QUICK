@@ -603,7 +603,7 @@ void get2e(_gpu_type gpu)
     QUICK_SAFE_CALL((get2e_kernel_sp <<<gpu->blocks, gpu->twoEThreadsPerBlock>>> ()));
 
     QUICK_SAFE_CALL((get2e_kernel_spd <<<gpu->blocks, gpu->twoEThreadsPerBlock>>> ()));
- 
+
 #ifdef GPU_SPDF
     if (gpu->maxL >= 3) {
         // Part f-1

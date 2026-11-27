@@ -47,7 +47,11 @@ contains
      use quick_cew_module, only : quick_cew
 #endif
      use quick_mpi_module, only: bMPI, master
-  
+#ifdef MPIV
+     use quick_mpi_module, only: quick_comm, quick_mpi_error
+     use mpi
+#endif
+
      implicit none
 
      logical :: present, MPIsaved, readSAD
@@ -73,7 +77,7 @@ contains
      ! therefore, assign individual variable values
   !   quick_molspec_save%imult = quick_molspec%imult
   !   quick_molspec_save%nelec = quick_molspec%nelec
-  
+
      natomsaved=natom
      xyzsaved=xyz
      MPIsaved=bMPI
@@ -226,7 +230,29 @@ contains
         enddo
         call PrtAct(ioutfile,"Finish SAD initial guess")
      endif
-  
+
+     ! atomBasis/atomDens are allocated unconditionally above (sized by
+     ! quick_molspec%iatomtype, now correct on every rank), but only ever
+     ! FILLED with real values inside the if(master) block just closed --
+     ! nothing broadcast those values out, so non-master ranks carried
+     ! fresh, zero-filled arrays. Invisible for a normal SCF (master's
+     ! final SAD density gets broadcast downstream regardless), but MFCC's
+     ! per-fragment SAD guess reads atomBasis/atomDens directly, independently,
+     ! on every rank, with no further broadcast -- so a non-master rank would
+     ! match an atom's type correctly (after the iAtomType fix above) but then
+     ! read atomBasis(sadatom)=0 and fall back to a flat-diagonal guess
+     ! (root cause of the remaining MFCC-SAD fallback=SIZE_OVERFLOW/nb=0 seen
+     ! after fixing the iAtomType broadcast alone).
+     ! Gate on MPIsaved, not bMPI: bMPI was forced .false. above (line ~92)
+     ! for the master-only per-atom-type SCF loop and isn't restored until
+     ! this subroutine's very end, so "if (bMPI)" here would never fire.
+#ifdef MPIV
+     if (MPIsaved) then
+        call MPI_BCAST(atomBasis,quick_molspec%iatomtype,mpi_integer,0,quick_comm,quick_mpi_error)
+        call MPI_BCAST(atomDens,quick_molspec%iatomtype*100*100,mpi_double_precision,0,quick_comm,quick_mpi_error)
+     endif
+#endif
+
      natom=natomsaved
      xyz=xyzsaved
   
@@ -234,7 +260,7 @@ contains
      quick_molspec=quick_molspec_save
   !   quick_molspec%imult = quick_molspec_save%imult
   !   quick_molspec%nelec = quick_molspec_save%nelec
-  
+
      bMPI=MPIsaved
   end subroutine getmolsad
 

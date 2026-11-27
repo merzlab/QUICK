@@ -344,7 +344,11 @@ contains
       endif
 
       call MPI_BCAST(self%iattype,natom,mpi_integer,0,quick_comm,quick_mpi_error)
-      call MPI_BCAST(self%chg,natom,mpi_integer,0,quick_comm,quick_mpi_error)
+      ! self%chg is declared double precision (see its dimension(:),
+      ! allocatable declaration above, shared with extchg); mpi_integer here
+      ! was a latent type mismatch that never surfaced because this
+      ! subroutine was dead code (never called) until now.
+      call MPI_BCAST(self%chg,natom,mpi_double_precision,0,quick_comm,quick_mpi_error)
 
    end subroutine broadcast_quick_molspec
 #endif
