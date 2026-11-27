@@ -233,7 +233,7 @@ extern "C" void gpu_new_(
     gpu->mpi_comm = MPI_COMM_NULL;
 #endif
     gpu->mpi_comm_rank = -1;
-    gpu->mpi_comm_size = 0;    
+    gpu->mpi_comm_size = 0;
     gpu->timer = NULL;
     gpu->natom = 0;
     gpu->nextatom = 0;
@@ -3549,7 +3549,7 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
 
 #if defined(USE_LEGACY_ATOMICS)
     gpu->gpu_calculated->oULL->Download();
-    
+
     for (int i = 0; i < gpu->nbasis; i++) {
         for (int j = i; j < gpu->nbasis; j++) {
             QUICKDouble val = ULLTODOUBLE(LOC2(gpu->gpu_calculated->oULL->_hostData, j, i, gpu->nbasis, gpu->nbasis))
@@ -3587,7 +3587,7 @@ extern "C" void gpu_addint_(QUICKDouble* o, int* intindex, char* intFileName)
     delete gpu->gpu_cutoff->dcConnect;
 #if defined(USE_LEGACY_ATOMICS)
     delete gpu->gpu_calculated->oULL;
-#endif    
+#endif
 
     PRINTDEBUG("COMPLETE RUNNING ADDINT");
 }

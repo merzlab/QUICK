@@ -6,7 +6,7 @@
 !       Regents of the University of California San Diego             !
 !                  & Michigan State University                        !
 !                      All Rights Reserved.                           !
-!                                                                     ! 
+!                                                                     !
 ! Copyright (C) 2022-2023 Merz lab                                    !
 ! Copyright (C) 2022-2023 Götz lab                                    !
 !                                                                     !
@@ -16,7 +16,7 @@
 !_____________________________________________________________________!
 
 !---------------------------------------------------------------------!
-! This module contains all one electron integral (oei) & oei gradient ! 
+! This module contains all one electron integral (oei) & oei gradient !
 ! code.                                                               !
 !---------------------------------------------------------------------!
 
@@ -121,10 +121,10 @@
     !allocate essential variables
     call alloc(quick_molspec, quick_method%readxyz, ierr)
     !if (quick_method%MFCC) call allocate_MFCC()
-   
+
     RECORD_TIME(timer_end%TInitialize)
     timer_cumer%TInitialize = timer_cumer%TInitialize + timer_end%TInitialize - timer_begin%TInitialize
-  
+
     ! Then do inital guess
     RECORD_TIME(timer_begin%TIniGuess)
 
@@ -209,13 +209,13 @@
       call gpu_upload_atom_and_chg(quick_molspec%iattype, quick_molspec%chg)
     endif
 #endif
-    
+
     ! Molden export
     ! initialize exporting
     if(write_molden .and. master) then
        call initializeExport(quick_molden, ierr)
     endif
-    
+
     !------------------------------------------------------------------
     ! 4. SCF single point calculation. DFT if wanted. If it is OPT job
     !    ignore this part and go to opt part. We will get variationally determined Energy.
@@ -298,7 +298,7 @@
 #ifdef MPIV
             SAFE_CALL(dl_find(ierr, master))   ! DLC
 #else
-            SAFE_CALL(dl_find(ierr, .true.)) 
+            SAFE_CALL(dl_find(ierr, .true.))
 #endif
         else
             SAFE_CALL(lopt(ierr))         ! Cartesian
@@ -324,7 +324,7 @@
             SAFE_CALL(cshell_gradient(ierr))
         endif
 
-        ! One electron properties (ESP, EField) 
+        ! One electron properties (ESP, EField)
         call compute_oeprop()
 
         if (master .and. quick_method%writechk) then

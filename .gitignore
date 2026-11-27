@@ -30,3 +30,4 @@ install_mpi/
 build_dbg/
 install_dbg/
 .DS_Store
+.claude/
